@@ -1,3 +1,6 @@
 Django==2.1.3
 djangorestframework==3.9.0
 pytz==2018.7
+django-oauth-toolkit==1.2.0
+django-rest-framework-social-oauth2==1.1.0
+python-social-auth==0.3.6
