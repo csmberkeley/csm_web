@@ -6,6 +6,7 @@ from rest_framework import generics, permissions
 
 from .models import Course
 from .serializers import CourseSerializer
+from .permissions import IsLeader, IsLeaderOrReadOnly
 
 def login(request):
     return render(request, 'scheduler/login.html')
@@ -22,9 +23,9 @@ def index(request):
 class CourseList(generics.ListCreateAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
 
 class CourseDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
