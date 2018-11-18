@@ -73,6 +73,10 @@ class Section(models.Model):
     default_spacetime = models.OneToOneField("Spacetime", on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
 
+    @property
+    def current_student_count(self):
+        return self.students.count()
+
 
 class Spacetime(models.Model):
     MONDAY = "M"
