@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.urls import reverse
 from django.contrib.auth import logout as auth_logout
 
-from rest_framework import generics
+from rest_framework import generics, permissions
 
 from .models import Course
 from .serializers import CourseSerializer
@@ -22,7 +22,9 @@ def index(request):
 class CourseList(generics.ListCreateAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
 
 class CourseDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
