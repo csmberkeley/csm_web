@@ -208,3 +208,5 @@ typings/
 # FuseBox cache
 .fusebox/
 
+# Vim swp files
+.*.sw?
