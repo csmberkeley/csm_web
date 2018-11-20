@@ -1,4 +1,4 @@
-"""csm_web URL Configuration
+"""scheduler URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/2.1/topics/http/urls/
@@ -16,8 +16,10 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from . import views
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path("scheduler/", include("scheduler.urls")),
-    path('', include('social_django.urls', namespace='social'))
+    path('', views.index, name='index'),
+    path('login', views.login, name='login'),
+    path('logout', views.logout, name='logout'),
 ]
