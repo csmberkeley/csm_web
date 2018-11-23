@@ -16,3 +16,8 @@ virtualenv venv
 source venv/bin/activate
 pip install -r csm_web/requirements.txt
 ```
+## Starting Django
+To start the Django server,
+```
+python csm_web/manage.py runserver
+```
