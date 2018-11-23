@@ -1,3 +1,4 @@
 from django.contrib import admin
+from scheduler.models import Course
 
-# Register your models here.
+admin.site.register(Course)

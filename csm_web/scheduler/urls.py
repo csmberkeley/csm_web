@@ -16,6 +16,8 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 
+from rest_framework.urlpatterns import format_suffix_patterns
+
 from . import views
 
 urlpatterns = [
@@ -23,3 +25,10 @@ urlpatterns = [
     path('login', views.login, name='login'),
     path('logout', views.logout, name='logout'),
 ]
+
+rest_urlpatterns = [
+    path('courses', views.CourseList.as_view()),
+    path('courses/<int:pk>', views.CourseDetail.as_view()),
+]
+
+urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
