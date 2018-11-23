@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'scheduler.apps.SchedulerConfig',
     'rest_framework',
     'social_django',
+    'frontend',
 ]
 
 MIDDLEWARE = [
