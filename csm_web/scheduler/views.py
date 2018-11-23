@@ -3,6 +3,7 @@ from django.urls import reverse
 from django.contrib.auth import logout as auth_logout
 
 from rest_framework import generics, permissions, viewsets
+from rest_framework.decorators import api_view
 
 from .models import Attendance, Course, Profile, Section, Spacetime, Override
 from .serializers import (
@@ -33,15 +34,35 @@ def index(request):
 
 
 class CourseList(generics.ListCreateAPIView):
+    """
+    Returns a list of all existing courses.
+    """
+
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
 
 
 class CourseDetail(generics.RetrieveUpdateDestroyAPIView):
+    """
+    Returns the courses object associated with the given primary key ID.
+    """
+
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+
+
+class UserProfileList(generics.ListCreateAPIView):
+    """
+    Returns a list of profiles associated with the currently logged in user.
+    """
+
+    serializer_class = ProfileSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+
+    def get_queryset(self):
+        return Profile.objects.filter(user=self.request.user)
 
 
 # API Stubs

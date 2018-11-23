@@ -1,0 +1,14 @@
+- model: scheduler.Course
+  pk: 1
+  fields:
+    name: EE16A
+    valid_until: 2018-12-15
+    enrollment_start: 2018-09-01
+    enrollment_end: 2018-10-01
+- model: scheduler.Course
+  pk: 1
+  fields:
+    name: CS61A
+    valid_until: 2018-12-15
+    enrollment_start: 2018-09-01
+    enrollment_end: 2018-10-01

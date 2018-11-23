@@ -30,6 +30,12 @@ urlpatterns = [
 rest_urlpatterns = [
     path("courses", views.CourseList.as_view()),
     path("courses/<int:pk>", views.CourseDetail.as_view()),
+    path("profiles", views.UserProfileList.as_view()),
+    # path("profile/<int:pk>, ...),
+    # path("sections/<int:pk>, ...),
+    # path("profile/<int:pk>/attendance, ...),
+    # ...
+    # all endpoints listed here https://paper.dropbox.com/doc/Scheduler-2.0-K0ZNsLU5DZ7JjGudjqKIt
 ]
 
 urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
@@ -37,7 +43,7 @@ urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
 # API Stub Routes
 router = DefaultRouter()
 router.register(r"attendances", views.AttendanceViewSet)
-router.register(r"profiles", views.ProfileViewSet)
+# router.register(r"profiles", views.ProfileViewSet)
 router.register(r"sections", views.SectionViewSet)
 router.register(r"spacetimes", views.SpacetimeViewSet)
 router.register(r"overrides", views.OverrideViewSet)
