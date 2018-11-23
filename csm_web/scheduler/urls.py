@@ -17,6 +17,7 @@ from django.contrib import admin
 from django.urls import path, include
 
 from rest_framework.urlpatterns import format_suffix_patterns
+from rest_framework.routers import DefaultRouter
 
 from . import views
 
@@ -32,3 +33,13 @@ rest_urlpatterns = [
 ]
 
 urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
+
+# API Stub Routes
+router = DefaultRouter()
+router.register(r'attendances', views.AttendanceViewSet)
+router.register(r'profiles', views.ProfileViewSet)
+router.register(r'sections', views.SectionViewSet)
+router.register(r'spacetimes', views.SpacetimeViewSet)
+router.register(r'overrides', views.OverrideViewSet)
+
+urlpatterns.extend(router.urls)
