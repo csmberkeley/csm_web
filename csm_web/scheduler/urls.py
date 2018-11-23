@@ -22,24 +22,24 @@ from rest_framework.routers import DefaultRouter
 from . import views
 
 urlpatterns = [
-    path('', views.index, name='index'),
-    path('login', views.login, name='login'),
-    path('logout', views.logout, name='logout'),
+    path("", views.index, name="index"),
+    path("login", views.login, name="login"),
+    path("logout", views.logout, name="logout"),
 ]
 
 rest_urlpatterns = [
-    path('courses', views.CourseList.as_view()),
-    path('courses/<int:pk>', views.CourseDetail.as_view()),
+    path("courses", views.CourseList.as_view()),
+    path("courses/<int:pk>", views.CourseDetail.as_view()),
 ]
 
 urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
 
 # API Stub Routes
 router = DefaultRouter()
-router.register(r'attendances', views.AttendanceViewSet)
-router.register(r'profiles', views.ProfileViewSet)
-router.register(r'sections', views.SectionViewSet)
-router.register(r'spacetimes', views.SpacetimeViewSet)
-router.register(r'overrides', views.OverrideViewSet)
+router.register(r"attendances", views.AttendanceViewSet)
+router.register(r"profiles", views.ProfileViewSet)
+router.register(r"sections", views.SectionViewSet)
+router.register(r"spacetimes", views.SpacetimeViewSet)
+router.register(r"overrides", views.OverrideViewSet)
 
 urlpatterns.extend(router.urls)
