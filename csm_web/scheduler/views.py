@@ -33,9 +33,9 @@ def index(request):
 # REST Framework API Views
 
 
-class CourseList(generics.ListCreateAPIView):
+class CourseList(generics.ListAPIView):
     """
-    Returns a list of all existing courses.
+    Responds to GET /courses with a list of all existing courses.
     """
 
     queryset = Course.objects.all()
@@ -45,15 +45,34 @@ class CourseList(generics.ListCreateAPIView):
 
 class CourseDetail(generics.RetrieveAPIView):
     """
-    Returns the courses object associated with the given primary key ID.
+    Responds to GET /courses/$NAME/ with the courses object associated with the given slug name.
     """
 
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
 
+    def get_object(self):
+        return self.queryset.get(name__iexact=self.kwargs["name"])
 
-class UserProfileList(generics.ListCreateAPIView):
+
+class CourseSectionList(generics.ListAPIView):
+    """
+    Responds to GET /courses/$NAME/sections with a list of all sections associated with the course
+    of the given slug name.
+    """
+
+    queryset = Course.objects.all()
+    serializer_class = SectionSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+
+    def get_queryset(self):
+        return Section.objects.filter(
+            course__name__iexact=self.kwargs["name"]
+        )
+
+
+class UserProfileList(generics.ListAPIView):
     """
     Returns a list of profiles associated with the currently logged in user.
     """
@@ -75,7 +94,8 @@ class UserProfileDetail(generics.RetrieveAPIView):
     permission_classes = (IsReadIfOwner, IsLeader)
 
     def get_queryset(self):
-        return Profile.objects.filter(user=self.request.pk)
+        return Profile.objects.filter(user__pk=self.request.query_params.get("pk", ""))
+
 
 # API Stubs
 

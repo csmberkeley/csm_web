@@ -2,3 +2,4 @@ Django==2.1.3
 djangorestframework==3.9.0
 pytz==2018.7
 python-social-auth[django]==0.3.6
+pyyaml==3.13

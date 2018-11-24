@@ -24,10 +24,10 @@ class Attendance(models.Model):
     @property
     def leader(self):
         return self.section.mentor
-    
+
 
 class Course(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.SlugField(max_length=100)
     valid_until = models.DateField()
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
@@ -84,7 +84,6 @@ class Section(models.Model):
     @property
     def leader(self):
         return self.mentor
-    
 
 
 class Spacetime(models.Model):
