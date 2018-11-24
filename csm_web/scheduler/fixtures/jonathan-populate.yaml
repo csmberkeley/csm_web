@@ -6,9 +6,72 @@
     enrollment_start: 2018-09-01
     enrollment_end: 2018-10-01
 - model: scheduler.Course
-  pk: 1
+  pk: 2
   fields:
     name: CS61A
     valid_until: 2018-12-15
     enrollment_start: 2018-09-01
     enrollment_end: 2018-10-01
+
+- model: scheduler.User
+  pk: 4
+  fields:
+    password: aaaaaaaa # technically should be hashes
+    is_superuser: false
+    username: teststud1
+    first_name: teststud_FN1
+    last_name: teststud_LN1
+    email: teststud1@berkeley.edu
+    is_staff: false
+    is_active: true
+    date_joined: 2018-11-15
+- model: scheduler.User
+  pk: 3
+  fields:
+    password: sdfsdaff
+    is_superuser: false
+    username: testjm1
+    first_name: testjm_FN1
+    last_name: testjm_LN1
+    email: testjm1@berkeley.edu
+    is_staff: false
+    is_active: true
+    date_joined: 2018-11-15
+- model: scheduler.User
+  pk: 2
+  fields:
+    password: cccccccc
+    is_superuser: false
+    username: testsm1
+    first_name: testsm_FN1
+    last_name: testsm_LN1
+    email: testsm1@berkeley.edu
+    is_staff: false
+    is_active: true
+    date_joined: 2018-11-15
+- model: scheduler.User
+  pk: 1
+  fields:
+    password: aaaaaaab
+    is_superuser: false
+    username: testcoord1
+    first_name: coord_fn1
+    last_name: coordman_ln1
+    email: testcoord1@berkeley.edu
+    is_staff: true
+    is_active: true
+    date_joined: 2018-11-15
+
+# - model: scheduler.Profile
+#   pk: 1
+#   fields:
+#     leader: 1 # fk, for coord will point back to self
+#     course: 1 # 16a
+#     role: CO
+#     user: 1
+#     section:
+# - model: scheduler.Profile
+#   pk: 2
+#   fields:
+#     leader: 2
+#     course: 

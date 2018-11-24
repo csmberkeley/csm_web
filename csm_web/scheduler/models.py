@@ -21,6 +21,10 @@ class Attendance(models.Model):
     presence = models.CharField(max_length=2, choices=PRESENCE_CHOICES)
     attendee = models.ForeignKey("Profile", on_delete=models.CASCADE)
 
+    @property
+    def leader(self):
+        return self.section.mentor
+    
 
 class Course(models.Model):
     name = models.CharField(max_length=100)
@@ -77,6 +81,11 @@ class Section(models.Model):
     def current_student_count(self):
         return self.students.count()
 
+    @property
+    def leader(self):
+        return self.mentor
+    
+
 
 class Spacetime(models.Model):
     MONDAY = "M"
@@ -105,3 +114,7 @@ class Override(models.Model):
     spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE)
     week_start = models.DateField()
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
+
+    @property
+    def leader(self):
+        return self.section.mentor

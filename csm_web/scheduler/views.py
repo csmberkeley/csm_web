@@ -14,7 +14,7 @@ from .serializers import (
     SpacetimeSerializer,
     OverrideSerializer,
 )
-from .permissions import IsLeader, IsLeaderOrReadOnly
+from .permissions import IsLeader, IsLeaderOrReadOnly, IsReadIfOwner
 
 
 def login(request):
@@ -43,7 +43,7 @@ class CourseList(generics.ListCreateAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
 
 
-class CourseDetail(generics.RetrieveUpdateDestroyAPIView):
+class CourseDetail(generics.RetrieveAPIView):
     """
     Returns the courses object associated with the given primary key ID.
     """
@@ -59,11 +59,23 @@ class UserProfileList(generics.ListCreateAPIView):
     """
 
     serializer_class = ProfileSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+    permission_classes = (IsReadIfOwner,)
 
     def get_queryset(self):
         return Profile.objects.filter(user=self.request.user)
 
+
+class UserProfileDetail(generics.RetrieveAPIView):
+    """
+    Returns details for the profile with profile_id = $ID, selectively gated by leadership,
+    i.e. only the leader or user associated with the profile should be able to retrieve this.
+    """
+
+    serializer_class = ProfileSerializer
+    permission_classes = (IsReadIfOwner, IsLeader)
+
+    def get_queryset(self):
+        return Profile.objects.filter(user=self.request.pk)
 
 # API Stubs
 

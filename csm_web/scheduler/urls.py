@@ -30,11 +30,19 @@ urlpatterns = [
 rest_urlpatterns = [
     path("courses", views.CourseList.as_view()),
     path("courses/<int:pk>", views.CourseDetail.as_view()),
+    # path("courses/<int:pk>/sections", ...), (GET)
     path("profiles", views.UserProfileList.as_view()),
-    # path("profile/<int:pk>, ...),
-    # path("sections/<int:pk>, ...),
-    # path("profile/<int:pk>/attendance, ...),
-    # ...
+    path("profile/<int:pk>", views.UserProfileDetail.as_view()),
+    # CRITICAL
+    # path("profile/<int:pk>/attendance", ...), (GET, POST)
+    # path("sections/<int:pk>", ...), (GET)
+    # path("sections/<int:pk>/overrides", ...), (PUT)
+    # path("attendances/<int:pk>", ...) (POST)
+    #
+    # NONCRITICAL
+    # path("sections/<int:pk>/enroll", ...), (POST)
+    # path("profiles/<int:pk>/enroll", ...), (DELETE)
+    #
     # all endpoints listed here https://paper.dropbox.com/doc/Scheduler-2.0-K0ZNsLU5DZ7JjGudjqKIt
 ]
 
