@@ -55,7 +55,7 @@ class Profile(models.Model):
         on_delete=models.CASCADE,
         limit_choices_to={"course": course},
         blank=True,
-        null=True
+        null=True,
     )
 
     def __str__(self):
@@ -112,7 +112,12 @@ class Spacetime(models.Model):
     day_of_week = models.CharField(max_length=2, choices=DAY_OF_WEEK_CHOICES)
 
     def __str__(self):
-        return "%s %s %s for %s min" % (self.location, self.day_of_week, str(self.start_time), str(self.duration))
+        return "%s %s %s for %s" % (
+            self.location,
+            self.day_of_week,
+            str(self.start_time),
+            str(self.duration),
+        )
 
 
 class Override(models.Model):
