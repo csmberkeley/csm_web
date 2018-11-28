@@ -67,9 +67,7 @@ class CourseSectionList(generics.ListAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
 
     def get_queryset(self):
-        return Section.objects.filter(
-            course__name__iexact=self.kwargs["name"]
-        )
+        return Section.objects.filter(course__name__iexact=self.kwargs["name"])
 
 
 class UserProfileList(generics.ListAPIView):
