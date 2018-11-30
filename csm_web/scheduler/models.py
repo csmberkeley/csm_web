@@ -18,7 +18,7 @@ class Attendance(models.Model):
     )
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     week_start = models.DateField()
-    presence = models.CharField(max_length=2, choices=PRESENCE_CHOICES)
+    presence = models.CharField(max_length=2, choices=PRESENCE_CHOICES, blank=True)
     attendee = models.ForeignKey("Profile", on_delete=models.CASCADE)
 
 
@@ -124,3 +124,6 @@ class Override(models.Model):
     spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE)
     week_start = models.DateField()
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
+
+    def __str__(self):
+        "Override for week of %s, %s" % (str(self.section), str(self.spacetime))
