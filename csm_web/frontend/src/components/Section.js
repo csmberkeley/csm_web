@@ -54,3 +54,4 @@ function Section(props) {
 }
 
 export default Section;
+export { SectionSummary };
