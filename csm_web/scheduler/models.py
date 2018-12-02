@@ -57,7 +57,6 @@ class Profile(models.Model):
         "Section",
         related_name="students",
         on_delete=models.CASCADE,
-        limit_choices_to={"course": course},
         blank=True,
         null=True,
     )
@@ -74,7 +73,6 @@ class Section(models.Model):
         null=True,
         related_name="mentor_sections",
         limit_choices_to={
-            "course": course,
             "role__in": [
                 Profile.JUNIOR_MENTOR,
                 Profile.SENIOR_MENTOR,
