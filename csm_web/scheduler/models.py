@@ -70,6 +70,7 @@ class Section(models.Model):
     mentor = models.ForeignKey(
         Profile,
         on_delete=models.SET_NULL,
+        blank=True,
         null=True,
         related_name="mentor_sections",
         limit_choices_to={
