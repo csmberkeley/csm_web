@@ -29,7 +29,12 @@ def logout(request):
 
 
 def index(request):
-    return render(request, "scheduler/index.html", {"user": request.user})
+    data = {"user": request.user}
+
+    if request.user.is_authenticated:
+        data["profiles"] = Profile.objects.filter(user=request.user)
+
+    return render(request, "scheduler/index.html", data)
 
 
 def enroll(request, pk):
