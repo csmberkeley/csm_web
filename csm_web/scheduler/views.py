@@ -1,6 +1,7 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import logout as auth_logout
+from django.core.exceptions import PermissionDenied
 
 from rest_framework import generics, permissions, viewsets
 from rest_framework.decorators import api_view
@@ -29,6 +30,22 @@ def logout(request):
 
 def index(request):
     return render(request, "scheduler/index.html", {"user": request.user})
+
+
+def enroll(request, pk):
+    section = get_object_or_404(Section, pk=pk)
+    if section.current_student_count >= section.capacity:
+        raise PermissionDenied
+
+    profile = Profile(
+        course=section.course,
+        section=section,
+        user=request.user,
+        role=Profile.STUDENT,
+        leader=section.mentor,
+    )
+    profile.save()
+    return redirect(reverse("index"))
 
 
 # REST Framework API Views
