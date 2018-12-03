@@ -47,6 +47,8 @@ class Profile(models.Model):
         (SENIOR_MENTOR, "Senior Mentor"),
         (COORDINATOR, "Coordinator"),
     )
+    ROLE_MAP = dict(ROLE_CHOICES)
+
     leader = models.ForeignKey(
         "self", on_delete=models.CASCADE, related_name="follower", blank=True, null=True
     )
@@ -62,7 +64,16 @@ class Profile(models.Model):
     )
 
     def __str__(self):
-        return "%s %s %s" % (self.role, self.course.name, self.user.username)
+        title = "{course} {role}".format(
+            course=self.course.name, role=Profile.ROLE_MAP[self.role]
+        )
+        if self.section:
+            section = "for {section}".format(section=self.section)
+        else:
+            section = ""
+        username = "({username})".format(username=self.user.username)
+
+        return " ".join(x for x in (title, section, username) if x)
 
 
 class Section(models.Model):
@@ -78,7 +89,7 @@ class Section(models.Model):
                 Profile.JUNIOR_MENTOR,
                 Profile.SENIOR_MENTOR,
                 Profile.COORDINATOR,
-            ],
+            ]
         },
     )
     default_spacetime = models.OneToOneField("Spacetime", on_delete=models.CASCADE)
@@ -93,7 +104,9 @@ class Section(models.Model):
         return self.mentor
 
     def __str__(self):
-        return "%s %s" % (self.course.name, str(self.default_spacetime))
+        return "{course} section ({spacetime})".format(
+            course=self.course.name, spacetime=str(self.default_spacetime)
+        )
 
 
 class Spacetime(models.Model):
