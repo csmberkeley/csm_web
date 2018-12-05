@@ -21,6 +21,13 @@ class Attendance(models.Model):
     presence = models.CharField(max_length=2, choices=PRESENCE_CHOICES, blank=True)
     attendee = models.ForeignKey("Profile", on_delete=models.CASCADE)
 
+    def __str__(self):
+        return "%s %s %s" % (
+            self.week_start,
+            self.presence,
+            self.attendee.user.username,
+        )
+
 
 class Course(models.Model):
     name = models.CharField(max_length=100)
