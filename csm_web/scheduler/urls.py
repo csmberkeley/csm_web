@@ -33,9 +33,9 @@ rest_urlpatterns = [
     path("courses/<slug:name>/sections/", views.CourseSectionList.as_view()),
     path("profiles/", views.UserProfileList.as_view()),
     path("profile/<int:pk>/", views.UserProfileDetail.as_view()),
+    path("sections/<int:pk>", views.SectionDetail.as_view()),
     # CRITICAL
     # path("profile/<int:pk>/attendance", ...), (GET, POST)
-    # path("sections/<int:pk>", ...), (GET)
     # path("sections/<int:pk>/overrides", ...), (PUT)
     # path("attendances/<int:pk>", ...) (POST)
     #

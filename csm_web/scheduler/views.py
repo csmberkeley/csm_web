@@ -95,6 +95,18 @@ class UserProfileDetail(generics.RetrieveAPIView):
         return Profile.objects.filter(user__pk=self.request.query_params.get("pk", ""))
 
 
+class SectionDetail(generics.RetrieveAPIView):
+    """
+    Responds to GET /sections/$ID with the corresponding section.
+    """
+
+    queryset = Section.objects.all()
+    serializer_class = SectionSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+
+    def get_object(self):
+        return self.queryset.get(pk=self.request.query_params.get("pk", ""))
+
 # API Stubs
 
 
