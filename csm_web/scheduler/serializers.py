@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Attendance, Course, Profile, Section, Spacetime, Override
+from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -10,6 +10,10 @@ class CourseSerializer(serializers.ModelSerializer):
 
 # Serializer Stubs
 
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ("id", "username", "first_name", "last_name", "email")
 
 class AttendanceSerializer(serializers.ModelSerializer):
     class Meta:

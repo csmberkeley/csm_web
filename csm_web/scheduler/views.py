@@ -5,8 +5,9 @@ from django.contrib.auth import logout as auth_logout
 from rest_framework import generics, permissions, viewsets
 from rest_framework.decorators import api_view
 
-from .models import Attendance, Course, Profile, Section, Spacetime, Override
+from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 from .serializers import (
+    UserSerializer,
     AttendanceSerializer,
     CourseSerializer,
     ProfileSerializer,
@@ -14,7 +15,7 @@ from .serializers import (
     SpacetimeSerializer,
     OverrideSerializer,
 )
-from .permissions import IsLeader, IsLeaderOrReadOnly, IsReadIfOwner
+from .permissions import IsLeader, IsLeaderOrReadOnly, IsReadIfOwner, IsOwner
 
 
 def login(request):
@@ -88,11 +89,23 @@ class UserProfileDetail(generics.RetrieveAPIView):
     i.e. only the leader or user associated with the profile should be able to retrieve this.
     """
 
+    queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
     permission_classes = (IsReadIfOwner, IsLeader)
+    # TODO account for verbosity (details in dropbox paper spec)
+
+
+class UserProfileAttendance(generics.ListCreateAPIView):
+    """
+    GET: Returns attendances for profile with profile_id = $ID, Gated by leadership
+    POST: Updates an attendance record for the user with profile_id = $ID
+    """
+
+    serializer_class = AttendanceSerializer
+    permission_classes = (IsOwner, IsLeader)
 
     def get_queryset(self):
-        return Profile.objects.filter(user__pk=self.request.query_params.get("pk", ""))
+        return Attendance.objects.filter(section__mentor__pk=self.kwargs["pk"])
 
 
 class SectionDetail(generics.RetrieveAPIView):
@@ -108,6 +121,10 @@ class SectionDetail(generics.RetrieveAPIView):
         return self.queryset.get(pk=self.request.query_params.get("pk", ""))
 
 # API Stubs
+
+class UserViewSet(viewsets.ModelViewSet):
+    queryset = User.objects.all()
+    serializer_class = UserSerializer
 
 
 class AttendanceViewSet(viewsets.ModelViewSet):
