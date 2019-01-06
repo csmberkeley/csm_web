@@ -7,11 +7,11 @@ class IsLeader(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated
+        return bool(request.user and request.user.is_authenticated)
 
     # note: has_permission is always run before has_object_permission
     def has_object_permission(self, request, view, obj):
-        return obj.leader and request.user == obj.leader
+        return bool(obj.leader and request.user == obj.leader)
 
 
 class IsLeaderOrReadOnly(IsLeader):
@@ -21,13 +21,15 @@ class IsLeaderOrReadOnly(IsLeader):
     """
 
     def has_permission(self, request, view):
-        return request.method in permissions.SAFE_METHODS or super().has_permission(
-            request, view
+        return bool(
+            request.method in permissions.SAFE_METHODS
+            or super().has_permission(request, view)
         )
 
     def has_object_permission(self, request, view, obj):
-        return request.method in permissions.SAFE_METHODS or super().has_object_permission(
-            request, view, obj
+        return bool(
+            request.method in permissions.SAFE_METHODS
+            or super().has_object_permission(request, view, obj)
         )
 
 
@@ -38,17 +40,21 @@ class IsReadIfOwner(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        return (
-            request.method in permissions.SAFE_METHODS
-            and request.user
-            and request.user.is_authenticated
+        return bool(
+            (
+                request.method in permissions.SAFE_METHODS
+                and request.user
+                and request.user.is_authenticated
+            )
         )
 
     def has_object_permission(self, request, view, obj):
-        return (
-            request.method in permissions.SAFE_METHODS
-            and request.user
-            and request.user == obj.user
+        return bool(
+            (
+                request.method in permissions.SAFE_METHODS
+                and request.user
+                and request.user == obj.user
+            )
         )
 
 
@@ -59,7 +65,7 @@ class IsOwner(permissions.BasePermission):
     """
 
     def has_permission(self, request, view):
-        return request.user and request.user.is_authenticated
+        return bool(request.user and request.user.is_authenticated)
 
     def has_object_permission(self, request, view, obj):
-        return request.user and request.user == obj.user
+        return bool(request.user and request.user == obj.user)
