@@ -142,7 +142,9 @@ class SectionDetail(generics.RetrieveAPIView):
     def get_object(self):
         return self.queryset.get(pk=self.request.query_params.get("pk", ""))
 
+
 # API Stubs
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
