@@ -91,7 +91,7 @@ class UserProfileDetail(generics.RetrieveAPIView):
 
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = (IsReadIfOwner, IsLeader)
+    permission_classes = (IsReadIfOwner|IsLeader,)
     # TODO account for verbosity (details in dropbox paper spec)
 
 
