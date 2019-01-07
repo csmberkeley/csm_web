@@ -35,8 +35,9 @@ rest_urlpatterns = [
     path("profiles/<int:pk>/", views.UserProfileDetail.as_view()),
     path("profiles/<int:pk>/attendance", views.UserProfileAttendance.as_view()),
     path("sections/<int:pk>/", views.SectionDetail.as_view()),
+    path("overrides/", views.CreateOverrideDetail.as_view()),
+    path("overrides/<int:pk>/", views.OverrideDetail.as_view()),
     # CRITICAL
-    # path("sections/<int:pk>/overrides", ...), (PUT)
     # path("attendances/<int:pk>", ...) (POST)
     #
     # NONCRITICAL
@@ -54,6 +55,5 @@ router.register(r"attendances", views.AttendanceViewSet)
 router.register(r"users", views.UserViewSet)
 router.register(r"allprofiles", views.ProfileViewSet)
 router.register(r"spacetimes", views.SpacetimeViewSet)
-router.register(r"overrides", views.OverrideViewSet)
 
 urlpatterns.extend(router.urls)
