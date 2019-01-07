@@ -34,7 +34,7 @@ rest_urlpatterns = [
     path("profiles/", views.UserProfileList.as_view()),
     path("profiles/<int:pk>/", views.UserProfileDetail.as_view()),
     path("profiles/<int:pk>/attendance", views.UserProfileAttendance.as_view()),
-    path("sections/<int:pk>", views.SectionDetail.as_view()),
+    path("sections/<int:pk>/", views.SectionDetail.as_view()),
     # CRITICAL
     # path("sections/<int:pk>/overrides", ...), (PUT)
     # path("attendances/<int:pk>", ...) (POST)
@@ -53,7 +53,6 @@ router = DefaultRouter()
 router.register(r"attendances", views.AttendanceViewSet)
 router.register(r"users", views.UserViewSet)
 router.register(r"allprofiles", views.ProfileViewSet)
-router.register(r"sections", views.SectionViewSet)
 router.register(r"spacetimes", views.SpacetimeViewSet)
 router.register(r"overrides", views.OverrideViewSet)
 
