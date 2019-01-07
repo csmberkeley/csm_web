@@ -91,7 +91,7 @@ class UserProfileDetail(generics.RetrieveAPIView):
 
     queryset = Profile.objects.all()
     serializer_class = ProfileSerializer
-    permission_classes = (IsReadIfOwner|IsLeader,)
+    permission_classes = (IsReadIfOwner | IsLeader,)
     # TODO account for verbosity (details in dropbox paper spec)
 
 
@@ -120,7 +120,9 @@ class SectionDetail(generics.RetrieveAPIView):
     def get_object(self):
         return self.queryset.get(pk=self.kwargs["pk"])
 
+
 # API Stubs
+
 
 class UserViewSet(viewsets.ModelViewSet):
     queryset = User.objects.all()
