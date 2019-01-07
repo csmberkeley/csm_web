@@ -118,7 +118,7 @@ class SectionDetail(generics.RetrieveAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
 
     def get_object(self):
-        return self.queryset.get(pk=self.request.query_params.get("pk", ""))
+        return self.queryset.get(pk=self.kwargs["pk"])
 
 # API Stubs
 
