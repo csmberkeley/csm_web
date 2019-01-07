@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import logout as auth_logout
 
@@ -115,6 +115,25 @@ class SectionDetail(generics.RetrieveAPIView):
 
     queryset = Section.objects.all()
     serializer_class = SectionSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+
+    def get_object(self):
+        return self.queryset.get(pk=self.kwargs["pk"])
+
+
+class CreateOverrideDetail(generics.CreateAPIView):
+    """
+    Responds to POST /overrides with the corresponding section.
+    """
+
+    queryset = Override.objects.all()
+    serializer_class = OverrideSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+
+
+class OverrideDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Override.objects.all()
+    serializer_class = OverrideSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
 
     def get_object(self):
