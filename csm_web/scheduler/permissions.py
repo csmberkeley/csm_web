@@ -11,7 +11,7 @@ class IsLeader(permissions.BasePermission):
 
     # note: has_permission is always run before has_object_permission
     def has_object_permission(self, request, view, obj):
-        return bool(obj.leader and request.user == obj.leader)
+        return bool(obj.leader and request.user == obj.leader.user)
 
 
 class IsLeaderOrReadOnly(IsLeader):
