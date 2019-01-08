@@ -143,6 +143,24 @@ class SectionDetail(generics.RetrieveAPIView):
         return self.queryset.get(pk=self.kwargs["pk"])
 
 
+class CreateOverrideDetail(generics.CreateAPIView):
+    """
+    Responds to POST /overrides with the corresponding section.
+    """
+
+    queryset = Override.objects.all()
+    serializer_class = OverrideSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+
+
+class OverrideDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Override.objects.all()
+    serializer_class = OverrideSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+
+    def get_object(self):
+        return self.queryset.get(pk=self.kwargs["pk"])
+
 
 # API Stubs
 
