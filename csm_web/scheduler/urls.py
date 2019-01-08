@@ -41,8 +41,8 @@ rest_urlpatterns = [
     # path("attendances/<int:pk>", ...) (POST)
     #
     # NONCRITICAL
-    # path("sections/<int:pk>/enroll", ...), (POST)
-    # path("profiles/<int:pk>/enroll", ...), (DELETE)
+    path("sections/<int:pk>/enroll", views.enroll, name="enroll"),
+    # path("profiles/<int:pk>", ...), (DELETE)
     #
     # all endpoints listed here https://paper.dropbox.com/doc/Scheduler-2.0-K0ZNsLU5DZ7JjGudjqKIt
 ]
