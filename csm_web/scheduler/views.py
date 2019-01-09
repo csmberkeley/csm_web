@@ -16,7 +16,7 @@ from .serializers import (
     SpacetimeSerializer,
     OverrideSerializer,
 )
-from .permissions import IsLeader, IsLeaderOrReadOnly, IsReadIfOwner, IsOwner
+from .permissions import is_leader, IsLeader, IsLeaderOrReadOnly, IsReadIfOwner, IsOwner
 
 
 def login(request):
@@ -166,6 +166,16 @@ class CreateAttendanceDetail(generics.CreateAPIView):
     queryset = Attendance.objects.all()
     serializer_class = AttendanceSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeader)
+
+    def perform_create(self, serializer):
+        # Deny attendance creation if not leader of section
+        section = serializer.validated_data["section"]
+        if not is_leader(self.request.user, section):
+            raise PermissionDenied(
+                "You are not allowed to create Attendances for that section"
+            )
+        else:
+            serializer.save()
 
 
 class AttendanceDetail(generics.RetrieveUpdateDestroyAPIView):
