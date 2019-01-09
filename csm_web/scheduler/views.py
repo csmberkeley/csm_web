@@ -162,6 +162,21 @@ class OverrideDetail(generics.RetrieveUpdateDestroyAPIView):
         return self.queryset.get(pk=self.kwargs["pk"])
 
 
+class CreateAttendanceDetail(generics.CreateAPIView):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeader)
+
+
+class AttendanceDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeader)
+
+    def get_object(self):
+        return self.queryset.get(pk=self.kwargs["pk"])
+
+
 # API Stubs
 
 
