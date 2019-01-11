@@ -49,3 +49,25 @@ class OverrideSerializer(serializers.ModelSerializer):
     class Meta:
         model = Override
         fields = ("spacetime", "week_start", "section")
+
+
+class VerboseSectionSerializer(serializers.ModelSerializer):
+    default_spacetime = SpacetimeSerializer()
+
+    class Meta:
+        model = Section
+        fields = (
+            "id",
+            "course",
+            "mentor",
+            "default_spacetime",
+            "capacity",
+        )
+
+
+class VerboseProfileSerializer(serializers.ModelSerializer):
+    section = VerboseSectionSerializer()
+
+    class Meta:
+        model = Profile
+        fields = ("id", "leader", "course", "role", "user", "section")
