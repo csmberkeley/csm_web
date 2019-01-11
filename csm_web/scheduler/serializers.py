@@ -30,6 +30,8 @@ class ProfileSerializer(serializers.ModelSerializer):
 
 
 class SectionSerializer(serializers.ModelSerializer):
+    default_spacetime = SpacetimeSerializer()
+
     class Meta:
         model = Section
         fields = ("course", "mentor", "default_spacetime", "capacity")
@@ -42,6 +44,8 @@ class SpacetimeSerializer(serializers.ModelSerializer):
 
 
 class OverrideSerializer(serializers.ModelSerializer):
+    spacetime = SpacetimeSerializer()
+
     class Meta:
         model = Override
         fields = ("spacetime", "week_start", "section")
