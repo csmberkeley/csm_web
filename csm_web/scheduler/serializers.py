@@ -11,6 +11,12 @@ class CourseSerializer(serializers.ModelSerializer):
 # Serializer Stubs
 
 
+class SpacetimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Spacetime
+        fields = ("location", "start_time", "duration", "day_of_week")
+
+
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
@@ -23,12 +29,6 @@ class AttendanceSerializer(serializers.ModelSerializer):
         fields = ("id", "section", "week_start", "presence", "attendee")
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ("id", "leader", "course", "role", "user", "section")
-
-
 class SectionSerializer(serializers.ModelSerializer):
     default_spacetime = SpacetimeSerializer()
 
@@ -37,10 +37,10 @@ class SectionSerializer(serializers.ModelSerializer):
         fields = ("course", "mentor", "default_spacetime", "capacity")
 
 
-class SpacetimeSerializer(serializers.ModelSerializer):
+class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Spacetime
-        fields = ("location", "start_time", "duration", "day_of_week")
+        model = Profile
+        fields = ("id", "leader", "course", "role", "user", "section")
 
 
 class OverrideSerializer(serializers.ModelSerializer):
