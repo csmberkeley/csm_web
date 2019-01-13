@@ -91,7 +91,18 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
             "default_spacetime",
             "capacity",
             "active_override",
+            "students",
         )
+
+    def to_representation(self, instance):
+        # Serialize section with students only if leader is viewing
+        user = self.context["request"].user
+
+        # TODO this should use is_leader from permissions, when that branch is merged
+        if not instance.leader or instance.leader.user != user:
+            self.fields.pop("students")
+
+        return super().to_representation(instance)
 
 
 class VerboseProfileSerializer(serializers.ModelSerializer):
