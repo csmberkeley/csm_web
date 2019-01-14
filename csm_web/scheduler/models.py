@@ -18,7 +18,7 @@ class Attendance(models.Model):
     )
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     week_start = models.DateField()
-    presence = models.CharField(max_length=2, choices=PRESENCE_CHOICES)
+    presence = models.CharField(max_length=2, choices=PRESENCE_CHOICES, blank=True)
     attendee = models.ForeignKey("Profile", on_delete=models.CASCADE)
 
     @property
@@ -148,3 +148,6 @@ class Override(models.Model):
     @property
     def leader(self):
         return self.section.mentor
+
+    def __str__(self):
+        "Override for week of %s, %s" % (str(self.section), str(self.spacetime))
