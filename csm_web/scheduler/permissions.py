@@ -3,6 +3,8 @@ from .models import Override, Attendance
 
 
 def is_leader(user, obj):
+    if not hasattr(obj, "leader"):
+        return False
     leader = obj.leader
     while leader:
         if user == leader.user:
@@ -26,7 +28,7 @@ class IsLeader(permissions.BasePermission):
         if isinstance(obj, Override) or isinstance(obj, Attendance):
             obj = obj.section
 
-        return bool(obj.leader and request.user == obj.leader.user)
+        return is_leader(request.user, obj)
 
 
 class IsLeaderOrReadOnly(IsLeader):
