@@ -124,17 +124,17 @@ class UserProfileDetail(generics.RetrieveAPIView):
             return ProfileSerializer
 
 
-class UserProfileAttendance(generics.ListCreateAPIView):
+class UserProfileAttendance(generics.ListAPIView):
     """
     GET: Returns attendances for profile with profile_id = $ID, Gated by leadership
-    POST: Updates an attendance record for the user with profile_id = $ID
     """
 
     serializer_class = AttendanceSerializer
-    permission_classes = (IsOwner, IsLeader)
+    permission_classes = (IsReadIfOwner | IsLeader,)
 
     def get_queryset(self):
-        return Attendance.objects.filter(section__mentor__pk=self.kwargs["pk"])
+        profile = get_object_or_404(Profile, pk=self.kwargs["pk"])
+        return Attendance.objects.filter(attendee=profile.pk)
 
 
 class SectionDetail(generics.RetrieveAPIView):
