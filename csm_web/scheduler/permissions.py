@@ -3,6 +3,8 @@ from .models import Override, Attendance
 
 
 def is_leader(user, obj):
+    if not hasattr(obj, "leader"):
+        return False
     leader = obj.leader
     while leader:
         if user == leader.user:
