@@ -17,7 +17,7 @@ from .serializers import (
     SpacetimeSerializer,
     OverrideSerializer,
 )
-from .permissions import IsLeader, IsLeaderOrReadOnly, IsReadIfOwner, IsOwner
+from .permissions import is_leader, IsLeader, IsLeaderOrReadOnly, IsReadIfOwner, IsOwner
 
 VERBOSE = "verbose"
 
@@ -164,6 +164,31 @@ class OverrideDetail(generics.RetrieveUpdateDestroyAPIView):
     queryset = Override.objects.all()
     serializer_class = OverrideSerializer
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+
+    def get_object(self):
+        return self.queryset.get(pk=self.kwargs["pk"])
+
+
+class CreateAttendanceDetail(generics.CreateAPIView):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeader)
+
+    def perform_create(self, serializer):
+        # Deny attendance creation if not leader of section
+        section = serializer.validated_data["section"]
+        if not is_leader(self.request.user, section):
+            raise PermissionDenied(
+                "You are not allowed to create Attendances for that section"
+            )
+        else:
+            serializer.save()
+
+
+class AttendanceDetail(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Attendance.objects.all()
+    serializer_class = AttendanceSerializer
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeader)
 
     def get_object(self):
         return self.queryset.get(pk=self.kwargs["pk"])

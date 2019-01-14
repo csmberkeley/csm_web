@@ -37,10 +37,8 @@ rest_urlpatterns = [
     path("sections/<int:pk>/", views.SectionDetail.as_view()),
     path("overrides/", views.CreateOverrideDetail.as_view()),
     path("overrides/<int:pk>/", views.OverrideDetail.as_view()),
-    # CRITICAL
-    # path("attendances/<int:pk>", ...) (POST)
-    #
-    # NONCRITICAL
+    path("attendances/", views.CreateAttendanceDetail.as_view()),
+    path("attendances/<int:pk>/", views.AttendanceDetail.as_view()),
     path("sections/<int:pk>/enroll", views.enroll, name="enroll"),
     # path("profiles/<int:pk>", ...), (DELETE)
     #
@@ -51,7 +49,6 @@ urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
 
 # API Stub Routes
 router = DefaultRouter()
-router.register(r"attendances", views.AttendanceViewSet)
 router.register(r"users", views.UserViewSet)
 router.register(r"allprofiles", views.ProfileViewSet)
 router.register(r"spacetimes", views.SpacetimeViewSet)
