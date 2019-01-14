@@ -33,13 +33,17 @@ class ListPermissionMixin:
             return True
 
 
-class IsLeader(permissions.BasePermission):
+class IsLeader(permissions.BasePermission, ListPermissionMixin):
     """
     Grants read/write permission to resource only if the logged in user is the leader of the resource.
     """
 
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated)
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and self.has_list_permission(request, view)
+        )
 
     # note: has_permission is always run before has_object_permission
     def has_object_permission(self, request, view, obj):
@@ -94,14 +98,18 @@ class IsReadIfOwner(permissions.BasePermission):
         )
 
 
-class IsOwner(permissions.BasePermission):
+class IsOwner(permissions.BasePermission, ListPermissionMixin):
     """
     Grants permission to read/write the resource only if the requester is the user
     associated with the object.
     """
 
     def has_permission(self, request, view):
-        return bool(request.user and request.user.is_authenticated)
+        return bool(
+            request.user
+            and request.user.is_authenticated
+            and self.has_list_permission(request, view)
+        )
 
     def has_object_permission(self, request, view, obj):
         return bool(request.user and request.user == obj.user)
