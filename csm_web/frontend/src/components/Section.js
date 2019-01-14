@@ -48,7 +48,9 @@ function Section(props) {
         defaultSpacetime={props.defaultSpacetime}
         mentor={props.mentor}
       />
+      {/* TODO: Address in a separate PR
       <Attendances attendances={props.attendances} />
+      */}
     </div>
   );
 }
