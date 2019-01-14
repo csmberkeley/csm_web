@@ -66,7 +66,8 @@ class CourseList(generics.ListAPIView):
 
     queryset = Course.objects.all()
     serializer_class = CourseSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
+    list_permission_source = None
 
 
 class CourseDetail(generics.RetrieveAPIView):
@@ -90,7 +91,8 @@ class CourseSectionList(generics.ListAPIView):
 
     queryset = Course.objects.all()
     serializer_class = SectionSerializer
-    permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
+    permission_classes = permissions.IsAuthenticatedOrReadOnly
+    list_permission_source = None
 
     def get_queryset(self):
         return Section.objects.filter(course__name__iexact=self.kwargs["name"])
@@ -102,7 +104,9 @@ class UserProfileList(generics.ListAPIView):
     """
 
     serializer_class = ProfileSerializer
-    permission_classes = (IsReadIfOwner,)
+
+    # There are no restrictions on any user viewing their own Profiles
+    list_permission_source = None
 
     def get_queryset(self):
         return Profile.objects.filter(user=self.request.user)
@@ -130,11 +134,16 @@ class UserProfileAttendance(generics.ListAPIView):
     """
 
     serializer_class = AttendanceSerializer
-    permission_classes = (IsReadIfOwner | IsLeader,)
+    permission_classes = ((IsOwner | IsLeader),)
 
     def get_queryset(self):
         profile = get_object_or_404(Profile, pk=self.kwargs["pk"])
         return Attendance.objects.filter(attendee=profile.pk)
+
+    @property
+    def list_permission_source(self):
+        # Only the Owner or Leader of this Profile should be able to view its attendance
+        return get_object_or_404(Profile, pk=self.kwargs["pk"])
 
 
 class SectionDetail(generics.RetrieveAPIView):
