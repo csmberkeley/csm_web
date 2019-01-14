@@ -20,4 +20,5 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("scheduler/", include("scheduler.urls")),
     path("", include("social_django.urls", namespace="social")),
+    path("", include("frontend.urls")),
 ]

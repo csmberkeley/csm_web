@@ -32,3 +32,7 @@ To start the Django server,
 ```
 python csm_web/manage.py runserver
 ```
+To populate the database with test data,
+```
+python csm_web/manage.py loaddata populate
+```
