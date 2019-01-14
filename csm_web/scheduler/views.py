@@ -12,11 +12,14 @@ from .serializers import (
     AttendanceSerializer,
     CourseSerializer,
     ProfileSerializer,
+    VerboseProfileSerializer,
     SectionSerializer,
     SpacetimeSerializer,
     OverrideSerializer,
 )
 from .permissions import is_leader, IsLeader, IsLeaderOrReadOnly, IsReadIfOwner, IsOwner
+
+VERBOSE = "verbose"
 
 
 def login(request):
@@ -112,9 +115,13 @@ class UserProfileDetail(generics.RetrieveAPIView):
     """
 
     queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
     permission_classes = (IsReadIfOwner | IsLeader,)
-    # TODO account for verbosity (details in dropbox paper spec)
+
+    def get_serializer_class(self):
+        if self.request.query_params.get(VERBOSE, "false") == "true":
+            return VerboseProfileSerializer
+        else:
+            return ProfileSerializer
 
 
 class UserProfileAttendance(generics.ListCreateAPIView):
