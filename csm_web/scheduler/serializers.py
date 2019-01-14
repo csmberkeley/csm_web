@@ -2,7 +2,7 @@ from datetime import datetime, timedelta
 
 from rest_framework import serializers
 from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
-
+from .permissions import is_leader
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
@@ -98,8 +98,7 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
         # Serialize section with students only if leader is viewing
         user = self.context["request"].user
 
-        # TODO this should use is_leader from permissions, when that branch is merged
-        if not instance.leader or instance.leader.user != user:
+        if not is_leader(user, instance):
             self.fields.pop("students")
 
         return super().to_representation(instance)
