@@ -1,8 +1,8 @@
 from datetime import datetime, timedelta
-
 from rest_framework import serializers
 from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 from .permissions import is_leader
+
 
 class CourseSerializer(serializers.ModelSerializer):
     class Meta:
