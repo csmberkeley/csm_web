@@ -1,4 +1,4 @@
-from rest_framework import permissions
+from rest_framework import permissions, mixins
 from .models import Override, Attendance
 
 
@@ -12,6 +12,25 @@ def is_leader(user, obj):
         else:
             leader = leader.leader
     return False
+
+
+class ListPermissionMixin:
+    """
+    Grants permission based on a list_permission_source property.
+    If list_permission_source is None OR has_object_permission passes on
+    list_permission_source, then has_list_permission passes.
+    """
+
+    def has_list_permission(self, request, view):
+        if (
+            isinstance(view, mixins.ListModelMixin)
+            and view.list_permission_source is not None
+        ):
+            return self.has_object_permission(
+                request, view, view.list_permission_source
+            )
+        else:
+            return True
 
 
 class IsLeader(permissions.BasePermission):
