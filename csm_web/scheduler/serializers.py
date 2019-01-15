@@ -81,6 +81,9 @@ class ActiveOverrideField(serializers.RelatedField):
 class VerboseSectionSerializer(serializers.ModelSerializer):
     default_spacetime = SpacetimeSerializer()
     active_override = ActiveOverrideField(source="override_set", read_only=True)
+    students = serializers.PrimaryKeyRelatedField(
+        source="active_students", many=True, read_only=True
+    )
 
     class Meta:
         model = Section
