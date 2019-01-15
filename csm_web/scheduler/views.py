@@ -3,8 +3,9 @@ from django.urls import reverse
 from django.contrib.auth import logout as auth_logout
 from django.core.exceptions import PermissionDenied
 
-from rest_framework import generics, permissions, viewsets
+from rest_framework import generics, permissions, viewsets, status
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 from .serializers import (
@@ -35,7 +36,7 @@ def index(request):
     data = {"user": request.user}
 
     if request.user.is_authenticated:
-        data["profiles"] = Profile.objects.filter(user=request.user)
+        data["profiles"] = Profile.objects.filter(user=request.user, active=True)
 
     return render(request, "scheduler/index.html", data)
 
@@ -109,7 +110,7 @@ class UserProfileList(generics.ListAPIView):
     list_permission_source = None
 
     def get_queryset(self):
-        return Profile.objects.filter(user=self.request.user)
+        return Profile.objects.filter(user=self.request.user, active=True)
 
 
 class UserProfileDetail(generics.RetrieveAPIView):
@@ -118,7 +119,7 @@ class UserProfileDetail(generics.RetrieveAPIView):
     i.e. only the leader or user associated with the profile should be able to retrieve this.
     """
 
-    queryset = Profile.objects.all()
+    queryset = Profile.objects.filter(active=True)
     permission_classes = (IsReadIfOwner | IsLeader,)
 
     def get_serializer_class(self):
@@ -126,6 +127,19 @@ class UserProfileDetail(generics.RetrieveAPIView):
             return VerboseProfileSerializer
         else:
             return ProfileSerializer
+
+
+class DeleteProfile(generics.DestroyAPIView):
+    def destroy(self, request, *args, **kwargs):
+        profile = get_object_or_404(Profile, pk=self.kwargs["pk"])
+        if not profile.active:
+            raise PermissionDenied(
+                "This profile ({}) has been deactivated".format(profile)
+            )
+        profile.active = False
+        profile.save()
+
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
 
 
 class UserProfileAttendance(generics.ListAPIView):
@@ -186,9 +200,14 @@ class CreateAttendanceDetail(generics.CreateAPIView):
     def perform_create(self, serializer):
         # Deny attendance creation if not leader of section
         section = serializer.validated_data["section"]
+        profile = serializer.validated_data["attendee"]
         if not is_leader(self.request.user, section):
             raise PermissionDenied(
                 "You are not allowed to create Attendances for that section"
+            )
+        elif not profile.active:  # Deny attendances for deactivated profiles
+            raise PermissionDenied(
+                "This profile ({}) has been deactivated".format(profile)
             )
         else:
             serializer.save()
