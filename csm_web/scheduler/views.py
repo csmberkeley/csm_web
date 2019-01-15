@@ -3,8 +3,9 @@ from django.urls import reverse
 from django.contrib.auth import logout as auth_logout
 from django.core.exceptions import PermissionDenied
 
-from rest_framework import generics, permissions, viewsets
+from rest_framework import generics, permissions, viewsets, status
 from rest_framework.decorators import api_view
+from rest_framework.response import Response
 
 from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 from .serializers import (
@@ -126,6 +127,19 @@ class UserProfileDetail(generics.RetrieveAPIView):
             return VerboseProfileSerializer
         else:
             return ProfileSerializer
+
+class DeleteProfile(generics.DestroyAPIView):
+    def destroy(self, request, *args, **kwargs):
+        profile = get_object_or_404(Profile, pk=self.kwargs["pk"])
+        if not profile.active:
+            raise PermissionDenied(
+                "This profile ({}) has been deactivated".format(profile)
+            )
+        profile.active = False
+        profile.save()
+
+        return Response({}, status=status.HTTP_204_NO_CONTENT)
+
 
 
 class UserProfileAttendance(generics.ListAPIView):
