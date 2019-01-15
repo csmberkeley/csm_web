@@ -17,8 +17,8 @@ from django.contrib import admin
 from django.urls import path, include
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/", admin.site.urls),
     path("scheduler/", include("scheduler.urls")),
-    path('', include('social_django.urls', namespace='social')),
-    path('', include('frontend.urls')),
+    path("", include("social_django.urls", namespace="social")),
+    path("", include("frontend.urls")),
 ]

@@ -28,9 +28,13 @@ class Attendance(models.Model):
             self.attendee.user.username,
         )
 
+    @property
+    def leader(self):
+        return self.section.mentor
+
 
 class Course(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.SlugField(max_length=100)
     valid_until = models.DateField()
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
@@ -50,6 +54,8 @@ class Profile(models.Model):
         (SENIOR_MENTOR, "Senior Mentor"),
         (COORDINATOR, "Coordinator"),
     )
+    ROLE_MAP = dict(ROLE_CHOICES)
+
     leader = models.ForeignKey(
         "self", on_delete=models.CASCADE, related_name="follower", blank=True, null=True
     )
@@ -60,13 +66,21 @@ class Profile(models.Model):
         "Section",
         related_name="students",
         on_delete=models.CASCADE,
-        limit_choices_to={"course": course},
         blank=True,
         null=True,
     )
 
     def __str__(self):
-        return "%s %s %s" % (self.role, self.course.name, self.user.username)
+        title = "{course} {role}".format(
+            course=self.course.name, role=Profile.ROLE_MAP[self.role]
+        )
+        if self.section:
+            section = "for {section}".format(section=self.section)
+        else:
+            section = ""
+        username = "({username})".format(username=self.user.username)
+
+        return " ".join(x for x in (title, section, username) if x)
 
 
 class Section(models.Model):
@@ -74,15 +88,15 @@ class Section(models.Model):
     mentor = models.ForeignKey(
         Profile,
         on_delete=models.SET_NULL,
+        blank=True,
         null=True,
         related_name="mentor_sections",
         limit_choices_to={
-            "course": course,
             "role__in": [
                 Profile.JUNIOR_MENTOR,
                 Profile.SENIOR_MENTOR,
                 Profile.COORDINATOR,
-            ],
+            ]
         },
     )
     default_spacetime = models.OneToOneField("Spacetime", on_delete=models.CASCADE)
@@ -92,8 +106,14 @@ class Section(models.Model):
     def current_student_count(self):
         return self.students.count()
 
+    @property
+    def leader(self):
+        return self.mentor
+
     def __str__(self):
-        return "%s %s" % (self.course.name, str(self.default_spacetime))
+        return "{course} section ({spacetime})".format(
+            course=self.course.name, spacetime=str(self.default_spacetime)
+        )
 
 
 class Spacetime(models.Model):
@@ -119,7 +139,7 @@ class Spacetime(models.Model):
     day_of_week = models.CharField(max_length=2, choices=DAY_OF_WEEK_CHOICES)
 
     def __str__(self):
-        return "%s %s %s for %s" % (
+        return "%s %s %s for %s min" % (
             self.location,
             self.day_of_week,
             str(self.start_time),
@@ -131,6 +151,10 @@ class Override(models.Model):
     spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE)
     week_start = models.DateField()
     section = models.ForeignKey(Section, on_delete=models.CASCADE)
+
+    @property
+    def leader(self):
+        return self.section.mentor
 
     def __str__(self):
         "Override for week of %s, %s" % (str(self.section), str(self.spacetime))

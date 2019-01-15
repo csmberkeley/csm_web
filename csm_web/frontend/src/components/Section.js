@@ -131,7 +131,9 @@ function Section(props) {
         courseName={props.courseName}
         isMentor={props.isMentor}
       />
+      {/* TODO: Address in a separate PR
       <Attendances attendances={props.attendances} />
+      */}
     </div>
   );
 }
