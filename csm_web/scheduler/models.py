@@ -7,6 +7,13 @@ class User(AbstractUser):
     pass
 
 
+class ActivatableModel(models.Model):
+    active = models.BooleanField(default=True)
+
+    class Meta:
+        abstract = True
+
+
 class Attendance(models.Model):
     PRESENT = "PR"
     UNEXCUSED_ABSENCE = "UN"
@@ -36,7 +43,7 @@ class Course(models.Model):
         return self.name
 
 
-class Profile(models.Model):
+class Profile(ActivatableModel):
     STUDENT = "ST"
     JUNIOR_MENTOR = "JM"
     SENIOR_MENTOR = "SM"
