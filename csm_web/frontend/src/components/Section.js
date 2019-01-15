@@ -33,12 +33,32 @@ function WeekAttendance(props) {
   );
 }
 
-function Attendances(props) {
-  const attendances = props.attendances;
-  const weekAttendances = attendances.map((attendance, index) => (
-    <WeekAttendance attendance={attendance} weekNum={index} key={index} />
-  ));
-  return <div>{weekAttendances}</div>;
+class Attendances extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      profile: props.profile,
+      attendances: [],
+    }
+  }
+  componentDidMount() {
+    fetch(`/scheduler/profiles/${this.state.profile}/attendance`)
+      .then(response => response.json())
+      .then(attendances =>
+        this.setState((state, props) => {
+          return {
+            attendances: [ ...attendances, ...state.attendances ]
+          };
+        })
+      );
+  }
+  render() {
+    const attendances = this.state.attendances;
+    const weekAttendances = attendances.map((attendance, index) => (
+      <WeekAttendance attendance={attendance} weekNum={index} key={index} />
+    ));
+    return <div>{weekAttendances}</div>;
+  }
 }
 
 function Section(props) {
@@ -48,9 +68,7 @@ function Section(props) {
         defaultSpacetime={props.defaultSpacetime}
         mentor={props.mentor}
       />
-      {/* TODO: Address in a separate PR
-      <Attendances attendances={props.attendances} />
-      */}
+      <Attendances profile={props.profile}/>
     </div>
   );
 }

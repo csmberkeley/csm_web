@@ -40,7 +40,7 @@ class App extends React.Component {
             <Route
               path="/sections/:id"
               render={({ match }) => (
-                <Section {...this.state.sections[match.params.id]} />
+                <Section profile={match.params.id} {...this.state.sections[match.params.id]} />
               )}
             />
           </div>
