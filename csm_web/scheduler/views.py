@@ -128,6 +128,7 @@ class UserProfileDetail(generics.RetrieveAPIView):
         else:
             return ProfileSerializer
 
+
 class DeleteProfile(generics.DestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         profile = get_object_or_404(Profile, pk=self.kwargs["pk"])
@@ -139,7 +140,6 @@ class DeleteProfile(generics.DestroyAPIView):
         profile.save()
 
         return Response({}, status=status.HTTP_204_NO_CONTENT)
-
 
 
 class UserProfileAttendance(generics.ListAPIView):
@@ -205,7 +205,7 @@ class CreateAttendanceDetail(generics.CreateAPIView):
             raise PermissionDenied(
                 "You are not allowed to create Attendances for that section"
             )
-        elif not profile.active: # Deny attendances for deactivated profiles
+        elif not profile.active:  # Deny attendances for deactivated profiles
             raise PermissionDenied(
                 "This profile ({}) has been deactivated".format(profile)
             )
