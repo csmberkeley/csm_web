@@ -130,6 +130,7 @@ class UserProfileDetail(generics.RetrieveAPIView):
 
 
 class DeleteProfile(generics.DestroyAPIView):
+    # TODO this looks like it should really have a permission class...
     def destroy(self, request, *args, **kwargs):
         profile = get_object_or_404(Profile, pk=self.kwargs["pk"])
         if not profile.active:

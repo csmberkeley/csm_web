@@ -1,4 +1,7 @@
 from django.test import TestCase
+from os import path
+from rest_framework import status
+from rest_framework.test import APIClient
 import random
 
 from scheduler.models import Profile
@@ -15,7 +18,40 @@ from scheduler.factories import (
 
 COURSE_NAMES = ("CS88", "CS61A", "CS61B", "CS70", "CS61C", "EE16A")
 ROLE_MAP = Profile.ROLE_MAP
+BASE_PATH = "/scheduler"
 
+# ----- REQUEST UTILITIES -----
+class APITestCase(TestCase):
+
+    def get_client_for(self, user):
+        """Returns an APIClient object that is logged in as the provided user."""
+        client = APIClient()
+        client.force_authenticate(user)
+        return client
+
+    def req_fails_perms(self, method, endpoint, data=None):
+        """
+        Performs a request to the specified endpoint, and checks that it fails
+        due to the user lacking proper permissions.
+        The METHOD parameter should be a get/post/etc from an APIClient object.
+        Returns the response object afterwards.
+        """
+        resp = method(path.join(BASE_PATH, endpoint.strip('/')), follow=True, data=data)
+        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN, msg=resp.content)
+        return resp
+
+    def req_succeeds(self, method, endpoint, data=None):
+        """
+        Performs a request to the specified endpoint, and checks that it succeeds.
+        Returns the response object.
+        The METHOD parameter should be a get/post/etc from an APIClient object.
+        """
+        resp = method(path.join(BASE_PATH, endpoint.strip('/')), follow=True, data=data)
+        self.assertEqual(resp.status_code, status.HTTP_200_OK, msg=resp.content)
+        return resp
+
+
+# ----- MODEL GENERATION -----
 
 def make_test_courses():
     """Creates course objects and persists them to database."""
@@ -52,7 +88,7 @@ def enroll_user_as_student(user, section):
 	"""
     student = give_role(user, Profile.STUDENT, section.course)
     student.section = section
-    student.mentor = section.leader
+    student.leader = section.leader
     create_attendances_for(student)
     return student
 
@@ -77,6 +113,7 @@ def gen_test_data(cls, NUM_USERS=300):
     def assign(role, leader, c, lst):
         # returns the profile created
         profile = give_role(next(users), role, c)
+        profile.leader = leader
         lst.append(profile)
         return profile
 
@@ -90,12 +127,12 @@ def gen_test_data(cls, NUM_USERS=300):
                     sm = assign(Profile.SENIOR_MENTOR, coord, c, seniors)
                     section = create_empty_section_for(sm)
                     for k in range(random.randint(3, 6)):
-                        enroll_user_as_student(next(users), section)
-                        # JMs
+                        students.append(enroll_user_as_student(next(users), section))
+                    # JMs
                     for k in range(JM_COUNT):
                         jm = assign(Profile.JUNIOR_MENTOR, sm, c, juniors)
                         for _ in range(random.randint(3, 6)):
-                            enroll_user_as_student(next(users), section)
+                            students.append(enroll_user_as_student(next(users), section))
     except StopIteration:
         pass
     cls.users = users
@@ -104,28 +141,3 @@ def gen_test_data(cls, NUM_USERS=300):
     cls.seniors = seniors
     cls.juniors = juniors
     cls.students = students
-
-
-"""
-path("", views.index, name="index"),
-path("login", views.login, name="login"),
-path("logout", views.logout, name="logout"),
-
-path("courses/", views.CourseList.as_view()),
-path("courses/<slug:name>/", views.CourseDetail.as_view()),
-path("courses/<slug:name>/sections/", views.CourseSectionList.as_view()),
-path("profiles/", views.UserProfileList.as_view()),
-path("profiles/<int:pk>/", views.UserProfileDetail.as_view()),
-path("profiles/<int:pk>/attendance", views.UserProfileAttendance.as_view()),
-path("profiles/<int:pk>/unenroll", views.DeleteProfile.as_view()),
-path("sections/<int:pk>/enroll", views.enroll, name="enroll"),
-path("sections/<int:pk>/", views.SectionDetail.as_view()),
-path("overrides/", views.CreateOverrideDetail.as_view()),
-path("overrides/<int:pk>/", views.OverrideDetail.as_view()),
-path("attendances/", views.CreateAttendanceDetail.as_view()),
-path("attendances/<int:pk>/", views.AttendanceDetail.as_view()),
-
-router.register(r"users", views.UserViewSet)
-router.register(r"allprofiles", views.ProfileViewSet)
-router.register(r"spacetimes", views.SpacetimeViewSet)
-"""
