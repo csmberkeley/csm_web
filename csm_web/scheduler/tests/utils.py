@@ -16,6 +16,8 @@ from scheduler.factories import (
     create_attendances_for,
 )
 
+random.seed(0)
+
 COURSE_NAMES = ("CS88", "CS61A", "CS61B", "CS70", "CS61C", "EE16A")
 ROLE_MAP = Profile.ROLE_MAP
 BASE_PATH = "/scheduler"
@@ -35,7 +37,6 @@ class APITestCase(TestCase):
         The METHOD parameter should be a get/post/etc from an APIClient object.
         Returns the response object afterwards.
         """
-        print(endpoint, data)
         resp = method(path.join(BASE_PATH, endpoint.strip("/")), follow=True, data=data)
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN, msg=resp.content)
         return resp
@@ -58,9 +59,9 @@ def random_objs(clazz, n=1):
     """
     Generates N instances of the provided class, retrieved from the database.
     """
-    src = clazz.objects.order_by("?").iterator()
+    src = clazz.objects.all()
     for _ in range(n):
-        yield next(src)
+        yield random.choice(src)
 
 
 def make_test_courses():
@@ -110,7 +111,6 @@ def gen_test_data(cls, NUM_USERS=300):
 	- 4 SMs per coord, each with a section of 3-6 students
 	- 3 JMs per SM, each with a section of 3-6 students
 	"""
-    random.seed(0)
     users = iter(make_test_users(NUM_USERS))
     courses = make_test_courses()
     # for sanity tests, everyone only has one role for now
