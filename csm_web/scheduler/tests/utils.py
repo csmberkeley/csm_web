@@ -1,57 +1,110 @@
 from django.test import TestCase
-from rest_framework.test import APIRequestFactory
+import random
 
-from scheduler.factories import (
-	CourseFactory,
-	SpacetimeFactory,
-	UserFactory,
-	ProfileFactory,
-	SectionFactory,
-	AttendanceFactory,
-	OverrideFactory,
-	create_attendances_for
-)
 from scheduler.models import Profile
+from scheduler.factories import (
+    CourseFactory,
+    SpacetimeFactory,
+    UserFactory,
+    ProfileFactory,
+    SectionFactory,
+    AttendanceFactory,
+    OverrideFactory,
+    create_attendances_for,
+)
 
 COURSE_NAMES = ("CS88", "CS61A", "CS61B", "CS70", "CS61C", "EE16A")
 ROLE_MAP = Profile.ROLE_MAP
 
+
 def make_test_courses():
-	"""Creates course objects and persists them to database."""
-	return (CourseFactory.create(name=name) for name in COURSE_NAMES)
+    """Creates course objects and persists them to database."""
+    return [CourseFactory.create(name=name) for name in COURSE_NAMES]
+
 
 def make_test_users(n):
-	"""Creates N test users and persists them to database."""
-	return UserFactory.create_batch(n)
+    """Creates N test users and persists them to database."""
+    return UserFactory.create_batch(n)
+
 
 def give_role(user, role, course):
-	"""
+    """
 	Creates a profile for USER in a given ROLE for the provided COURSE, and
 	saves the profile to database.
 	"""
-	return ProfileFactory.create(
-		user=user,
-		course=course,
-		leader=None,
-		section=None,
-		role=role
-	)
+    return ProfileFactory.create(
+        user=user, course=course, leader=None, section=None, role=role
+    )
+
 
 def create_empty_section_for(mentor):
+    """
+	Creates a section for MENTOR without populated students.
 	"""
-	Creates a section for MENTOR without populated students, and saves
-	it to database.
-	"""
-	assert mentor.role in (ROLE_MAP["SM"], ROLE_MAP["JM"])
-	return SectionFactory.create(course=mentor.course, mentor=mentor)
+    return SectionFactory.create(course=mentor.course, mentor=mentor)
 
-def enroll_student(student, section):
+
+def enroll_user_as_student(user, section):
+    """
+	Creates a student profile for USER, and assigns them to the given SECTION.
+	Also creates blank attendances as necessary.
+	Returns the created profile.
 	"""
-	Enrolls a student in the given section, and creates attendances as needed.
+    student = give_role(user, Profile.STUDENT, section.course)
+    student.section = section
+    student.mentor = section.leader
+    create_attendances_for(student)
+    return student
+
+
+def gen_test_data(cls, NUM_USERS=300):
+    """
+	Adds NUM_USERS users to the database and initializes profiles for them as follows:
+	- 2 coords per course
+	- 4 SMs per coord, each with a section of 3-6 students
+	- 3 JMs per SM, each with a section of 3-6 students
 	"""
-	assert student.role == ROLE_MAP["ST"]
-	student.section = section
-	create_attendances_for(student)
+    random.seed(0)
+    users = iter(make_test_users(NUM_USERS))
+    courses = make_test_courses()
+    # for sanity tests, everyone only has one role for now
+    num_courses = len(courses)
+    coords, seniors, juniors, students = [], [], [], []
+    COORD_COUNT = 2
+    SM_COUNT = 4
+    JM_COUNT = 3
+
+    def assign(role, leader, c, lst):
+        # returns the profile created
+        profile = give_role(next(users), role, c)
+        lst.append(profile)
+        return profile
+
+    try:
+        for c in courses:
+            # coords
+            for i in range(COORD_COUNT):
+                coord = assign(Profile.COORDINATOR, None, c, coords)
+                # SMs
+                for j in range(SM_COUNT):
+                    sm = assign(Profile.SENIOR_MENTOR, coord, c, seniors)
+                    section = create_empty_section_for(sm)
+                    for k in range(random.randint(3, 6)):
+                        enroll_user_as_student(next(users), section)
+                        # JMs
+                    for k in range(JM_COUNT):
+                        jm = assign(Profile.JUNIOR_MENTOR, sm, c, juniors)
+                        for _ in range(random.randint(3, 6)):
+                            enroll_user_as_student(next(users), section)
+    except StopIteration:
+        pass
+    cls.users = users
+    cls.courses = courses
+    cls.coords = coords
+    cls.seniors = seniors
+    cls.juniors = juniors
+    cls.students = students
+
 
 """
 path("", views.index, name="index"),
