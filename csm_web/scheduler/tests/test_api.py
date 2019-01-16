@@ -24,16 +24,17 @@ class TestAPI(APITestCase):
         requester must be owner or leader
     - /profiles/$ID/unenroll (DELETE): drops a student from a section by deactivating the profile;
         requester must be owner or leader
-    - /profiles/$ID/attendances (GET): returns the attendances for the student profile;
+    - /profiles/$ID/attendance (GET): returns the attendances for the student profile;
         requester must be owner or leader
     - /attendances/$ID (GET): returns the specified attendance object;
         requester must be owner or leader
     - /attendances/$ID (POST): updates the specified attendance object;
         must be leader (since students presumably can't update their own attendances)
     - /sections/$ID/enroll (POST): enrolls a student in a section, if possible
-    - /overrides (GET): returns a list of overrides for a given section
-    - /overrides/$ID (PUT): creates an override for section with ID;
-        must be the mentor of the section
+    - /overrides/$ID (GET): returns the override with the given ID;
+        allows POST by a leader
+    - /overrides (POST): creates an override for a section;
+        must be leader
     """
 
     @classmethod
@@ -76,6 +77,7 @@ class TestAPI(APITestCase):
                 self.assertIn(field, section_req.data)
             exp = serial.SectionSerializer(s).data
             self.assertEquals(exp, section_req.data)
+        # TODO view overrides
 
     def test_fail_no_login(self, client=None):
         """
@@ -85,18 +87,17 @@ class TestAPI(APITestCase):
             client = APIClient()
         failed_gets = (
             "/profiles",
-            (models.Profile, lambda id: "/profiles/{}".format(id)),
-            (models.Attendance, lambda id: "/profiles/{}/attendances".format(id)),
-            (models.Attendance, lambda id: "/attendances/{}".format(id)),
-            "/overrides",
+            (models.Profile, "/profiles/{}"),
+            (models.Attendance, "/profiles/{}/attendance"),
+            (models.Attendance, "/attendances/{}"),
         )
         for ep in failed_gets:
             if isinstance(ep, str):
                 self.req_fails_perms(client.get, ep)
             else:
-                clazz, fmt = ep
+                clazz, s = ep
                 for obj in random_objs(clazz, 10):
-                    self.req_fails_perms(client.get, fmt(obj.id))
+                    self.req_fails_perms(client.get, s.format(obj.id))
 
     def test_as_no_profile(self):
         """
@@ -111,7 +112,7 @@ class TestAPI(APITestCase):
         # /attendances/$ID (POST): updates the specified attendance object;
         #         must be leader (since students presumably can't update their own attendances)
         # /sections/$ID/enroll (POST): enrolls a student in a section, if possible
-        # /overrides (GET): returns a list of overrides for a given section
+        # /overrides (POST): returns a list of overrides for a given section
         # /overrides/$ID (PUT): creates an override for section with ID;
         #         must be the mentor of the section
 

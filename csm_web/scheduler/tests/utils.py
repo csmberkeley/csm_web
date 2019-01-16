@@ -23,6 +23,10 @@ ROLE_MAP = Profile.ROLE_MAP
 BASE_PATH = "/scheduler"
 
 # ----- REQUEST UTILITIES -----
+def fail_msg(ep, resp):
+    return "Endpoint: {}\nResponse Content: {}".format(ep, resp.content)
+
+
 class APITestCase(TestCase):
     def get_client_for(self, user):
         """Returns an APIClient object that is logged in as the provided user."""
@@ -30,26 +34,45 @@ class APITestCase(TestCase):
         client.force_authenticate(user)
         return client
 
+    def request(self, method, endpoint, exp_code=None, data=None):
+        """
+        Performs a request to the specified endpoint and returns the response object.
+        Also checks if the status code of the response is exp_code, if provided.
+        The method parameter should be a get/post/etc from an APIClient object.
+        """
+        resp = method(path.join(BASE_PATH, endpoint.strip("/")), follow=True, data=data)
+        if exp_code is not None:
+            self.assertEqual(resp.status_code, exp_code, msg=fail_msg(endpoint, resp))
+        return resp
+
     def req_fails_perms(self, method, endpoint, data=None):
         """
         Performs a request to the specified endpoint, and checks that it fails
         due to the user lacking proper permissions.
-        The METHOD parameter should be a get/post/etc from an APIClient object.
+        The method parameter should be a get/post/etc from an APIClient object.
         Returns the response object afterwards.
         """
-        resp = method(path.join(BASE_PATH, endpoint.strip("/")), follow=True, data=data)
-        self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN, msg=resp.content)
-        return resp
+        return self.request(
+            method, endpoint, exp_code=status.HTTP_403_FORBIDDEN, data=data
+        )
+
+    def req_fails_method(self, method, endpoint, data=None):
+        """
+        Performs a request to the specified endpoint, and checks that it fails
+        due to the endpoint not supporting the provided method.
+        Returns the response object.
+        """
+        return self.request(
+            method, endpoint, exp_code=status.HTTP_405_METHOD_NOT_ALLOWED, data=data
+        )
 
     def req_succeeds(self, method, endpoint, data=None):
         """
         Performs a request to the specified endpoint, and checks that it succeeds.
+        The method parameter should be a get/post/etc from an APIClient object.
         Returns the response object.
-        The METHOD parameter should be a get/post/etc from an APIClient object.
         """
-        resp = method(path.join(BASE_PATH, endpoint.strip("/")), follow=True, data=data)
-        self.assertEqual(resp.status_code, status.HTTP_200_OK, msg=resp.content)
-        return resp
+        return self.request(method, endpoint, exp_code=status.HTTP_200_OK, data=data)
 
 
 # ----- MODEL GENERATION -----
