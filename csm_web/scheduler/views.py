@@ -110,7 +110,10 @@ class UserProfileList(generics.ListAPIView):
     list_permission_source = None
 
     def get_queryset(self):
-        return Profile.objects.filter(user=self.request.user, active=True)
+        if self.request.user.is_authenticated:
+            return Profile.objects.filter(user=self.request.user, active=True)
+        else:
+            raise PermissionDenied
 
 
 class UserProfileDetail(generics.RetrieveAPIView):

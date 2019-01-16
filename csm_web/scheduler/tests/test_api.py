@@ -2,8 +2,10 @@ from django.test import TestCase
 from rest_framework.test import APIClient
 import random
 
-from scheduler.models import Profile
-from .utils import gen_test_data, APITestCase
+import scheduler.models as models
+import scheduler.serializers as serial
+from .utils import gen_test_data, APITestCase, random_objs
+
 
 class TestAPI(APITestCase):
     """
@@ -13,6 +15,9 @@ class TestAPI(APITestCase):
     The following endpoints can be queried by all users WITHOUT LOGIN:
     - /courses (GET): lists all courses that are active
     - /courses/$ID (GET): lists sections for the course with the specified ID or slug
+    - /sections/$ID (GET): provides information about a section;
+        properties vary depending on the profile of the requester
+
     The following endpoints can be queried by all users WITH LOGIN:
     - /profiles (GET): lists profiles for the current user
     - /profiles/$ID (GET): returns details for the profile with $ID;
@@ -25,8 +30,6 @@ class TestAPI(APITestCase):
         requester must be owner or leader
     - /attendances/$ID (POST): updates the specified attendance object;
         must be leader (since students presumably can't update their own attendances)
-    - /section/$ID (GET): provides information about a section;
-        properties vary depending on the profile of the requester
     - /sections/$ID/enroll (POST): enrolls a student in a section, if possible
     - /overrides (GET): returns a list of overrides for a given section
     - /overrides/$ID (PUT): creates an override for section with ID;
@@ -37,28 +40,80 @@ class TestAPI(APITestCase):
     def setUpTestData(cls):
         gen_test_data(cls, 300)
 
-    def test_all(self):
+    # TODO make sure we can't POST to GET-only endpoints and vice versa
+
+    def test_all(self, client=None):
         """
         Tests requests that can be made by any user.
         """
-        client = APIClient()
+        if client is None:
+            client = APIClient()
         course_req = self.req_succeeds(client.get, "/courses")
         # attempt to query every course in the list of courses
+        COURSE_FIELDS = (
+            "id",
+            "name",
+            "valid_until",
+            "enrollment_start",
+            "enrollment_end",
+        )
         for course in course_req.data:
-            for field in ("id", "name", "valid_until", "enrollment_start", "enrollment_end"):
+            for field in COURSE_FIELDS:
                 self.assertIn(field, course)
             slug = course["name"]
             # TODO: since we provide details in /course anyway, why do we still have this endpoint?
             detail_req = self.req_succeeds(client.get, "/courses/{}".format(slug))
-            for field in ("id", "name", "valid_until", "enrollment_start", "enrollment_end"):
+            for field in COURSE_FIELDS:
                 self.assertIn(field, detail_req.data)
+        # query a few random sections
+        SECTION_FIELDS = ("course", "mentor", "default_spacetime", "capacity")
+        for s in random_objs(models.Section, n=10):
+            section_req = self.req_succeeds(client.get, "/sections/{}".format(s.id))
+            # unauthenticated user should see course, mentor, default_spacetime, and capacity
+            # need to check presence of fields as well as obj equality to ensure
+            # we didn't put anything extra/leave anything out
+            for field in SECTION_FIELDS:
+                self.assertIn(field, section_req.data)
+            exp = serial.SectionSerializer(s).data
+            self.assertEquals(exp, section_req.data)
 
-    def test_fail_no_login(self):
+    def test_fail_no_login(self, client=None):
         """
         Tests requests that should fail when not logged in.
         """
-        c = APIClient()
+        if client is None:
+            client = APIClient()
+        failed_gets = (
+            "/profiles",
+            (models.Profile, lambda id: "/profiles/{}".format(id)),
+            (models.Attendance, lambda id: "/profiles/{}/attendances".format(id)),
+            (models.Attendance, lambda id: "/attendances/{}".format(id)),
+            "/overrides",
+        )
+        for ep in failed_gets:
+            if isinstance(ep, str):
+                self.req_fails_perms(client.get, ep)
+            else:
+                clazz, fmt = ep
+                for obj in random_objs(clazz, 10):
+                    self.req_fails_perms(client.get, fmt(obj.id))
 
+    def test_as_no_profile(self):
+        """
+        Tests requests made by a logged in user with no profile.
+        """
+        self.test_all()
+
+        # /profiles/$ID/unenroll (DELETE): drops a student from a section by deactivating the profile;
+        #         requester must be owner or leader
+        # /attendances/$ID (GET): returns the specified attendance object;
+        #         requester must be owner or leader
+        # /attendances/$ID (POST): updates the specified attendance object;
+        #         must be leader (since students presumably can't update their own attendances)
+        # /sections/$ID/enroll (POST): enrolls a student in a section, if possible
+        # /overrides (GET): returns a list of overrides for a given section
+        # /overrides/$ID (PUT): creates an override for section with ID;
+        #         must be the mentor of the section
 
     def test_as_student(self):
         """

@@ -15,18 +15,22 @@ class CourseFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: "CS%d" % n)
     valid_until = factory.Faker("date_between", start_date="-1y", end_date="+1y")
     enrollment_start = factory.LazyAttribute(
-        lambda o: timezone.make_aware(factory.Faker(
-            "date_time_between_dates",
-            datetime_start=o.valid_until - timedelta(weeks=17),
-            datetime_end=o.valid_until - timedelta(weeks=10),
-        ).generate({}))
+        lambda o: timezone.make_aware(
+            factory.Faker(
+                "date_time_between_dates",
+                datetime_start=o.valid_until - timedelta(weeks=17),
+                datetime_end=o.valid_until - timedelta(weeks=10),
+            ).generate({})
+        )
     )
     enrollment_end = factory.LazyAttribute(
-        lambda o: timezone.make_aware(factory.Faker(
-            "date_time_between_dates",
-            datetime_start=o.enrollment_start,
-            datetime_end=o.valid_until,
-        ).generate({}))
+        lambda o: timezone.make_aware(
+            factory.Faker(
+                "date_time_between_dates",
+                datetime_start=o.enrollment_start,
+                datetime_end=o.valid_until,
+            ).generate({})
+        )
     )
 
 

@@ -22,7 +22,6 @@ BASE_PATH = "/scheduler"
 
 # ----- REQUEST UTILITIES -----
 class APITestCase(TestCase):
-
     def get_client_for(self, user):
         """Returns an APIClient object that is logged in as the provided user."""
         client = APIClient()
@@ -36,7 +35,8 @@ class APITestCase(TestCase):
         The METHOD parameter should be a get/post/etc from an APIClient object.
         Returns the response object afterwards.
         """
-        resp = method(path.join(BASE_PATH, endpoint.strip('/')), follow=True, data=data)
+        print(endpoint, data)
+        resp = method(path.join(BASE_PATH, endpoint.strip("/")), follow=True, data=data)
         self.assertEqual(resp.status_code, status.HTTP_403_FORBIDDEN, msg=resp.content)
         return resp
 
@@ -46,12 +46,22 @@ class APITestCase(TestCase):
         Returns the response object.
         The METHOD parameter should be a get/post/etc from an APIClient object.
         """
-        resp = method(path.join(BASE_PATH, endpoint.strip('/')), follow=True, data=data)
+        resp = method(path.join(BASE_PATH, endpoint.strip("/")), follow=True, data=data)
         self.assertEqual(resp.status_code, status.HTTP_200_OK, msg=resp.content)
         return resp
 
 
 # ----- MODEL GENERATION -----
+
+
+def random_objs(clazz, n=1):
+    """
+    Generates N instances of the provided class, retrieved from the database.
+    """
+    src = clazz.objects.order_by("?").iterator()
+    for _ in range(n):
+        yield next(src)
+
 
 def make_test_courses():
     """Creates course objects and persists them to database."""
@@ -132,7 +142,9 @@ def gen_test_data(cls, NUM_USERS=300):
                     for k in range(JM_COUNT):
                         jm = assign(Profile.JUNIOR_MENTOR, sm, c, juniors)
                         for _ in range(random.randint(3, 6)):
-                            students.append(enroll_user_as_student(next(users), section))
+                            students.append(
+                                enroll_user_as_student(next(users), section)
+                            )
     except StopIteration:
         pass
     cls.users = users
