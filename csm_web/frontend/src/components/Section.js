@@ -110,6 +110,7 @@ function WeekAttendance(props) {
   );
 }
 class Attendances extends React.Component {
+  /*
   constructor(props) {
     super(props);
     this.state = {
@@ -128,8 +129,9 @@ class Attendances extends React.Component {
         })
       );
   }
+	*/
   render() {
-    const attendances = this.state.attendances;
+    const attendances = this.props.attendances;
     const weekAttendances = attendances.map((attendance, index) => (
       <WeekAttendance attendance={attendance} weekNum={index} key={index} />
     ));
@@ -146,7 +148,7 @@ function Section(props) {
         courseName={props.courseName}
         isMentor={props.isMentor}
       />
-      <Attendances profile={props.profile} />
+      <Attendances attendances={props.attendances} />
     </div>
   );
 }

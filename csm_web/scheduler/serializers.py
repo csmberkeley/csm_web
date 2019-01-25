@@ -2,6 +2,7 @@ from datetime import datetime, timedelta
 from rest_framework import serializers
 from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 from .permissions import is_leader
+from itertools import groupby
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -13,10 +14,34 @@ class CourseSerializer(serializers.ModelSerializer):
 # Serializer Stubs
 
 
+TIME_FORMAT_STRING = "%I:%M %p"
+
+
 class SpacetimeSerializer(serializers.ModelSerializer):
+    end_time = serializers.SerializerMethodField()
+    day_of_week = serializers.SerializerMethodField()
+    start_time = serializers.TimeField(
+        format=TIME_FORMAT_STRING, input_formats=[TIME_FORMAT_STRING]
+    )
+
     class Meta:
         model = Spacetime
-        fields = ("location", "start_time", "duration", "day_of_week")
+        fields = ("location", "start_time", "day_of_week", "end_time")
+
+    def get_end_time(self, obj):
+        start_datetime = datetime(
+            year=1,
+            day=1,
+            month=1,
+            hour=obj.start_time.hour,
+            minute=obj.start_time.minute,
+            second=obj.start_time.second,
+        )
+        end_time = (start_datetime + obj.duration).time()
+        return end_time.strftime(TIME_FORMAT_STRING)
+
+    def get_day_of_week(self, obj):
+        return obj.get_day_of_week_display()
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -84,18 +109,53 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
     students = serializers.PrimaryKeyRelatedField(
         source="active_students", many=True, read_only=True
     )
+    course_name = serializers.SerializerMethodField()
+    is_mentor = serializers.SerializerMethodField()
+    attendances = serializers.SerializerMethodField()
 
     class Meta:
         model = Section
         fields = (
             "id",
-            "course",
+            "course_name",
             "mentor",
             "default_spacetime",
             "capacity",
             "active_override",
             "students",
+            "is_mentor",
+            "attendances",
         )
+
+    def get_attendances(self, obj):
+        if is_leader(self.context["request"].user, obj):
+            nested_attendances = [
+                [
+                    (
+                        student.user.first_name + " " + student.user.last_name,
+                        attendance.week_start,
+                        attendance.get_presence_display(),
+                    )
+                    for attendance in student.attendance_set.all()
+                ]
+                for student in obj.students.all()
+            ]
+            flat_attendances = [item for lst in nested_attendances for item in lst]
+            flat_attendances.sort(key=lambda tuple: tuple[1])
+            grouped_attendances = groupby(flat_attendances, key=lambda tuple: tuple[1])
+            attendances = [
+                {name: presence for name, week_start, presence in group}
+                for key, group in grouped_attendances
+            ]
+            return attendances
+
+    def get_course_name(self, obj):
+        return obj.course.name
+
+    def get_is_mentor(self, obj):
+        return is_leader(
+            self.context["request"].user, obj
+        )  # obj.mentor in self.context["request"].user.profile_set.all()
 
     def to_representation(self, instance):
         # Serialize section with students only if leader is viewing
