@@ -161,8 +161,6 @@ def create_attendances_for(student):
 
 def create_section_for(mentor):
     section = SectionFactory.create(course=mentor.course, mentor=mentor)
-    mentor.section = section
-    mentor.save()
     students = ProfileFactory.create_batch(
         random.randint(1, section.capacity),
         course=section.course,
