@@ -220,13 +220,7 @@ def create_demo_accounts():
     demo_senior_mentor = random.choice(demo_coordinator.followers.all())
     assert demo_senior_mentor.role == Profile.SENIOR_MENTOR
     demoify_user(demo_senior_mentor.user, "demo_senior_mentor")
-    demo_junior_mentor = random.choice(
-        [
-            jm
-            for jm in demo_senior_mentor.followers.all()
-            if jm.section.students.count() >= 2
-        ]
-    )
+    demo_junior_mentor = random.choice(demo_senior_mentor.followers.all())
     assert demo_junior_mentor.role == Profile.JUNIOR_MENTOR
     demoify_user(demo_junior_mentor.user, "demo_junior_mentor")
     demo_student = random.choice(demo_junior_mentor.followers.all())
