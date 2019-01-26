@@ -97,11 +97,16 @@ class SectionFactory(factory.DjangoModelFactory):
 
 ATTENDANCE_CHOICES = [db_value for db_value, _ in Attendance.PRESENCE_CHOICES]
 
+PRESENCE_DB_VALUES = [
+    db_value for db_value, display_name in Attendance.PRESENCE_CHOICES
+]
+
+
 class AttendanceFactory(factory.DjangoModelFactory):
     class Meta:
         model = Attendance
 
-    presence = factory.fuzzy.FuzzyChoice(ATTENDANCE_CHOICES)
+    presence = factory.fuzzy.FuzzyChoice(PRESENCE_DB_VALUES)
     section = factory.SubFactory(SectionFactory)
     attendee = factory.SubFactory(ProfileFactory)
 
