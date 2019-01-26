@@ -95,19 +95,57 @@ function SectionSummary(props) {
   );
 }
 
-function WeekAttendance(props) {
-  const studentAttendances = Object.entries(props.attendance);
-  const studentAttendanceListEntries = studentAttendances.map(
-    (attendance, index) => (
-      <li key={index}> {`${attendance[0]} ${attendance[1]}`} </li>
-    )
-  );
-  return (
-    <div>
-      <h4>Week {props.weekNum}</h4>
-      <ul className="uk-list">{studentAttendanceListEntries}</ul>
-    </div>
-  );
+class WeekAttendance extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = Object.assign({}, props.attendance);
+    this.handleInputChange = this.handleInputChange.bind(this);
+  }
+
+  handleInputChange(event) {
+    this.setState({ [event.target.name]: event.target.value });
+  }
+
+  render() {
+    const studentAttendances = Object.entries(this.state);
+    const studentAttendanceListEntries = studentAttendances.map(
+      (attendance, index) => {
+        const [studentName, presence] = attendance;
+        return (
+          <div className="uk-margin">
+            <label
+              className="uk-form-label"
+              key={index}
+              htmlFor={`${studentName}week${this.props.weekNum}`}
+            >
+              {" "}
+              {studentName}
+            </label>
+            <select
+              id={`${studentName}week${this.props.weekNum}`}
+              className="uk-select uk-form-width-medium"
+              value={presence}
+              name={studentName}
+              onChange={this.handleInputChange}
+            >
+              <option value="">---</option>
+              <option value="EX">Excused Absence</option>
+              <option value="UN">Unexcused Absence</option>
+              <option value="PR">Present</option>
+            </select>
+          </div>
+        );
+      }
+    );
+    return (
+      <div>
+        <h4>Week {this.props.weekNum}</h4>
+        <form className="uk-form-horizontal">
+          {studentAttendanceListEntries}
+        </form>
+      </div>
+    );
+  }
 }
 class Attendances extends React.Component {
   /*
@@ -135,7 +173,7 @@ class Attendances extends React.Component {
     const weekAttendances = attendances.map((attendance, index) => (
       <WeekAttendance attendance={attendance} weekNum={index} key={index} />
     ));
-    return <div>{weekAttendances}</div>;
+    return <div className="uk-container">{weekAttendances}</div>;
   }
 }
 

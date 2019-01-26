@@ -152,7 +152,7 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
                     (
                         student.user.first_name + " " + student.user.last_name,
                         attendance.week_start,
-                        attendance.get_presence_display(),
+                        attendance.presence,
                     )
                     for attendance in student.attendance_set.all()
                 ]
