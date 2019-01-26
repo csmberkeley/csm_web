@@ -1,4 +1,5 @@
-from datetime import datetime, timedelta
+from datetime import timedelta
+from django.utils import timezone
 from rest_framework import serializers
 from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 from .permissions import is_leader
@@ -61,8 +62,8 @@ class ActiveOverrideField(serializers.RelatedField):
 
         # We want the latest override for this week
 
-        weekday = datetime.now().weekday()
-        current_week_start = datetime.now().date() - timedelta(days=weekday)
+        weekday = timezone.now().weekday()
+        current_week_start = timezone.now().date() - timedelta(days=weekday)
         current_week_end = current_week_start + timedelta(days=7)
 
         valid_set = overrides.filter(

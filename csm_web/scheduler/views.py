@@ -110,7 +110,10 @@ class UserProfileList(generics.ListAPIView):
     list_permission_source = None
 
     def get_queryset(self):
-        return Profile.objects.filter(user=self.request.user, active=True)
+        if self.request.user.is_authenticated:
+            return Profile.objects.filter(user=self.request.user, active=True)
+        else:
+            raise PermissionDenied
 
 
 class UserProfileDetail(generics.RetrieveAPIView):
@@ -130,6 +133,7 @@ class UserProfileDetail(generics.RetrieveAPIView):
 
 
 class DeleteProfile(generics.DestroyAPIView):
+    # TODO this looks like it should really have a permission class...
     def destroy(self, request, *args, **kwargs):
         profile = get_object_or_404(Profile, pk=self.kwargs["pk"])
         if not profile.active:

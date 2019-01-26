@@ -68,6 +68,7 @@ class Profile(ActivatableModel):
         on_delete=models.CASCADE,
         blank=True,
         null=True,
+        limit_choices_to={"role": STUDENT},
     )
 
     def __str__(self):

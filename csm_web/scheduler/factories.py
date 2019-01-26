@@ -1,6 +1,7 @@
 import factory
 import factory.fuzzy
-from datetime import timedelta, datetime
+from datetime import timedelta
+from django.utils import timezone
 import random
 from django.core import management
 from django.conf import settings
@@ -14,18 +15,22 @@ class CourseFactory(factory.DjangoModelFactory):
     name = factory.Sequence(lambda n: "CS%d" % n)
     valid_until = factory.Faker("date_between", start_date="-1y", end_date="+1y")
     enrollment_start = factory.LazyAttribute(
-        lambda o: factory.Faker(
-            "date_time_between_dates",
-            datetime_start=o.valid_until - timedelta(weeks=17),
-            datetime_end=o.valid_until - timedelta(weeks=10),
-        ).generate({})
+        lambda o: timezone.make_aware(
+            factory.Faker(
+                "date_time_between_dates",
+                datetime_start=o.valid_until - timedelta(weeks=17),
+                datetime_end=o.valid_until - timedelta(weeks=10),
+            ).generate({})
+        )
     )
     enrollment_end = factory.LazyAttribute(
-        lambda o: factory.Faker(
-            "date_time_between_dates",
-            datetime_start=o.enrollment_start,
-            datetime_end=o.valid_until,
-        ).generate({})
+        lambda o: timezone.make_aware(
+            factory.Faker(
+                "date_time_between_dates",
+                datetime_start=o.enrollment_start,
+                datetime_end=o.valid_until,
+            ).generate({})
+        )
     )
 
 
@@ -117,7 +122,7 @@ WEEKDAY_MAP = {
 
 
 def create_attendances_for(student):
-    today = datetime.today().date()
+    today = timezone.datetime.today().date()
     current_date = student.course.enrollment_start.date()
     while (
         WEEKDAY_MAP[current_date.weekday()]

@@ -47,6 +47,7 @@ rest_urlpatterns = [
 urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
 
 # API Stub Routes
+# TODO remove these in production
 router = DefaultRouter()
 router.register(r"users", views.UserViewSet)
 router.register(r"allprofiles", views.ProfileViewSet)
