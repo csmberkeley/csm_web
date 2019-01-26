@@ -14,16 +14,16 @@ class App extends React.Component {
     const profilesEndpoint = "/scheduler/profiles/";
     fetch(profilesEndpoint)
       .then(response => response.json())
-      .then(data => {
-        const profileIDs = data.profiles;
-        for (let id of profileIDs) {
-          fetch(`${profilesEndpoint}${id}/`)
+      .then(profiles => {
+        for (let profile of profiles) {
+          let id = profile.id;
+          fetch(`${profilesEndpoint}${id}/?verbose=true`)
             .then(response => response.json())
             .then(profileData =>
               this.setState((state, props) => {
                 return {
                   profiles: { [id]: profileData, ...state.profiles },
-                  sections: { ...profileData.sections, ...state.sections }
+                  sections: { [id]: profileData.section, ...state.sections }
                 };
               })
             );
@@ -40,7 +40,10 @@ class App extends React.Component {
             <Route
               path="/sections/:id"
               render={({ match }) => (
-                <Section {...this.state.sections[match.params.id]} />
+                <Section
+                  profile={match.params.id}
+                  {...this.state.sections[match.params.id]}
+                />
               )}
             />
           </div>

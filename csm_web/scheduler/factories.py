@@ -56,9 +56,16 @@ class UserFactory(factory.DjangoModelFactory):
     class Meta:
         model = User
 
-    username = factory.Sequence(
-        lambda n: "%s%d" % (factory.Faker("name").generate({}).replace(" ", "_"), n)
+    first_name = factory.LazyFunction(
+        lambda: factory.Faker("name").generate({}).split()[0]
     )
+    last_name = factory.LazyFunction(
+        lambda: factory.Faker("name").generate({}).split()[-1]
+    )
+    username = factory.LazyAttributeSequence(
+        lambda o, n: "%s_%s%d" % (o.first_name, o.last_name, n)
+    )
+    email = factory.LazyAttribute(lambda o: "%s@gmail.com" % o.username)
 
 
 ROLE_DB_CHOICES = [db_value for db_value, display_name in Profile.ROLE_CHOICES]

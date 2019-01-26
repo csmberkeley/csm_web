@@ -5,14 +5,10 @@ from django.db import migrations, models
 
 class Migration(migrations.Migration):
 
-    dependencies = [
-        ('scheduler', '0004_auto_20181126_2319'),
-    ]
+    dependencies = [("scheduler", "0004_auto_20181126_2319")]
 
     operations = [
         migrations.AlterField(
-            model_name='course',
-            name='name',
-            field=models.SlugField(max_length=100),
-        ),
+            model_name="course", name="name", field=models.SlugField(max_length=100)
+        )
     ]
