@@ -95,12 +95,13 @@ class SectionFactory(factory.DjangoModelFactory):
         ProfileFactory, course=factory.SelfAttribute("..course")
     )
 
+ATTENDANCE_CHOICES = [db_value for db_value, _ in Attendance.PRESENCE_CHOICES]
 
 class AttendanceFactory(factory.DjangoModelFactory):
     class Meta:
         model = Attendance
 
-    presence = factory.fuzzy.FuzzyChoice(Attendance.PRESENCE_CHOICES)
+    presence = factory.fuzzy.FuzzyChoice(ATTENDANCE_CHOICES)
     section = factory.SubFactory(SectionFactory)
     attendee = factory.SubFactory(ProfileFactory)
 
