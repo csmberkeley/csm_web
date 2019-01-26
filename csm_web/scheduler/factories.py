@@ -95,7 +95,6 @@ class SectionFactory(factory.DjangoModelFactory):
         ProfileFactory, course=factory.SelfAttribute("..course")
     )
 
-ATTENDANCE_CHOICES = [db_value for db_value, _ in Attendance.PRESENCE_CHOICES]
 
 PRESENCE_DB_VALUES = [
     db_value for db_value, display_name in Attendance.PRESENCE_CHOICES
@@ -162,7 +161,7 @@ def create_attendances_for(student):
 
 def create_section_for(mentor):
     section = SectionFactory.create(course=mentor.course, mentor=mentor)
-    mentor.section = section 
+    mentor.section = section
     mentor.save()
     students = ProfileFactory.create_batch(
         random.randint(1, section.capacity),
@@ -235,9 +234,10 @@ def create_demo_accounts():
     demo_student = random.choice(demo_junior_mentor.followers.all())
     assert demo_student.role == Profile.STUDENT
     demoify_user(demo_student.user, "demo_student")
-    print("\nDemo accounts have been created with usernames demo_coordinator, demo_junior_mentor, demo_senior_mentor, and demo_student.")
+    print(
+        "\nDemo accounts have been created with usernames demo_coordinator, demo_junior_mentor, demo_senior_mentor, and demo_student."
+    )
     print("The password for these accounts is 'pass', log in at localhost:8000/admin/")
-
 
 
 def generate_test_data(complicate=False):
@@ -248,7 +248,7 @@ def generate_test_data(complicate=False):
     course_names = ("CS70", "CS61A", "CS61B", "CS61C", "EE16A")
     print("Generating test data...")
     for course in (CourseFactory.create(name=name) for name in course_names):
-        print(course.name + '...', end=" ")
+        print(course.name + "...", end=" ")
         coordinators = ProfileFactory.create_batch(
             2, course=course, leader=None, section=None, role=Profile.COORDINATOR
         )
