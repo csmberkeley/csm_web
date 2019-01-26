@@ -162,6 +162,8 @@ def create_attendances_for(student):
 
 def create_section_for(mentor):
     section = SectionFactory.create(course=mentor.course, mentor=mentor)
+    mentor.section = section 
+    mentor.save()
     students = ProfileFactory.create_batch(
         random.randint(1, section.capacity),
         course=section.course,
@@ -201,23 +203,69 @@ def complicate_data():
         OverrideFactory.create(section=random.choice(Section.objects.all()))
 
 
+def demoify_user(user, username):
+    user.is_staff = True
+    user.is_superuser = True
+    user.username = username
+    user.email = "%s@berkeley.edu" % username
+    name_parts = username.split("_")
+    user.first_name, user.last_name = (
+        name_parts[0].capitalize(),
+        "".join(name_parts[1:]).capitalize(),
+    )
+    user.set_password("pass")
+    user.save()
+
+
+def create_demo_accounts():
+    demo_coordinator = random.choice(Profile.objects.filter(role=Profile.COORDINATOR))
+    demoify_user(demo_coordinator.user, "demo_coordinator")
+    demo_senior_mentor = random.choice(demo_coordinator.followers.all())
+    assert demo_senior_mentor.role == Profile.SENIOR_MENTOR
+    demoify_user(demo_senior_mentor.user, "demo_senior_mentor")
+    demo_junior_mentor = random.choice(
+        [
+            jm
+            for jm in demo_senior_mentor.followers.all()
+            if jm.section.students.count() >= 2
+        ]
+    )
+    assert demo_junior_mentor.role == Profile.JUNIOR_MENTOR
+    demoify_user(demo_junior_mentor.user, "demo_junior_mentor")
+    demo_student = random.choice(demo_junior_mentor.followers.all())
+    assert demo_student.role == Profile.STUDENT
+    demoify_user(demo_student.user, "demo_student")
+    print("\nDemo accounts have been created with usernames demo_coordinator, demo_junior_mentor, demo_senior_mentor, and demo_student.")
+    print("The password for these accounts is 'pass', log in at localhost:8000/admin/")
+
+
+
 def generate_test_data(complicate=False):
     if not settings.DEBUG:
         print("This cannot be run in production! Aborting.")
         return
     management.call_command("flush", interactive=True)
     course_names = ("CS70", "CS61A", "CS61B", "CS61C", "EE16A")
+    print("Generating test data...")
     for course in (CourseFactory.create(name=name) for name in course_names):
+        print(course.name + '...', end=" ")
         coordinators = ProfileFactory.create_batch(
             2, course=course, leader=None, section=None, role=Profile.COORDINATOR
         )
         senior_mentors = ProfileFactory.create_batch(
-            random.randint(4, 10),
+            random.randint(4, 6),
             course=course,
-            leader=random.choice(coordinators),
+            leader=coordinators[0],
+            section=None,
+            role=Profile.SENIOR_MENTOR,
+        ) + ProfileFactory.create_batch(
+            random.randint(4, 6),
+            course=course,
+            leader=coordinators[1],
             section=None,
             role=Profile.SENIOR_MENTOR,
         )
+
         for senior_mentor in senior_mentors:
             junior_mentors = ProfileFactory.create_batch(
                 random.randint(4, 6),
@@ -228,5 +276,7 @@ def generate_test_data(complicate=False):
             )
             for junior_mentor in junior_mentors:
                 create_section_for(junior_mentor)
+        print("Done")
     if complicate:
         complicate_data()
+    create_demo_accounts()

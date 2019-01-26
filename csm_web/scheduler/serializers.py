@@ -4,6 +4,7 @@ from rest_framework import serializers
 from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 from .permissions import is_leader
 from itertools import groupby
+from datetime import datetime
 
 
 class CourseSerializer(serializers.ModelSerializer):

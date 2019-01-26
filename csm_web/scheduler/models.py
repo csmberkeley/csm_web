@@ -64,7 +64,7 @@ class Profile(ActivatableModel):
     ROLE_MAP = dict(ROLE_CHOICES)
 
     leader = models.ForeignKey(
-        "self", on_delete=models.CASCADE, related_name="follower", blank=True, null=True
+        "self", on_delete=models.CASCADE, related_name="followers", blank=True, null=True
     )
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     role = models.CharField(max_length=2, choices=ROLE_CHOICES)
