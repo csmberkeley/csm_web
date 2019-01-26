@@ -1,4 +1,5 @@
 import React from "react";
+import * as Cookies from "js-cookie";
 
 class Override extends React.Component {
   constructor(props) {
@@ -100,29 +101,46 @@ class WeekAttendance extends React.Component {
     super(props);
     this.state = Object.assign({}, props.attendance);
     this.handleInputChange = this.handleInputChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   handleInputChange(event) {
-    this.setState({ [event.target.name]: event.target.value });
+    this.setState({
+      [event.target.id]: [event.target.name, event.target.value]
+    });
+  }
+
+  handleSubmit(event) {
+    event.preventDefault();
+    for (let pk of Object.keys(this.state)) {
+      const [studentName, presence] = this.state[pk];
+      fetch(`/scheduler/attendances/${pk}/`, {
+        method: "PATCH",
+        credentials: "same-origin",
+        headers: {
+          "X-CSRFToken": Cookies.get("csrftoken"),
+          Accept: "application/json",
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify({ presence: presence })
+      });
+    }
   }
 
   render() {
     const studentAttendances = Object.entries(this.state);
     const studentAttendanceListEntries = studentAttendances.map(
       (attendance, index) => {
-        const [studentName, presence] = attendance;
+        const [pk, details] = attendance;
+        const [studentName, presence] = details;
         return (
-          <div className="uk-margin">
-            <label
-              className="uk-form-label"
-              key={index}
-              htmlFor={`${studentName}week${this.props.weekNum}`}
-            >
+          <div key={pk} className="uk-margin">
+            <label className="uk-form-label" htmlFor={pk}>
               {" "}
               {studentName}
             </label>
             <select
-              id={`${studentName}week${this.props.weekNum}`}
+              id={pk}
               className="uk-select uk-form-width-medium"
               value={presence}
               name={studentName}
@@ -140,8 +158,11 @@ class WeekAttendance extends React.Component {
     return (
       <div>
         <h4>Week {this.props.weekNum}</h4>
-        <form className="uk-form-horizontal">
+        <form className="uk-form-horizontal" onSubmit={this.handleSubmit}>
           {studentAttendanceListEntries}
+          <button className="uk-button uk-button-default uk-button-small">
+            Save changes
+          </button>
         </form>
       </div>
     );

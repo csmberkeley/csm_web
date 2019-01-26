@@ -153,6 +153,7 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
                         student.user.first_name + " " + student.user.last_name,
                         attendance.week_start,
                         attendance.presence,
+                        attendance.id,
                     )
                     for attendance in student.attendance_set.all()
                 ]
@@ -162,7 +163,7 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
             flat_attendances.sort(key=lambda tuple: tuple[1])
             grouped_attendances = groupby(flat_attendances, key=lambda tuple: tuple[1])
             attendances = [
-                {name: presence for name, week_start, presence in group}
+                {str(pk): [name, presence] for name, week_start, presence, pk in group}
                 for key, group in grouped_attendances
             ]
             return attendances
@@ -186,8 +187,16 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
 
 
 class VerboseProfileSerializer(serializers.ModelSerializer):
-    section = VerboseSectionSerializer()
+    section = serializers.SerializerMethodField()
 
     class Meta:
         model = Profile
         fields = ("id", "leader", "course", "role", "user", "section")
+
+    def get_section(self, obj):
+        if obj.role == Profile.STUDENT:
+            return VerboseSectionSerializer(obj.section, context=self.context).data
+        else:
+            return VerboseSectionSerializer(
+                obj.mentor_sections.first(), context=self.context
+            ).data
