@@ -204,7 +204,7 @@ def demoify_user(user, username):
     user.is_staff = True
     user.is_superuser = True
     user.username = username
-    user.email = "%s@berkeley.edu" % username
+    user.email = "{}@berkeley.edu".format(username)
     name_parts = username.split("_")
     user.first_name, user.last_name = (
         name_parts[0].capitalize(),
