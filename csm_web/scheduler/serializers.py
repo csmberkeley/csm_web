@@ -16,15 +16,9 @@ class CourseSerializer(serializers.ModelSerializer):
 # Serializer Stubs
 
 
-TIME_FORMAT_STRING = "%I:%M %p"
-
-
 class SpacetimeSerializer(serializers.ModelSerializer):
     end_time = serializers.SerializerMethodField()
     day_of_week = serializers.SerializerMethodField()
-    start_time = serializers.TimeField(
-        format=TIME_FORMAT_STRING, input_formats=[TIME_FORMAT_STRING]
-    )
 
     class Meta:
         model = Spacetime
@@ -40,7 +34,7 @@ class SpacetimeSerializer(serializers.ModelSerializer):
             second=obj.start_time.second,
         )
         end_time = (start_datetime + obj.duration).time()
-        return end_time.strftime(TIME_FORMAT_STRING)
+        return end_time
 
     def get_day_of_week(self, obj):
         return obj.get_day_of_week_display()
@@ -78,6 +72,15 @@ class OverrideSerializer(serializers.ModelSerializer):
     class Meta:
         model = Override
         fields = ("spacetime", "week_start", "section")
+
+    def create(self, validated_data):
+        default_spacetime = validated_data["section"].default_spacetime
+        spacetime_data = validated_data["spacetime"]
+        spacetime_data["duration"] = default_spacetime.duration
+        spacetime = SpacetimeSerializer().create(spacetime_data)
+
+        validated_data["spacetime"] = spacetime
+        return super().create(validated_data)
 
 
 class ActiveOverrideField(serializers.RelatedField):
