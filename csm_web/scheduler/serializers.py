@@ -117,6 +117,7 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
     course_name = serializers.SerializerMethodField()
     is_mentor = serializers.SerializerMethodField()
     attendances = serializers.SerializerMethodField()
+    mentor = ProfileSerializer()
 
     class Meta:
         model = Section

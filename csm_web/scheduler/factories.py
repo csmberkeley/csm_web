@@ -91,9 +91,6 @@ class SectionFactory(factory.DjangoModelFactory):
     course = factory.SubFactory(CourseFactory)
     default_spacetime = factory.SubFactory(SpacetimeFactory)
     capacity = factory.LazyFunction(lambda: random.randint(3, 6))
-    mentor = factory.SubFactory(
-        ProfileFactory, course=factory.SelfAttribute("..course")
-    )
 
 
 PRESENCE_DB_VALUES = [
@@ -160,7 +157,9 @@ def create_attendances_for(student):
 
 
 def create_section_for(mentor):
-    section = SectionFactory.create(course=mentor.course, mentor=mentor)
+    section = SectionFactory.create(course=mentor.course)
+    mentor.section = section
+    mentor.save()
     students = ProfileFactory.create_batch(
         random.randint(1, section.capacity),
         course=section.course,
