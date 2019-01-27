@@ -61,10 +61,20 @@ class ProfileSerializer(serializers.ModelSerializer):
 class SectionSerializer(serializers.ModelSerializer):
     default_spacetime = SpacetimeSerializer()
     mentor = ProfileSerializer()
+    enrolled_students = serializers.SerializerMethodField()
 
     class Meta:
         model = Section
-        fields = ("course", "mentor", "default_spacetime", "capacity")
+        fields = (
+            "course",
+            "mentor",
+            "default_spacetime",
+            "capacity",
+            "enrolled_students",
+        )
+
+    def get_enrolled_students(self, obj):
+        return obj.active_students.count()
 
 
 class OverrideSerializer(serializers.ModelSerializer):
