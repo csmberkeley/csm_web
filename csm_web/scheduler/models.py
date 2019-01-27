@@ -64,18 +64,17 @@ class Profile(ActivatableModel):
     ROLE_MAP = dict(ROLE_CHOICES)
 
     leader = models.ForeignKey(
-        "self", on_delete=models.CASCADE, related_name="followers", blank=True, null=True
+        "self",
+        on_delete=models.CASCADE,
+        related_name="followers",
+        blank=True,
+        null=True,
     )
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     role = models.CharField(max_length=2, choices=ROLE_CHOICES)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     section = models.ForeignKey(
-        "Section",
-        related_name="students",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-        limit_choices_to={"role": STUDENT},
+        "Section", on_delete=models.CASCADE, blank=True, null=True
     )
 
     def __str__(self):
@@ -93,22 +92,18 @@ class Profile(ActivatableModel):
 
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    mentor = models.ForeignKey(
-        Profile,
-        on_delete=models.SET_NULL,
-        blank=True,
-        null=True,
-        related_name="mentor_sections",
-        limit_choices_to={
-            "role__in": [
-                Profile.JUNIOR_MENTOR,
-                Profile.SENIOR_MENTOR,
-                Profile.COORDINATOR,
-            ]
-        },
-    )
     default_spacetime = models.OneToOneField("Spacetime", on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
+
+    @property
+    def students(self):
+        return self.profile_set.filter(role=Profile.STUDENT)
+
+    @property
+    def mentor(self):
+        mentor_profiles = self.profile_set.exclude(role=Profile.STUDENT)
+        assert mentor_profiles.count() <= 1
+        return mentor_profiles.first()
 
     @property
     def current_student_count(self):
