@@ -2,12 +2,14 @@ import React from "react";
 import { MemoryRouter as Router, Route, Link } from "react-router-dom";
 import ReactDOM from "react-dom";
 import Section from "./Section";
+import Course from "./Course";
 import Navbar from "./Navbar";
 
 class App extends React.Component {
   state = {
     sections: {},
-    profiles: {}
+    profiles: {},
+    courses: ["cs61a", "cs61b", "cs70", "ee16a"]
   };
 
   componentDidMount() {
@@ -36,7 +38,10 @@ class App extends React.Component {
       <div>
         <Router>
           <div>
-            <Navbar sections={this.state.sections} />
+            <Navbar
+              sections={this.state.sections}
+              courses={this.state.courses}
+            />
             <Route
               path="/sections/:id"
               render={({ match }) => (
@@ -45,6 +50,10 @@ class App extends React.Component {
                   {...this.state.sections[match.params.id]}
                 />
               )}
+            />
+            <Route
+              path="/courses/:slug"
+              render={({ match }) => <Course course={match.params.slug} />}
             />
           </div>
         </Router>

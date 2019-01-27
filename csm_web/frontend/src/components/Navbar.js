@@ -29,6 +29,19 @@ function Navbar(props) {
     }
   );
 
+  const courseListEntries = Object.entries(props.courses).map(
+    (entry, index) => {
+      const [id, course] = entry;
+      return (
+        <li key={index}>
+          <Link to={`/courses/${course}`}>
+            <h4>{course.toUpperCase()}</h4>
+          </Link>
+        </li>
+      );
+    }
+  );
+
   return (
     <nav className="uk-navbar-container" data-uk-navbar="delay-hide: 200">
       <div className="uk-navbar-right">
@@ -38,6 +51,14 @@ function Navbar(props) {
             <div className="uk-navbar-dropdown uk-width-large">
               <ul className="uk-nav uk-navbar-dropdown-nav uk-list-striped">
                 {sectionListEntries}
+              </ul>
+            </div>
+          </li>
+          <li>
+            <a href="#">Courses</a>
+            <div className="uk-navbar-dropdown">
+              <ul className="uk-nav uk-navbar-dropdown-nav">
+                {courseListEntries}
               </ul>
             </div>
           </li>
