@@ -92,7 +92,7 @@ class CourseSectionList(generics.ListAPIView):
 
     queryset = Course.objects.all()
     serializer_class = SectionSerializer
-    permission_classes = permissions.IsAuthenticatedOrReadOnly
+    permission_classes = (permissions.IsAuthenticatedOrReadOnly,)
     list_permission_source = None
 
     def get_queryset(self):
