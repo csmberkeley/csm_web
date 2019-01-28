@@ -1,11 +1,11 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.contrib.auth import logout as auth_logout
-from django.core.exceptions import PermissionDenied
 
 from rest_framework import generics, permissions, viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
+from rest_framework.exceptions import APIException
 
 from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 from .serializers import (
@@ -45,7 +45,13 @@ def index(request):
 def enroll(request, pk):
     section = get_object_or_404(Section, pk=pk)
     if section.current_student_count >= section.capacity:
-        raise PermissionDenied
+        raise APIException(
+            detail={
+                "short_code": "section_full",
+                "message": "Section is at full capacity",
+            },
+            code=403,
+        )
 
     profile = Profile(
         course=section.course,
