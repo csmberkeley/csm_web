@@ -44,6 +44,18 @@ def index(request):
 @api_view(http_method_names=["POST"])
 def enroll(request, pk):
     section = get_object_or_404(Section, pk=pk)
+
+    if request.user.profile_set.filter(course=section.course, active=True).count() > 0:
+        # Note: This denies anyone who is already associated with a course
+        # (student, JM, SM, Coord) from enrolling in a course section.
+        raise APIException(
+            detail={
+                "short_code": "already_enrolled",
+                "message": "User is already enrolled in this course",
+            },
+            code=403,
+        )
+
     if section.current_student_count >= section.capacity:
         raise APIException(
             detail={
