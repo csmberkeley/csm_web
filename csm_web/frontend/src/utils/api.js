@@ -1,7 +1,9 @@
 import Cookies from "js-cookie";
 
 export function post(endpoint, data) {
-  const relative_endpoint_pattern = RegExp("^([A-z0-9]+/)+$");
+  // TODO This Regex has trailing endpoints that are optional. We should update this
+  // once we standardize to either have it or not have it
+  const relative_endpoint_pattern = RegExp("^([A-z0-9]+/)*[A-z0-9]+/?$");
   if (!relative_endpoint_pattern.test(endpoint)) {
     throw new Error("post should only be used with relative endpoints");
   }
