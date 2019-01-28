@@ -1,6 +1,7 @@
 import React from "react";
 import { groupBy } from "lodash";
 import moment from "moment";
+import { post } from "../utils/api";
 
 const API_TIME_FORMAT = "HH:mm:ss";
 const DISPLAY_TIME_FORMAT = "HH:mm A";
@@ -103,6 +104,12 @@ function Day(props) {
 }
 
 function SectionSummary(props) {
+  function handleClick(event) {
+    post(`scheduler/sections/${props.section.id}/enroll`, {}).then(response => {
+      console.log(response);
+    });
+  }
+
   const spacetime = props.section.defaultSpacetime;
   const startTime = moment(spacetime.startTime, API_TIME_FORMAT).format(
     DISPLAY_TIME_FORMAT
@@ -119,6 +126,9 @@ function SectionSummary(props) {
       <p>
         {available}/{props.section.capacity}
       </p>
+      <button className="uk-button uk-button-default" onClick={handleClick}>
+        Enroll
+      </button>
     </li>
   );
 }
