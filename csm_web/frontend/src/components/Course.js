@@ -1,6 +1,9 @@
 import React from "react";
 import { groupBy } from "lodash";
+import moment from "moment";
 
+const API_TIME_FORMAT = "HH:mm:ss";
+const DISPLAY_TIME_FORMAT = "HH:mm A";
 const dayOfWeek = {
   Monday: 0,
   Tuesday: 1,
@@ -72,16 +75,52 @@ class Course extends React.Component {
 }
 
 function Day(props) {
+  const sections = props.sections
+    .sort((section1, section2) => {
+      const time1 = moment(
+        section1.defaultSpacetime.startTime,
+        API_TIME_FORMAT
+      );
+      const time2 = moment(
+        section2.defaultSpacetime.startTime,
+        API_TIME_FORMAT
+      );
+      return time1 - time2;
+    })
+    .map((section, index) => {
+      return <SectionSummary section={section} key={index} />;
+    });
   return (
     <li>
       <a className="uk-accordion-title" href="#">
         {props.day}
       </a>
-      <div className="uk-accordion-content">Lorem ipsum dolor sit amet</div>
+      <div className="uk-accordion-content">
+        <ul>{sections}</ul>
+      </div>
     </li>
   );
 }
 
-function SectionSummary(props) {}
+function SectionSummary(props) {
+  const spacetime = props.section.defaultSpacetime;
+  const startTime = moment(spacetime.startTime, API_TIME_FORMAT).format(
+    DISPLAY_TIME_FORMAT
+  );
+  const location = spacetime.location;
+
+  const available = props.section.capacity - props.section.enrolledStudents;
+
+  return (
+    <li>
+      <h4>
+        {location} - {startTime}
+      </h4>
+      <p>
+        {available}/{props.section.capacity}
+      </p>
+    </li>
+  );
+}
 
 export default Course;
