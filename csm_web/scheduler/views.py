@@ -41,6 +41,7 @@ def index(request):
     return render(request, "scheduler/index.html", data)
 
 
+@api_view()
 def enroll(request, pk):
     section = get_object_or_404(Section, pk=pk)
     if section.current_student_count >= section.capacity:
