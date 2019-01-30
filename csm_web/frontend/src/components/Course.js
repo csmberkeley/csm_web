@@ -123,9 +123,24 @@ function Day(props) {
 
 function SectionSummary(props) {
   function handleClick(event) {
-    post(`scheduler/sections/${props.section.id}/enroll`, {}).then(response => {
-      console.log(response);
-    });
+    let ok = false;
+    post(`scheduler/sections/${props.section.id}/enroll`, {})
+      .then(response => {
+        ok = response.ok;
+        return response.json();
+      })
+      .then(body => {
+        if (!ok) {
+          if (body.shortCode == "already_enrolled") {
+            console.log(body.message);
+          } else if (body.shortCode == "section_full") {
+            console.log(body.message);
+          } else {
+            console.log("An unknown error has occured");
+            console.log(body.message);
+          }
+        }
+      });
   }
 
   const spacetime = props.section.defaultSpacetime;
