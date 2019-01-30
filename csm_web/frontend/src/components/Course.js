@@ -142,7 +142,8 @@ function SectionSummary(props) {
         {location} - {startTime}
       </h4>
       <p>
-        {available}/{props.section.capacity}
+        {props.section.enrolledStudents}/{props.section.capacity} - {available}{" "}
+        spots available
       </p>
       <button className="uk-button uk-button-default" onClick={handleClick}>
         Enroll
