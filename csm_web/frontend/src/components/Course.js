@@ -30,13 +30,15 @@ class Course extends React.Component {
 
   componentDidUpdate(prevProps) {
     if (this.props.course != prevProps.course) {
-      this.setState((state, props) => {
-        return {
-          course: props.course,
-          sections: {}
-        }
-      });
-      this.updateSections();
+      this.setState(
+        (state, props) => {
+          return {
+            course: props.course,
+            sections: {}
+          };
+        },
+        () => this.updateSections()
+      );
     }
   }
 
