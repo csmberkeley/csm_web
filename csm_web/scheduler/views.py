@@ -5,7 +5,7 @@ from django.contrib.auth import logout as auth_logout
 from rest_framework import generics, permissions, viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
-from rest_framework.exceptions import APIException
+from rest_framework.exceptions import PermissionDenied
 
 from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 from .serializers import (
@@ -48,21 +48,21 @@ def enroll(request, pk):
     if request.user.profile_set.filter(course=section.course, active=True).count() > 0:
         # Note: This denies anyone who is already associated with a course
         # (student, JM, SM, Coord) from enrolling in a course section.
-        raise APIException(
+        raise PermissionDenied(
             detail={
                 "short_code": "already_enrolled",
                 "message": "User is already enrolled in this course",
             },
-            code=403,
+            code=status.HTTP_403_FORBIDDEN,
         )
 
     if section.current_student_count >= section.capacity:
-        raise APIException(
+        raise PermissionDenied(
             detail={
                 "short_code": "section_full",
                 "message": "Section is at full capacity",
             },
-            code=403,
+            code=status.HTTP_403_FORBIDDEN,
         )
 
     profile = Profile(
