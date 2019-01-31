@@ -73,7 +73,9 @@ def enroll(request, pk):
         leader=section.mentor,
     )
     profile.save()
-    return redirect(reverse("index"))
+    serialized_profile = ProfileSerializer(profile).data
+
+    return Response(serialized_profile)
 
 
 # REST Framework API Views
