@@ -187,16 +187,8 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
 
 
 class VerboseProfileSerializer(serializers.ModelSerializer):
-    section = serializers.SerializerMethodField()
+    section = VerboseSectionSerializer()
 
     class Meta:
         model = Profile
         fields = ("id", "leader", "course", "role", "user", "section")
-
-    def get_section(self, obj):
-        if obj.role == Profile.STUDENT:
-            return VerboseSectionSerializer(obj.section, context=self.context).data
-        else:
-            return VerboseSectionSerializer(
-                obj.mentor_sections.first(), context=self.context
-            ).data
