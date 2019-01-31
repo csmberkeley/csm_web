@@ -1,5 +1,9 @@
 import React from "react";
 import * as Cookies from "js-cookie";
+import moment from "moment";
+
+// indicies correspond to moment.day()
+const DAYS_OF_WEEK = ["SU", "M", "TU", "W", "TH", "F", "SA"];
 
 class Override extends React.Component {
   constructor(props) {
@@ -7,8 +11,6 @@ class Override extends React.Component {
     this.state = {
       location: null,
       startTime: null,
-      duration: null,
-      dayOfWeek: null,
       date: null
     };
     this.handleInputChange = this.handleInputChange.bind(this);
@@ -16,12 +18,24 @@ class Override extends React.Component {
   }
 
   handleInputChange(event) {
-    const [name, value] = [event.target.name, event.target.value];
+    const { name, value } = event.target;
     this.setState({ [name]: value });
   }
 
   handleSubmit(event) {
     event.preventDefault();
+    const datetime = moment(`${this.state.date} ${this.state.startTime}`);
+    const spacetime = {
+      location: this.state.location,
+      start_time: datetime.format("HH:mm:ss"),
+      day_of_week_value: DAYS_OF_WEEK[datetime.day()]
+    };
+    const data = {
+      spacetime: spacetime,
+      week_start: datetime.startOf("week").format("YYYY-MM-DD"),
+      section: this.props.sectionID
+    };
+    console.log(JSON.stringify(data));
     fetch("/scheduler/overrides/", {
       method: "POST",
       credentials: "same-origin",
@@ -30,7 +44,7 @@ class Override extends React.Component {
         Accept: "application/json",
         "Content-Type": "application/json"
       },
-      body: JSON.stringify(this.state)
+      body: JSON.stringify(data)
     });
   }
 
@@ -38,7 +52,6 @@ class Override extends React.Component {
     const inputParameters = [
       ["Location", "location", "text"],
       ["Start time", "startTime", "time"],
-      ["Duration", "duration", "number"],
       ["Date", "date", "date"]
     ];
     const inputs = inputParameters.map(parameters => {

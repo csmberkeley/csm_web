@@ -8,7 +8,7 @@ function SectionSummary(props) {
       <div className="uk-container">
         <div>
           <h2>{props.courseName}</h2>
-          {props.isMentor && <Override />}
+          {props.isMentor && <Override sectionID={props.sectionID} />}
         </div>
         <p>
           {props.defaultSpacetime.dayOfWeek} {props.defaultSpacetime.startTime}{" "}
@@ -117,6 +117,7 @@ function Section(props) {
         mentor={props.mentor}
         courseName={props.courseName}
         isMentor={props.isMentor}
+        sectionID={props.id}
       />
       <Attendances attendances={props.attendances} />
     </div>

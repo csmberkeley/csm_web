@@ -18,11 +18,21 @@ class CourseSerializer(serializers.ModelSerializer):
 
 class SpacetimeSerializer(serializers.ModelSerializer):
     end_time = serializers.SerializerMethodField()
-    day_of_week = serializers.SerializerMethodField()
+    # day_of_week = serializers.SerializerMethodField()
+    day_of_week_value = serializers.CharField(source="day_of_week")
+    day_of_week = serializers.CharField(
+        source="get_day_of_week_display", read_only=True
+    )
 
     class Meta:
         model = Spacetime
-        fields = ("location", "start_time", "day_of_week", "end_time")
+        fields = (
+            "location",
+            "start_time",
+            "day_of_week_value",
+            "end_time",
+            "day_of_week",
+        )
 
     def get_end_time(self, obj):
         start_datetime = datetime(
@@ -36,8 +46,8 @@ class SpacetimeSerializer(serializers.ModelSerializer):
         end_time = (start_datetime + obj.duration).time()
         return end_time
 
-    def get_day_of_week(self, obj):
-        return obj.get_day_of_week_display()
+    # def get_day_of_week(self, obj):
+    #    return obj.get_day_of_week_display()
 
 
 class UserSerializer(serializers.ModelSerializer):
