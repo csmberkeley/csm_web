@@ -2,6 +2,7 @@ import React from "react";
 import { groupBy } from "lodash";
 import moment from "moment";
 import { post } from "../utils/api";
+import { alert_modal } from "../utils/common";
 
 const API_TIME_FORMAT = "HH:mm:ss";
 const DISPLAY_TIME_FORMAT = "HH:mm A";
@@ -122,8 +123,16 @@ function Day(props) {
 }
 
 function SectionSummary(props) {
+  const spacetime = props.section.defaultSpacetime;
+  const startTime = moment(spacetime.startTime, API_TIME_FORMAT).format(
+    DISPLAY_TIME_FORMAT
+  );
+  const location = spacetime.location;
+
   function handleClick(event) {
-    let ok = false;
+    // TODO is there a nicer way to do this with async rather than this external
+    // variable?
+    var ok = false;
     post(`scheduler/sections/${props.section.id}/enroll`, {})
       .then(response => {
         ok = response.ok;
@@ -132,22 +141,30 @@ function SectionSummary(props) {
       .then(body => {
         if (!ok) {
           if (body.shortCode == "already_enrolled") {
-            console.log(body.message);
+            alert_modal(
+              "You are already enrolled in this course. You can only enroll in one section per course.",
+              () => {}
+            );
           } else if (body.shortCode == "section_full") {
-            console.log(body.message);
+            alert_modal(
+              "This section is full. Please try enrolling in another section.",
+              () => {}
+            );
           } else {
-            console.log("An unknown error has occured");
+            alert_modal("An unknown error has occurred.", () => {});
+            console.log("An unknown error has occurred.");
             console.log(body.message);
           }
+        } else {
+          alert_modal(
+            `You've successfully enrolled in section ${
+              props.section.id
+            } at ${location}, ${startTime}`,
+            () => {}
+          );
         }
       });
   }
-
-  const spacetime = props.section.defaultSpacetime;
-  const startTime = moment(spacetime.startTime, API_TIME_FORMAT).format(
-    DISPLAY_TIME_FORMAT
-  );
-  const location = spacetime.location;
 
   const available = props.section.capacity - props.section.enrolledStudents;
   const pluralized_spot = available == 1 ? "spot" : "spots";
