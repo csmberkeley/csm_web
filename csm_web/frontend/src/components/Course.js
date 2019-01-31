@@ -24,8 +24,11 @@ class Course extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      course: props.course,
-      sections: {}
+      course: {
+        name: props.course
+      },
+      sections: {},
+      enrolled: false
     };
   }
 
@@ -34,32 +37,66 @@ class Course extends React.Component {
       this.setState(
         (state, props) => {
           return {
-            course: props.course,
-            sections: {}
+            course: {
+              name: props.course
+            },
+            sections: {},
+            enrolled: false
           };
         },
-        () => this.updateSections()
+        () => this.updateCourse()
       );
     }
   }
 
   componentDidMount() {
-    this.updateSections();
+    this.updateCourse();
   }
 
-  updateSections() {
-    fetch(`/scheduler/courses/${this.state.course}/sections/`)
+  updateCourse() {
+    console.log("Beginning update...");
+    fetch(`/scheduler/courses/${this.state.course.name}`)
       .then(response => response.json())
-      .then(sections =>
-        this.setState((state, props) => {
-          return {
-            sections: groupBy(
-              sections,
-              section => section.defaultSpacetime.dayOfWeek
-            )
-          };
-        })
-      );
+      .then(course => {
+        this.setState(
+          (state, props) => {
+            return {
+              course: course
+            };
+          },
+          () => {
+            // These requests are synchronous on getting course data
+            fetch("/scheduler/profiles/")
+              .then(response => response.json())
+              .then(profiles => {
+                this.setState(
+                  (state, props) => {
+                    const courses = profiles.map(profile => profile.course);
+                    return {
+                      enrolled: courses.indexOf(state.course.id) != -1
+                    };
+                  },
+                  () => {
+                    console.log("Updated Enrolled!");
+                    console.log(this.state);
+                  }
+                );
+              });
+            fetch(`/scheduler/courses/${this.state.course.name}/sections/`)
+              .then(response => response.json())
+              .then(sections => {
+                this.setState((state, props) => {
+                  return {
+                    sections: groupBy(
+                      sections,
+                      section => section.defaultSpacetime.dayOfWeek
+                    )
+                  };
+                });
+              });
+          }
+        );
+      });
   }
 
   render() {
@@ -78,13 +115,24 @@ class Course extends React.Component {
       .reverse()
       .map(item => {
         const [day, sections] = item;
-        return <Day key={day} day={day} sections={sections} />;
+        return (
+          <Day
+            key={day}
+            enrolled={this.state.enrolled}
+            day={day}
+            sections={sections}
+            update={() => this.updateCourse()}
+          />
+        );
       });
 
     return (
       <div>
         <div>
-          <CourseDetail course={this.state.course} />
+          <CourseDetail
+            enrolled={this.state.enrolled}
+            course={this.state.course.name}
+          />
         </div>
         <div>
           <ul uk-accordion="true">{days}</ul>
@@ -108,7 +156,14 @@ function Day(props) {
       return time1 - time2;
     })
     .map((section, index) => {
-      return <SectionSummary section={section} key={index} />;
+      return (
+        <SectionSummary
+          enrolled={props.enrolled}
+          section={section}
+          key={index}
+          update={props.update}
+        />
+      );
     });
   return (
     <li>
@@ -163,6 +218,9 @@ function SectionSummary(props) {
             () => {}
           );
         }
+
+        // Updates the Course component
+        props.update();
       });
   }
 
