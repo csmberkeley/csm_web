@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
+from django.utils import timezone
 from django.contrib.auth import logout as auth_logout
 
 from rest_framework import generics, permissions, viewsets, status
@@ -52,6 +53,18 @@ def enroll(request, pk):
             detail={
                 "short_code": "already_enrolled",
                 "message": "User is already enrolled in this course",
+            },
+            code=status.HTTP_403_FORBIDDEN,
+        )
+
+    if (
+        timezone.now() < section.course.enrollment_start
+        or timezone.now() > section.course.enrollment_end
+    ):
+        raise PermissionDenied(
+            detail={
+                "short_code": "course_closed",
+                "message": "Course is not open for enrollment",
             },
             code=status.HTTP_403_FORBIDDEN,
         )
