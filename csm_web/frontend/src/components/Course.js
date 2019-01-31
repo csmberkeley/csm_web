@@ -150,6 +150,7 @@ function SectionSummary(props) {
   const location = spacetime.location;
 
   const available = props.section.capacity - props.section.enrolledStudents;
+  const pluralized_spot = available == 1 ? "spot" : "spots";
 
   return (
     <li>
@@ -158,7 +159,7 @@ function SectionSummary(props) {
       </h4>
       <p>
         {props.section.enrolledStudents}/{props.section.capacity} - {available}{" "}
-        spots available
+        {pluralized_spot} available
       </p>
       <button className="uk-button uk-button-default" onClick={handleClick}>
         Enroll
