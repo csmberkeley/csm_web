@@ -21,6 +21,7 @@ function CourseDetail(props) {
     <div>
       <h1>{props.course}</h1>
       {props.enrolled && <h3>You are enrolled in this course</h3>}
+      {!props.enrollmentOpen && <h3>This course is not open for enrollment</h3>}
     </div>
   );
 }
@@ -33,7 +34,8 @@ class Course extends React.Component {
         name: props.course
       },
       sections: {},
-      enrolled: false
+      enrolled: false,
+      enrollmentOpen: false
     };
   }
 
@@ -46,7 +48,8 @@ class Course extends React.Component {
               name: props.course
             },
             sections: {},
-            enrolled: false
+            enrolled: false,
+            enrollmentOpen: false
           };
         },
         () => this.updateCourse()
@@ -65,8 +68,12 @@ class Course extends React.Component {
       .then(course => {
         this.setState(
           (state, props) => {
+            const enrollmentStart = moment(course.enrollmentStart);
+            const enrollmentEnd = moment(course.enrollmentEnd);
             return {
-              course: course
+              course: course,
+              enrollmentOpen:
+                moment() > enrollmentStart && moment() < enrollmentEnd
             };
           },
           () => {
@@ -124,6 +131,7 @@ class Course extends React.Component {
           <Day
             key={day}
             enrolled={this.state.enrolled}
+            enrollmentOpen={this.state.enrollmentOpen}
             day={day}
             sections={sections}
             update={() => this.updateCourse()}
@@ -136,6 +144,7 @@ class Course extends React.Component {
         <div>
           <CourseDetail
             enrolled={this.state.enrolled}
+            enrollmentOpen={this.state.enrollmentOpen}
             course={this.state.course.name}
           />
         </div>
@@ -164,6 +173,7 @@ function Day(props) {
       return (
         <SectionSummary
           enrolled={props.enrolled}
+          enrollmentOpen={props.enrollmentOpen}
           section={section}
           key={index}
           update={props.update}
@@ -205,6 +215,11 @@ function SectionSummary(props) {
               "You are already enrolled in this course. You can only enroll in one section per course.",
               () => {}
             );
+          } else if (body.shortCode == "course_closed") {
+            alert_modal(
+              "This course is not currently open for enrollment.",
+              () => {}
+            );
           } else if (body.shortCode == "section_full") {
             alert_modal(
               "This section is full. Please try enrolling in another section.",
@@ -231,7 +246,7 @@ function SectionSummary(props) {
 
   const available = props.section.capacity - props.section.enrolledStudents;
   const pluralized_spot = available == 1 ? "spot" : "spots";
-  const disabled = props.enrolled || available == 0;
+  const disabled = props.enrolled || !props.enrollmentOpen || available == 0;
 
   return (
     <li>
