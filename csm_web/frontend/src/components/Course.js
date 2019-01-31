@@ -17,7 +17,12 @@ const dayOfWeek = {
 };
 
 function CourseDetail(props) {
-  return <h1>{props.course}</h1>;
+  return (
+    <div>
+      <h1>{props.course}</h1>
+      {props.enrolled && <h3>You are enrolled in this course</h3>}
+    </div>
+  );
 }
 
 class Course extends React.Component {
@@ -226,6 +231,7 @@ function SectionSummary(props) {
 
   const available = props.section.capacity - props.section.enrolledStudents;
   const pluralized_spot = available == 1 ? "spot" : "spots";
+  const disabled = props.enrolled || available == 0;
 
   return (
     <li>
@@ -236,7 +242,11 @@ function SectionSummary(props) {
         {props.section.enrolledStudents}/{props.section.capacity} - {available}{" "}
         {pluralized_spot} available
       </p>
-      <button className="uk-button uk-button-default" onClick={handleClick}>
+      <button
+        className="uk-button uk-button-default"
+        disabled={disabled}
+        onClick={handleClick}
+      >
         Enroll
       </button>
     </li>
