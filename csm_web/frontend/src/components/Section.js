@@ -1,76 +1,6 @@
 import React from "react";
 import * as Cookies from "js-cookie";
-
-class Override extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      location: null,
-      startTime: null,
-      duration: null,
-      dayOfWeek: null,
-      date: null
-    };
-    this.handleInputChange = this.handleInputChange.bind(this);
-  }
-
-  handleInputChange(event) {
-    const [name, value] = [event.target.name, event.target.value];
-    this.setState({ [name]: value });
-  }
-
-  render() {
-    const inputParameters = [
-      ["Location", "location", "text"],
-      ["Start time", "startTime", "time"],
-      ["Duration", "duration", "number"],
-      ["Date", "date", "date"]
-    ];
-    const inputs = inputParameters.map(parameters => {
-      const [label, name, type] = parameters;
-      return (
-        <label>
-          {label}
-          <input
-            name={name}
-            type={type}
-            onChange={this.handleInputChange}
-            className="uk-input"
-          />
-        </label>
-      );
-    });
-
-    return (
-      <div>
-        <button
-          className="uk-button uk-button-default"
-          type="button"
-          style={{ float: "right" }}
-          data-uk-toggle="target: #override-modal"
-        >
-          Override
-        </button>
-        <div id="override-modal" data-uk-modal>
-          <div className="uk-modal-dialog uk-modal-body">
-            <button
-              className="uk-modal-close"
-              type="button"
-              style={{ float: "right" }}
-              data-uk-icon="icon: close"
-            >
-              {" "}
-            </button>
-            <h2 className="uk-modal-title" style={{ marginTop: "0px" }}>
-              Override
-            </h2>
-            <form>{inputs}</form>
-          </div>
-        </div>
-      </div>
-    );
-  }
-}
+import Override from "./Override";
 
 function SectionSummary(props) {
   return (
@@ -168,27 +98,8 @@ class WeekAttendance extends React.Component {
     );
   }
 }
+
 class Attendances extends React.Component {
-  /*
-  constructor(props) {
-    super(props);
-    this.state = {
-      profile: props.profile,
-      attendances: []
-    };
-  }
-  componentDidMount() {
-    fetch(`/scheduler/profiles/${this.state.profile}/attendance`)
-      .then(response => response.json())
-      .then(attendances =>
-        this.setState((state, props) => {
-          return {
-            attendances: [...attendances, ...state.attendances]
-          };
-        })
-      );
-  }
-	*/
   render() {
     const attendances = this.props.attendances;
     const weekAttendances = attendances.map((attendance, index) => (
