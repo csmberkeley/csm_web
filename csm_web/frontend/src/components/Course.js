@@ -147,7 +147,7 @@ function Day(props) {
         enrolled={props.enrolled}
         enrollmentOpen={props.enrollmentOpen}
         section={section}
-        key={index}
+        key={section.id}
         update={props.update}
       />
     ));
@@ -181,26 +181,26 @@ function SectionEnroll(props) {
       })
       .then(body => {
         if (!ok) {
-          if (body.shortCode === "already_enrolled") {
-            alert_modal(
-              "You are already enrolled in this course. You can only enroll in one section per course.",
-              () => {}
-            );
-          } else if (body.shortCode === "course_closed") {
-            alert_modal(
-              "This course is not currently open for enrollment.",
-              () => {}
-            );
-          } else if (body.shortCode === "section_full") {
-            alert_modal(
-              "This section is full. Please try enrolling in another section.",
-              () => {}
-            );
-          } else {
-            alert_modal("An unknown error has occurred.", () => {});
-            console.log("An unknown error has occurred.");
-            console.log(body.message);
+          let errorMessage;
+          switch (body.shortCode) {
+            case "already_enrolled":
+              errorMessage =
+                "You are already enrolled in this course. You can only enroll in one section per course.";
+              break;
+            case "course_closed":
+              errorMessage =
+                "This course is not currently open for enrollment.";
+              break;
+            case "section_full":
+              errorMessage =
+                "This course is not currently open for enrollment.";
+              break;
+            default:
+              errorMessage = "An unknown error has occurred.";
+              console.log("An unknown error has occurred.");
+              console.log(body.message);
           }
+          alert_modal(errorMessage, () => {});
         } else {
           alert_modal(
             `You've successfully enrolled in section ${
