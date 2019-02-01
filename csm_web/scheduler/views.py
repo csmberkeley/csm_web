@@ -1,3 +1,4 @@
+from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
 from django.utils import timezone
@@ -69,25 +70,32 @@ def enroll(request, pk):
             code=status.HTTP_403_FORBIDDEN,
         )
 
-    if section.current_student_count >= section.capacity:
-        raise PermissionDenied(
-            detail={
-                "short_code": "section_full",
-                "message": "Section is at full capacity",
-            },
-            code=status.HTTP_403_FORBIDDEN,
+    with transaction.atomic():
+        # We reload the section object for atomicity. Even though we never actually
+        # update the section, any profile addition must first acquire a lock on the
+        # desired section. This allows us to assume that current_student_count is
+        # correct.
+        section = Section.objects.select_for_update().get(pk=section.pk)
+
+        if section.current_student_count >= section.capacity:
+            raise PermissionDenied(
+                detail={
+                    "short_code": "section_full",
+                    "message": "Section is at full capacity",
+                },
+                code=status.HTTP_403_FORBIDDEN,
+            )
+
+        profile = Profile(
+            course=section.course,
+            section=section,
+            user=request.user,
+            role=Profile.STUDENT,
+            leader=section.mentor,
         )
+        profile.save()
 
-    profile = Profile(
-        course=section.course,
-        section=section,
-        user=request.user,
-        role=Profile.STUDENT,
-        leader=section.mentor,
-    )
-    profile.save()
     serialized_profile = ProfileSerializer(profile).data
-
     return Response(serialized_profile)
 
 
