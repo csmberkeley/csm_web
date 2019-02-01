@@ -30,9 +30,7 @@ class Course extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      course: {
-        name: props.course
-      },
+      course: props.course,
       sections: {},
       enrolled: false,
       enrollmentOpen: false
@@ -44,9 +42,7 @@ class Course extends React.Component {
       this.setState(
         (state, props) => {
           return {
-            course: {
-              name: props.course
-            },
+            course: props.course,
             sections: {},
             enrolled: false,
             enrollmentOpen: false
@@ -62,45 +58,36 @@ class Course extends React.Component {
   }
 
   updateCourse() {
-    fetch(`/scheduler/courses/${this.state.course.name}`)
+    const now = moment();
+    const enrollmentStart = moment(this.state.course.enrollmentStart);
+    const enrollmentEnd = moment(this.state.course.enrollmentEnd);
+    this.setState((state, props) => {
+      return {
+        enrollmentOpen: now > enrollmentStart && now < enrollmentEnd
+      };
+    });
+
+    fetch("/scheduler/profiles/")
       .then(response => response.json())
-      .then(course => {
-        this.setState(
-          (state, props) => {
-            const now = moment();
-            const enrollmentStart = moment(course.enrollmentStart);
-            const enrollmentEnd = moment(course.enrollmentEnd);
-            return {
-              course: course,
-              enrollmentOpen: now > enrollmentStart && now < enrollmentEnd
-            };
-          },
-          () => {
-            // These requests are synchronous on getting course data
-            fetch("/scheduler/profiles/")
-              .then(response => response.json())
-              .then(profiles => {
-                this.setState((state, props) => {
-                  const courses = profiles.map(profile => profile.course);
-                  return {
-                    enrolled: courses.includes(state.course.id)
-                  };
-                });
-              });
-            fetch(`/scheduler/courses/${this.state.course.name}/sections/`)
-              .then(response => response.json())
-              .then(sections => {
-                this.setState((state, props) => {
-                  return {
-                    sections: groupBy(
-                      sections,
-                      section => section.defaultSpacetime.dayOfWeek
-                    )
-                  };
-                });
-              });
-          }
-        );
+      .then(profiles => {
+        this.setState((state, props) => {
+          const courses = profiles.map(profile => profile.course);
+          return {
+            enrolled: courses.includes(state.course.id)
+          };
+        });
+      });
+    fetch(`/scheduler/courses/${this.state.course.name}/sections/`)
+      .then(response => response.json())
+      .then(sections => {
+        this.setState((state, props) => {
+          return {
+            sections: groupBy(
+              sections,
+              section => section.defaultSpacetime.dayOfWeek
+            )
+          };
+        });
       });
   }
 

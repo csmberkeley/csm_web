@@ -9,7 +9,7 @@ class App extends React.Component {
   state = {
     sections: {},
     profiles: {},
-    courses: ["cs61a", "cs61b", "cs70", "ee16a"]
+    courses: {}
   };
 
   componentDidMount() {
@@ -30,6 +30,21 @@ class App extends React.Component {
               })
             );
         }
+      });
+
+    fetch("/scheduler/courses")
+      .then(response => response.json())
+      .then(courses => {
+        this.setState((state, props) => {
+          let courses_map = {};
+          courses.map(course => {
+            courses_map[course.name] = course;
+          });
+
+          return {
+            courses: courses_map
+          };
+        });
       });
   }
 
@@ -53,7 +68,11 @@ class App extends React.Component {
             />
             <Route
               path="/courses/:slug"
-              render={({ match }) => <Course course={match.params.slug} />}
+              render={({ match }) => (
+                <Course
+                  course={this.state.courses[match.params.slug.toUpperCase()]}
+                />
+              )}
             />
           </div>
         </Router>

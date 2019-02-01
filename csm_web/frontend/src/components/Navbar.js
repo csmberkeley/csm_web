@@ -29,18 +29,13 @@ function Navbar(props) {
     }
   );
 
-  const courseListEntries = Object.entries(props.courses).map(
-    (entry, index) => {
-      const [id, course] = entry;
-      return (
-        <li key={index}>
-          <Link to={`/courses/${course}`}>
-            <h4>{course.toUpperCase()}</h4>
-          </Link>
-        </li>
-      );
-    }
-  );
+  const courseListEntries = Object.keys(props.courses).map(course => (
+    <li key={course}>
+      <Link to={`/courses/${course}`}>
+        <h4>{course.toUpperCase()}</h4>
+      </Link>
+    </li>
+  ));
 
   return (
     <nav className="uk-navbar-container" data-uk-navbar="delay-hide: 200">
