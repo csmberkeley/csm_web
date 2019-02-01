@@ -62,18 +62,17 @@ class Course extends React.Component {
   }
 
   updateCourse() {
-    console.log("Beginning update...");
     fetch(`/scheduler/courses/${this.state.course.name}`)
       .then(response => response.json())
       .then(course => {
         this.setState(
           (state, props) => {
+            const now = moment();
             const enrollmentStart = moment(course.enrollmentStart);
             const enrollmentEnd = moment(course.enrollmentEnd);
             return {
               course: course,
-              enrollmentOpen:
-                moment() > enrollmentStart && moment() < enrollmentEnd
+              enrollmentOpen: now > enrollmentStart && now < enrollmentEnd
             };
           },
           () => {
@@ -81,18 +80,12 @@ class Course extends React.Component {
             fetch("/scheduler/profiles/")
               .then(response => response.json())
               .then(profiles => {
-                this.setState(
-                  (state, props) => {
-                    const courses = profiles.map(profile => profile.course);
-                    return {
-                      enrolled: courses.indexOf(state.course.id) != -1
-                    };
-                  },
-                  () => {
-                    console.log("Updated Enrolled!");
-                    console.log(this.state);
-                  }
-                );
+                this.setState((state, props) => {
+                  const courses = profiles.map(profile => profile.course);
+                  return {
+                    enrolled: courses.includes(state.course.id)
+                  };
+                });
               });
             fetch(`/scheduler/courses/${this.state.course.name}/sections/`)
               .then(response => response.json())
@@ -116,15 +109,8 @@ class Course extends React.Component {
       .sort((item1, item2) => {
         const day1 = dayOfWeek[item1[0]];
         const day2 = dayOfWeek[item2[0]];
-        if (day1 == day2) {
-          return 0;
-        } else if (day1 < day2) {
-          return 1;
-        } else {
-          return -1;
-        }
+        return day1 - day2;
       })
-      .reverse()
       .map(item => {
         const [day, sections] = item;
         return (
@@ -169,17 +155,15 @@ function Day(props) {
       );
       return time1 - time2;
     })
-    .map((section, index) => {
-      return (
-        <SectionSummary
-          enrolled={props.enrolled}
-          enrollmentOpen={props.enrollmentOpen}
-          section={section}
-          key={index}
-          update={props.update}
-        />
-      );
-    });
+    .map((section, index) => (
+      <SectionEnroll
+        enrolled={props.enrolled}
+        enrollmentOpen={props.enrollmentOpen}
+        section={section}
+        key={index}
+        update={props.update}
+      />
+    ));
   return (
     <li>
       <a className="uk-accordion-title" href="#">
@@ -192,7 +176,7 @@ function Day(props) {
   );
 }
 
-function SectionSummary(props) {
+function SectionEnroll(props) {
   const spacetime = props.section.defaultSpacetime;
   const startTime = moment(spacetime.startTime, API_TIME_FORMAT).format(
     DISPLAY_TIME_FORMAT
