@@ -215,3 +215,6 @@ typings/
 
 # Vim swp files
 .*.sw?
+
+# Webpack bundle
+main.js

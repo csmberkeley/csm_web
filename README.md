@@ -25,14 +25,15 @@ To create install dependencies,
 ```
 source venv/bin/activate
 pip install -r csm_web/requirements.txt
+npm i
 ```
 
 ## Starting Django
 To start the Django server,
 ```
-python csm_web/manage.py runserver
+npm run dev && python csm_web/manage.py runserver
 ```
 To populate the database with test data,
 ```
-python csm_web/manage.py loaddata populate
+python csm_web/manage.py createtestdata
 ```
