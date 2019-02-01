@@ -45,7 +45,9 @@ class Override extends React.Component {
         "Content-Type": "application/json"
       },
       body: JSON.stringify(data)
-    });
+    }).then(() =>
+      UIkit.modal(document.getElementById("override-modal")).hide()
+    );
   }
 
   render() {
