@@ -40,7 +40,7 @@ class Course extends React.Component {
   }
 
   componentDidUpdate(prevProps) {
-    if (this.props.course != prevProps.course) {
+    if (this.props.course !== prevProps.course) {
       this.setState(
         (state, props) => {
           return {
@@ -194,17 +194,17 @@ function SectionEnroll(props) {
       })
       .then(body => {
         if (!ok) {
-          if (body.shortCode == "already_enrolled") {
+          if (body.shortCode === "already_enrolled") {
             alert_modal(
               "You are already enrolled in this course. You can only enroll in one section per course.",
               () => {}
             );
-          } else if (body.shortCode == "course_closed") {
+          } else if (body.shortCode === "course_closed") {
             alert_modal(
               "This course is not currently open for enrollment.",
               () => {}
             );
-          } else if (body.shortCode == "section_full") {
+          } else if (body.shortCode === "section_full") {
             alert_modal(
               "This section is full. Please try enrolling in another section.",
               () => {}
@@ -229,8 +229,8 @@ function SectionEnroll(props) {
   }
 
   const available = props.section.capacity - props.section.enrolledStudents;
-  const pluralized_spot = available == 1 ? "spot" : "spots";
-  const disabled = props.enrolled || !props.enrollmentOpen || available == 0;
+  const pluralized_spot = available === 1 ? "spot" : "spots";
+  const disabled = props.enrolled || !props.enrollmentOpen || available === 0;
 
   return (
     <li>
