@@ -52,18 +52,19 @@ class AttendanceSerializer(serializers.ModelSerializer):
         fields = ("id", "section", "week_start", "presence", "attendee")
 
 
-class SectionSerializer(serializers.ModelSerializer):
-    default_spacetime = SpacetimeSerializer()
-
-    class Meta:
-        model = Section
-        fields = ("course", "mentor", "default_spacetime", "capacity")
-
-
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = ("id", "leader", "course", "role", "user", "section")
+
+
+class SectionSerializer(serializers.ModelSerializer):
+    default_spacetime = SpacetimeSerializer()
+    mentor = ProfileSerializer()
+
+    class Meta:
+        model = Section
+        fields = ("course", "mentor", "default_spacetime", "capacity")
 
 
 class OverrideSerializer(serializers.ModelSerializer):
