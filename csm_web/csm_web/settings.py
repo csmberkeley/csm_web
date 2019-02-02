@@ -19,14 +19,21 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
+# TODO
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = "***REMOVED***"
 
+# TODO
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
+# Change this when Matthew graduates I guess
+ADMINS = [
+    ("Jonathan Shi", "jhshi@berkeley.edu"),
+    ("Matthew Soh", "matthewsoh@berkeley.edu")
+]
 
 # Application definition
 
@@ -172,4 +179,52 @@ REST_FRAMEWORK = {
         "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
         "rest_framework.renderers.BrowsableAPIRenderer",
     )
+}
+
+# Logging
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+        },
+        "mail_admins": {
+            "level": "ERROR",
+            "class": "django.utils.log.AdminEmailHandler",
+        },
+        "info": {
+            "level": "INFO",
+            "filename": os.path.join(DJANGO_ROOT, "scheduler-info.log")
+        }
+        "low-level": {
+            "level": "DEBUG",
+            "filename": os.path.join(DJANGO_ROOT, "scheduler-low-level.log")
+        },
+        "models": {
+            "level": "DEBUG",
+            "filename": os.path.join(DJANGO_ROOT, "scheduler-models.log")
+        },
+        "add-drop": {
+            "level": "INFO",
+            "filename": os.path.join(DJANGO_ROOT, "scheduler-add-drop.log")
+        }
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["console", "info"],
+            "propagate": True
+        },
+        "django.request": {
+            "handlers": ["low-level"],
+            "propagate": True
+        },
+        "django.db.backends": {
+            "handlers": ["low-level"],
+            "propagate": True
+        },
+        "scheduler.signals": {
+            "handlers": ["console", "info", "mail_admins", "add-drop", "models"],
+        }
+    }
 }
