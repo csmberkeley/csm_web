@@ -185,50 +185,72 @@ REST_FRAMEWORK = {
 LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
+    "formatters": {
+        "default": {
+            "format": "{asctime} {module} {levelname} {message}",
+            "style": "{"
+        }
+    },
     "handlers": {
-        "console": {
+        "console-django": {
+            "level": "INFO",
             "class": "logging.StreamHandler",
+            "formatter": "default"
+        },
+        "console-models": {
+            "level": "ERROR",
+            "class": "logging.StreamHandler",
+            "formatter": "default"
         },
         "mail_admins": {
             "level": "ERROR",
             "class": "django.utils.log.AdminEmailHandler",
+            "formatter": "default"
         },
         "info": {
             "level": "INFO",
             "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "scheduler-info.log")
+            "filename": os.path.join(BASE_DIR, "scheduler-info.log"),
+            "formatter": "default"
         },
         "low-level": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "scheduler-low-level.log")
+            "filename": os.path.join(BASE_DIR, "scheduler-low-level.log"),
+            "formatter": "default"
         },
         "models": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "scheduler-models.log")
+            "filename": os.path.join(BASE_DIR, "scheduler-models.log"),
+            "formatter": "default"
         },
         "add-drop": {
             "level": "INFO",
             "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "scheduler-add-drop.log")
+            "filename": os.path.join(BASE_DIR, "scheduler-add-drop.log"),
+            "formatter": "default"
         }
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "info", "mail_admins"],
-            "propagate": True
+            "handlers": ["console-django", "info", "mail_admins"],
+            "level": "INFO",
         },
         "django.request": {
             "handlers": ["low-level"],
-            "propagate": True
+            "level": "DEBUG",
+            "propagate": False
         },
+        # only active on debug builds
         "django.db.backends": {
             "handlers": ["low-level"],
-            "propagate": True
+            "level": "DEBUG",
+            "propagate": False
         },
         "scheduler.signals": {
-            "handlers": ["console", "info", "mail_admins", "add-drop", "models"],
+            "handlers": ["console-models", "info", "mail_admins", "add-drop", "models"],
+            "level": "DEBUG"
         }
     }
 }
