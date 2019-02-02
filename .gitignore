@@ -1,7 +1,6 @@
 .DS_Store
 # js bundle
-scheduler/csm_web/frontend/static/main.js
-
+csm_web/frontend/static/frontend/main.js
 
 ### Python ###
 # Byte-compiled / optimized / DLL files

@@ -1,10 +1,8 @@
+import csv
 from django.core.management import BaseCommand
 from django.db import transaction, IntegrityError
 from collections import OrderedDict
 from scheduler.models import Profile, Course, User
-
-# from django.contrib.auth.models import User as AuthUser
-import csv
 
 PROFILE_CSV_DEFAULT_FIELDS = ("name", "email", "role")
 
@@ -78,12 +76,11 @@ class Command(BaseCommand):
         self.stdout.write("Generated {} profile(s).".format(count))
 
     def _check_cols(self, cols, options):
-        if options["is_students"]:
-            if "role" in cols:
+        if options["is_students"] and "role" in cols:
                 raise Exception(
                     "'role' column was found in CSV, but --student was specified"
                 )
-        elif "role" not in cols:
+        if not options["is_students"] and "role" not in cols:
             raise Exception("'role' column missing (found {})".format(cols))
         if "email" not in cols:
             raise Exception("'email' column missing (found {})".format(cols))
