@@ -58,7 +58,7 @@ class Command(BaseCommand):
             fields["role"] = Profile.STUDENT
         if options["course"] and options["course"] != fields["course"]:
             raise Exception(
-                "Warning: course in CSV does not match course provided as argument"
+                "Course in CSV does not match course provided as argument"
             )
             # NOTE: unsure if this accounts for normalization, i.e. fname.lname@gmail vs fnamelname2gmail
             # also unsure if lack of password will mess with social-auth; that's to be tested

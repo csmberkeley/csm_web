@@ -16,11 +16,11 @@ class TestGhostProfileMaker(TestCase):
 	"""
 
     NUM_STUDENTS = 500
-    NUM_JMS = 100
+    TEST_COURSE = "EE16A"
 
     @classmethod
     def setUpTestData(cls):
-        c = factories.CourseFactory.create(name="EE16A")
+        c = factories.CourseFactory.create(name=cls.TEST_COURSE)
         mentor = Profile.objects.create(
             leader=None,
             course=c,
@@ -63,8 +63,8 @@ class TestGhostProfileMaker(TestCase):
         cls.f.close()
 
     def test_success_command_output(self):
-        course = "EE16A"
-        call_command("createghostprofiles", self.good["filename"], "EE16A")
+        course = self.TEST_COURSE
+        call_command("createghostprofiles", self.good["filename"])
         missing = []
         for profile_dict in self.good["profile_dicts"]:
             # check to ensure that the users all exist
