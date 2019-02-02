@@ -3,6 +3,7 @@ chardet==3.0.4
 defusedxml==0.5.0
 Django==2.1.5
 django-eventlog==1.1
+django-heroku==0.3.1
 djangorestframework==3.9.0
 djangorestframework-camel-case==0.2.0
 factory-boy==2.11.1
