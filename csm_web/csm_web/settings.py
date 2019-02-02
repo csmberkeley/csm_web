@@ -195,24 +195,28 @@ LOGGING = {
         },
         "info": {
             "level": "INFO",
-            "filename": os.path.join(DJANGO_ROOT, "scheduler-info.log")
-        }
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "scheduler-info.log")
+        },
         "low-level": {
             "level": "DEBUG",
-            "filename": os.path.join(DJANGO_ROOT, "scheduler-low-level.log")
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "scheduler-low-level.log")
         },
         "models": {
             "level": "DEBUG",
-            "filename": os.path.join(DJANGO_ROOT, "scheduler-models.log")
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "scheduler-models.log")
         },
         "add-drop": {
             "level": "INFO",
-            "filename": os.path.join(DJANGO_ROOT, "scheduler-add-drop.log")
+            "class": "logging.FileHandler",
+            "filename": os.path.join(BASE_DIR, "scheduler-add-drop.log")
         }
     },
     "loggers": {
         "django": {
-            "handlers": ["console", "info"],
+            "handlers": ["console", "info", "mail_admins"],
             "propagate": True
         },
         "django.request": {

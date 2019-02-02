@@ -6,6 +6,13 @@ from scheduler.models import Profile, Course, User
 
 PROFILE_CSV_DEFAULT_FIELDS = ("name", "email", "role")
 
+# aliases
+FIELD_ALIASES = {
+    "full name": "name"
+}
+
+IGNORED_FIELDS = { "returning", "paid" }
+
 ROLE_MAP = {
     "Coordinator": Profile.COORDINATOR,
     "Senior Mentor": Profile.SENIOR_MENTOR,
@@ -55,7 +62,7 @@ class Command(BaseCommand):
                 reader = iter(csv.reader(csvfile))
                 if options["withheader"]:
                     # treat the first row as column names
-                    cols = [s.lower() for s in next(reader)]
+                    cols = [self._get_col_name(s) for s in next(reader)]
                 else:
                     cols = PROFILE_CSV_DEFAULT_FIELDS
                 self._check_cols(cols, options)
@@ -74,6 +81,17 @@ class Command(BaseCommand):
             self.stderr.write("Unable to read CSV file.")
             raise e
         self.stdout.write("Generated {} profile(s).".format(count))
+
+    def _get_col_name(self, s):
+        t = s.lower()
+        if t in PROFILE_CSV_DEFAULT_FIELDS:
+            return t
+        elif t in IGNORED_FIELDS:
+            return None
+        elif t in FIELD_ALIASES:
+            return FIELD_ALIASES[s]
+        else:
+            raise Exception("Unknown column name: {}".format(s))
 
     def _check_cols(self, cols, options):
         if options["is_students"] and "role" in cols:
@@ -102,5 +120,10 @@ class Command(BaseCommand):
         # NOTE: unsure if this accounts for normalization, i.e. fname.lname@gmail vs fnamelname@gmail
         # also unsure if lack of password will mess with social-auth; that's to be tested
         email = fields["email"]
-        user, _ = User.objects.get_or_create(username=email.split("@")[0], email=email)
+        chunks = email.split("@")
+        if len(chunks) != 2:
+            raise Exception("Malformed email: {}".format(email))
+        if chunks[1] != "berkeley.edu":
+            raise Exception("Non-Berkeley email found: {}".format(email))
+        user, _ = User.objects.get_or_create(username=chunks[0], email=email)
         Profile.objects.create(role=fields["role"], course=course, user=user)
