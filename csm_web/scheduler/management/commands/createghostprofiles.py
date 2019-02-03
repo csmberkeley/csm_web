@@ -11,11 +11,12 @@ FIELD_ALIASES = {
     "full name": "name"
 }
 
-IGNORED_FIELDS = { "returning", "paid" }
+IGNORED_FIELDS = { "returning", "paid", "paid tutor", "" }
 
 ROLE_MAP = {
     "Coordinator": Profile.COORDINATOR,
     "Senior Mentor": Profile.SENIOR_MENTOR,
+    "Associate Mentor": Profile.ASSOCIATE_MENTOR,
     "Junior Mentor": Profile.JUNIOR_MENTOR,
     "Student": Profile.STUDENT,
 }
@@ -23,6 +24,7 @@ ROLE_MAP = {
 
 class Command(BaseCommand):
     help = """Creates 'ghost' profiles for users who have not yet logged in to Scheduler.
+    This should be run only after all sections have been entered.
     This takes in a CSV file where each row contains the user's name, email, and role, and generates
     profile objects as specified.
     The path to the CSV file and the course the file is for are specified as arguments.
@@ -42,16 +44,29 @@ class Command(BaseCommand):
             "course", type=str, help="the slug for the course being entered"
         )
         parser.add_argument(
+            "--test",
+            action="store_true",
+            dest="is_test",
+            help="if specified, any section with role that's not SM/coord will be removed, \
+                and the role will be set to student instead for testing purposes"
+        )
+        parser.add_argument(
             "--student",
             action="store_true",
             dest="is_students",
             help="if specified, assumes that all users entered are students",
         )
         parser.add_argument(
-            "--withheader",
-            action="store_true",
+            "--noheader",
+            action="store_false",
             dest="withheader",
-            help="specifies that the first row of the CSV file should be read as column names, otherwise uses PROFILE_CSV_DEFAULT_FIELDS",
+            help="if not specified, specifies that the first row of the CSV file should be read as column names, otherwise uses PROFILE_CSV_DEFAULT_FIELDS",
+        )
+        parser.add_argument(
+            "--nullsections",
+            action="store_true",
+            dest="nullsections",
+            help="ignores section field of profile (should be used only for testing)"
         )
 
     def handle(self, *args, **options):
@@ -70,11 +85,14 @@ class Command(BaseCommand):
                 try:
                     with transaction.atomic():
                         for row in reader:
-                            self._create_single_profile(cols, row, course, options)
+                            self._update_profile(cols, row, course, options)
                             count += 1
+                except IndexError as e:
+                    self.stderr.write("cols: {}")
+                    raise e
                 except IntegrityError as e:
                     self.stderr.write(
-                        "Failed after generating {} profile(s)".format(count)
+                        "Failed after generating {} profile(s).".format(count)
                     )
                     raise e
         except csv.Error as e:
@@ -89,7 +107,7 @@ class Command(BaseCommand):
         elif t in IGNORED_FIELDS:
             return None
         elif t in FIELD_ALIASES:
-            return FIELD_ALIASES[s]
+            return FIELD_ALIASES[t]
         else:
             raise Exception("Unknown column name: {}".format(s))
 
@@ -103,15 +121,19 @@ class Command(BaseCommand):
         if "email" not in cols:
             raise Exception("'email' column missing (found {})".format(cols))
 
-    def _create_single_profile(self, cols, row, course, options):
+    def _update_profile(self, cols, row, course, options):
         """
-        Creates a single profile object from the parameters passed in the row of a CSV file.
+        Updates profile object from the parameters passed in the row of a CSV file.
+        These profiles should have been created beforehand when section times were entered.
+        If --nullsections was passed, then profile objects are created instead. This should
+        be used only in testing.
         - cols: an iterable specifying the order of the columns
         - row: the row of the CSV file (a list of values)
         """
         # TODO for students, match section to mentor, and generate attendances (maybe as an object hook?)
         fields = {}
         for i in range(len(row)):
+            # field index can definitely be lifted out of this function; to optimize later
             field = cols[i]
             fields[field] = row[i]
         if options["is_students"]:
@@ -126,4 +148,17 @@ class Command(BaseCommand):
         if chunks[1] != "berkeley.edu":
             raise Exception("Non-Berkeley email found: {}".format(email))
         user, _ = User.objects.get_or_create(username=chunks[0], email=email)
-        Profile.objects.create(role=fields["role"], course=course, user=user)
+        if options["nullsections"]:
+            Profile.objects.create(role=ROLE_MAP[fields["role"]], course=course, user=user)
+        else:
+            # user and course fields should already be filled correctly, just update role
+            Profile.objects.filter(user=user, course=course).update(role=ROLE_MAP[fields["role"]])
+        if options["is_test"]:
+            # only allow SMs to have sections for testing purposes
+            for profile in Profile.objects.filter(user=user, course=course):
+                if profile.role not in (Profile.SENIOR_MENTOR, Profile.COORDINATOR):
+                    # delete their section while we're at it
+                    profile.section.delete()
+                    # because of cascade we need to make a new profile, which is kind of silly
+                    # but bear with me
+                    Profile.objects.create(role=Profile.STUDENT, course=course, user=user)

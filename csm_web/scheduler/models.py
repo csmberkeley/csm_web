@@ -53,11 +53,13 @@ class Course(models.Model):
 class Profile(ActivatableModel):
     STUDENT = "ST"
     JUNIOR_MENTOR = "JM"
+    ASSOCIATE_MENTOR = "AM"
     SENIOR_MENTOR = "SM"
     COORDINATOR = "CO"
     ROLE_CHOICES = (
         (STUDENT, "Student"),
         (JUNIOR_MENTOR, "Junior Mentor"),
+        (ASSOCIATE_MENTOR, "Associate Mentor"),
         (SENIOR_MENTOR, "Senior Mentor"),
         (COORDINATOR, "Coordinator"),
     )
@@ -71,7 +73,7 @@ class Profile(ActivatableModel):
         null=True,
     )
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    role = models.CharField(max_length=2, choices=ROLE_CHOICES)
+    role = models.CharField(max_length=2, choices=ROLE_CHOICES, blank=True)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     section = models.ForeignKey(
         "Section", on_delete=models.CASCADE, blank=True, null=True

@@ -89,6 +89,6 @@ class TestGhostProfileMaker(TestCase):
         Profile.objects.all().delete()
         User.objects.all().delete()
         call_command(
-            "createghostprofiles", self.with_header_filename, course, "--withheader"
+            "createghostprofiles", self.with_header_filename, course, "--nullsections"
         )
         check()
