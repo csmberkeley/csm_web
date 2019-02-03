@@ -75,3 +75,17 @@ body {
   margin: 0;
   padding: 0px 0px 0px 0.5em;
 }
+
+.course-hero {
+  padding: 1em;
+}
+
+.course-hero-label {
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 2.5em;
+}
+
+.course-hero-alert {
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 1em;
+}

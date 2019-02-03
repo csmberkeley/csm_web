@@ -18,10 +18,16 @@ const dayOfWeek = {
 
 function CourseDetail(props) {
   return (
-    <div>
-      <h1>{props.course}</h1>
-      {props.enrolled && <h3>You are enrolled in this course</h3>}
-      {!props.enrollmentOpen && <h3>This course is not open for enrollment</h3>}
+    <div className="course-hero">
+      <h1 className="course-hero-label">{props.course}</h1>
+      {props.enrolled && (
+        <h3 className="course-hero-alert">You are enrolled in this course</h3>
+      )}
+      {!props.enrollmentOpen && (
+        <h3 className="course-hero-alert">
+          This course is not open for enrollment
+        </h3>
+      )}
     </div>
   );
 }
@@ -112,6 +118,21 @@ class Course extends React.Component {
         );
       });
 
+    const dayHeaders = Object.entries(this.state.sections)
+      .sort((item1, item2) => {
+        const day1 = dayOfWeek[item1[0]];
+        const day2 = dayOfWeek[item2[0]];
+        return day1 - day2;
+      })
+      .map(item => {
+        const [day, sections] = item;
+        return (
+          <li key={day}>
+            <a href="#">{day}</a>
+          </li>
+        );
+      });
+
     return (
       <div>
         <div>
@@ -122,7 +143,10 @@ class Course extends React.Component {
           />
         </div>
         <div>
-          <ul uk-accordion="true">{days}</ul>
+          <ul data-uk-tab="connect: #target">{dayHeaders}</ul>
+          <ul id="target" className="uk-switcher">
+            {days}
+          </ul>
         </div>
       </div>
     );
@@ -152,14 +176,9 @@ function Day(props) {
       />
     ));
   return (
-    <li>
-      <a className="uk-accordion-title" href="#">
-        {props.day}
-      </a>
-      <div className="uk-accordion-content">
-        <ul>{sections}</ul>
-      </div>
-    </li>
+    <div>
+      <ul className="uk-list uk-list-striped">{sections}</ul>
+    </div>
   );
 }
 
@@ -229,7 +248,7 @@ function SectionEnroll(props) {
         {pluralized_spot} available
       </p>
       <button
-        className="uk-button uk-button-default"
+        className="uk-button uk-button-primary"
         disabled={disabled}
         onClick={handleClick}
       >
