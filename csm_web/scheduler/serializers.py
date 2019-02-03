@@ -177,6 +177,25 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
                 for key, group in grouped_attendances
             ]
             return attendances
+        else:
+            attendances = (
+                self.context["request"]
+                .user.profile_set.filter(section=obj)
+                .first()
+                .attendance_set.all()
+            )
+            attendances = sorted(
+                attendances, key=lambda attendance: attendance.week_start
+            )
+            student_name = (
+                self.context["request"].user.first_name
+                + " "
+                + self.context["request"].user.last_name
+            )
+            return [
+                {str(attendance.id): [student_name, attendance.presence]}
+                for attendance in attendances
+            ]
 
     def get_course_name(self, obj):
         return obj.course.name
