@@ -5,5 +5,5 @@ class SchedulerConfig(AppConfig):
     name = "scheduler"
 
     def ready(self):
-    	# registers signals
-    	import scheduler.signals
+        # registers signals
+        import scheduler.signals

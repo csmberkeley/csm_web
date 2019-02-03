@@ -32,7 +32,7 @@ ALLOWED_HOSTS = []
 # Change this when Matthew graduates I guess
 ADMINS = [
     ("Jonathan Shi", "jhshi@berkeley.edu"),
-    ("Matthew Soh", "matthewsoh@berkeley.edu")
+    ("Matthew Soh", "matthewsoh@berkeley.edu"),
 ]
 
 # Application definition
@@ -186,51 +186,48 @@ LOGGING = {
     "version": 1,
     "disable_existing_loggers": False,
     "formatters": {
-        "default": {
-            "format": "{asctime} {module} {levelname} {message}",
-            "style": "{"
-        }
+        "default": {"format": "{asctime} {module} {levelname} {message}", "style": "{"}
     },
     "handlers": {
         "console-django": {
             "level": "INFO",
             "class": "logging.StreamHandler",
-            "formatter": "default"
+            "formatter": "default",
         },
         "console-models": {
             "level": "ERROR",
             "class": "logging.StreamHandler",
-            "formatter": "default"
+            "formatter": "default",
         },
         "mail_admins": {
             "level": "ERROR",
             "class": "django.utils.log.AdminEmailHandler",
-            "formatter": "default"
+            "formatter": "default",
         },
         "info": {
             "level": "INFO",
             "class": "logging.FileHandler",
             "filename": os.path.join(BASE_DIR, "scheduler-info.log"),
-            "formatter": "default"
+            "formatter": "default",
         },
         "low-level": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
             "filename": os.path.join(BASE_DIR, "scheduler-low-level.log"),
-            "formatter": "default"
+            "formatter": "default",
         },
         "models": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
             "filename": os.path.join(BASE_DIR, "scheduler-models.log"),
-            "formatter": "default"
+            "formatter": "default",
         },
         "add-drop": {
             "level": "INFO",
             "class": "logging.FileHandler",
             "filename": os.path.join(BASE_DIR, "scheduler-add-drop.log"),
-            "formatter": "default"
-        }
+            "formatter": "default",
+        },
     },
     "loggers": {
         "django": {
@@ -240,18 +237,18 @@ LOGGING = {
         "django.request": {
             "handlers": ["low-level"],
             "level": "DEBUG",
-            "propagate": False
+            "propagate": False,
         },
         # only active on debug builds
         "django.db.backends": {
             "handlers": ["low-level"],
             "level": "DEBUG",
-            "propagate": False
+            "propagate": False,
         },
         "scheduler.signals": {
             "handlers": ["console-models", "mail_admins", "add-drop", "models"],
             "level": "DEBUG",
-            "propagate": False
-        }
-    }
+            "propagate": False,
+        },
+    },
 }

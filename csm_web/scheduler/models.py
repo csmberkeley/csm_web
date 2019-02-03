@@ -39,6 +39,9 @@ class Attendance(models.Model):
     def leader(self):
         return self.section.mentor
 
+    class Meta:
+        unique_together = ("section", "week_start")
+
 
 class Course(models.Model):
     name = models.SlugField(max_length=100)
@@ -48,6 +51,9 @@ class Course(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        unique_together = ("name",)
 
 
 class Profile(ActivatableModel):
@@ -123,6 +129,9 @@ class Section(models.Model):
         return "{course} section ({spacetime})".format(
             course=self.course.name, spacetime=str(self.default_spacetime)
         )
+
+    class Meta:
+        unique_together = ("course", "default_spacetime")
 
 
 class Spacetime(models.Model):

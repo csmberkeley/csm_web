@@ -4,13 +4,16 @@ from django.db import transaction, IntegrityError
 from django.utils import timezone
 from scheduler.models import Course
 
+
 class Command(BaseCommand):
     help = """Creates Course objects as specified by a JSON config file.
     The JSON can either contain a single course, or multiple courses.
     The datetimes in the file should be in ISO format, and will be treated as timezone aware."""
 
     def add_arguments(self, parser):
-        parser.add_argument("json_path", type=str, help="the path to the JSON file to be read")
+        parser.add_argument(
+            "json_path", type=str, help="the path to the JSON file to be read"
+        )
 
     def handle(self, *args, **options):
         filename = options["json_path"]
@@ -26,12 +29,15 @@ class Command(BaseCommand):
                         course = Course.objects.create(
                             name=json_course["name"],
                             valid_until=get_datetime(json_course["valid_until"]),
-                            enrollment_start=get_datetime(json_course["enrollment_start"]),
-                            enrollment_end=get_datetime(json_course["enrollment_end"])
+                            enrollment_start=get_datetime(
+                                json_course["enrollment_start"]
+                            ),
+                            enrollment_end=get_datetime(json_course["enrollment_end"]),
                         )
                         courses.append(course)
             except IntegrityError as e:
-                self.stderr.write("Failed after generating these courses: {}".format(courses))
+                self.stderr.write(
+                    "Failed after generating these courses: {}".format(courses)
+                )
                 raise e
         self.stdout.write("Generated these courses: {}".format(courses))
-
