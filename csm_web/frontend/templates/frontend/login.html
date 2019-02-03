@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+	<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>CSM Scheduler</title>
+	{% load static %}
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.25/css/uikit.min.css" />
+	<link rel="stylesheet" href="{% static 'frontend/css/style.css' %}" type="text/css" media="screen"/>
+
+
+	<!-- UIkit JS -->
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.25/js/uikit.min.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.25/js/uikit-icons.min.js"></script>
+	</head>
+	<body style="width: 100%; height: 100%;">
+		<div class="uk-card uk-card-default uk-align-center" style="width: 75%; height: 75%; margin-top: 5%;">
+			<img src="{% static 'frontend/img/csm_logo.png' %}" style="width: 50%; height: 50%" class="uk-align-center">
+			<a class="uk-button uk-button-primary uk-align-center" style="width: 35%;" href="{% url 'social:begin' 'google-oauth2' %}">Login with your @berkeley.edu email</a><br>
+		</div>
+	</body>
+</html>
+			

@@ -146,7 +146,9 @@ AUTHENTICATION_BACKENDS = (
 
 # Python Social Auth
 
-LOGIN_REDIRECT_URL = "/scheduler"
+LOGIN_REDIRECT_URL = "/"
+
+LOGIN_URL = "/login"
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = (
     "***REMOVED***"
