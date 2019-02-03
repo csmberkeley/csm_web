@@ -34,14 +34,6 @@ function Navbar(props) {
     }
   );
 
-  const courseListEntries = Object.keys(props.courses).map(course => (
-    <li key={course}>
-      <Link to={`/courses/${course}`}>
-        <h4>{course.toUpperCase()}</h4>
-      </Link>
-    </li>
-  ));
-
   return (
     <div uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky">
       <nav
@@ -69,23 +61,15 @@ function Navbar(props) {
               >
                 <ul className="uk-nav uk-navbar-dropdown-nav">
                   {sectionListEntries}
-                  <li id="section-enroll-btn">
-                    <i class="fa fa-plus" aria-hidden="true" /> Enroll in a
-                    section
-                  </li>
+                  <Link to={"/courses/"}>
+                    <li id="section-enroll-btn">
+                      <i class="fa fa-plus" aria-hidden="true" /> Enroll in a
+                      section
+                    </li>
+                  </Link>
                 </ul>
               </div>
             </li>
-            {/*
-          <li>
-            <a href="#">Courses</a>
-            <div className="uk-navbar-dropdown">
-              <ul className="uk-nav uk-navbar-dropdown-nav">
-                {courseListEntries}
-              </ul>
-            </div>
-          </li>
-          */}
           </ul>
         </div>
       </nav>

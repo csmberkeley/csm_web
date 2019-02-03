@@ -3,6 +3,7 @@ import { MemoryRouter as Router, Route, Link } from "react-router-dom";
 import ReactDOM from "react-dom";
 import Section from "./Section";
 import Course from "./Course";
+import CourseNav from "./CourseNav";
 import Navbar from "./Navbar";
 
 class App extends React.Component {
@@ -65,6 +66,11 @@ class App extends React.Component {
                   {...this.state.sections[match.params.id]}
                 />
               )}
+            />
+            <Route
+              path="/courses/"
+              exact="true"
+              render={() => <CourseNav courses={this.state.courses} />}
             />
             <Route
               path="/courses/:slug"
