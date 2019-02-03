@@ -110,10 +110,12 @@ class WeekAttendance extends React.Component {
 class Attendances extends React.Component {
   render() {
     const attendances = this.props.attendances;
-    const weekAttendances = attendances.map((attendance, index) => (
-      <WeekAttendance attendance={attendance} weekNum={index} key={index} />
-    ));
-    return <div className="uk-container">{weekAttendances}</div>;
+    if (attendances) {
+      const weekAttendances = attendances.map((attendance, index) => (
+        <WeekAttendance attendance={attendance} weekNum={index} key={index} />
+      ));
+      return <div className="uk-container">{weekAttendances}</div>;
+    }
   }
 }
 
