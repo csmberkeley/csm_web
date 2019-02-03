@@ -1,5 +1,5 @@
 import React from "react";
-import * as Cookies from "js-cookie";
+import Cookies from "js-cookie";
 import Override from "./Override";
 
 function SectionSummary(props) {
@@ -29,21 +29,29 @@ function SectionSummary(props) {
 class WeekAttendance extends React.Component {
   constructor(props) {
     super(props);
-    this.state = Object.assign({}, props.attendance);
+    this.state = {
+      attendance: Object.assign({}, props.attendance),
+      changed: new Set()
+    };
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
   handleInputChange(event) {
-    this.setState({
-      [event.target.id]: [event.target.name, event.target.value]
-    });
+    const { id, name, value } = event.target;
+    this.setState((state, props) => ({
+      attendance: (() => {
+        state.attendance[id] = [name, value];
+        return state.attendance;
+      })(),
+      changed: state.changed.add(id)
+    }));
   }
 
   handleSubmit(event) {
     event.preventDefault();
-    for (let pk of Object.keys(this.state)) {
-      const [studentName, presence] = this.state[pk];
+    for (let pk of this.state.changed) {
+      const [studentName, presence] = this.state.attendance[pk];
       fetch(`/scheduler/attendances/${pk}/`, {
         method: "PATCH",
         credentials: "same-origin",
@@ -58,7 +66,7 @@ class WeekAttendance extends React.Component {
   }
 
   render() {
-    const studentAttendances = Object.entries(this.state);
+    const studentAttendances = Object.entries(this.state.attendance);
     const studentAttendanceListEntries = studentAttendances.map(
       (attendance, index) => {
         const [pk, details] = attendance;

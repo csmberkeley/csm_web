@@ -1,5 +1,5 @@
 import React from "react";
-import * as Cookies from "js-cookie";
+import Cookies from "js-cookie";
 import moment from "moment";
 
 // indicies correspond to moment.day()
