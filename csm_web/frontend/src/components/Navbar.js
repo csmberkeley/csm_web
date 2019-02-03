@@ -9,11 +9,11 @@ function SectionDropdownEntry(props) {
     "HH:mm:ss"
   ).format("hh:mm A");
   return (
-    <div class="section-dropdown-entry">
-      <h3 class="section-dropdown-entry-course-label">
+    <div className="section-dropdown-entry">
+      <h3 className="section-dropdown-entry-course-label">
         {props.section.courseName}
       </h3>
-      <p class="section-dropdown-entry-time">
+      <p className="section-dropdown-entry-time">
         {props.section.defaultSpacetime.dayOfWeek} {displayTime}
       </p>
     </div>
@@ -42,9 +42,9 @@ function Navbar(props) {
         className="uk-navbar-container"
         data-uk-navbar="delay-hide: 200"
       >
-        <div class="logo-container uk-navbar-item">
+        <div className="logo-container uk-navbar-item">
           <img
-            class="logo-img uk-logo"
+            className="logo-img uk-logo"
             src="static/frontend/img/logo_white.png"
           />
         </div>
@@ -63,7 +63,7 @@ function Navbar(props) {
                   {sectionListEntries}
                   <Link to={"/courses/"}>
                     <li id="section-enroll-btn">
-                      <i class="fa fa-plus" aria-hidden="true" /> Enroll in a
+                      <i className="fa fa-plus" aria-hidden="true" /> Enroll in a
                       section
                     </li>
                   </Link>
