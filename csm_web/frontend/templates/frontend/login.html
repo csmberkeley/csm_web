@@ -13,10 +13,11 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.25/js/uikit.min.js"></script>
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.25/js/uikit-icons.min.js"></script>
 	</head>
-	<body style="width: 100%; height: 100%;">
-		<div class="uk-card uk-card-default uk-align-center" style="width: 75%; height: 75%; margin-top: 5%;">
-			<img src="{% static 'frontend/img/csm_logo.png' %}" style="width: 50%; height: 50%" class="uk-align-center">
-			<a class="uk-button uk-button-primary uk-align-center" style="width: 35%;" href="{% url 'social:begin' 'google-oauth2' %}">Login with your @berkeley.edu email</a><br>
+	<body>
+		<div id="login-card" class="uk-card uk-card-default uk-align-center" style="width: 75%; height: 75%; margin-top: 5%;">
+		    <img src="{% static 'frontend/img/csm_logo.png' %}" style="max-width: 50%;" class="uk-align-center">
+		    <a id="login-btn" class="uk-button uk-button-primary uk-align-center" href="{% url 'social:begin' 'google-oauth2' %}">Login</a>
+                    <p id="login-subtitle">with your Berkeley email</p>
 		</div>
 	</body>
 </html>

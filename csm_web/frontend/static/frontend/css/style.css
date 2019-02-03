@@ -2,6 +2,26 @@ body {
   font-family: "Source Sans Pro", sans-serif;
 }
 
+#login-card {
+  padding: 1em;
+}
+
+#login-btn {
+  margin: auto;
+  font-family: "Source Sans Pro", sans-serif;
+  width: 35%;
+  min-width:10em;
+}
+
+#login-subtitle {
+  margin: auto;
+  margin-top: 0.5em;
+  opacity: 0.75;
+  font-family: "Source Sans Pro", sans-serif;
+  text-align: center;
+  font-size: 0.75em;
+}
+
 .logo-img {
   height: 1.5em;
 }
