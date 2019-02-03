@@ -1,15 +1,20 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { SectionSummary } from "./Section";
+import moment from "moment";
 
 function SectionDropdownEntry(props) {
+  const displayTime = moment(
+    props.section.defaultSpacetime.startTime,
+    "HH:mm:ss"
+  ).format("hh:mm A");
   return (
-    <div>
-      <h5 style={{ margin: "0px" }}>{props.section.courseName}</h5>
-      <p style={{ margin: "0px" }}>
-        {props.section.defaultSpacetime.location}{" "}
-        {props.section.defaultSpacetime.startTime} -{" "}
-        {props.section.defaultSpacetime.endTime}
+    <div class="section-dropdown-entry">
+      <h3 class="section-dropdown-entry-course-label">
+        {props.section.courseName}
+      </h3>
+      <p class="section-dropdown-entry-time">
+        {props.section.defaultSpacetime.dayOfWeek} {displayTime}
       </p>
     </div>
   );
@@ -38,17 +43,40 @@ function Navbar(props) {
   ));
 
   return (
-    <nav className="uk-navbar-container" data-uk-navbar="delay-hide: 200">
-      <div className="uk-navbar-right">
-        <ul className="uk-navbar-nav">
-          <li className="uk-active">
-            <a href="#">Sections</a>
-            <div className="uk-navbar-dropdown uk-width-large">
-              <ul className="uk-nav uk-navbar-dropdown-nav uk-list-striped">
-                {sectionListEntries}
-              </ul>
-            </div>
-          </li>
+    <div uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky">
+      <nav
+        id="navbar"
+        uk-navbar="true"
+        className="uk-navbar-container"
+        data-uk-navbar="delay-hide: 200"
+      >
+        <div class="logo-container uk-navbar-item">
+          <img
+            class="logo-img uk-logo"
+            src="static/frontend/img/logo_white.png"
+          />
+        </div>
+        <div className="uk-navbar-right">
+          <ul className="uk-navbar-nav">
+            <li className="uk-active">
+              <a id="section-btn" href="#">
+                Sections
+              </a>
+              <div
+                id="section-dropdown"
+                className="uk-navbar-dropdown"
+                uk-dropdown="offset: 0"
+              >
+                <ul className="uk-nav uk-navbar-dropdown-nav">
+                  {sectionListEntries}
+                  <li id="section-enroll-btn">
+                    <i class="fa fa-plus" aria-hidden="true" /> Enroll in a
+                    section
+                  </li>
+                </ul>
+              </div>
+            </li>
+            {/*
           <li>
             <a href="#">Courses</a>
             <div className="uk-navbar-dropdown">
@@ -57,9 +85,11 @@ function Navbar(props) {
               </ul>
             </div>
           </li>
-        </ul>
-      </div>
-    </nav>
+          */}
+          </ul>
+        </div>
+      </nav>
+    </div>
   );
 }
 
