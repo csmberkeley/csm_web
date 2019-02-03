@@ -14,11 +14,13 @@
 	<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.25/js/uikit-icons.min.js"></script>
 	</head>
 	<body>
-		<div id="login-card" class="uk-card uk-card-default uk-align-center" style="width: 75%; height: 75%; margin-top: 5%;">
-		    <img src="{% static 'frontend/img/csm_logo.png' %}" style="max-width: 50%;" class="uk-align-center">
-		    <a id="login-btn" class="uk-button uk-button-primary uk-align-center" href="{% url 'social:begin' 'google-oauth2' %}">Login</a>
+          <div id="login-container">
+		<div id="login-card" class="uk-card uk-card-default">
+		    <img id="login-logo" src="{% static 'frontend/img/logo-min/logo.png' %}">
+		    <a id="login-btn" class="uk-button uk-button-primary" href="{% url 'social:begin' 'google-oauth2' %}">Login</a>
                     <p id="login-subtitle">with your Berkeley email</p>
 		</div>
+	   </div>
 	</body>
 </html>
 			
