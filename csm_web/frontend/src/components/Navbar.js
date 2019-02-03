@@ -45,7 +45,7 @@ function Navbar(props) {
         <div className="logo-container uk-navbar-item">
           <img
             className="logo-img uk-logo"
-            src="static/frontend/img/logo_white.png"
+            src="static/frontend/img/logo-min/logo_notext_white.png"
           />
         </div>
         <div className="uk-navbar-right">
@@ -57,14 +57,14 @@ function Navbar(props) {
               <div
                 id="section-dropdown"
                 className="uk-navbar-dropdown"
-                uk-dropdown="offset: 0"
+                uk-dropdown="offset: 0; pos: bottom-right;"
               >
                 <ul className="uk-nav uk-navbar-dropdown-nav">
                   {sectionListEntries}
                   <Link to={"/courses/"}>
                     <li id="section-enroll-btn">
-                      <i className="fa fa-plus" aria-hidden="true" /> Enroll in a
-                      section
+                      <i className="fa fa-plus" aria-hidden="true" /> Enroll in
+                      a section
                     </li>
                   </Link>
                 </ul>
