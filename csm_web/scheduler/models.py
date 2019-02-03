@@ -175,4 +175,4 @@ class Override(models.Model):
         return self.section.mentor
 
     def __str__(self):
-        "Override for week of %s, %s" % (str(self.section), str(self.spacetime))
+        return "Override for week of %s, %s" % (str(self.section), str(self.spacetime))

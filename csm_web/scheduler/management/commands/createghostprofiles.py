@@ -7,9 +7,11 @@ from scheduler.models import Profile, Course, User
 PROFILE_CSV_DEFAULT_FIELDS = ("name", "email", "role")
 
 # aliases
-FIELD_ALIASES = {"full name": "name"}
+FIELD_ALIASES = {
+    "full name": "name"
+}
 
-IGNORED_FIELDS = {"returning", "paid", "paid tutor", ""}
+IGNORED_FIELDS = { "returning", "paid", "paid tutor", "" }
 
 ROLE_MAP = {
     "Coordinator": Profile.COORDINATOR,
@@ -46,7 +48,7 @@ class Command(BaseCommand):
             action="store_true",
             dest="is_test",
             help="if specified, any section with role that's not SM/coord will be removed, \
-                and the role will be set to student instead for testing purposes",
+                and the role will be set to student instead for testing purposes"
         )
         parser.add_argument(
             "--student",
@@ -64,7 +66,7 @@ class Command(BaseCommand):
             "--nullsections",
             action="store_true",
             dest="nullsections",
-            help="ignores section field of profile (should be used only for testing)",
+            help="ignores section field of profile (should be used only for testing)"
         )
 
     def handle(self, *args, **options):
@@ -111,9 +113,9 @@ class Command(BaseCommand):
 
     def _check_cols(self, cols, options):
         if options["is_students"] and "role" in cols:
-            raise Exception(
-                "'role' column was found in CSV, but --student was specified"
-            )
+                raise Exception(
+                    "'role' column was found in CSV, but --student was specified"
+                )
         if not options["is_students"] and "role" not in cols:
             raise Exception("'role' column missing (found {})".format(cols))
         if "email" not in cols:
@@ -147,18 +149,13 @@ class Command(BaseCommand):
             raise Exception("Non-Berkeley email found: {}".format(email))
         user, _ = User.objects.get_or_create(username=chunks[0], email=email)
         if options["nullsections"]:
-            Profile.objects.create(
-                role=ROLE_MAP[fields["role"]], course=course, user=user
-            )
+            Profile.objects.create(role=ROLE_MAP[fields["role"]], course=course, user=user)
         else:
             # user and course fields should already be filled correctly, just update role
-            Profile.objects.filter(user=user, course=course).update(
-                role=ROLE_MAP[fields["role"]]
-            )
+            Profile.objects.filter(user=user, course=course).update(role=ROLE_MAP[fields["role"]])
         if options["is_test"]:
             # only allow SMs to have sections for testing purposes
             for profile in Profile.objects.filter(user=user, course=course):
-                if profile.role not in (Profile.SENIOR_MENTOR, Profile.COORDINATOR):
-                    # delete their section while we're at it
-                    profile.section.delete()
-                    # cascade will delete the profile as well, so just leave it
+                if profile.role not in (Profile.STUDENT, Profile.SENIOR_MENTOR, Profile.COORDINATOR):
+                    profile.delete()
+                    Profile.objects.create(role=Profile.STUDENT, course=course, user=user)

@@ -3,7 +3,6 @@ import logging
 from django.db.models import signals
 from django.dispatch import receiver
 from django.contrib.auth.models import User as AuthUser
-from django.utils import timezone
 import scheduler.models as models
 
 ### ATTENDANCE GENERATION
@@ -16,12 +15,11 @@ WEEKDAY_MAP = {
 @receiver(signals.post_save, sender=models.Profile)
 def generate_attendances(sender, **kwargs):
     """
-    Creates attendance objects for a student upon the creation of their profile.
+    Creates attendance objects for a student when they join a section.
     """
     profile = kwargs["instance"]
-    created = kwargs["created"]
     raw = kwargs["raw"]
-    if not raw and created and profile.role == models.Profile.STUDENT:
+    if not raw and profile.role == models.Profile.STUDENT and profile.section is not None:
         # modified slightly from factories.py
         current_date = profile.course.enrollment_start.date()
         while (
