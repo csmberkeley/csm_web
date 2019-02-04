@@ -1,4 +1,5 @@
 import React from "react";
+import { Redirect } from "react-router-dom";
 import { groupBy } from "lodash";
 import moment from "moment";
 import { post } from "../utils/api";
@@ -39,7 +40,8 @@ class Course extends React.Component {
       course: props.course,
       sections: {},
       enrolled: false,
-      enrollmentOpen: false
+      enrollmentOpen: false,
+      viewSection: null
     };
   }
 
@@ -98,6 +100,11 @@ class Course extends React.Component {
   }
 
   render() {
+    if (this.state.viewSection != null) {
+      console.log("/sections/" + this.state.viewSection);
+      return <Redirect to={"/sections/" + this.state.viewSection} push />;
+    }
+
     const days = Object.entries(this.state.sections)
       .sort((item1, item2) => {
         const day1 = dayOfWeek[item1[0]];
@@ -114,6 +121,13 @@ class Course extends React.Component {
             day={day}
             sections={sections}
             update={() => this.updateCourse()}
+            viewSection={id =>
+              this.setState((state, props) => {
+                return {
+                  viewSection: id
+                };
+              })
+            }
           />
         );
       });
@@ -173,6 +187,7 @@ function Day(props) {
         section={section}
         key={section.id}
         update={props.update}
+        viewSection={props.viewSection}
       />
     ));
   return (
@@ -225,7 +240,9 @@ function SectionEnroll(props) {
             `You've successfully enrolled in section ${
               props.section.id
             } at ${location}, ${startTime}`,
-            () => {}
+            () => {
+              props.viewSection(props.section.id);
+            }
           );
         }
 

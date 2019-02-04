@@ -20,8 +20,13 @@ class App extends React.Component {
   };
 
   componentDidMount() {
+    this.updateProfiles();
+    this.updateCourses();
+  }
+
+  updateProfiles() {
     const profilesEndpoint = "/scheduler/profiles/";
-    fetch(profilesEndpoint)
+    return fetch(profilesEndpoint)
       .then(response => response.json())
       .then(profiles => {
         this.setState(
@@ -39,7 +44,10 @@ class App extends React.Component {
                   this.setState((state, props) => {
                     return {
                       profiles: { [id]: profileData, ...state.profiles },
-                      sections: { [profileData.section.id]: profileData.section, ...state.sections }
+                      sections: {
+                        [profileData.section.id]: profileData.section,
+                        ...state.sections
+                      }
                     };
                   })
                 );
@@ -47,8 +55,10 @@ class App extends React.Component {
           }
         );
       });
+  }
 
-    fetch("/scheduler/courses")
+  updateCourses() {
+    return fetch("/scheduler/courses")
       .then(response => response.json())
       .then(courses => {
         this.setState((state, props) => {
@@ -81,11 +91,7 @@ class App extends React.Component {
                   Object.keys(this.state.profiles).length !=
                   this.state.profiles_ct
                 ) {
-                  return (
-                    <div id="loading-splash">
-                      <h3>Loading...</h3>
-                    </div>
-                  );
+                  return <LoadingSplash />;
                 } else if (this.state.profiles_ct == 0) {
                   return <Redirect to="/courses/" push />;
                 } else {
@@ -97,11 +103,18 @@ class App extends React.Component {
             />
             <Route
               path="/sections/:id"
-              render={({ match }) => (
-                <Section
-                  {...this.state.sections[match.params.id]}
-                />
-              )}
+              render={({ match }) => {
+                if (
+                  !Object.keys(this.state.sections).includes(match.params.id)
+                ) {
+                  // This might be a newly added section
+                  this.updateProfiles();
+                  this.updateCourses();
+                  return <LoadingSplash />;
+                } else {
+                  return <Section {...this.state.sections[match.params.id]} />;
+                }
+              }}
             />
             <Route
               path="/courses/"
@@ -121,6 +134,14 @@ class App extends React.Component {
       </div>
     );
   }
+}
+
+function LoadingSplash() {
+  return (
+    <div class="loading-splash">
+      <h3>Loading...</h3>
+    </div>
+  );
 }
 
 const wrapper = document.getElementById("app");
