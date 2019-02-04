@@ -1,5 +1,10 @@
 import React from "react";
-import { MemoryRouter as Router, Route, Link } from "react-router-dom";
+import {
+  MemoryRouter as Router,
+  Route,
+  Link,
+  Redirect
+} from "react-router-dom";
 import ReactDOM from "react-dom";
 import Section from "./Section";
 import Course from "./Course";
@@ -10,7 +15,8 @@ class App extends React.Component {
   state = {
     sections: {},
     profiles: {},
-    courses: {}
+    courses: {},
+    profiles_ct: null
   };
 
   componentDidMount() {
@@ -18,19 +24,28 @@ class App extends React.Component {
     fetch(profilesEndpoint)
       .then(response => response.json())
       .then(profiles => {
-        for (let profile of profiles) {
-          let id = profile.id;
-          fetch(`${profilesEndpoint}${id}/?verbose=true`)
-            .then(response => response.json())
-            .then(profileData =>
-              this.setState((state, props) => {
-                return {
-                  profiles: { [id]: profileData, ...state.profiles },
-                  sections: { [id]: profileData.section, ...state.sections }
-                };
-              })
-            );
-        }
+        this.setState(
+          (state, props) => {
+            return {
+              profiles_ct: profiles.length
+            };
+          },
+          () => {
+            for (let profile of profiles) {
+              let id = profile.id;
+              fetch(`${profilesEndpoint}${id}/?verbose=true`)
+                .then(response => response.json())
+                .then(profileData =>
+                  this.setState((state, props) => {
+                    return {
+                      profiles: { [id]: profileData, ...state.profiles },
+                      sections: { [id]: profileData.section, ...state.sections }
+                    };
+                  })
+                );
+            }
+          }
+        );
       });
 
     fetch("/scheduler/courses")
@@ -59,6 +74,28 @@ class App extends React.Component {
               courses={this.state.courses}
             />
             <Route
+              path="/"
+              exact
+              render={() => {
+                if (
+                  Object.keys(this.state.profiles).length !=
+                  this.state.profiles_ct
+                ) {
+                  return (
+                    <div id="loading-splash">
+                      <h3>Loading...</h3>
+                    </div>
+                  );
+                } else if (this.state.profiles_ct == 0) {
+                  return <Redirect to="/courses/" push />;
+                } else {
+                  const firstSection =
+                    "/sections/" + Object.keys(this.state.profiles)[0];
+                  return <Redirect to={firstSection} push />;
+                }
+              }}
+            />
+            <Route
               path="/sections/:id"
               render={({ match }) => (
                 <Section
@@ -69,7 +106,7 @@ class App extends React.Component {
             />
             <Route
               path="/courses/"
-              exact="true"
+              exact
               render={() => <CourseNav courses={this.state.courses} />}
             />
             <Route
