@@ -101,16 +101,17 @@ class Course extends React.Component {
 
   render() {
     if (this.state.viewSection != null) {
-      console.log("/sections/" + this.state.viewSection);
-      return <Redirect to={"/sections/" + this.state.viewSection} push />;
+      return <Redirect to={`/sections/${this.state.viewSection}`} push />;
     }
 
+    const dayComparator = (item1, item2) => {
+      const day1 = dayOfWeek[item1[0]];
+      const day2 = dayOfWeek[item2[0]];
+      return day1 - day2;
+    };
+
     const days = Object.entries(this.state.sections)
-      .sort((item1, item2) => {
-        const day1 = dayOfWeek[item1[0]];
-        const day2 = dayOfWeek[item2[0]];
-        return day1 - day2;
-      })
+      .sort(dayComparator)
       .map(item => {
         const [day, sections] = item;
         return (
@@ -133,11 +134,7 @@ class Course extends React.Component {
       });
 
     const dayHeaders = Object.entries(this.state.sections)
-      .sort((item1, item2) => {
-        const day1 = dayOfWeek[item1[0]];
-        const day2 = dayOfWeek[item2[0]];
-        return day1 - day2;
-      })
+      .sort(dayComparator)
       .map(item => {
         const [day, sections] = item;
         return (

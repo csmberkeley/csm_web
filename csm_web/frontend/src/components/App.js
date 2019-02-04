@@ -95,8 +95,9 @@ class App extends React.Component {
                 } else if (this.state.profiles_ct == 0) {
                   return <Redirect to="/courses/" push />;
                 } else {
-                  const firstSection =
-                    "/sections/" + Object.keys(this.state.sections)[0];
+                  const firstSection = `/sections/${
+                    Object.keys(this.state.sections)[0]
+                  }`;
                   return <Redirect to={firstSection} push />;
                 }
               }}
