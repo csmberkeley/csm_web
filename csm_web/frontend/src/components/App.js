@@ -39,7 +39,7 @@ class App extends React.Component {
                   this.setState((state, props) => {
                     return {
                       profiles: { [id]: profileData, ...state.profiles },
-                      sections: { [id]: profileData.section, ...state.sections }
+                      sections: { [profileData.section.id]: profileData.section, ...state.sections }
                     };
                   })
                 );
@@ -90,7 +90,7 @@ class App extends React.Component {
                   return <Redirect to="/courses/" push />;
                 } else {
                   const firstSection =
-                    "/sections/" + Object.keys(this.state.profiles)[0];
+                    "/sections/" + Object.keys(this.state.sections)[0];
                   return <Redirect to={firstSection} push />;
                 }
               }}
@@ -99,7 +99,6 @@ class App extends React.Component {
               path="/sections/:id"
               render={({ match }) => (
                 <Section
-                  profile={match.params.id}
                   {...this.state.sections[match.params.id]}
                 />
               )}
