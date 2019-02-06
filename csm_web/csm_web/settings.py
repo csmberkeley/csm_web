@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     "scheduler.apps.SchedulerConfig",
     "rest_framework",
     "social_django",
+    "eventlog.apps.EventLogConfig",
     "frontend",
 ]
 

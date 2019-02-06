@@ -4,6 +4,7 @@ from django.db.models import signals
 from django.dispatch import receiver
 from django.contrib.auth.models import User as AuthUser
 import scheduler.models as models
+from eventlog.events import EventGroup
 
 ### ATTENDANCE GENERATION
 
@@ -12,6 +13,7 @@ WEEKDAY_MAP = {
 }
 
 GENERATE_ATTENDANCES = False
+
 
 @receiver(signals.post_save, sender=models.Profile)
 def generate_attendances(sender, **kwargs):
@@ -22,7 +24,11 @@ def generate_attendances(sender, **kwargs):
         return
     profile = kwargs["instance"]
     raw = kwargs["raw"]
-    if not raw and profile.role == models.Profile.STUDENT and profile.section is not None:
+    if (
+        not raw
+        and profile.role == models.Profile.STUDENT
+        and profile.section is not None
+    ):
         # modified slightly from factories.py
         current_date = profile.course.enrollment_start.date()
         while (
@@ -41,6 +47,26 @@ def generate_attendances(sender, **kwargs):
 
 
 ### LOGGING
+e = EventGroup()
+
+
+@receiver(signals.pre_save, sender=models.Profile)
+def log_student_pre_create(sender, **kwargs):
+    profile = kwargs["instance"]
+    raw = kwargs["raw"]
+    if not raw and profile.role == models.Profile.STUDENT:
+        e.info("Starting profile save of {}".format(profile), initiator="Pre-Enroll")
+
+
+@receiver(signals.post_save, sender=models.Profile)
+def log_students_post_create(sender, **kwargs):
+    profile = kwargs["instance"]
+    created = kwargs["created"]
+    raw = kwargs["raw"]
+    if not raw and profile.role == models.Profile.STUDENT:
+        e.info("Finished profile save of {}".format(profile), initiator="Post-Enroll")
+
+
 logger = logging.getLogger("scheduler.signals")
 
 DEBUG = logging.DEBUG

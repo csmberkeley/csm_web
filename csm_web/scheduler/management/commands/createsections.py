@@ -32,7 +32,7 @@ DAY_MAP = {
     "F": Spacetime.FRIDAY,
 }
 
-SELFBOOK_DAY_MAP = { # ngl this is pretty silly but w/e
+SELFBOOK_DAY_MAP = {  # ngl this is pretty silly but w/e
     "Monday": Spacetime.MONDAY,
     "Tuesday": Spacetime.TUESDAY,
     "Wednesday": Spacetime.WEDNESDAY,
@@ -40,7 +40,7 @@ SELFBOOK_DAY_MAP = { # ngl this is pretty silly but w/e
     "Friday": Spacetime.FRIDAY,
 }
 
-IGNORED_COURSES = { "CS70", "CS61A" } # they're doing their own stuff
+IGNORED_COURSES = {"CS70", "CS61A"}  # they're doing their own stuff
 
 # gets capacity of a section
 CAPACITY_FUNCS = {
@@ -53,8 +53,9 @@ CAPACITY_FUNCS = {
     # 16a: all 5s
     COURSES.EE16A: lambda _: 5,
     COURSES.CS61C: lambda _: 5,
-    COURSES.CS61A: lambda _: 5
+    COURSES.CS61A: lambda _: 5,
 }
+
 
 class Command(BaseCommand):
     help = """Creates Section and Spacetime objects given an input CSV file.
@@ -78,57 +79,44 @@ class Command(BaseCommand):
         )
         parser.add_argument(
             "--omitfile",
-            help="a CSV of courses/emails to be ommited from section signups, likely because the course is handling those signups itself"
+            help="a CSV of courses/emails to be omited from section signups, likely because the course is handling those signups itself",
         )
         parser.add_argument(
-            "--selfbook",
-            action="store_true",
-            dest="selfbook",
-            help="if true, indicates that the mentors in the file are booking library rooms"
-        )
-        parser.add_argument(
-            "--course",
-            action="store",
-            dest="course",
-            help="if selfbook is specified, sets the course"
-        )
-        parser.add_argument(
-            "--sm",
-            action="store_true",
-            dest="sm",
-            help="if selfbook is specified, parses course field from CSV"
+            "--selfbookers",
+            help="a CSV containing the course/email/time of all mentors who are booking library rooms",
         )
 
     def handle(self, *args, **options):
         filename = options["csv_path"]
-        if options["selfbook"] and not (options["course"] or options["sm"]):
-            raise Exception("must have --sm or --course with --selfbook")
-        if options["course"] and not options["selfbook"]:
-            raise Exception("--course specified without --selfbook")
         count = 0
         if options["omitfile"]:
             omits = self._get_omits(options["omitfile"])
         else:
             omits = {}
+        # library bookings
+        selfbook_file = options["selfbookers"]
+        if selfbook_file:
+            with open(selfbook_file) as csvfile:
+                reader = iter(csv.reader(csvfile))
+                # hardcoded headers :(
+                next(reader)
+                with transaction.atomic():
+                    for row in reader:
+                        count += self._create_self_booked_section(row, omits, options)
+        # normal
         with open(filename) as csvfile:
             reader = iter(csv.reader(csvfile))
-            if options["withheader"] and not options["selfbook"]:
+            if options["withheader"]:
                 cols = [self._get_col_name(s) for s in next(reader)]
                 missing_cols = set(SECTION_CSV_DEFAULT_FIELDS) - set(cols)
                 if len(missing_cols) != 0:
                     raise Exception("Missing columns: {}".format(missing_cols))
             else:
                 cols = SECTION_CSV_DEFAULT_FIELDS
-            if options["selfbook"]: # skip header
-                next(reader)
             try:
                 with transaction.atomic():
                     for row in reader:
-                        if options["selfbook"]:
-                            self._create_self_booked_section(row, omits, options)
-                        else:
-                            self._create_booked_section(cols, row, omits, options)
-                        count += 1
+                        count += self._create_booked_section(cols, row, omits, options)
             except IndexError as e:
                 self.stderr.write("cols: {}")
                 raise e
@@ -166,27 +154,27 @@ class Command(BaseCommand):
     def _create_self_booked_section(self, row, omits, options):
         """
         ASSUMED ORDER:
-        timestamp, email, name, email, accept?, selfbook?, day1, starttime1, day2, starttime2
+        name, email, course, day1, starttime1, day2, starttime2
         also hardcode section length for 16a
         """
-        course_name = (row[4] if options["sm"] else options["course"]).replace(" ", "")
+        course_name = row[2].replace(" ", "")
         if course_name in COURSES.IGNORED_COURSES:
-            return
+            return 0
         course = Course.objects.get(name=course_name)
         email = row[1]
-        if email in omits.get(course_name, []):
-            self.stdout.write("{}: not generating section for {}".format(course_name, email))
-            return
-        day_1 = SELFBOOK_DAY_MAP[row[6]]
-        time_1 = dt.datetime.strptime(row[7], "%I:%M:%S %p")
+        day_1 = SELFBOOK_DAY_MAP[row[3]]
+        time_1 = dt.datetime.strptime(row[4], "%I:%M:%S %p")
         room = "TBD"
         duration = dt.timedelta(hours=1, minutes=(30 if course == COURSES.EE16A else 0))
-        self._save_objs(room, time_1, duration, day_1, course, email)
+        count = self._save_objs(room, time_1, duration, day_1, course, email, omits)
         # second section
-        if len(row) > 8 and row[8] and row[9]:
-            day_2 = SELFBOOK_DAY_MAP[row[8]]
-            time_2 = dt.datetime.strptime(row[9], "%I:%M:%S %p")
-            self._save_objs(room, time_2, duration, day_2, course, email)
+        if row[5] and row[6]:
+            day_2 = SELFBOOK_DAY_MAP[row[5]]
+            time_2 = dt.datetime.strptime(row[6], "%I:%M:%S %p")
+            count += self._save_objs(
+                room, time_2, duration, day_2, course, email, omits
+            )
+        return count
 
     def _create_booked_section(self, cols, row, omits, options):
         fields = {}
@@ -196,11 +184,8 @@ class Command(BaseCommand):
         # BIG ASSUMPTION: "title" column is of form "CSM CS61A Section"
         course_name = fields["title"].split()[1].replace(" ", "")
         if course_name in COURSES.IGNORED_COURSES:
-            return
+            return 0
         email = fields["invitees"]
-        if email in omits.get(course_name, []):
-            self.stdout.write("{}: not generating section for {}".format(course_name, email))
-            return
         if options["is_test"]:
             course_name = "TEST_{}".format(course_name)
         course = Course.objects.get(name=course_name)
@@ -216,9 +201,14 @@ class Command(BaseCommand):
         end_time = get_time(fields["end time"])
         # need to be datetimes to get timedelta
         duration = end_time - get_time(fields["start time"])
-        self._save_objs(room, start_time, duration, day_of_week, course, email)
+        return self._save_objs(
+            room, start_time, duration, day_of_week, course, email, omits
+        )
 
-    def _save_objs(self, room, start_time, duration, day_of_week, course, email):
+    def _save_objs(self, room, start_time, duration, day_of_week, course, email, omits):
+        if email in omits.get(course.name, []):
+            self.stdout.write("{}: omitted section for {}".format(course.name, email))
+            return 0
         spacetime = Spacetime.objects.create(
             location=room,
             start_time=start_time,
@@ -226,7 +216,9 @@ class Command(BaseCommand):
             day_of_week=day_of_week,
         )
         # *** create section ***
-        capacity = CAPACITY_FUNCS[course.name](spacetime) # want this to error if bad course
+        capacity = CAPACITY_FUNCS[course.name](
+            spacetime
+        )  # want this to error if bad course
         section = Section.objects.create(
             course=course, default_spacetime=spacetime, capacity=capacity
         )
@@ -237,4 +229,7 @@ class Command(BaseCommand):
         if chunks[1] != "berkeley.edu":
             raise Exception("Non-Berkeley email found: {}".format(email))
         user, _ = User.objects.get_or_create(username=chunks[0], email=email)
-        profile = Profile.objects.get_or_create(user=user, course=course, section=section)
+        profile = Profile.objects.get_or_create(
+            user=user, course=course, section=section
+        )
+        return 1
