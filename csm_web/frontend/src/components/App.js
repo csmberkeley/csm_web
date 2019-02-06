@@ -39,7 +39,10 @@ class App extends React.Component {
                 this.setState((state, props) => {
                   return {
                     profiles: { [id]: profileData, ...state.profiles },
-                    sections: { [id]: profileData.section, ...state.sections }
+                    sections: {
+                      [profileData.section.id]: profileData.section,
+                      ...state.sections
+                    }
                   };
                 })
               )
@@ -107,9 +110,25 @@ class App extends React.Component {
                   this.updateCourses();
                   return <LoadingSplash />;
                 } else {
+                  // We lookup the matching profile manually for this state because a
+                  // page linking to this might not have access to profile data. (i.e.
+                  // the Course listing page. This is fine since there are few profiles
+                  // per user.
+
+                  let matchingProfile = null;
+                  for (let profileID in this.state.profiles) {
+                    let profile = this.state.profiles[profileID];
+                    if (profile.section.id == match.params.id) {
+                      matchingProfile = profileID;
+                      break;
+                    }
+                  }
+
+                  // TODO might need to catch null fallthrough here
+
                   return (
                     <Section
-                      profile={match.params.id}
+                      profile={matchingProfile}
                       {...this.state.sections[match.params.id]}
                     />
                   );
