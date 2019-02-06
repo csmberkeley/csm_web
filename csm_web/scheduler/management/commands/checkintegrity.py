@@ -118,7 +118,7 @@ class Command(BaseCommand):
             st = section.default_spacetime
             obj = (st.start_time, st.location, st.day_of_week, section.mentor.user.email)
             if obj in seen_spacetimes:
-                self._err("Duplicate spacetime for section {} by mentor".format(section, section.mentor))
+                self._err("Duplicate spacetime for section {} by mentor {}".format(section, section.mentor))
             seen_spacetimes.add(obj)
             if not section.mentor:
                 self._err("Section {} lacks mentor".format(section))

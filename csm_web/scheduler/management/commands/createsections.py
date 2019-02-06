@@ -162,7 +162,7 @@ class Command(BaseCommand):
         email = row[1]
         day_1 = SELFBOOK_DAY_MAP[row[3]]
         time_1 = dt.datetime.strptime(row[4], "%I:%M:%S %p")
-        duration = dt.timedelta(hours=1, minutes=(30 if course == COURSES.EE16A else 0))
+        duration = dt.timedelta(hours=1, minutes=(30 if course_name == COURSES.EE16A else 0))
         if row[7]:
             room = row[7]
         else:
@@ -206,10 +206,17 @@ class Command(BaseCommand):
             room, start_time, duration, day_of_week, course, email, omits
         )
 
+    seen_sections = set()
+
     def _save_objs(self, room, start_time, duration, day_of_week, course, email, omits):
         if email in omits.get(course.name, []):
             self.stdout.write("{}: omitted section for {}".format(course.name, email))
             return 0
+        obj = (room, start_time, day_of_week, course, email)
+        if obj in self.seen_sections:
+            self.stderr.write("Duplicate section: {}".format(obj))
+            raise Exception()
+        self.seen_sections.add(obj)
         spacetime = Spacetime.objects.create(
             location=room,
             start_time=start_time,
