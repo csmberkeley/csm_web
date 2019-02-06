@@ -63,8 +63,11 @@ function Navbar(props) {
                   {sectionListEntries}
                   <Link to={"/courses/"}>
                     <li id="section-enroll-btn">
-                      <i className="fa fa-plus" aria-hidden="true" /> Enroll in
-                      a section
+                      <span
+                        uk-icon="icon: plus; ratio: 0.8"
+                        uk-icon-button="true"
+                      />{" "}
+                      Enroll in a section
                     </li>
                   </Link>
                 </ul>
