@@ -1,38 +1,26 @@
 [
 	{
-		"name": "TEST_CS61A",
-		"valid_until": "2019-02-04T00:00:00",
-		"enrollment_start": "2019-02-03T05:00:00",
-		"enrollment_end": "2019-02-03T22:00:00"
+		"name": "CS61B",
+		"valid_until": "2019-05-18T00:00:00",
+		"enrollment_start": "2019-02-06T21:00:00",
+		"enrollment_end": "2019-05-18T00:00:00"
 	},
 	{
-		"name": "TEST_CS61B",
-		"valid_until": "2019-02-04T00:00:00",
-		"enrollment_start": "2019-02-03T05:00:00",
-		"enrollment_end": "2019-02-03T22:00:00"
+		"name": "CS61C",
+		"valid_until": "2019-05-18T00:00:00",
+		"enrollment_start": "2019-02-06T20:00:00",
+		"enrollment_end": "2019-05-18T00:00:00"
 	},
 	{
-		"name": "TEST_CS61C",
-		"valid_until": "2019-02-04T00:00:00",
-		"enrollment_start": "2019-02-03T05:00:00",
-		"enrollment_end": "2019-02-03T22:00:00"
+		"name": "EE16A",
+		"valid_until": "2019-05-18T00:00:00",
+		"enrollment_start": "2019-02-06T19:00:00",
+		"enrollment_end": "2019-05-18T00:00:00"
 	},
 	{
-		"name": "TEST_CS70",
-		"valid_until": "2019-02-04T00:00:00",
-		"enrollment_start": "2019-02-03T05:00:00",
-		"enrollment_end": "2019-02-03T22:00:00"
-	},
-	{
-		"name": "TEST_CS88",
-		"valid_until": "2019-02-04T00:00:00",
-		"enrollment_start": "2019-02-03T05:00:00",
-		"enrollment_end": "2019-02-03T22:00:00"
-	},
-	{
-		"name": "TEST_EE16A",
-		"valid_until": "2019-02-04T00:00:00",
-		"enrollment_start": "2019-02-03T05:00:00",
-		"enrollment_end": "2019-02-03T22:00:00"
+		"name": "CS88",
+		"valid_until": "2019-05-18T00:00:00",
+		"enrollment_start": "2019-02-06T10:00:00",
+		"enrollment_end": "2019-05-18T00:00:00"
 	}
 ]

@@ -87,7 +87,7 @@ class Profile(ActivatableModel):
 
     def __str__(self):
         title = "{course} {role}".format(
-            course=self.course.name, role=Profile.ROLE_MAP[self.role]
+            course=self.course.name, role=Profile.ROLE_MAP.get(self.role)
         )
         if self.section:
             section = "for {section}".format(section=self.section)

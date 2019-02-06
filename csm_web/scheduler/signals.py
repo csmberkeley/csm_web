@@ -11,12 +11,15 @@ WEEKDAY_MAP = {
     number: pair[0] for number, pair in enumerate(models.Spacetime.DAY_OF_WEEK_CHOICES)
 }
 
+GENERATE_ATTENDANCES = False
 
 @receiver(signals.post_save, sender=models.Profile)
 def generate_attendances(sender, **kwargs):
     """
     Creates attendance objects for a student when they join a section.
     """
+    if not GENERATE_ATTENDANCES:
+        return
     profile = kwargs["instance"]
     raw = kwargs["raw"]
     if not raw and profile.role == models.Profile.STUDENT and profile.section is not None:
