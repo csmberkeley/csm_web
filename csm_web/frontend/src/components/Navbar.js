@@ -52,7 +52,8 @@ function Navbar(props) {
           <ul className="uk-navbar-nav">
             <li className="uk-active">
               <a id="section-btn" href="#">
-                <span style={{marginRight: `${0.2}em`}} uk-icon="menu"></span> Sections
+                <span style={{ marginRight: `${0.2}em` }} uk-icon="menu" />{" "}
+                Sections
               </a>
               <div
                 id="section-dropdown"
