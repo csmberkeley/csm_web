@@ -213,7 +213,7 @@ function SectionEnroll(props) {
               break;
             case "section_full":
               errorMessage =
-                "This course is not currently open for enrollment.";
+                "This section is full. Please select another section.";
               break;
             default:
               errorMessage = "An unknown error has occurred.";
