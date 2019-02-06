@@ -232,11 +232,11 @@ LOGGING = {
             "propagate": False,
         },
         # only active on debug builds
-        # "django.db.backends": {
-        #     "handlers": ["low-level"],
-        #     "level": "DEBUG",
-        #     "propagate": False,
-        # },
+        "django.db.backends": {
+            "handlers": ["low-level"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
         "scheduler.signals": {
             "handlers": ["console-models", "mail_admins", "models"],
             "level": "DEBUG",
