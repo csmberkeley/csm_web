@@ -68,9 +68,18 @@ class ProfileSerializer(serializers.ModelSerializer):
         fields = ("id", "leader", "course", "role", "user", "section")
 
 
+class UserProfileSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
+
+    class Meta:
+        model = Profile
+        fields = ("id", "leader", "course", "role", "user", "section")
+
+
 class SectionSerializer(serializers.ModelSerializer):
     default_spacetime = SpacetimeSerializer()
-    mentor = ProfileSerializer()
+    # This is not VerboseProfileSerializer otherwise there would be a cyclic dependency
+    mentor = UserProfileSerializer()
     enrolled_students = serializers.SerializerMethodField()
 
     class Meta:
@@ -139,7 +148,8 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
     course_name = serializers.SerializerMethodField()
     is_mentor = serializers.SerializerMethodField()
     attendances = serializers.SerializerMethodField()
-    mentor = ProfileSerializer()
+    # This is not VerboseProfileSerializer otherwise there would be a cyclic dependency
+    mentor = UserProfileSerializer()
 
     class Meta:
         model = Section
