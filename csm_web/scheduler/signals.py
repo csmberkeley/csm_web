@@ -55,16 +55,22 @@ def log_student_pre_create(sender, **kwargs):
     profile = kwargs["instance"]
     raw = kwargs["raw"]
     if not raw and profile.role == models.Profile.STUDENT:
-        e.info("Starting profile save of {}".format(profile), initiator="Pre-Enroll")
+        e.info(
+            "Starting profile save of {} (email {})".format(profile, profile.user.email),
+            initiator="Pre-Enroll"
+        )
 
 
 @receiver(signals.post_save, sender=models.Profile)
-def log_students_post_create(sender, **kwargs):
+def log_student_post_create(sender, **kwargs):
     profile = kwargs["instance"]
     created = kwargs["created"]
     raw = kwargs["raw"]
     if not raw and profile.role == models.Profile.STUDENT:
-        e.info("Finished profile save of {}".format(profile), initiator="Post-Enroll")
+        e.info(
+            "Finished profile save of {} (email {})".format(profile, profile.user.email),
+            initiator="Post-Enroll"
+        )
 
 
 logger = logging.getLogger("scheduler.signals")

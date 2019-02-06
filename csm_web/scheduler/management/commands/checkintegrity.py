@@ -79,7 +79,7 @@ class Command(BaseCommand):
                     )
                 )
                 for profile in profiles:
-                    section_count = Section.objects.filter(mentor=profiles.first())
+                    section_count = Section.objects.filter(mentor=profile)
                     if section_count != 0:
                         self._err(
                             "Found {} section instances for profile {}".format(
