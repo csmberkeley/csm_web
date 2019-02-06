@@ -222,11 +222,6 @@ LOGGING = {
             "class": "logging.StreamHandler",
             "formatter": "default",
         },
-        "add-drop": {
-            "level": "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "default",
-        },
     },
     "loggers": {
         "django": {
@@ -245,7 +240,7 @@ LOGGING = {
             "propagate": False,
         },
         "scheduler.signals": {
-            "handlers": ["console-models", "mail_admins", "add-drop", "models"],
+            "handlers": ["console-models", "mail_admins", "models"],
             "level": "DEBUG",
             "propagate": False,
         },
