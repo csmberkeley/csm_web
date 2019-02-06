@@ -125,9 +125,7 @@ class App extends React.Component {
             <Route
               path="/courses/:slug"
               render={({ match }) => (
-                <Course
-                  course={this.state.courses[match.params.slug.toUpperCase()]}
-                />
+                <Course course={this.state.courses[match.params.slug]} />
               )}
             />
           </div>
