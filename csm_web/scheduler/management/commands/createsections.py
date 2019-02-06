@@ -22,7 +22,7 @@ SECTION_CSV_DEFAULT_FIELDS = (
     "invitees",
 )
 
-IGNORED_FIELDS = {"location", "repeat", "occurrences", ""}
+IGNORED_FIELDS = {"location", "repeat", "occurrences", "", "notes"}
 
 DAY_MAP = {
     "M": Spacetime.MONDAY,
@@ -96,8 +96,8 @@ class Command(BaseCommand):
         # library bookings
         selfbook_file = options["selfbookers"]
         if selfbook_file:
-            with open(selfbook_file) as csvfile:
-                reader = iter(csv.reader(csvfile))
+            with open(selfbook_file) as sb_file:
+                reader = iter(csv.reader(sb_file))
                 # hardcoded headers :(
                 next(reader)
                 with transaction.atomic():
@@ -146,8 +146,6 @@ class Command(BaseCommand):
             return t
         elif t in IGNORED_FIELDS:
             return None
-        elif t in FIELD_ALIASES:
-            return FIELD_ALIASES[s]
         else:
             raise Exception("Unknown column name: {}".format(s))
 
@@ -164,8 +162,11 @@ class Command(BaseCommand):
         email = row[1]
         day_1 = SELFBOOK_DAY_MAP[row[3]]
         time_1 = dt.datetime.strptime(row[4], "%I:%M:%S %p")
-        room = "TBD"
         duration = dt.timedelta(hours=1, minutes=(30 if course == COURSES.EE16A else 0))
+        if row[7]:
+            room = row[7]
+        else:
+            room = "TBD"
         count = self._save_objs(room, time_1, duration, day_1, course, email, omits)
         # second section
         if row[5] and row[6]:
