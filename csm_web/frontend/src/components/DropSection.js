@@ -73,18 +73,22 @@ class DropSection extends React.Component {
             <h2 className="uk-modal-title" style={{ marginTop: "0px" }}>
               Are you sure?
             </h2>
-            You are about to drop this section, you will no longer be enrolled
-            as a student. Are you sure this is what you want to do?
-            <button
-              className="uk-button uk-button-danger"
-              style={{ margin: "5px 5px 5px 0px" }}
-              onClick={this.handleDrop}
-            >
-              Yes, drop this section
-            </button>
-            <button className="uk-button uk-button-default uk-modal-close">
-              Cancel
-            </button>
+            <p>
+              You are about to drop this section, you will no longer be enrolled
+              as a student. Are you sure this is what you want to do?
+            </p>
+            <div>
+              <button
+                className="uk-button uk-button-danger"
+                style={{ float: "right" }}
+                onClick={this.handleDrop}
+              >
+                Yes, drop this section
+              </button>
+              <button className="uk-button uk-button-default uk-modal-close">
+                Cancel
+              </button>
+            </div>
           </div>
         </div>
         <div id="drop-successful-modal" data-uk-modal="stack: true">
