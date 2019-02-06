@@ -19,7 +19,11 @@ class DropSection extends React.Component {
     }).then(response => {
       if (response.ok) {
         UIkit.modal(document.getElementById("confirm-drop-modal")).hide();
-        UIkit.modal(document.getElementById("drop-successful-modal")).show();
+        UIkit.modal(document.getElementById("drop-successful-modal"))
+          .show()
+          .then(() => {
+            location.reload(true);
+          });
       }
     });
   }
