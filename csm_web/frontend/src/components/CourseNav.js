@@ -9,7 +9,12 @@ function CourseNav(props) {
       </Link>
     </li>
   ));
-  return <ul className="uk-list uk-list-striped">{courseListEntries}</ul>;
+  return (
+    <div id="coursenav-container">
+      <h1 id="coursenav-title">Enroll in a course</h1>
+      <ul className="uk-list uk-list-striped">{courseListEntries}</ul>
+    </div>
+  );
 }
 
 export default CourseNav;

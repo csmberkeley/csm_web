@@ -134,3 +134,14 @@ html, body {
   font-family: "Source Sans Pro", sans-serif;
   font-size: 1em;
 }
+
+#coursenav-container {
+  padding-top: 1em;
+}
+
+#coursenav-title {
+  font-family: "Source Sans Pro", sans-serif;
+  font-size: 2em;
+  font-weight: 600;
+  padding-left: 0.5em;
+}
