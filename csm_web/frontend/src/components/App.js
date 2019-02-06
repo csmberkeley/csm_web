@@ -15,8 +15,9 @@ class App extends React.Component {
   state = {
     sections: {},
     profiles: {},
-    courses: {},
-    profiles_ct: null
+    courses: null,
+    profiles_ct: null,
+    ready: false
   };
 
   componentDidMount() {
@@ -50,7 +51,8 @@ class App extends React.Component {
                       }
                     };
                   })
-                );
+                )
+                .then(() => this.updateReadyState());
             }
           }
         );
@@ -71,7 +73,22 @@ class App extends React.Component {
             courses: courses_map
           };
         });
+      })
+      .then(() => this.updateReadyState());
+  }
+
+  updateReadyState() {
+    if (
+      this.state.courses != null &&
+      this.state.profiles_ct != null &&
+      Object.keys(this.state.profiles).length == this.state.profiles_ct
+    ) {
+      this.setState((state, props) => {
+        return {
+          ready: true
+        };
       });
+    }
   }
 
   render() {
@@ -87,10 +104,7 @@ class App extends React.Component {
               path="/"
               exact
               render={() => {
-                if (
-                  Object.keys(this.state.profiles).length !=
-                  this.state.profiles_ct
-                ) {
+                if (!this.state.ready) {
                   return <LoadingSplash />;
                 } else if (this.state.profiles_ct == 0) {
                   return <Redirect to="/courses/" push />;
