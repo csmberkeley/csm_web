@@ -66,44 +66,75 @@ class WeekAttendance extends React.Component {
   }
 
   render() {
+    const presenceDisplayMap = {
+      EX: "Excused Absence",
+      UN: "Unexcused Absence",
+      PR: "Present",
+      "": "Your mentor has not yet recorded attendance for this week"
+    };
     const studentAttendances = Object.entries(this.state.attendance);
     const studentAttendanceListEntries = studentAttendances.map(
       (attendance, index) => {
         const [pk, details] = attendance;
         const [studentName, presence] = details;
-        return (
-          <div key={pk} className="uk-margin">
-            <label className="uk-form-label" htmlFor={pk}>
-              {" "}
-              {studentName}
-            </label>
-            <select
-              id={pk}
-              className="uk-select uk-form-width-medium"
-              value={presence}
-              name={studentName}
-              onChange={this.handleInputChange}
-            >
-              <option value="">---</option>
-              <option value="EX">Excused Absence</option>
-              <option value="UN">Unexcused Absence</option>
-              <option value="PR">Present</option>
-            </select>
-          </div>
-        );
+        if (this.props.isMentor) {
+          return (
+            <div key={pk} className="uk-margin">
+              <label className="uk-form-label" htmlFor={pk}>
+                {" "}
+                {studentName}
+              </label>
+              <select
+                id={pk}
+                className="uk-select uk-form-width-medium"
+                value={presence}
+                name={studentName}
+                onChange={this.handleInputChange}
+              >
+                <option value="">---</option>
+                <option value="EX">{presenceDisplayMap["EX"]}</option>
+                <option value="UN">{presenceDisplayMap["UN"]}</option>
+                <option value="PR">{presenceDisplayMap["PR"]}</option>
+              </select>
+            </div>
+          );
+        } else {
+          return (
+            <div key={pk} className="uk-margin">
+              <p>{presenceDisplayMap[presence]}</p>
+            </div>
+          );
+        }
       }
     );
-    return (
-      <div>
-        <h4>Week {this.props.weekNum}</h4>
-        <form className="uk-form-horizontal" onSubmit={this.handleSubmit}>
-          {studentAttendanceListEntries}
-          <button className="uk-button uk-button-default uk-button-small">
-            Save changes
-          </button>
-        </form>
-      </div>
-    );
+    if (this.props.isMentor) {
+      return (
+        <li>
+          <a className="uk-accordion-title" href="#">
+            Week {this.props.weekNum}
+          </a>
+          <div className="uk-accordion-content">
+            <form className="uk-form-horizontal" onSubmit={this.handleSubmit}>
+              {studentAttendanceListEntries}
+              <button className="uk-button uk-button-default uk-button-small">
+                Save changes
+              </button>
+            </form>
+          </div>
+        </li>
+      );
+    } else {
+      return (
+        <li>
+          <a className="uk-accordion-title" href="#">
+            Week {this.props.weekNum}
+          </a>
+          <div className="uk-accordion-content">
+            {studentAttendanceListEntries}
+          </div>
+        </li>
+      );
+    }
   }
 }
 
@@ -112,9 +143,19 @@ class Attendances extends React.Component {
     const attendances = this.props.attendances;
     if (attendances) {
       const weekAttendances = attendances.map((attendance, index) => (
-        <WeekAttendance attendance={attendance} weekNum={index} key={index} />
+        <WeekAttendance
+          attendance={attendance}
+          weekNum={index}
+          key={index}
+          isMentor={this.props.isMentor}
+        />
       ));
-      return <div className="uk-container">{weekAttendances}</div>;
+      weekAttendances.reverse();
+      return (
+        <div className="uk-container">
+          <ul data-uk-accordion="active: 0">{weekAttendances}</ul>
+        </div>
+      );
     }
   }
 }
@@ -129,7 +170,7 @@ function Section(props) {
         isMentor={props.isMentor}
         sectionID={props.id}
       />
-      <Attendances attendances={props.attendances} />
+      <Attendances attendances={props.attendances} isMentor={props.isMentor} />
     </div>
   );
 }
