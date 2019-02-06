@@ -9,7 +9,7 @@ function CourseNav(props) {
       </Link>
     </li>
   ));
-  return <ul class="uk-list uk-list-striped">{courseListEntries}</ul>;
+  return <ul className="uk-list uk-list-striped">{courseListEntries}</ul>;
 }
 
 export default CourseNav;

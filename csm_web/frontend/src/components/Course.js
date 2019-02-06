@@ -69,32 +69,27 @@ class Course extends React.Component {
     const now = moment();
     const enrollmentStart = moment(this.state.course.enrollmentStart);
     const enrollmentEnd = moment(this.state.course.enrollmentEnd);
-    this.setState((state, props) => {
-      return {
-        enrollmentOpen: now > enrollmentStart && now < enrollmentEnd
-      };
+    this.setState({
+      enrollmentOpen: now > enrollmentStart && now < enrollmentEnd
     });
 
     fetch("/scheduler/profiles/")
       .then(response => response.json())
       .then(profiles => {
-        this.setState((state, props) => {
-          const courses = profiles.map(profile => profile.course);
-          return {
-            enrolled: courses.includes(state.course.id)
-          };
+        this.setState({
+          enrolled: profiles
+            .map(profile => profile.course)
+            .includes(state.course.id)
         });
       });
     fetch(`/scheduler/courses/${this.state.course.name}/sections/`)
       .then(response => response.json())
       .then(sections => {
-        this.setState((state, props) => {
-          return {
-            sections: groupBy(
-              sections,
-              section => section.defaultSpacetime.dayOfWeek
-            )
-          };
+        this.setState({
+          sections: groupBy(
+            sections,
+            section => section.defaultSpacetime.dayOfWeek
+          )
         });
       });
   }
@@ -122,13 +117,7 @@ class Course extends React.Component {
             day={day}
             sections={sections}
             update={() => this.updateCourse()}
-            viewSection={id =>
-              this.setState((state, props) => {
-                return {
-                  viewSection: id
-                };
-              })
-            }
+            viewSection={id => this.setState({ viewSection: id })}
           />
         );
       });
@@ -154,8 +143,8 @@ class Course extends React.Component {
           />
         </div>
         <div>
-          <ul data-uk-tab="connect: #target">{dayHeaders}</ul>
-          <ul id="target" className="uk-switcher">
+          <ul data-uk-tab="connect: #days-list">{dayHeaders}</ul>
+          <ul id="days-list" className="uk-switcher">
             {days}
           </ul>
         </div>
@@ -237,9 +226,7 @@ function SectionEnroll(props) {
             `You've successfully enrolled in section ${
               props.section.id
             } at ${location}, ${startTime}`,
-            () => {
-              props.viewSection(props.section.id);
-            }
+            () => props.viewSection(props.section.id)
           );
         }
 

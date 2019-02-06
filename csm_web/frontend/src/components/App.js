@@ -30,32 +30,25 @@ class App extends React.Component {
     return fetch(profilesEndpoint)
       .then(response => response.json())
       .then(profiles => {
-        this.setState(
-          (state, props) => {
-            return {
-              profiles_ct: profiles.length
-            };
-          },
-          () => {
-            for (let profile of profiles) {
-              let id = profile.id;
-              fetch(`${profilesEndpoint}${id}/?verbose=true`)
-                .then(response => response.json())
-                .then(profileData =>
-                  this.setState((state, props) => {
-                    return {
-                      profiles: { [id]: profileData, ...state.profiles },
-                      sections: {
-                        [profileData.section.id]: profileData.section,
-                        ...state.sections
-                      }
-                    };
-                  })
-                )
-                .then(() => this.updateReadyState());
-            }
+        this.setState({ profiles_ct: profiles.length }, () => {
+          for (let profile of profiles) {
+            let id = profile.id;
+            fetch(`${profilesEndpoint}${id}/?verbose=true`)
+              .then(response => response.json())
+              .then(profileData =>
+                this.setState((state, props) => {
+                  return {
+                    profiles: { [id]: profileData, ...state.profiles },
+                    sections: {
+                      [profileData.section.id]: profileData.section,
+                      ...state.sections
+                    }
+                  };
+                })
+              )
+              .then(() => this.updateReadyState());
           }
-        );
+        });
       });
   }
 
@@ -63,15 +56,11 @@ class App extends React.Component {
     return fetch("/scheduler/courses")
       .then(response => response.json())
       .then(courses => {
-        this.setState((state, props) => {
-          let courses_map = {};
-          courses.map(course => {
-            courses_map[course.name] = course;
-          });
-
-          return {
-            courses: courses_map
-          };
+        this.setState({
+          courses: courses.reduce((coursesMap, course) => {
+            coursesMap[course.name] = course;
+            return coursesMap;
+          }, {})
         });
       })
       .then(() => this.updateReadyState());
@@ -81,13 +70,9 @@ class App extends React.Component {
     if (
       this.state.courses != null &&
       this.state.profiles_ct != null &&
-      Object.keys(this.state.profiles).length == this.state.profiles_ct
+      Object.keys(this.state.profiles).length === this.state.profiles_ct
     ) {
-      this.setState((state, props) => {
-        return {
-          ready: true
-        };
-      });
+      this.setState({ ready: true });
     }
   }
 
@@ -106,7 +91,7 @@ class App extends React.Component {
               render={() => {
                 if (!this.state.ready) {
                   return <LoadingSplash />;
-                } else if (this.state.profiles_ct == 0) {
+                } else if (this.state.profiles_ct === 0) {
                   return <Redirect to="/courses/" push />;
                 } else {
                   const firstSection = `/sections/${
@@ -119,9 +104,7 @@ class App extends React.Component {
             <Route
               path="/sections/:id"
               render={({ match }) => {
-                if (
-                  !Object.keys(this.state.sections).includes(match.params.id)
-                ) {
+                if (!this.state.sections.hasOwnProperty(match.params.id)) {
                   // This might be a newly added section
                   this.updateProfiles();
                   this.updateCourses();
@@ -151,7 +134,7 @@ class App extends React.Component {
 
 function LoadingSplash() {
   return (
-    <div class="loading-splash">
+    <div className="loading-splash">
       <h3>Loading...</h3>
     </div>
   );
