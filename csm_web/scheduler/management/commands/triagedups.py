@@ -27,7 +27,7 @@ class Command(BaseCommand):
 		print("Keeping {}".format(keep))
 		for prof in profs:
 			for s in prof.section.students:
-				s.section = keep
+				s.section = keep.section
 				s.save()
 			if len(prof.section.students) == 0:
 				print("Deleting {}".format(prof))
