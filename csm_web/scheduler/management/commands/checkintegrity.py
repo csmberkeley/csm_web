@@ -4,8 +4,8 @@ Makes sure nothing in the system is overly screwed up.
 
 import csv
 from django.core.management import BaseCommand
-from scheduler.models import Course, Profile, Section
-
+from scheduler.models import Course, Profile, Section, Spacetime
+import datetime as dt
 
 class Command(BaseCommand):
     help = "Runs through all objects in the database and makes sure nothing funky is up with them."
@@ -28,6 +28,8 @@ class Command(BaseCommand):
         if options["omitfile"]:
             omits = self._get_omits(options["omitfile"])
             self._check_omits(omits)
+        self._check_section_integrities(options["courses"])
+        self._check_profile_integrities()
         if self.failed:
             self.stderr.write("Integrity check failed with these errors:")
             for f in self.failed:
@@ -96,9 +98,13 @@ class Command(BaseCommand):
         - has a spacetime
         """
         sections = Section.objects.all()
+        seen_spacetimes = set()
         for section in sections:
-            if section.course not in courses:
+            if section.course.name not in courses:
                 self._err("Section {} has bad course".format(section))
+            if section.course.name == "EE16A":
+                if section.default_spacetime.duration < dt.timedelta(hours=1, minutes=30):
+                    self._err("16A section {} has bad duration".format(section))
             if not section.capacity:
                 self._err("Section {} lacks capacity".format(section))
             if section.current_student_count > section.capacity:
@@ -107,8 +113,13 @@ class Command(BaseCommand):
                         section, section.current_student_count, section.capacity
                     )
                 )
-            if not section.spacetime:
+            if not section.default_spacetime:
                 self._err("Section {} lacks spacetime".format(section))
+            st = section.default_spacetime
+            obj = (st.start_time, st.location, st.day_of_week, section.mentor.user.email)
+            if obj in seen_spacetimes:
+                self._err("Duplicate spacetime for section {} by mentor".format(section, section.mentor))
+            seen_spacetimes.add(obj)
             if not section.mentor:
                 self._err("Section {} lacks mentor".format(section))
             mentor_role = section.mentor.role
@@ -120,10 +131,11 @@ class Command(BaseCommand):
                 )
 
     def _check_profile_integrities(self):
-        for profile in Profiles.objects.all():
+        for profile in Profile.objects.all():
             if not profile.user:
                 self._err("Somehow, profile {} has no user".format(profile))
             if profile.role not in Profile.ROLE_MAP:
                 self._err("Profile {} has bad role".format(profile))
             if profile.role == Profile.STUDENT and not profile.section:
                 self._err("Student profile {} has no section".format(profile))
+
