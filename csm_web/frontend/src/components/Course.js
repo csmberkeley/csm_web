@@ -76,10 +76,12 @@ class Course extends React.Component {
     fetch("/scheduler/profiles/")
       .then(response => response.json())
       .then(profiles => {
-        this.setState({
-          enrolled: profiles
-            .map(profile => profile.course)
-            .includes(state.course.id)
+        this.setState((state, props) => {
+          return {
+            enrolled: profiles
+              .map(profile => profile.course)
+              .includes(state.course.id)
+          };
         });
       });
     fetch(`/scheduler/courses/${this.state.course.name}/sections/`)
