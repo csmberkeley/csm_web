@@ -39,10 +39,7 @@ class App extends React.Component {
                 this.setState((state, props) => {
                   return {
                     profiles: { [id]: profileData, ...state.profiles },
-                    sections: {
-                      [profileData.section.id]: profileData.section,
-                      ...state.sections
-                    }
+                    sections: { [id]: profileData.section, ...state.sections }
                   };
                 })
               )
@@ -110,7 +107,12 @@ class App extends React.Component {
                   this.updateCourses();
                   return <LoadingSplash />;
                 } else {
-                  return <Section {...this.state.sections[match.params.id]} />;
+                  return (
+                    <Section
+                      profile={match.params.id}
+                      {...this.state.sections[match.params.id]}
+                    />
+                  );
                 }
               }}
             />
