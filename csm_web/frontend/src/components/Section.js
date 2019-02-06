@@ -1,6 +1,7 @@
 import React from "react";
 import Cookies from "js-cookie";
 import Override from "./Override";
+import moment from "moment";
 
 function SectionSummary(props) {
   return (
@@ -161,10 +162,19 @@ class Attendances extends React.Component {
 }
 
 function Section(props) {
+  const defaultSpacetime = Object.assign({}, props.defaultSpacetime); // props are supposed to be immutable
+  defaultSpacetime.startTime = moment(
+    defaultSpacetime.startTime,
+    "HH:mm:ss"
+  ).format("hh:mm A");
+  defaultSpacetime.endTime = moment(
+    defaultSpacetime.endTime,
+    "HH:mm:ss"
+  ).format("hh:mm A");
   return (
     <div>
       <SectionSummary
-        defaultSpacetime={props.defaultSpacetime}
+        defaultSpacetime={defaultSpacetime}
         mentor={props.mentor}
         courseName={props.courseName}
         isMentor={props.isMentor}
