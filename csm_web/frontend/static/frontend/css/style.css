@@ -145,3 +145,54 @@ html, body {
   font-weight: 600;
   padding-left: 0.5em;
 }
+
+.section-enroll {
+  padding: 1em !important;
+  font-family: "Source Sans Pro", sans-serif;
+}
+
+.section-enroll-container {
+  max-width: 25em;
+}
+
+.section-enroll-data{
+  float: left
+}
+
+.section-enroll-spacetime {
+  font-size: 1.2em;
+  font-weight: 600;
+  margin: 0;
+}
+
+.section-enroll-mentor-label {
+  font-size: 0.75em;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin: 1em 0 0 0;
+}
+
+.section-enroll-mentor{
+  font-size: 1em;
+  margin: 0;
+}
+
+.section-enroll-mentor{
+  font-size: 1em;
+  margin: 0;
+}
+
+.section-enroll-capacity{
+  font-size: 1em;
+  font-weight: 600;
+  margin: 0.25em 0 1em 0;
+}
+
+.section-enroll-btn{
+  float: right;
+  padding-top: 5em;
+}
+
+.section-enroll-btn > button {
+  bottom: 1em;
+}

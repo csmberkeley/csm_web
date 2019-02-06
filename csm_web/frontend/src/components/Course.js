@@ -240,21 +240,32 @@ function SectionEnroll(props) {
   const disabled = props.enrolled || !props.enrollmentOpen || available === 0;
 
   return (
-    <li>
-      <h4>
-        {location} - {startTime}
-      </h4>
-      <p>
-        {props.section.enrolledStudents}/{props.section.capacity} - {available}{" "}
-        {pluralized_spot} available
-      </p>
-      <button
-        className="uk-button uk-button-primary"
-        disabled={disabled}
-        onClick={handleClick}
-      >
-        Enroll
-      </button>
+    <li className="section-enroll">
+      <div className="section-enroll-container">
+        <div className="section-enroll-data">
+          <p className="section-enroll-spacetime">
+            {location} - {startTime}
+          </p>
+          <p className="section-enroll-mentor-label">Mentor</p>
+          <p className="section-enroll-mentor">
+            {props.section.mentor.user.firstName}{" "}
+            {props.section.mentor.user.lastName}
+          </p>
+          <p className="section-enroll-capacity">
+            {props.section.enrolledStudents}/{props.section.capacity} -{" "}
+            {available} {pluralized_spot} available
+          </p>
+        </div>
+        <div className="section-enroll-btn">
+          <button
+            className="uk-button uk-button-primary"
+            disabled={disabled}
+            onClick={handleClick}
+          >
+            Enroll
+          </button>
+        </div>
+      </div>
     </li>
   );
 }
