@@ -239,10 +239,10 @@ LOGGING = {
         #     "level": "DEBUG",
         #     "propagate": False,
         # },
-        # "scheduler.signals": {
-        #     "handlers": ["console-models", "mail_admins", "models"],
-        #     "level": "DEBUG",
-        #     "propagate": False,
-        # },
+        "scheduler.signals": {
+            "handlers": ["console-models", "mail_admins", "models"],
+            "level": "DEBUG",
+            "propagate": False,
+        },
     },
 }
