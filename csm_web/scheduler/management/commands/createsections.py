@@ -40,8 +40,6 @@ SELFBOOK_DAY_MAP = {  # ngl this is pretty silly but w/e
     "Friday": Spacetime.FRIDAY,
 }
 
-IGNORED_COURSES = {"CS70", "CS61A"}  # they're doing their own stuff
-
 # gets capacity of a section
 CAPACITY_FUNCS = {
     # 70: all 4s
@@ -209,6 +207,8 @@ class Command(BaseCommand):
     seen_sections = set()
 
     def _save_objs(self, room, start_time, duration, day_of_week, course, email, omits):
+        if course.name in COURSES.IGNORED_COURSES:
+            return 0
         if email in omits.get(course.name, []):
             self.stdout.write("{}: omitted section for {}".format(course.name, email))
             return 0

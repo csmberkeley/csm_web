@@ -6,7 +6,7 @@ import { post } from "../utils/api";
 import { alert_modal } from "../utils/common";
 
 const API_TIME_FORMAT = "HH:mm:ss";
-const DISPLAY_TIME_FORMAT = "HH:mm A";
+const DISPLAY_TIME_FORMAT = "h:mm A";
 const dayOfWeek = {
   Monday: 0,
   Tuesday: 1,

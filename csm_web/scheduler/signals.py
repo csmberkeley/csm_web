@@ -56,7 +56,7 @@ def log_student_pre_create(sender, **kwargs):
     raw = kwargs["raw"]
     if not raw and profile.role == models.Profile.STUDENT:
         e.info(
-            "Starting profile save of {} (email {})".format(profile, profile.user.email),
+            "Starting profile save of {} (email {}, active={})".format(profile, profile.user.email, profile.active),
             initiator="Pre-Enroll"
         )
 
@@ -68,8 +68,19 @@ def log_student_post_create(sender, **kwargs):
     raw = kwargs["raw"]
     if not raw and profile.role == models.Profile.STUDENT:
         e.info(
-            "Finished profile save of {} (email {})".format(profile, profile.user.email),
+            "Finished profile save of {} (email {}, active={})".format(profile, profile.user.email, profile.active),
             initiator="Post-Enroll"
+        )
+
+@receiver(signals.post_save, sender=models.Override)
+def log_student_post_create(sender, **kwargs):
+    override = kwargs["instance"]
+    created = kwargs["created"]
+    raw = kwargs["raw"]
+    if not raw:
+        e.info(
+            "Finished save of {}".format(override),
+            initiator="Override Post-Save"
         )
 
 
