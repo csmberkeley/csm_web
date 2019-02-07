@@ -40,7 +40,7 @@ class Attendance(models.Model):
         return self.section.mentor
 
     class Meta:
-        unique_together = ("section", "week_start")
+        unique_together = ("section", "week_start", "attendee")
 
 
 class Course(models.Model):

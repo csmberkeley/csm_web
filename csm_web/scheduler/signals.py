@@ -12,24 +12,24 @@ WEEKDAY_MAP = {
     number: pair[0] for number, pair in enumerate(models.Spacetime.DAY_OF_WEEK_CHOICES)
 }
 
-GENERATE_ATTENDANCES = False
-
+ATTENDANCE_GENERATE_COUNT = 0
 
 @receiver(signals.post_save, sender=models.Profile)
 def generate_attendances(sender, **kwargs):
     """
     Creates attendance objects for a student when they join a section.
     """
-    if not GENERATE_ATTENDANCES:
-        return
     profile = kwargs["instance"]
     raw = kwargs["raw"]
+    created = kwargs["created"]
     if (
         not raw
+        and created
         and profile.role == models.Profile.STUDENT
         and profile.section is not None
     ):
         # modified slightly from factories.py
+        count = 0
         current_date = profile.course.enrollment_start.date()
         while (
             WEEKDAY_MAP[current_date.weekday()]
@@ -37,11 +37,14 @@ def generate_attendances(sender, **kwargs):
         ):
             current_date += timedelta(days=1)
         while current_date < profile.course.valid_until:
+            if count >= ATTENDANCE_GENERATE_COUNT:
+                break
             models.Attendance.objects.create(
                 attendee=profile,
                 section=profile.section,
                 week_start=current_date - timedelta(days=current_date.weekday()),
             )
+            count += 1
             current_date += timedelta(weeks=1)
             # TODO backfill absences for late enrollees?
 
@@ -73,7 +76,7 @@ def log_student_post_create(sender, **kwargs):
         )
 
 @receiver(signals.post_save, sender=models.Override)
-def log_student_post_create(sender, **kwargs):
+def log_overide_post_create(sender, **kwargs):
     override = kwargs["instance"]
     created = kwargs["created"]
     raw = kwargs["raw"]
