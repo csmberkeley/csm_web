@@ -18,5 +18,5 @@ module.exports = {
     ]
   },
   plugins: plugins,
-  externals: { react: "React", 'react-dom': 'ReactDOM' }
+  externals: { react: "React", "react-dom": "ReactDOM" }
 };
