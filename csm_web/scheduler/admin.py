@@ -32,14 +32,14 @@ class SectionAdmin(admin.ModelAdmin):
     )
 
     def get_mentor_display(self, obj):
-        return "%s - %s" % (obj.mentor.name, obj.mentor.user.email)
+        return f"{obj.mentor.name} - {obj.mentor.user.email}"
 
     get_mentor_display.short_description = "mentor"
 
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    fields = ("name", "course", "get_role_display", "section", "user")
+    fields = ("name", "course", "get_role_display", "section", "user", "active")
     readonly_fields = ("name", "get_role_display")
     list_filter = ("course", "role", "active")
     search_fields = ("user__email",)
@@ -59,9 +59,6 @@ class ProfileAdmin(admin.ModelAdmin):
         queryset.update(active=True)
 
     activate_profiles.short_description = "Mark selected profiles as active"
-
-
-DAY_NUMBER_MAP = {"S": 0, "M": 1, "TU": 2, "W": 3, "TH": 4, "F": 5, "SA": 6}
 
 
 @admin.register(Spacetime)

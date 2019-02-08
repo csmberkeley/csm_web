@@ -87,10 +87,10 @@ class Profile(ActivatableModel):
 
     @property
     def name(self):
-        return "%s %s" % (self.user.first_name, self.user.last_name)
+        return f"{self.user.first_name} {self.user.last_name}"
 
     def __str__(self):
-        return "%s %s - %s" % (self.course.name, self.get_role_display(), self.name)
+        return f"{self.course.name} {self.get_role_display()} - {self.name}"
 
 
 class Section(models.Model):
@@ -154,11 +154,10 @@ class Spacetime(models.Model):
     day_of_week = models.CharField(max_length=2, choices=DAY_OF_WEEK_CHOICES)
 
     def __str__(self):
-        return "%s %s %s for %d min" % (
-            self.location,
-            self.day_of_week,
-            self.start_time.strftime("%I:%M %p"),
-            self.duration.total_seconds() / 60,
+        formatted_time = self.start_time.strftime("%I:%M %p")
+        num_minutes = int(self.duration.total_seconds() // 60)
+        return (
+            f"{self.location} {self.day_of_week} {formatted_time} for {num_minutes} min"
         )
 
 
@@ -172,4 +171,4 @@ class Override(models.Model):
         return self.section.mentor
 
     def __str__(self):
-        return "Override for week of %s, %s" % (str(self.section), str(self.spacetime))
+        return f"Override for week of {self.section} {self.spacetime}"
