@@ -17,5 +17,5 @@ class Command(BaseCommand):
             self.stdout.write("====SECTIONS FOR MENTOR {}====".format(email))
             for profile in profs:
                 self.stdout.write("    - {}; students {}".format(profile.section,
-                    [s.user.email for s in profile.section.students]
+                    [s.user.email for s in profile.section.active_students]
                 ))
