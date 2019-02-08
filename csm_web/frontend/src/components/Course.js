@@ -239,7 +239,7 @@ function SectionEnroll(props) {
 
   const available = Math.max(0, props.section.capacity - props.section.enrolledStudents);
   const pluralized_spot = available === 1 ? "spot" : "spots";
-  const disabled = props.enrolled || !props.enrollmentOpen || available === 0;
+  const disabled = props.enrolled || !props.enrollmentOpen || available <= 0;
 
   return (
     <li className="section-enroll">
