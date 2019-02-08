@@ -237,7 +237,7 @@ function SectionEnroll(props) {
       });
   }
 
-  const available = props.section.capacity - props.section.enrolledStudents;
+  const available = Math.max(0, props.section.capacity - props.section.enrolledStudents);
   const pluralized_spot = available === 1 ? "spot" : "spots";
   const disabled = props.enrolled || !props.enrollmentOpen || available === 0;
 
