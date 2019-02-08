@@ -1,8 +1,19 @@
 {
-	"presets": [
-		"@babel/preset-env", "@babel/preset-react"
-	],
-	"plugins": [
-		"transform-class-properties"
-	]
+  "presets": [
+    "@babel/preset-react",
+    [
+      "@babel/preset-env",
+      {
+		"useBuiltIns": false,
+        "targets": {
+          "Chrome": "70",
+          "Safari": "12",
+          "Firefox": "62",
+          "ios": "12",
+          "ChromeAndroid": "70"
+        }
+      }
+    ]
+  ],
+  "plugins": ["transform-class-properties", "lodash"]
 }

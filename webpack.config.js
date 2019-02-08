@@ -1,3 +1,10 @@
+var webpack = require("webpack");
+var LodashModuleReplacementPlugin = require("lodash-webpack-plugin");
+var plugins = [
+  new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
+  new LodashModuleReplacementPlugin()
+];
+
 module.exports = {
   module: {
     rules: [
@@ -9,5 +16,7 @@ module.exports = {
         }
       }
     ]
-  }
+  },
+  plugins: plugins,
+  externals: { react: "React", 'react-dom': 'ReactDOM' }
 };
