@@ -16,8 +16,9 @@ class Command(BaseCommand):
             for profile in students:
                 section = profile.section
                 if Attendance.objects.filter(section=section, attendee=profile).count() > 0:
-                    self.stdout.write("Skipping {}".format(profile))
+                    # self.stdout.write("Skipping {}".format(profile))
                     continue
+                self.stdout.write("Updating {}".format(profile))
                 current_date = profile.course.enrollment_start.date()
                 while (
                     WEEKDAY_MAP[current_date.weekday()] != section.default_spacetime.day_of_week
