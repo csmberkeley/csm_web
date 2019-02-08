@@ -85,17 +85,12 @@ class Profile(ActivatableModel):
         "Section", on_delete=models.CASCADE, blank=True, null=True
     )
 
-    def __str__(self):
-        title = "{course} {role}".format(
-            course=self.course.name, role=Profile.ROLE_MAP.get(self.role)
-        )
-        if self.section:
-            section = "for {section}".format(section=self.section)
-        else:
-            section = ""
-        username = "({username})".format(username=self.user.username)
+    @property
+    def name(self):
+        return "%s %s" % (self.user.first_name, self.user.last_name)
 
-        return " ".join(x for x in (title, section, username) if x)
+    def __str__(self):
+        return "%s %s - %s" % (self.course.name, self.get_role_display(), self.name)
 
 
 class Section(models.Model):
@@ -116,6 +111,8 @@ class Section(models.Model):
     @property
     def current_student_count(self):
         return self.active_students.count()
+
+    current_student_count.fget.short_description = "Number of students enrolled"
 
     @property
     def leader(self):
@@ -157,11 +154,11 @@ class Spacetime(models.Model):
     day_of_week = models.CharField(max_length=2, choices=DAY_OF_WEEK_CHOICES)
 
     def __str__(self):
-        return "%s %s %s for %s min" % (
+        return "%s %s %s for %d min" % (
             self.location,
             self.day_of_week,
-            str(self.start_time),
-            str(self.duration),
+            self.start_time.strftime("%I:%M %p"),
+            self.duration.total_seconds() / 60,
         )
 
 
