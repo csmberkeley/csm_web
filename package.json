@@ -19,21 +19,16 @@
   },
   "homepage": "https://github.com/csmberkeley/csm_web#readme",
   "devDependencies": {
-    "@babel/cli": "^7.2.3",
     "@babel/core": "^7.2.2",
     "@babel/preset-env": "^7.3.1",
     "@babel/preset-react": "^7.0.0",
-    "babel-cli": "^7.0.0-beta.3",
-    "babel-core": "^7.0.0-beta.3",
     "babel-loader": "^8.0.5",
     "babel-plugin-lodash": "^3.3.4",
     "babel-plugin-transform-class-properties": "^6.24.1",
     "babel-polyfill": "^7.0.0-beta.3",
-    "babel-preset-env": "^7.0.0-beta.3",
     "lodash-webpack-plugin": "^0.11.5",
     "react-router-dom": "^4.3.1",
-    "webpack": "^4.25.1",
-    "webpack-cli": "^3.1.2"
+    "webpack": "^4.25.1"
   },
   "dependencies": {
     "js-cookie": "^2.2.0",
