@@ -50,7 +50,7 @@ enrolled in the course, then it drops them from their old section and assigns th
                 for prof in profiles:
                     self.stdout.write("{}, {}".format(prof, prof.user.email))
                 self.stderr.write("These people were dropped from previous sections:")
-                self.stderr.write("{}".format(multiple_enrollees))
+                self.stderr.write("{}".format(self.multiple_enrollees))
                 prompt = input("[y/n]")
                 if prompt != "y":
                     raise Exception()
