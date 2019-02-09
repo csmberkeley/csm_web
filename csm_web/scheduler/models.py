@@ -90,7 +90,7 @@ class Profile(ActivatableModel):
         return f"{self.user.first_name} {self.user.last_name}"
 
     def __str__(self):
-        return f"{self.course.name} {self.get_role_display()} - {self.name}"
+        return f"{self.course.name} {self.role} - {self.name}"
 
 
 class Section(models.Model):

@@ -14,7 +14,6 @@ from scheduler.management.commands.params import COURSES
 
 SECTION_CSV_DEFAULT_FIELDS = (
     "title",
-    "date",
     "day",
     "start time",
     "room",
@@ -22,7 +21,7 @@ SECTION_CSV_DEFAULT_FIELDS = (
     "invitees",
 )
 
-IGNORED_FIELDS = {"location", "repeat", "occurrences", "", "notes"}
+IGNORED_FIELDS = {"location", "date", "repeat", "occurrences", "", "notes"}
 
 DAY_MAP = {
     "M": Spacetime.MONDAY,
@@ -189,7 +188,7 @@ class Command(BaseCommand):
             course_name = "TEST_{}".format(course_name)
         course = Course.objects.get(name=course_name)
         # *** create spacetime ***
-        day_of_week = DAY_MAP[fields["day"]]
+        day_of_week = DAY_MAP.get(fields["day"], SELFBOOK_DAY_MAP.get(fields["day"]))
         room = fields["room"]
         # https://stackoverflow.com/questions/35241643/
         get_time = (
