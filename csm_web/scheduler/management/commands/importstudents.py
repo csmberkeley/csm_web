@@ -14,12 +14,15 @@ SELFBOOK_DAY_MAP = {  # ngl this is pretty silly but w/e
 }
 
 class Command(BaseCommand):
-    help = "Imports students from a CSV and enrolls them as needed."
+    help = "Imports students from a CSV and enrolls them as needed. If the student is already \
+enrolled in the course, then it drops them from their old section and assigns them to their new one."
 
     def add_arguments(self, parser):
         parser.add_argument(
             "csv_path", type=str, help="the path to the CSV file to be read"
         )
+
+    multiple_enrollees = []
 
     def handle(self, *args, **options):
         filename = options["csv_path"]
@@ -46,6 +49,8 @@ class Command(BaseCommand):
                 self.stdout.write("Generated these profiles:")
                 for prof in profiles:
                     self.stdout.write("{}, {}".format(prof, prof.user.email))
+                self.stderr.write("These people were dropped from previous sections:")
+                self.stderr.write("{}".format(multiple_enrollees))
                 prompt = input("[y/n]")
                 if prompt != "y":
                     raise Exception()
@@ -81,6 +86,17 @@ class Command(BaseCommand):
         if chunks[1] != "berkeley.edu":
             raise Exception("Non-Berkeley email found: {}".format(stud_email))
         user, _ = User.objects.get_or_create(username=chunks[0], email=stud_email)
+        old_students = Profile.objects.filter(
+            active=True,
+            course=section.course,
+            role=Profile.STUDENT,
+            user=user
+        )
+        if old_students.count() > 0:
+            fst = old_students.first()
+            old_students.update(active=False) # drop them
+            self.stdout.write("Dropping {} from {} before signup".format(fst, fst.section))
+            self.multiple_enrollees.append(stud_email)
         return Profile.objects.create(
             course=section.course,
             role=Profile.STUDENT,
