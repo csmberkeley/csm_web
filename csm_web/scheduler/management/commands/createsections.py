@@ -83,6 +83,8 @@ class Command(BaseCommand):
             help="a CSV containing the course/email/time of all mentors who are booking library rooms",
         )
 
+    generated = []
+
     def handle(self, *args, **options):
         filename = options["csv_path"]
         count = 0
@@ -114,6 +116,12 @@ class Command(BaseCommand):
                 with transaction.atomic():
                     for row in reader:
                         count += self._create_booked_section(cols, row, omits, options)
+                    self.stdout.write("Generated these mentor profiles:")
+                    for p in self.generated:
+                        self.stdout.write("{}".format(p))
+                    prompt = input("[y/n]")
+                    if prompt != "y":
+                        raise Exception()
             except IndexError as e:
                 self.stderr.write("cols: {}")
                 raise e
@@ -212,6 +220,15 @@ class Command(BaseCommand):
             self.stdout.write("{}: omitted section for {}".format(course.name, email))
             return 0
         obj = (room, start_time, day_of_week, course, email)
+        old_profiles = Profile.objects.filter(
+            user__email=email,
+            section__course=course,
+            section__default_spacetime__location=room,
+            section__default_spacetime__start_time=start_time,
+            section__default_spacetime__day_of_week=day_of_week,
+        )
+        if old_profiles.count() > 0:
+            return 0
         if obj in self.seen_sections:
             self.stderr.write("Duplicate section: {}".format(obj))
             raise Exception()
@@ -239,4 +256,5 @@ class Command(BaseCommand):
         profile = Profile.objects.get_or_create(
             user=user, course=course, section=section
         )
+        self.generated.append(profile)
         return 1
