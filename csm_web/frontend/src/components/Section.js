@@ -187,7 +187,11 @@ function Section(props) {
         profile={props.profile}
         studentIDs={props.students}
       />
-      <Attendances attendances={props.attendances} isMentor={props.isMentor} />
+      <Attendances
+        key={props.id}
+        attendances={props.attendances}
+        isMentor={props.isMentor}
+      />
     </div>
   );
 }
