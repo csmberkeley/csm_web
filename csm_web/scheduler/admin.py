@@ -39,16 +39,11 @@ class SectionAdmin(admin.ModelAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    fields = ("name", "course", "get_role_display", "section", "user", "active")
-    readonly_fields = ("name", "get_role_display")
+    fields = ("name", "course", "role", "section", "user", "active")
+    readonly_fields = ("name",)
     list_filter = ("course", "role", "active")
     search_fields = ("user__email",)
     actions = ("deactivate_profiles", "activate_profiles")
-
-    def get_role_display(self, obj):
-        return obj.get_role_display()
-
-    get_role_display.short_description = "Role"
 
     def deactivate_profiles(self, request, queryset):
         queryset.update(active=False)
