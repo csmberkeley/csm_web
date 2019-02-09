@@ -67,7 +67,12 @@ class Override extends React.Component {
         <button
           className="uk-button uk-button-default"
           type="button"
-          style={{ float: "right" }}
+          style={{
+            float: "right",
+            clear: "right",
+            width: "150px",
+            margin: "5px 0px"
+          }}
           data-uk-toggle="target: #override-modal"
         >
           Override

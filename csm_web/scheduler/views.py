@@ -16,6 +16,7 @@ from .serializers import (
     CourseSerializer,
     ProfileSerializer,
     VerboseProfileSerializer,
+    UserProfileSerializer,
     SectionSerializer,
     SpacetimeSerializer,
     OverrideSerializer,
@@ -23,6 +24,7 @@ from .serializers import (
 from .permissions import is_leader, IsLeader, IsLeaderOrReadOnly, IsReadIfOwner, IsOwner
 
 VERBOSE = "verbose"
+USERINFO = "userinfo"
 
 
 def login(request):
@@ -170,6 +172,8 @@ class UserProfileDetail(generics.RetrieveAPIView):
     def get_serializer_class(self):
         if self.request.query_params.get(VERBOSE, "false") == "true":
             return VerboseProfileSerializer
+        elif self.request.query_params.get(USERINFO, "false") == "true":
+            return UserProfileSerializer
         else:
             return ProfileSerializer
 

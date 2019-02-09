@@ -2,6 +2,7 @@ import React from "react";
 import Cookies from "js-cookie";
 import Override from "./Override";
 import DropSection from "./DropSection";
+import Roster from "./Roster";
 import moment from "moment";
 
 function SectionSummary(props) {
@@ -13,6 +14,7 @@ function SectionSummary(props) {
 
           <h2 style={{ clear: "both" }}>{props.courseName}</h2>
           {props.isMentor && <Override sectionID={props.sectionID} />}
+          {props.isMentor && <Roster studentIDs={props.studentIDs} />}
         </div>
         <p>
           {props.defaultSpacetime.dayOfWeek} {props.defaultSpacetime.startTime}{" "}
@@ -183,6 +185,7 @@ function Section(props) {
         isMentor={props.isMentor}
         sectionID={props.id}
         profile={props.profile}
+        studentIDs={props.students}
       />
       <Attendances attendances={props.attendances} isMentor={props.isMentor} />
     </div>
