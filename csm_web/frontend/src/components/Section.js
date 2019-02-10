@@ -173,7 +173,12 @@ class Section extends React.Component {
     super(props);
   }
   render() {
-    const defaultSpacetime = Object.assign({}, this.props.defaultSpacetime); // this.props are supposed to be immutable
+    const defaultSpacetime = Object.assign(
+      {},
+      this.props.activeOverride
+        ? this.props.activeOverride.spacetime
+        : this.props.defaultSpacetime
+    ); // this.props are supposed to be immutable
     defaultSpacetime.startTime = moment(
       defaultSpacetime.startTime,
       "HH:mm:ss"
