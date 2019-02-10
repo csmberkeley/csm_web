@@ -14,6 +14,9 @@ class Roster extends React.Component {
   }
 
   loadStudentInfo(studentIDs) {
+    if (studentIDs.length === 0) {
+      this.setState((state, props) => ({ students: {} }));
+    }
     for (let id of studentIDs) {
       fetch(`/scheduler/profiles/${id}/?userinfo=true`)
         .then(response => response.json())
