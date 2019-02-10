@@ -203,8 +203,12 @@ class Section extends React.Component {
 
   componentWillUnmount() {
     let rosterModal = document.getElementById("roster-modal");
+    let overrideModal = document.getElementById("override-modal");
     if (rosterModal) {
       rosterModal.remove();
+    }
+    if (overrideModal) {
+      overrideModal.remove();
     }
   }
 }
