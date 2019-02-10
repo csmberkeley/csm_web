@@ -125,10 +125,10 @@ class App extends React.Component {
                   }
 
                   // TODO might need to catch null fallthrough here
-
                   return (
                     <Section
                       profile={matchingProfile}
+                      key={match.params.id}
                       {...this.state.sections[match.params.id]}
                     />
                   );

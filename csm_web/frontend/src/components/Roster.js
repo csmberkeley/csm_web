@@ -3,36 +3,70 @@ import React from "react";
 class Roster extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {};
+    this.state = { currentSectionID: props.sectionID, students: null }; // will contain entries of the form studentID: [studentName, studentEmail]
   }
 
-  componentDidMount() {
-    for (let id of this.props.studentIDs) {
+  static getDerivedStateFromProps(state, props) {
+    if (props.sectionID !== state.currentSectionID) {
+      return { currentSectionID: props.sectionID, students: null };
+    }
+    return null; // does not update state
+  }
+
+  loadStudentInfo(studentIDs) {
+    for (let id of studentIDs) {
       fetch(`/scheduler/profiles/${id}/?userinfo=true`)
         .then(response => response.json())
         .then(studentInfo => {
           const { user } = studentInfo;
-          this.setState((state, props) => ({
-            [id]: [`${user.firstName} ${user.lastName}`, user.email],
-            ...state
-          }));
+          this.setState((state, props) => {
+            if (state.students === null) {
+              return {
+                students: {
+                  [id]: [`${user.firstName} ${user.lastName}`, user.email]
+                }
+              };
+            } else {
+              return {
+                students: {
+                  [id]: [`${user.firstName} ${user.lastName}`, user.email],
+                  ...state.students
+                }
+              };
+            }
+          });
         });
     }
   }
 
-  render() {
-    const rosterEntries = Object.entries(this.state).map(
-      (studentInfo, index) => {
-        const [id, studentDetails] = studentInfo;
-        const [name, email] = studentDetails;
+  componentDidMount() {
+    this.loadStudentInfo(this.props.studentIDs);
+  }
 
-        return (
-          <li key={id}>
-            {name} - <a href={`mailto:${email}`}>{email}</a>
-          </li>
-        );
-      }
-    );
+  componentDidUpdate(prevProps, prevState) {
+    if (this.state.students === null) {
+      this.loadStudentInfo(this.props.studentIDs);
+    }
+  }
+
+  render() {
+    var rosterEntries;
+    if (this.state.students !== null) {
+      rosterEntries = Object.entries(this.state.students).map(
+        (studentInfo, index) => {
+          const [id, studentDetails] = studentInfo;
+          const [name, email] = studentDetails;
+
+          return (
+            <li key={id}>
+              {name} - <a href={`mailto:${email}`}>{email}</a>
+            </li>
+          );
+        }
+      );
+    } else {
+      rosterEntries = [<p>Loading...</p>];
+    }
     return (
       <div>
         <button

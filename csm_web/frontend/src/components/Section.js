@@ -14,7 +14,9 @@ function SectionSummary(props) {
 
           <h2 style={{ clear: "both" }}>{props.courseName}</h2>
           {props.isMentor && <Override sectionID={props.sectionID} />}
-          {props.isMentor && <Roster studentIDs={props.studentIDs} />}
+          {props.isMentor && (
+            <Roster studentIDs={props.studentIDs} sectionID={props.sectionID} />
+          )}
         </div>
         <p>
           {props.defaultSpacetime.dayOfWeek} {props.defaultSpacetime.startTime}{" "}
@@ -166,35 +168,45 @@ class Attendances extends React.Component {
   }
 }
 
-function Section(props) {
-  const defaultSpacetime = Object.assign({}, props.defaultSpacetime); // props are supposed to be immutable
-  defaultSpacetime.startTime = moment(
-    defaultSpacetime.startTime,
-    "HH:mm:ss"
-  ).format("hh:mm A");
-  defaultSpacetime.endTime = moment(
-    defaultSpacetime.endTime,
-    "HH:mm:ss"
-  ).format("hh:mm A");
-  return (
-    <div>
-      <SectionSummary
-        defaultSpacetime={defaultSpacetime}
-        mentor={props.mentor}
-        courseName={props.courseName}
-        isMentor={props.isMentor}
-        sectionID={props.id}
-        profile={props.profile}
-        studentIDs={props.students}
-      />
-      <Attendances
-        key={props.id}
-        attendances={props.attendances}
-        isMentor={props.isMentor}
-      />
-    </div>
-  );
-}
+class Section extends React.Component {
+  constructor(props) {
+    super(props);
+  }
+  render() {
+    const defaultSpacetime = Object.assign({}, this.props.defaultSpacetime); // this.props are supposed to be immutable
+    defaultSpacetime.startTime = moment(
+      defaultSpacetime.startTime,
+      "HH:mm:ss"
+    ).format("hh:mm A");
+    defaultSpacetime.endTime = moment(
+      defaultSpacetime.endTime,
+      "HH:mm:ss"
+    ).format("hh:mm A");
+    return (
+      <div>
+        <SectionSummary
+          defaultSpacetime={defaultSpacetime}
+          mentor={this.props.mentor}
+          courseName={this.props.courseName}
+          isMentor={this.props.isMentor}
+          sectionID={this.props.id}
+          profile={this.props.profile}
+          studentIDs={this.props.students}
+        />
+        <Attendances
+          attendances={this.props.attendances}
+          isMentor={this.props.isMentor}
+        />
+      </div>
+    );
+  }
 
+  componentWillUnmount() {
+    let rosterModal = document.getElementById("roster-modal");
+    if (rosterModal) {
+      rosterModal.remove();
+    }
+  }
+}
 export default Section;
 export { SectionSummary };
