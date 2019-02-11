@@ -30,7 +30,6 @@ class Command(BaseCommand):
                     self._save_section(room_2, start_time, day_2, course, email, capacity)
 
     def _parse_days(self, days):
-        print(days)
         d1, d2 = [d.lower().strip() for d in days.split("/")]
         DAY_MAP = {
             "m": Spacetime.MONDAY,
@@ -42,6 +41,8 @@ class Command(BaseCommand):
         return DAY_MAP[d1], DAY_MAP[d2]
 
     def _save_section(self, room, start_time, day_of_week, course, email, capacity):
+        if room == "":
+            room = "TBD"
         spacetime = Spacetime.objects.create(
             location=room,
             start_time=start_time,
