@@ -39,7 +39,7 @@ class Command(BaseCommand):
             self.stdout.write("All clear. Hopefully. Good luck.")
 
     def _err(self, msg):
-        self.stderr.write(msg)
+        # self.stderr.write(msg)
         self.failed.append(msg)
 
     def _get_omits(self, omitfile):
@@ -138,4 +138,7 @@ class Command(BaseCommand):
                 self._err("Profile {} has bad role".format(profile))
             if profile.role == Profile.STUDENT and not profile.section:
                 self._err("Student profile {} has no section".format(profile))
+            if profile.role == Profile.STUDENT and profile.active:
+                if profile.leader != profile.section.leader:
+                    self._err("Student profile {} has inconsistent leader".format(profile))
 
