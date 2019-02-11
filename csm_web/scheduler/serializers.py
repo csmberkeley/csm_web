@@ -177,7 +177,7 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
                     )
                     for attendance in student.attendance_set.all()
                 ]
-                for student in obj.students.all()
+                for student in obj.active_students.all()
             ]
             flat_attendances = [item for lst in nested_attendances for item in lst]
             flat_attendances.sort(key=lambda tuple: tuple[1])
