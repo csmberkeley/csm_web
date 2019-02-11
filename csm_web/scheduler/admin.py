@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.utils.html import format_html
+from django.urls import reverse
 from scheduler.models import (
     User,
     Attendance,
@@ -9,7 +11,16 @@ from scheduler.models import (
     Override,
 )
 
-admin.site.register(User)
+
+@admin.register(User)
+class UserAdmin(admin.ModelAdmin):
+    fields = ("username", "email", "first_name", "last_name", "is_active")
+    search_fields = ("email",)
+    list_display = ("name", "email")
+    list_filter = ("is_active",)
+
+    def name(self, obj):
+        return f"{obj.first_name} {obj.last_name}"
 
 
 @admin.register(Section)
@@ -20,8 +31,9 @@ class SectionAdmin(admin.ModelAdmin):
         "get_mentor_display",
         "capacity",
         "current_student_count",
+        "students",
     )
-    readonly_fields = ("get_mentor_display", "current_student_count")
+    readonly_fields = ("get_mentor_display", "current_student_count", "students")
     list_filter = ("course", "default_spacetime__day_of_week")
     list_display = (
         "course",
@@ -32,10 +44,17 @@ class SectionAdmin(admin.ModelAdmin):
     )
 
     def get_mentor_display(self, obj):
-        return f"{obj.mentor.name} - {obj.mentor.user.email}"
+        admin_url = reverse('admin:scheduler_profile_change', args=(obj.mentor.id,))
+        return format_html('<a href="{}">{}</a>', admin_url, obj.mentor.name)
 
     get_mentor_display.short_description = "mentor"
 
+    def students(self, obj):
+        student_links = []
+        for student in obj.students.all():
+            admin_url = reverse('admin:scheduler_profile_change', args=(student.id,))
+            student_links.append(format_html('<a style="display: block" href="{}">{}</a>', admin_url, student.name))
+        return format_html(''.join(student_links))
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
