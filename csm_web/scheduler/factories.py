@@ -167,8 +167,8 @@ def create_section_for(mentor):
         section=section,
         role=Profile.STUDENT,
     )
-    for student in students:
-        create_attendances_for(student)
+    # for student in students:
+    #     create_attendances_for(student)
     return section
 
 
