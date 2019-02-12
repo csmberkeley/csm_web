@@ -51,14 +51,14 @@ class SectionAdmin(admin.ModelAdmin):
 
     def students(self, obj):
         student_links = []
-        for student in obj.students.all():
+        for student in obj.students.filter(active=True):
             admin_url = reverse('admin:scheduler_profile_change', args=(student.id,))
-            student_links.append(format_html('<a style="display: block" href="{}">{}</a>', admin_url, student.name))
+            student_links.append(format_html('<a style="display: block" href="{}">{} {}</a>', admin_url, student.name, student.user.email))
         return format_html(''.join(student_links))
 
 @admin.register(Profile)
 class ProfileAdmin(admin.ModelAdmin):
-    fields = ("name", "course", "role", "section", "user", "active")
+    fields = ("name", "leader", "course", "role", "section", "user", "active")
     readonly_fields = ("name",)
     list_filter = ("course", "role", "active")
     search_fields = ("user__email",)
