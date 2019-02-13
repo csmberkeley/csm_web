@@ -12,7 +12,8 @@ class Override extends React.Component {
     this.state = {
       location: null,
       startTime: null,
-      date: null
+      date: null,
+      errorMessage: null
     };
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -26,6 +27,11 @@ class Override extends React.Component {
   handleSubmit(event) {
     event.preventDefault();
     const datetime = moment(`${this.state.date} ${this.state.startTime}`);
+    const today = moment();
+    if (datetime.isBefore(today)) {
+      this.setState({ errorMessage: "You must select a date in the future" });
+      return;
+    }
     const spacetime = {
       location: this.state.location,
       start_time: datetime.format("HH:mm:ss"),
@@ -57,6 +63,8 @@ class Override extends React.Component {
             type={type}
             onChange={this.handleInputChange}
             className="uk-input"
+            required
+            autoComplete="off"
           />
         </label>
       );
@@ -90,9 +98,24 @@ class Override extends React.Component {
             <h2 className="uk-modal-title" style={{ marginTop: "0px" }}>
               Override
             </h2>
+            {this.state.errorMessage && (
+              <p
+                style={{
+                  color: "red",
+                  border: "red 1px solid",
+                  padding: "5px",
+                  "text-align": "center"
+                }}
+              >
+                Error: {this.state.errorMessage}
+              </p>
+            )}
             <form onSubmit={this.handleSubmit}>
               {inputs}
-              <button className="uk-button uk-button-default uk-button-small">
+              <button
+                className="uk-button uk-button-default uk-button-small"
+                style={{ marginTop: "5px" }}
+              >
                 Save Override
               </button>
             </form>
