@@ -122,7 +122,9 @@ class ActiveOverrideField(serializers.RelatedField):
 
         # We want the latest override for this week
 
-        weekday = timezone.now().weekday()
+        weekday = (
+            timezone.now().weekday() + 1
+        ) % 7  # Shift to make Sunday first day of the week
         current_week_start = timezone.now().date() - timedelta(days=weekday)
         current_week_end = current_week_start + timedelta(days=7)
 
