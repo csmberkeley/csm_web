@@ -42,9 +42,23 @@ class Override extends React.Component {
       week_start: datetime.startOf("week").format("YYYY-MM-DD"),
       section: this.props.sectionID
     };
-    post("scheduler/overrides/", data).then(() =>
-      UIkit.modal(document.getElementById("override-modal")).hide()
-    );
+    post("scheduler/overrides/", data)
+      .then(response => {
+        if (response.ok) {
+          UIkit.modal(document.getElementById("override-modal")).hide();
+        } else {
+          this.setState({
+            errorMessage:
+              "Something went wrong. Please try again in a few minutes."
+          });
+        }
+      })
+      .catch(error =>
+        this.setState({
+          errorMessage:
+            "Something went wrong. Please try again in a few minutes."
+        })
+      );
   }
 
   render() {
