@@ -1,4 +1,5 @@
 from django.contrib import admin
+from django.contrib.admin.views.decorators import staff_member_required
 from django.utils.html import format_html
 from django.urls import reverse
 from scheduler.models import (
@@ -10,6 +11,46 @@ from scheduler.models import (
     Spacetime,
     Override,
 )
+
+class CoordAdmin(admin.ModelAdmin):
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_add_permission(self, request):
+        return request.user.is_staff
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_staff
+
+    def has_module_permission(self, request):
+        return request.user.is_staff
+
+# @admin.register(User)
+class CoordEditStudent(admin.CoordAdmin):
+    """
+    Allows coordinators to enroll/edit students.
+    """
+    ...
+
+
+# @admin.register(Profile)
+class CoordEditSection(admin.CoordAdmin):
+    """
+    Allows coordinators to add/edit sections, i.e. mentor profile + section + spacetime.
+    """
+
+    fields = ("username", "email", "first_name", "last_name", "is_active", "course")
+    readonly_fields = ("username", "email", "first_name", "last_name", "is_active")
+    fieldsets = (
+        ("Mentor Information", {"fields": ()}),
+        ("Section Information", {"fields": ()}),
+    )
+
+    def save_model(self, request, obj, form, change):
+        ...
 
 
 @admin.register(User)
@@ -24,7 +65,7 @@ class UserAdmin(admin.ModelAdmin):
 
 
 @admin.register(Section)
-class SectionAdmin(admin.ModelAdmin):
+class SectionAdmin(admin.CoordAdmin):
     fields = (
         "course",
         "default_spacetime",
@@ -42,9 +83,30 @@ class SectionAdmin(admin.ModelAdmin):
         "capacity",
         "current_student_count",
     )
+    search_fields = (
+        "course__name",
+        "default_spacetime__day_of_week",
+        "default_spacetime__location",
+    )
+
+    def has_add_permission(self, request):
+        return False # add sections by creating profiles :L
+    
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(
+            course__in=[
+                p.course
+                for p in request.user.profile_set.filter(
+                    active=True, role=Profile.COORDINATOR
+                )
+            ]
+        )
 
     def get_mentor_display(self, obj):
-        admin_url = reverse('admin:scheduler_profile_change', args=(obj.mentor.id,))
+        admin_url = reverse("admin:scheduler_profile_change", args=(obj.mentor.id,))
         return format_html('<a href="{}">{}</a>', admin_url, obj.mentor.name)
 
     get_mentor_display.short_description = "mentor"
@@ -52,17 +114,26 @@ class SectionAdmin(admin.ModelAdmin):
     def students(self, obj):
         student_links = []
         for student in obj.students.filter(active=True):
-            admin_url = reverse('admin:scheduler_profile_change', args=(student.id,))
-            student_links.append(format_html('<a style="display: block" href="{}">{} {}</a>', admin_url, student.name, student.user.email))
-        return format_html(''.join(student_links))
+            admin_url = reverse("admin:scheduler_profile_change", args=(student.id,))
+            student_links.append(
+                format_html(
+                    '<a style="display: block" href="{}">{} {}</a>',
+                    admin_url,
+                    student.name,
+                    student.user.email,
+                )
+            )
+        return format_html("".join(student_links))
+
 
 @admin.register(Profile)
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(admin.CoordAdmin):
     fields = ("name", "leader", "course", "role", "section", "user", "active")
     readonly_fields = ("name",)
     list_filter = ("course", "role", "active")
     search_fields = ("user__email",)
     actions = ("deactivate_profiles", "activate_profiles")
+    autocomplete_fields = ("leader", "section", "user")
 
     def deactivate_profiles(self, request, queryset):
         queryset.update(active=False)
@@ -116,7 +187,7 @@ class CourseAdmin(admin.ModelAdmin):
 
 
 @admin.register(Attendance)
-class AttendanceAdmin(admin.ModelAdmin):
+class AttendanceAdmin(admin.CoordAdmino):
     fields = ("get_presence_display", "week_start", "section", "attendee")
     list_display = ("attendee", "week_start", "presence")
     list_filter = ("presence", "attendee__course")
@@ -126,7 +197,7 @@ class AttendanceAdmin(admin.ModelAdmin):
 
 
 @admin.register(Override)
-class OverrideAdmin(admin.ModelAdmin):
+class OverrideAdmin(admin.CoordAdmin):
     fields = ("week_start", "spacetime", "section")
     ordering = ("-week_start",)
 
