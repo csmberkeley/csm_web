@@ -117,6 +117,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = "scheduler.User"
 
+# Security/HTTPS headers
+# https://docs.djangoproject.com/en/2.1/ref/middleware/#module-django.middleware.security
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_SECONDS = 3600 # TODO change to 1 year (31536000s) once we're sure this works
+SECURE_HSTS_PRELOAD = True
+SECURE_SSL_REDIRECT = True # ideally would be handled by nginx or something, but needed for heroku
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
