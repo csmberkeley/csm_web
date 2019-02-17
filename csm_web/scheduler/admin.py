@@ -1,5 +1,7 @@
+from django.db import models
 from django.contrib import admin
 from django.contrib.admin.views.decorators import staff_member_required
+from django.core.exceptions import ValidationError
 from django.utils.html import format_html
 from django.urls import reverse
 from scheduler.models import (
@@ -12,86 +14,90 @@ from scheduler.models import (
     Override,
 )
 
+
 class CoordAdmin(admin.ModelAdmin):
     def has_view_permission(self, request, obj=None):
-        return request.user.is_staff
+        return request.user.is_staff or request.user.is_superuser
 
     def has_add_permission(self, request):
-        return request.user.is_staff
+        return request.user.is_staff or request.user.is_superuser
 
     def has_change_permission(self, request, obj=None):
-        return request.user.is_staff
+        return request.user.is_staff or request.user.is_superuser
 
     def has_delete_permission(self, request, obj=None):
-        return request.user.is_staff
+        return request.user.is_staff or request.user.is_superuser
 
     def has_module_permission(self, request):
-        return request.user.is_staff
-
-# @admin.register(User)
-class CoordEditStudent(admin.CoordAdmin):
-    """
-    Allows coordinators to enroll/edit students.
-    """
-    ...
-
-
-# @admin.register(Profile)
-class CoordEditSection(admin.CoordAdmin):
-    """
-    Allows coordinators to add/edit sections, i.e. mentor profile + section + spacetime.
-    """
-
-    fields = ("username", "email", "first_name", "last_name", "is_active", "course")
-    readonly_fields = ("username", "email", "first_name", "last_name", "is_active")
-    fieldsets = (
-        ("Mentor Information", {"fields": ()}),
-        ("Section Information", {"fields": ()}),
-    )
-
-    def save_model(self, request, obj, form, change):
-        ...
+        return request.user.is_staff or request.user.is_superuser
 
 
 @admin.register(User)
-class UserAdmin(admin.ModelAdmin):
-    fields = ("username", "email", "first_name", "last_name", "is_active")
+class UserAdmin(CoordAdmin):
+    fields = ("username", "email", "first_name", "last_name")
     search_fields = ("email",)
     list_display = ("name", "email")
     list_filter = ("is_active",)
 
     def name(self, obj):
-        return f"{obj.first_name} {obj.last_name}"
+        if obj.first_name and obj.last_name:
+            return f"{obj.first_name} {obj.last_name}"
+        else:
+            return obj.username
+
+    def has_delete_permission(self, request, obj=None):
+        return request.user.is_superuser
 
 
 @admin.register(Section)
-class SectionAdmin(admin.CoordAdmin):
-    fields = (
-        "course",
-        "default_spacetime",
+class SectionAdmin(CoordAdmin):
+    fieldsets = (
+        (
+            "Mentor Information",
+            {"fields": ("get_mentor_display", "get_mentor_email", "get_profile_id")},
+        ),
+        (
+            "Section Information",
+            {
+                "fields": (
+                    "course",
+                    "get_default_spacetime",
+                    "capacity",
+                    "current_student_count",
+                    "students",
+                )
+            },
+        ),
+    )
+    readonly_fields = (
         "get_mentor_display",
-        "capacity",
+        "get_mentor_email",
+        "get_default_spacetime",
+        "get_profile_id",
+        "course",
         "current_student_count",
         "students",
     )
-    readonly_fields = ("get_mentor_display", "current_student_count", "students")
     list_filter = ("course", "default_spacetime__day_of_week")
     list_display = (
         "course",
         "default_spacetime",
         "get_mentor_display",
-        "capacity",
+        "get_mentor_email",
         "current_student_count",
+        "capacity",
     )
     search_fields = (
         "course__name",
+        "profile__user__first_name",  # FK'd on mentor hopefully
+        "profile__user__last_name",
         "default_spacetime__day_of_week",
         "default_spacetime__location",
     )
 
     def has_add_permission(self, request):
-        return False # add sections by creating profiles :L
-    
+        return request.user.is_superuser  # add sections by creating profiles :L
+
     def get_queryset(self, request):
         qs = super().get_queryset(request)
         if request.user.is_superuser:
@@ -104,6 +110,31 @@ class SectionAdmin(admin.CoordAdmin):
                 )
             ]
         )
+
+    def get_default_spacetime(self, obj):
+        admin_url = reverse(
+            "admin:scheduler_spacetime_change", args=(obj.default_spacetime.id,)
+        )
+        return format_html(
+            '<div class="related-widget-wrapper"> \
+            <a class="related-widget-wrapper-link change-related"change-related" \
+            id="change_id_default_spacetime" \
+            href="{}?_to_field=id&_popup=1">{}</a></div>',
+            admin_url,
+            str(obj.default_spacetime),
+        )
+
+    get_default_spacetime.short_description = "Default room/time"
+
+    def get_mentor_email(self, obj):
+        return obj.mentor.user.email
+
+    get_mentor_email.short_description = "mentor email"
+
+    def get_profile_id(self, obj):
+        return obj.mentor.id
+
+    get_profile_id.short_description = "Profile ID"
 
     def get_mentor_display(self, obj):
         admin_url = reverse("admin:scheduler_profile_change", args=(obj.mentor.id,))
@@ -127,13 +158,70 @@ class SectionAdmin(admin.CoordAdmin):
 
 
 @admin.register(Profile)
-class ProfileAdmin(admin.CoordAdmin):
-    fields = ("name", "leader", "course", "role", "section", "user", "active")
+class ProfileAdmin(CoordAdmin):
     readonly_fields = ("name",)
     list_filter = ("course", "role", "active")
-    search_fields = ("user__email",)
+    search_fields = ("user__email", "name")
     actions = ("deactivate_profiles", "activate_profiles")
     autocomplete_fields = ("leader", "section", "user")
+
+    def has_delete_permission(self, request, obj=None):
+        return (
+            False
+        )  # delete sections + mentor by deleting sections, drop by deactivating
+
+    def get_changeform_initial_data(self, request):
+        vals = super().get_changeform_initial_data(request)
+        ps = request.user.profile_set.filter(active=True, role=Profile.COORDINATOR)
+        count = ps.count()
+        if count > 0:
+            if "role" not in vals:
+                vals["role"] = Profile.STUDENT
+        if count == 1:
+            if "course" not in vals:
+                vals["course"] = ps.first().course
+        return vals
+
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if not request.user.is_superuser:
+            courses = [
+                p.course
+                for p in request.user.profile_set.filter(
+                    active=True, role=Profile.COORDINATOR
+                )
+            ]
+            if db_field.name == "leader":
+                kwargs["queryset"] = Profile.objects.filter(course__in=courses)
+            elif db_field.name == "section":
+                kwargs["queryset"] = Section.objects.filter(course__in=courses)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_fields(self, request, obj=None):
+        fields = ["name", "course", "role", "section", "user"]
+        if request.user.is_superuser:
+            fields.insert(2, "leader")
+        if obj and obj.role == "ST":
+            fields.append("active")
+        return tuple(fields)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(
+            role=Profile.STUDENT,  # TODO for now, only allows student creation
+            course__in=[
+                p.course
+                for p in request.user.profile_set.filter(
+                    active=True, role=Profile.COORDINATOR
+                )
+            ],
+        )
+
+    def save_model(self, request, obj, form, change):
+        if obj.role == Profile.STUDENT:
+            obj.leader = obj.section.leader
+        super().save_model(request, obj, form, change)
 
     def deactivate_profiles(self, request, queryset):
         queryset.update(active=False)
@@ -147,11 +235,20 @@ class ProfileAdmin(admin.CoordAdmin):
 
 
 @admin.register(Spacetime)
-class SpacetimeAdmin(admin.ModelAdmin):
+class SpacetimeAdmin(CoordAdmin):
     fields = ("location", "day_of_week", "start_time", "duration")
     list_display = ("location", "day_of_week", "start_time")
-    list_filter = ("day_of_week",)
-    search_fields = ("location",)
+    list_filter = ("location", "day_of_week")
+    search_fields = ("location", "day_of_week")
+
+    def has_module_permission(self, request, obj=None):
+        return request.user.is_superuser  # should only be editable through section
+
+    def has_delete_permission(self, request, obj=None):
+        return False  # will break 1to1 invariants if deleted
+
+    def get_queryset(self, request):
+        return Spacetime.objects.all()
 
 
 @admin.register(Course)
@@ -173,6 +270,9 @@ class CourseAdmin(admin.ModelAdmin):
         "number_of_senior_mentors",
     )
 
+    def has_view_permission(self, request, obj=None):
+        return request.user.is_staff or request.user.is_superuser
+
     def number_of_sections(self, obj):
         return obj.section_set.count()
 
@@ -187,7 +287,7 @@ class CourseAdmin(admin.ModelAdmin):
 
 
 @admin.register(Attendance)
-class AttendanceAdmin(admin.CoordAdmino):
+class AttendanceAdmin(admin.ModelAdmin):
     fields = ("get_presence_display", "week_start", "section", "attendee")
     list_display = ("attendee", "week_start", "presence")
     list_filter = ("presence", "attendee__course")
@@ -195,10 +295,16 @@ class AttendanceAdmin(admin.CoordAdmino):
     readonly_fields = ("get_presence_display",)
     ordering = ("-week_start",)
 
+    def has_module_permission(self, request, obj=None):
+        return request.user.is_superuser  # TODO remove when implemented as coord view
+
 
 @admin.register(Override)
-class OverrideAdmin(admin.CoordAdmin):
+class OverrideAdmin(admin.ModelAdmin):
     fields = ("week_start", "spacetime", "section")
     ordering = ("-week_start",)
 
     list_filter = ("spacetime__day_of_week", "section__course")
+
+    def has_module_permission(self, request, obj=None):
+        return request.user.is_superuser  # TODO remove when implemented as coord view

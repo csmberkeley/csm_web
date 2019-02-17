@@ -123,8 +123,12 @@ class Section(models.Model):
         return self.students.filter(active=True)
 
     def __str__(self):
-        return "{course} section ({spacetime})".format(
-            course=self.course.name, spacetime=str(self.default_spacetime)
+        return "{course} section ({enrolled}/{cap}, {mentor}, {spacetime})".format(
+            course=self.course.name,
+            mentor=self.mentor.name,
+            enrolled=self.current_student_count,
+            cap=self.capacity,
+            spacetime=str(self.default_spacetime),
         )
 
     class Meta:
