@@ -37,12 +37,13 @@ class App extends React.Component {
               .then(response => response.json())
               .then(profileData =>
                 this.setState((state, props) => {
+                  let sections = { ...state.sections };
+                  if (profileData.section) {
+                    sections[[profileData.section.id]] = profileData.section;
+                  }
                   return {
                     profiles: { [id]: profileData, ...state.profiles },
-                    sections: {
-                      [profileData.section.id]: profileData.section,
-                      ...state.sections
-                    }
+                    sections: sections
                   };
                 })
               )
@@ -118,7 +119,10 @@ class App extends React.Component {
                   let matchingProfile = null;
                   for (let profileID in this.state.profiles) {
                     let profile = this.state.profiles[profileID];
-                    if (profile.section.id == match.params.id) {
+                    if (
+                      profile.section &&
+                      profile.section.id == match.params.id
+                    ) {
                       matchingProfile = profileID;
                       break;
                     }
