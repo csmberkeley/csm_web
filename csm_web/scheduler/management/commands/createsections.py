@@ -167,7 +167,9 @@ class Command(BaseCommand):
         email = row[1]
         day_1 = SELFBOOK_DAY_MAP[row[3]]
         time_1 = dt.datetime.strptime(row[4], "%I:%M:%S %p")
-        duration = dt.timedelta(hours=1, minutes=(30 if course_name == COURSES.EE16A else 0))
+        duration = dt.timedelta(
+            hours=1, minutes=(30 if course_name == COURSES.EE16A else 0)
+        )
         if row[7]:
             room = row[7]
         else:

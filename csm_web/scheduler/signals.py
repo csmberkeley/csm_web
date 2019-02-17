@@ -13,6 +13,7 @@ WEEKDAY_MAP = {
     number: pair[0] for number, pair in enumerate(models.Spacetime.DAY_OF_WEEK_CHOICES)
 }
 
+
 @receiver(signals.post_save, sender=models.Profile)
 def handle_post_drop(sender, **kwargs):
     """
@@ -22,19 +23,15 @@ def handle_post_drop(sender, **kwargs):
     """
     profile = kwargs["instance"]
     raw = kwargs["raw"]
-    if (
-        not raw
-        and profile.role == models.Profile.STUDENT
-        and not profile.active
-    ):
+    if not raw and profile.role == models.Profile.STUDENT and not profile.active:
         # drop from corresponding 70 section
         # probably should not be atomic, o.w. won't update active field before next signal
         # be very careful though
         other_profiles = models.Profile.objects.filter(
             user=profile.user,
-            active=True, # important to prevent infinite loop
+            active=True,  # important to prevent infinite loop
             course__name="CS70",
-            leader=profile.leader
+            leader=profile.leader,
         ).update(active=False)
 
 
@@ -76,8 +73,10 @@ def log_student_pre_create(sender, **kwargs):
     raw = kwargs["raw"]
     if not raw and profile.role == models.Profile.STUDENT:
         e.info(
-            "Starting profile save of {} (email {}, active={})".format(profile, profile.user.email, profile.active),
-            initiator="Pre-Enroll"
+            "Starting profile save of {} (email {}, active={})".format(
+                profile, profile.user.email, profile.active
+            ),
+            initiator="Pre-Enroll",
         )
 
 
@@ -90,13 +89,14 @@ def log_student_post_create(sender, **kwargs):
         if profile.active:
             e.info(
                 "Finished enrolling {} (email {})".format(profile, profile.user.email),
-                initiator="Post-Enroll"
+                initiator="Post-Enroll",
             )
         else:
             e.info(
                 "Finished dropping {} (email {})".format(profile, profile.user.email),
-                initiator="Post-Enroll"
+                initiator="Post-Enroll",
             )
+
 
 @receiver(signals.post_save, sender=models.Override)
 def log_overide_post_create(sender, **kwargs):
@@ -104,10 +104,7 @@ def log_overide_post_create(sender, **kwargs):
     created = kwargs["created"]
     raw = kwargs["raw"]
     if not raw:
-        e.info(
-            "Finished save of {}".format(override),
-            initiator="Override Post-Save"
-        )
+        e.info("Finished save of {}".format(override), initiator="Override Post-Save")
 
 
 logger = logging.getLogger("scheduler.signals")

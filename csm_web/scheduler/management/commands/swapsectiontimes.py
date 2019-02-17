@@ -16,10 +16,11 @@ DAY_MAP = {
     "F": Spacetime.FRIDAY,
 }
 
+
 class Command(BaseCommand):
     help = """Swaps section times for existing sections. Requires prompt to complete.
 Assumes that the order of colums is `mentor email` | `old start time` | `old day` | `new start time` | `new day` | `new location`
-    """    
+    """
 
     def add_arguments(self, parser):
         parser.add_argument(
@@ -42,7 +43,7 @@ Assumes that the order of colums is `mentor email` | `old start time` | `old day
                     section = Profile.objects.get(
                         user__email=email,
                         section__default_spacetime__start_time=old_start,
-                        section__default_spacetime__day_of_week=old_day
+                        section__default_spacetime__day_of_week=old_day,
                     ).section
                     sts = Spacetime.objects.filter(section=section)
                     assert sts.count() == 1
@@ -51,9 +52,7 @@ Assumes that the order of colums is `mentor email` | `old start time` | `old day
                     new_day = DAY_MAP[row[4]]
                     new_room = row[5] if row[5] else "TBD"
                     sts.update(
-                        start_time=new_start,
-                        day_of_week=new_day,
-                        location=new_room
+                        start_time=new_start, day_of_week=new_day, location=new_room
                     )
                 self.stdout.write("Confirm these new section times: {}".format(swaps))
                 prompt = input("[y/n] ")

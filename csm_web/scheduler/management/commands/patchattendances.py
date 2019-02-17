@@ -7,6 +7,7 @@ WEEKDAY_MAP = {
     number: pair[0] for number, pair in enumerate(Spacetime.DAY_OF_WEEK_CHOICES)
 }
 
+
 class Command(BaseCommand):
     help = """Creates a single, temporary attendance for all students who have no attendances."""
 
@@ -15,13 +16,17 @@ class Command(BaseCommand):
         with transaction.atomic():
             for profile in students:
                 section = profile.section
-                if Attendance.objects.filter(section=section, attendee=profile).count() > 0:
+                if (
+                    Attendance.objects.filter(section=section, attendee=profile).count()
+                    > 0
+                ):
                     # self.stdout.write("Skipping {}".format(profile))
                     continue
                 self.stdout.write("Updating {}".format(profile))
                 current_date = profile.course.enrollment_start.date()
                 while (
-                    WEEKDAY_MAP[current_date.weekday()] != section.default_spacetime.day_of_week
+                    WEEKDAY_MAP[current_date.weekday()]
+                    != section.default_spacetime.day_of_week
                 ):
                     current_date += timedelta(days=1)
                 Attendance.objects.create(

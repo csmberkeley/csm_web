@@ -4,7 +4,15 @@ from django.core.management import BaseCommand
 from django.db import transaction, IntegrityError
 from scheduler.models import Profile, Section, User, Spacetime
 
-STUDENT_CSV_DEFAULT_FIELDS = ("title", "day", "start time", "room", "end time", "mentor email", "student email")
+STUDENT_CSV_DEFAULT_FIELDS = (
+    "title",
+    "day",
+    "start time",
+    "room",
+    "end time",
+    "mentor email",
+    "student email",
+)
 SELFBOOK_DAY_MAP = {  # ngl this is pretty silly but w/e
     "Monday": Spacetime.MONDAY,
     "Tuesday": Spacetime.TUESDAY,
@@ -12,6 +20,7 @@ SELFBOOK_DAY_MAP = {  # ngl this is pretty silly but w/e
     "Thursday": Spacetime.THURSDAY,
     "Friday": Spacetime.FRIDAY,
 }
+
 
 class Command(BaseCommand):
     help = "Imports students from a CSV and enrolls them as needed. If the student is already \
@@ -43,9 +52,7 @@ enrolled in the course, then it drops them from their old section and assigns th
                     except Exception as e:
                         print(row)
                         raise e
-                    profiles.append(
-                        self._enroll(section, fields["student email"])
-                    )
+                    profiles.append(self._enroll(section, fields["student email"]))
                 self.stdout.write("Generated these profiles:")
                 for prof in profiles:
                     self.stdout.write("{}, {}".format(prof, prof.user.email))
@@ -57,7 +64,9 @@ enrolled in the course, then it drops them from their old section and assigns th
 
     def _get_section(self, fields):
         get_time = (
-            lambda s: dt.datetime.combine(dt.date.min, dt.datetime.strptime(s, "%I:%M %p").time())
+            lambda s: dt.datetime.combine(
+                dt.date.min, dt.datetime.strptime(s, "%I:%M %p").time()
+            )
             - dt.datetime.min
         )
         # assume format is "CSM CS61B ..."
@@ -76,7 +85,7 @@ enrolled in the course, then it drops them from their old section and assigns th
             section__default_spacetime__day_of_week=SELFBOOK_DAY_MAP[fields["day"]],
             section__default_spacetime__start_time=start_time,
             section__default_spacetime__duration=duration,
-            section__default_spacetime__location=fields["room"]
+            section__default_spacetime__location=fields["room"],
         ).section
 
     def _enroll(self, section, stud_email):
@@ -87,19 +96,15 @@ enrolled in the course, then it drops them from their old section and assigns th
             raise Exception("Non-Berkeley email found: {}".format(stud_email))
         user, _ = User.objects.get_or_create(username=chunks[0], email=stud_email)
         old_students = Profile.objects.filter(
-            active=True,
-            course=section.course,
-            role=Profile.STUDENT,
-            user=user
+            active=True, course=section.course, role=Profile.STUDENT, user=user
         )
         if old_students.count() > 0:
             fst = old_students.first()
-            old_students.update(active=False) # drop them
-            self.stdout.write("Dropping {} from {} before signup".format(fst, fst.section))
+            old_students.update(active=False)  # drop them
+            self.stdout.write(
+                "Dropping {} from {} before signup".format(fst, fst.section)
+            )
             self.multiple_enrollees.append(stud_email)
         return Profile.objects.create(
-            course=section.course,
-            role=Profile.STUDENT,
-            user=user,
-            section=section
+            course=section.course, role=Profile.STUDENT, user=user, section=section
         )

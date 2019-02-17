@@ -27,7 +27,9 @@ class Command(BaseCommand):
                 with transaction.atomic():
                     for json_course in obj:
                         if Course.objects.filter(name=json_course["name"]).count() > 0:
-                            self.stdout.write("Already created course {}".format(json_course["name"]))
+                            self.stdout.write(
+                                "Already created course {}".format(json_course["name"])
+                            )
                             continue
                         course = Course.objects.create(
                             name=json_course["name"],

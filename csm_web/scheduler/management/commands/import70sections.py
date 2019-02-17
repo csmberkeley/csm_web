@@ -4,6 +4,7 @@ from django.core.management import BaseCommand
 from django.db import transaction, IntegrityError
 from scheduler.models import Profile, Section, User, Spacetime, Course
 
+
 class Command(BaseCommand):
     help = "Import CS70 sections because their format is different /shrug."
 
@@ -26,8 +27,12 @@ class Command(BaseCommand):
                     start_time = dt.time.fromisoformat(row[4])
                     room_1, room_2 = row[6], row[7]
                     capacity = 4 if "Soda 283" in room_1 or "Soda 283" in room_2 else 5
-                    self._save_section(room_1, start_time, day_1, course, email, capacity)
-                    self._save_section(room_2, start_time, day_2, course, email, capacity)
+                    self._save_section(
+                        room_1, start_time, day_1, course, email, capacity
+                    )
+                    self._save_section(
+                        room_2, start_time, day_2, course, email, capacity
+                    )
 
     def _parse_days(self, days):
         d1, d2 = [d.lower().strip() for d in days.split("/")]
@@ -36,7 +41,7 @@ class Command(BaseCommand):
             "t": Spacetime.TUESDAY,
             "w": Spacetime.WEDNESDAY,
             "th": Spacetime.THURSDAY,
-            "f": Spacetime.FRIDAY
+            "f": Spacetime.FRIDAY,
         }
         return DAY_MAP[d1], DAY_MAP[d2]
 
@@ -47,7 +52,7 @@ class Command(BaseCommand):
             location=room,
             start_time=start_time,
             duration=dt.timedelta(hours=1),
-            day_of_week=day_of_week
+            day_of_week=day_of_week,
         )
         section = Section.objects.create(
             course=course, default_spacetime=spacetime, capacity=capacity

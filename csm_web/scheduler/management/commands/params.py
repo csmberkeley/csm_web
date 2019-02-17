@@ -7,6 +7,7 @@ class COURSES:
     EE16A = "EE16A"
 
     IGNORED_COURSES = {
-    	"CS70", "CS61A", # minding their own business
-    	"CS88", # already entered
+        "CS70",
+        "CS61A",  # minding their own business
+        "CS88",  # already entered
     }

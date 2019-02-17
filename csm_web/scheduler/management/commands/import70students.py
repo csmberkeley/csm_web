@@ -4,6 +4,7 @@ from django.core.management import BaseCommand
 from django.db import transaction, IntegrityError
 from scheduler.models import Profile, Section, User, Spacetime, Course
 
+
 class Command(BaseCommand):
     help = "Imports students from a CSV and enrolls them. CS70 is whack /shrug"
 
@@ -24,7 +25,9 @@ class Command(BaseCommand):
                     mentor_email = row[4]
                     day_1, day_2 = self._parse_days(row[6])
                     start_time = dt.time.fromisoformat(row[7])
-                    self._enroll(student_email, mentor_email, day_1, day_2, start_time, course)
+                    self._enroll(
+                        student_email, mentor_email, day_1, day_2, start_time, course
+                    )
 
     def _parse_days(self, days):
         d1, d2 = [d.lower().strip() for d in days.split("/")]
@@ -33,16 +36,14 @@ class Command(BaseCommand):
             "t": Spacetime.TUESDAY,
             "w": Spacetime.WEDNESDAY,
             "th": Spacetime.THURSDAY,
-            "f": Spacetime.FRIDAY
+            "f": Spacetime.FRIDAY,
         }
         return DAY_MAP[d1], DAY_MAP[d2]
 
     def _enroll(self, stud_email, mentor_email, day_1, day_2, start_time, course):
         # Checks that the mentor has exactly 2 sections and that they have the correct spactimes
         mentor_profiles = Profile.objects.filter(
-            user__email=mentor_email,
-            course=course,
-            section__capacity__gt=0
+            user__email=mentor_email, course=course, section__capacity__gt=0
         )
         # section count
         assert mentor_profiles.count() == 2
@@ -68,12 +69,12 @@ class Command(BaseCommand):
             leader=prof_1,
             role=Profile.STUDENT,
             user=user,
-            section=prof_1.section
+            section=prof_1.section,
         )
         Profile.objects.create(
             course=course,
             leader=prof_2,
             role=Profile.STUDENT,
             user=user,
-            section=prof_2.section
+            section=prof_2.section,
         )
