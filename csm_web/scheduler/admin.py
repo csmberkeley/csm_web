@@ -172,11 +172,10 @@ class ProfileAdmin(CoordAdmin):
 
     def get_changeform_initial_data(self, request):
         vals = super().get_changeform_initial_data(request)
-        ps = request.user.profile_set.filter(active=True, role=Profile.COORDINATOR)
-        count = ps.count()
-        if count > 0:
-            if "role" not in vals:
-                vals["role"] = Profile.STUDENT
+        profiles = request.user.profile_set.filter(
+            active=True, role=Profile.COORDINATOR
+        )
+        count = profiles.count()
         if count == 1:
             if "course" not in vals:
                 vals["course"] = ps.first().course
@@ -288,11 +287,10 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
-    fields = ("get_presence_display", "week_start", "section", "attendee")
+    fields = ("presence", "week_start", "section", "attendee")
     list_display = ("attendee", "week_start", "presence")
     list_filter = ("presence", "attendee__course")
     search_fields = ("attendee__name",)
-    readonly_fields = ("get_presence_display",)
     ordering = ("-week_start",)
 
     def has_module_permission(self, request, obj=None):

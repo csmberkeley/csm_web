@@ -67,16 +67,50 @@ def generate_attendances(sender, **kwargs):
 e = EventGroup()
 
 
+@receiver(signals.post_save, sender=models.Section)
+def log_section_post_create(sender, **kwargs):
+    section = kwargs["instance"]
+    created = kwargs["created"]
+    raw = kwargs["raw"]
+    if not raw:
+        if created:
+            e.info("Created new section {}".format(section), initiator="Section")
+        else:
+            e.info("Updated section {}".format(section), initiator="Section")
+
+
+@receiver(signals.post_save, sender=models.Attendance)
+def log_attendance_post_create(sender, **kwargs):
+    attendance = kwargs["instance"]
+    created = kwargs["created"]
+    raw = kwargs["raw"]
+    if not raw:
+        if created:
+            e.info(
+                "Created new attendance {} for section {}".format(
+                    attendance, attendance.section
+                ),
+                initiator="Attendance",
+            )
+        else:
+            e.info(
+                "Updated attendance {} for section {}".format(
+                    attendance, attendance.section
+                ),
+                initiator="Attendance",
+            )
+
+
 @receiver(signals.pre_save, sender=models.Profile)
-def log_student_pre_create(sender, **kwargs):
+def log_profile_pre_create(sender, **kwargs):
     profile = kwargs["instance"]
     raw = kwargs["raw"]
-    if not raw and profile.role == models.Profile.STUDENT:
+    if not raw:
         e.info(
             "Starting profile save of {} (email {}, active={})".format(
                 profile, profile.user.email, profile.active
             ),
-            initiator="Pre-Enroll",
+            initiator="Pre-Profile",
         )
 
 
