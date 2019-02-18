@@ -121,7 +121,7 @@ class App extends React.Component {
                     let profile = this.state.profiles[profileID];
                     if (
                       profile.section &&
-                      profile.section.id == match.params.id
+                      profile.section.id === match.params.id
                     ) {
                       matchingProfile = profileID;
                       break;
