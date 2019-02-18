@@ -161,7 +161,7 @@ class SectionAdmin(CoordAdmin):
 class ProfileAdmin(CoordAdmin):
     readonly_fields = ("name",)
     list_filter = ("course", "role", "active")
-    search_fields = ("user__email", "name")
+    search_fields = ("user__email", "user__first_name", "user__last_name")
     actions = ("deactivate_profiles", "activate_profiles")
     autocomplete_fields = ("leader", "section", "user")
 
