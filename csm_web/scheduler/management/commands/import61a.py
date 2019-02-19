@@ -43,7 +43,6 @@ class Command(BaseCommand):
                 reader = iter(csv.reader(csvfile))
                 next(reader)
                 for row in reader:
-                    print(row)
                     self._enroll_and_make_section(row, course, research_map, 0)
             normal_map = {}
             with open(normal) as csvfile:
@@ -103,7 +102,6 @@ class Command(BaseCommand):
             self.gmails.append(stud_email)
             return
         user, _ = User.objects.get_or_create(username=chunks[0], email=stud_email)
-        print(user)
         if not user.first_name and not user.last_name:
             user.first_name = stud_f_name
             user.last_name = stud_l_name
