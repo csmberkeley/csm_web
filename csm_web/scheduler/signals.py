@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date
 import logging
 from django.db.models import signals
 from django.db import transaction
@@ -49,8 +49,7 @@ def generate_attendances(sender, **kwargs):
         and profile.role == models.Profile.STUDENT
         and profile.section is not None
     ):
-        # modified slightly from factories.py
-        current_date = profile.course.enrollment_start.date()
+        current_date = date.today()
         while (
             WEEKDAY_MAP[current_date.weekday()]
             != profile.section.default_spacetime.day_of_week

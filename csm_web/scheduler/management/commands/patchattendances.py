@@ -1,4 +1,4 @@
-from datetime import timedelta
+from datetime import timedelta, date
 from django.core.management import BaseCommand
 from django.db import transaction, IntegrityError
 from scheduler.models import Profile, Attendance, Spacetime
@@ -9,21 +9,27 @@ WEEKDAY_MAP = {
 
 
 class Command(BaseCommand):
-    help = """Creates a single, temporary attendance for all students who have no attendances."""
+    help = """Creates a single attendance for this week for all students who have no attendances for this week."""
 
     def handle(self, *args, **options):
         students = Profile.objects.filter(role=Profile.STUDENT, active=True)
         with transaction.atomic():
             for profile in students:
                 section = profile.section
+                # TODO skip to upcoming monday for jobs
+                current_date = date.today()
                 if (
-                    Attendance.objects.filter(section=section, attendee=profile).count()
+                    Attendance.objects.filter(
+                        section=section,
+                        attendee=profile,
+                        week_start=current_date
+                        - timedelta(days=current_date.weekday()),
+                    ).count()
                     > 0
                 ):
                     # self.stdout.write("Skipping {}".format(profile))
                     continue
                 self.stdout.write("Updating {}".format(profile))
-                current_date = profile.course.enrollment_start.date()
                 while (
                     WEEKDAY_MAP[current_date.weekday()]
                     != section.default_spacetime.day_of_week

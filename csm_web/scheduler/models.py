@@ -125,7 +125,7 @@ class Section(models.Model):
     def __str__(self):
         return "{course} section ({enrolled}/{cap}, {mentor}, {spacetime})".format(
             course=self.course.name,
-            mentor=self.mentor.name,
+            mentor="(no mentor)" if not self.mentor else self.mentor.name,
             enrolled=self.current_student_count,
             cap=self.capacity,
             spacetime=str(self.default_spacetime),
