@@ -12,6 +12,14 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 
 import os
 
+# Analogous to RAILS_ENV, is one of {prod, dev}. Defaults to dev. This default can be
+# dangerous, but is worth it to avoid the hassle for developers setting the local ENV
+# var
+DEVELOPMENT = "dev"
+PRODUCTION = "prod"
+DJANGO_ENV = os.environ.get("DJANGO_ENV", DEVELOPMENT)
+assert DJANGO_ENV in (DEVELOPMENT, PRODUCTION)
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -25,7 +33,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # TODO
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = DJANGO_ENV == DEVELOPMENT
 
 ALLOWED_HOSTS = []
 
@@ -117,12 +125,6 @@ AUTH_PASSWORD_VALIDATORS = [
 
 AUTH_USER_MODEL = "scheduler.User"
 
-# Security/HTTPS headers
-# https://docs.djangoproject.com/en/2.1/ref/middleware/#module-django.middleware.security
-SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-SECURE_HSTS_SECONDS = 3600 # TODO change to 1 year (31536000s) once we're sure this works
-SECURE_HSTS_PRELOAD = True
-SECURE_SSL_REDIRECT = True # ideally would be handled by nginx or something, but needed for heroku
 
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
@@ -251,5 +253,17 @@ LOGGING = {
     },
 }
 
-import django_heroku
-django_heroku.settings(locals())
+if DJANGO_ENV == PRODUCTION:
+    # Security/HTTPS headers
+    # https://docs.djangoproject.com/en/2.1/ref/middleware/#module-django.middleware.security
+    SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+    # TODO change to 1 year (31536000s) once we're sure this works
+    SECURE_HSTS_SECONDS = 3600
+    SECURE_HSTS_PRELOAD = True
+    # ideally would be handled by nginx or something, but needed for heroku
+    SECURE_SSL_REDIRECT = True
+
+    # Heroku setup
+    import django_heroku
+
+    django_heroku.settings(locals())
