@@ -281,12 +281,14 @@ class CourseAdmin(admin.ModelAdmin):
         "number_of_sections",
         "number_of_students",
         "number_of_junior_mentors",
+        "number_of_associate_mentors",
         "number_of_senior_mentors",
     )
     readonly_fields = (
         "number_of_sections",
         "number_of_students",
         "number_of_junior_mentors",
+        "number_of_associate_mentors",
         "number_of_senior_mentors",
     )
 
@@ -296,29 +298,25 @@ class CourseAdmin(admin.ModelAdmin):
     def number_of_sections(self, obj):
         return obj.section_set.count()
 
-    def number_of_students(self, obj):
+    def _number_of_role(self, obj, role):
         return (
-            obj.profile_set.filter(role=Profile.STUDENT, active=True)
+            obj.profile_set.filter(role=role, active=True)
             .values("user__email")
             .annotate(ct=Count("user__email"))
             .count()
         )
+
+    def number_of_students(self, obj):
+        return self._number_of_role(obj, Profile.STUDENT)
 
     def number_of_junior_mentors(self, obj):
-        return (
-            obj.profile_set.filter(role=Profile.JUNIOR_MENTOR, active=True)
-            .values("user__email")
-            .annotate(ct=Count("user__email"))
-            .count()
-        )
+        return self._number_of_role(obj, Profile.JUNIOR_MENTOR)
+
+    def number_of_associate_mentors(self, obj):
+        return self._number_of_role(obj, Profile.ASSOCIATE_MENTOR)
 
     def number_of_senior_mentors(self, obj):
-        return (
-            obj.profile_set.filter(role=Profile.SENIOR_MENTOR, active=True)
-            .values("user__email")
-            .annotate(ct=Count("user__email"))
-            .count()
-        )
+        return self._number_of_role(obj, Profile.SENIOR_MENTOR)
 
 
 @admin.register(Attendance)
