@@ -86,9 +86,7 @@ class Command(BaseCommand):
                 self.gmails.append(mentor_email)
                 return
             user, _ = User.objects.get_or_create(username=chunks[0], email=mentor_email)
-            mentor = Profile.objects.create(
-                user=user, course=course, section=section
-            )
+            mentor = Profile.objects.create(user=user, course=course, section=section)
             # Need to run createghostprofiles after
             section_map[section_key] = (section, mentor)
         section, mentor = section_map[section_key]

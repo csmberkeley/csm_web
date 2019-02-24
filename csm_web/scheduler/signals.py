@@ -14,25 +14,65 @@ WEEKDAY_MAP = {
 }
 
 
+### LOGGING
+e = EventGroup()
+
+
 @receiver(signals.post_save, sender=models.Profile)
-def handle_post_drop(sender, **kwargs):
+def handle_profile_post_save(sender, **kwargs):
     """
     Performs actions to be taken upon a student dropping. At present, these are:
     (1) If the student dropped from a CS70 section, drop them from the corresponding
         2nd section as well.
+    (2) If the student is enrolled in a CS70 section, enroll them in the corresponding
+        2nd section as well.
     """
     profile = kwargs["instance"]
     raw = kwargs["raw"]
-    if not raw and profile.role == models.Profile.STUDENT and not profile.active:
-        # drop from corresponding 70 section
-        # probably should not be atomic, o.w. won't update active field before next signal
-        # be very careful though
-        other_profiles = models.Profile.objects.filter(
-            user=profile.user,
-            active=True,  # important to prevent infinite loop
-            course__name="CS70",
-            leader=profile.leader,
-        ).update(active=False)
+    if not raw and profile.role == models.Profile.STUDENT:
+        with transaction.atomic():
+            if not profile.active:
+                # drop from corresponding 70 section
+                e.info(
+                    "Recognized attempt to drop {} (profile id {}) from dual CS70 section".format(
+                        profile, profile.id
+                    ),
+                    initiator="CS70 Dual-Drop",
+                )
+                other_profiles = models.Profile.objects.filter(
+                    user=profile.user,
+                    active=True,  # important to prevent infinite loop
+                    course__name="CS70",
+                ).update(active=False)
+            else:
+                # enroll in corresponding 70 section
+                e.info(
+                    "Recognized attempt to enroll {} (profile id {}) in dual CS70 section".format(
+                        profile, profile.id
+                    ),
+                    initiator="CS70 Dual-Enroll",
+                )
+                if (
+                    models.Profile.objects.filter(
+                        user=profile.user, course__name="CS70", leader=profile.leader
+                    ).count()
+                    == 1
+                ):
+                    other_section = (
+                        models.Profile.objects.filter(
+                            user=profile.leader.user, course__name="CS70"
+                        )
+                        .exclude(id=profile.leader.id)
+                        .first()
+                        .section
+                    )
+                    models.Profile.objects.create(
+                        user=profile.user,
+                        course=models.Course.objects.get(name="CS70"),
+                        leader=profile.leader,
+                        section=other_section,
+                        role=models.Profile.STUDENT,
+                    )
 
 
 @receiver(signals.post_save, sender=models.Profile)
@@ -62,10 +102,6 @@ def generate_attendances(sender, **kwargs):
         )
 
 
-### LOGGING
-e = EventGroup()
-
-
 @receiver(signals.post_save, sender=models.Section)
 def log_section_post_create(sender, **kwargs):
     section = kwargs["instance"]
@@ -73,9 +109,15 @@ def log_section_post_create(sender, **kwargs):
     raw = kwargs["raw"]
     if not raw:
         if created:
-            e.info("Created new section {}".format(section), initiator="Section")
+            e.info(
+                "Created new section {}, id = {}".format(section, section.id),
+                initiator="Section",
+            )
         else:
-            e.info("Updated section {}".format(section), initiator="Section")
+            e.info(
+                "Updated section {}, id = {}".format(section, section.id),
+                initiator="Section",
+            )
 
 
 @receiver(signals.post_save, sender=models.Attendance)
@@ -121,12 +163,16 @@ def log_student_post_create(sender, **kwargs):
     if not raw and profile.role == models.Profile.STUDENT:
         if profile.active:
             e.info(
-                "Finished enrolling {} (email {})".format(profile, profile.user.email),
+                "Finished enrolling {} (email {}, id {})".format(
+                    profile, profile.user.email, profile.id
+                ),
                 initiator="Post-Enroll",
             )
         else:
             e.info(
-                "Finished dropping {} (email {})".format(profile, profile.user.email),
+                "Finished dropping {} (email {}, id {})".format(
+                    profile, profile.user.email, profile.id
+                ),
                 initiator="Post-Enroll",
             )
 

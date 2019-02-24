@@ -236,13 +236,15 @@ class ProfileAdmin(CoordAdmin):
     def get_attendances(self, obj):
         attendance_links = []
         for attendance in obj.attendance_set.all():
-            admin_url = reverse("admin:scheduler_attendance_change", args=(attendance.id,))
+            admin_url = reverse(
+                "admin:scheduler_attendance_change", args=(attendance.id,)
+            )
             attendance_links.append(
                 format_html(
                     '<a style="display: block" href="{}">Week of {}: {}</a>',
                     admin_url,
                     attendance.week_start,
-                    attendance.presence if attendance.presence else "--"
+                    attendance.presence if attendance.presence else "--",
                 )
             )
         attendance_links.sort()
@@ -294,13 +296,25 @@ class CourseAdmin(admin.ModelAdmin):
         return obj.section_set.count()
 
     def number_of_students(self, obj):
-        return obj.profile_set.filter(role=Profile.STUDENT, active=True).count()
+        return (
+            obj.profile_set.filter(role=Profile.STUDENT, active=True)
+            .values("user__email")
+            .count()
+        )
 
     def number_of_junior_mentors(self, obj):
-        return obj.profile_set.filter(role=Profile.JUNIOR_MENTOR, active=True).count()
+        return (
+            obj.profile_set.filter(role=Profile.JUNIOR_MENTOR, active=True)
+            .values("user__email")
+            .count()
+        )
 
     def number_of_senior_mentors(self, obj):
-        return obj.profile_set.filter(role=Profile.SENIOR_MENTOR, active=True).count()
+        return (
+            obj.profile_set.filter(role=Profile.SENIOR_MENTOR, active=True)
+            .values("user__email")
+            .count()
+        )
 
 
 @admin.register(Attendance)

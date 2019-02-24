@@ -3,6 +3,7 @@ import datetime as dt
 from django.core.management import BaseCommand
 from scheduler.models import Course, Attendance
 
+
 class Command(BaseCommand):
     help = "Exports a CSV of all attendances for all students in the given course to stdout."
 
@@ -15,8 +16,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         course = Course.objects.get(name=options["course"])
         attendances = Attendance.objects.filter(
-            section__course=course,
-            attendee__active=True,
+            section__course=course, attendee__active=True
         ).order_by(
             "week_start",
             "section__default_spacetime__day_of_week",
@@ -49,7 +49,7 @@ class Command(BaseCommand):
                 mentor.user.get_full_name(),
                 mentor.user.email,
                 spacetime.day_of_week,
-                str(spacetime.start_time)
+                str(spacetime.start_time),
             )
             self._write(row)
 

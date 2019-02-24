@@ -4,7 +4,7 @@ Makes sure nothing in the system is overly screwed up.
 
 import csv
 from django.core.management import BaseCommand
-from scheduler.models import Course, Profile, Section, Spacetime
+from scheduler.models import Course, Profile, Section, Spacetime, Attendance
 import datetime as dt
 
 
@@ -160,4 +160,8 @@ class Command(BaseCommand):
     def _check_attendance_integrities(self):
         qs = Attendance.objects.exclude(section=F("attendee__section"))
         if qs.count() > 0:
-            self._err("Found {} attendances where section does not match profile".format(qs.count()))
+            self._err(
+                "Found {} attendances where section does not match profile".format(
+                    qs.count()
+                )
+            )
