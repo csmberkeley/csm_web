@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Count
 from django.contrib import admin
 from django.contrib.admin.views.decorators import staff_member_required
 from django.core.exceptions import ValidationError
@@ -299,6 +300,7 @@ class CourseAdmin(admin.ModelAdmin):
         return (
             obj.profile_set.filter(role=Profile.STUDENT, active=True)
             .values("user__email")
+            .annotate(ct=Count("user__email"))
             .count()
         )
 
@@ -306,6 +308,7 @@ class CourseAdmin(admin.ModelAdmin):
         return (
             obj.profile_set.filter(role=Profile.JUNIOR_MENTOR, active=True)
             .values("user__email")
+            .annotate(ct=Count("user__email"))
             .count()
         )
 
@@ -313,6 +316,7 @@ class CourseAdmin(admin.ModelAdmin):
         return (
             obj.profile_set.filter(role=Profile.SENIOR_MENTOR, active=True)
             .values("user__email")
+            .annotate(ct=Count("user__email"))
             .count()
         )
 
