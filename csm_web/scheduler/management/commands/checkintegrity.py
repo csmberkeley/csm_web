@@ -31,6 +31,7 @@ class Command(BaseCommand):
             self._check_omits(omits)
         self._check_section_integrities(options["courses"])
         self._check_profile_integrities()
+        self._check_attendance_integrities()
         if self.failed:
             self.stderr.write("Integrity check failed with these errors:")
             for f in self.failed:
@@ -155,3 +156,8 @@ class Command(BaseCommand):
                     self._err(
                         "Student profile {} has inconsistent leader".format(profile)
                     )
+
+    def _check_attendance_integrities(self):
+        qs = Attendance.objects.exclude(section=F("attendee__section"))
+        if qs.count() > 0:
+            self._err("Found {} attendances where section does not match profile".format(qs.count()))

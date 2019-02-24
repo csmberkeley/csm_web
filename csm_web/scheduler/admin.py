@@ -159,7 +159,7 @@ class SectionAdmin(CoordAdmin):
 
 @admin.register(Profile)
 class ProfileAdmin(CoordAdmin):
-    readonly_fields = ("name",)
+    readonly_fields = ("name", "get_attendances")
     list_filter = ("course", "role", "active")
     search_fields = ("user__email", "user__first_name", "user__last_name")
     actions = ("deactivate_profiles", "activate_profiles")
@@ -200,6 +200,7 @@ class ProfileAdmin(CoordAdmin):
         if request.user.is_superuser:
             fields.insert(2, "leader")
         if obj and obj.role == "ST":
+            fields.append("get_attendances")
             fields.append("active")
         return tuple(fields)
 
@@ -231,6 +232,23 @@ class ProfileAdmin(CoordAdmin):
         queryset.update(active=True)
 
     activate_profiles.short_description = "Mark selected profiles as active"
+
+    def get_attendances(self, obj):
+        attendance_links = []
+        for attendance in obj.attendance_set.all():
+            admin_url = reverse("admin:scheduler_attendance_change", args=(attendance.id,))
+            attendance_links.append(
+                format_html(
+                    '<a style="display: block" href="{}">Week of {}: {}</a>',
+                    admin_url,
+                    attendance.week_start,
+                    attendance.presence if attendance.presence else "--"
+                )
+            )
+        attendance_links.sort()
+        return format_html("".join(attendance_links))
+
+    get_attendances.short_description = "Attendances"
 
 
 @admin.register(Spacetime)
@@ -288,9 +306,9 @@ class CourseAdmin(admin.ModelAdmin):
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
     fields = ("presence", "week_start", "section", "attendee")
-    list_display = ("attendee", "week_start", "presence")
+    list_display = ("attendee", "week_start", "presence", "section")
     list_filter = ("presence", "attendee__course")
-    search_fields = ("attendee__name",)
+    search_fields = ("attendee__user__first_name", "attendee__user__last_name")
     ordering = ("-week_start",)
 
     def has_module_permission(self, request, obj=None):
