@@ -21,7 +21,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 # TODO
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = "***REMOVED***"
+SECRET_KEY = os.environ.get("SECRET_KEY")
 
 # TODO
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -151,9 +151,7 @@ LOGIN_REDIRECT_URL = "/"
 
 LOGIN_URL = "/login"
 
-SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = (
-    "***REMOVED***"
-)
+SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_KEY")
 
 SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.social_details",
@@ -169,7 +167,7 @@ SOCIAL_AUTH_PIPELINE = (
 )
 
 # TODO Roll this for production
-SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = "***REMOVED***"
+SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
 SOCIAL_AUTH_GOOGLE_OAUTH2_IGNORE_DEFAULT_SCOPE = True
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     "https://www.googleapis.com/auth/userinfo.email",
