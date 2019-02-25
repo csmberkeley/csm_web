@@ -239,12 +239,6 @@ LOGGING = {
             "level": "DEBUG",
             "propagate": False,
         },
-        # only active on debug builds
-        "django.db.backends": {
-            "handlers": ["low-level"],
-            "level": "DEBUG",
-            "propagate": False,
-        },
         "scheduler.signals": {
             "handlers": ["console-models", "mail_admins", "models"],
             "level": "DEBUG",
@@ -252,6 +246,15 @@ LOGGING = {
         },
     },
 }
+
+
+if not os.environ.get("DEBUG_LOG_OFF"):
+    LOGGING["loggers"]["django.db.backends"] = {
+        "handlers": ["low-level"],
+        "level": "DEBUG",
+        "propagate": False,
+    }
+
 
 if DJANGO_ENV == PRODUCTION:
     # Security/HTTPS headers
