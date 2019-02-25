@@ -5,10 +5,14 @@ from django.utils import timezone
 import random
 from django.core import management
 from django.conf import settings
+from django.db.models import signals
 from .models import Course, Section, Spacetime, Profile, User, Attendance, Override
 
 
 class CourseFactory(factory.DjangoModelFactory):
+    @factory.django.mute_signals(
+        signals.pre_save, signals.post_save, signals.pre_delete
+    )
     class Meta:
         model = Course
 
@@ -41,6 +45,9 @@ DAY_OF_WEEK_DB_CHOICES = [
 
 
 class SpacetimeFactory(factory.DjangoModelFactory):
+    @factory.django.mute_signals(
+        signals.pre_save, signals.post_save, signals.pre_delete
+    )
     class Meta:
         model = Spacetime
 
@@ -53,6 +60,9 @@ class SpacetimeFactory(factory.DjangoModelFactory):
 
 
 class UserFactory(factory.DjangoModelFactory):
+    @factory.django.mute_signals(
+        signals.pre_save, signals.post_save, signals.pre_delete
+    )
     class Meta:
         model = User
 
@@ -72,6 +82,9 @@ ROLE_DB_CHOICES = [db_value for db_value, display_name in Profile.ROLE_CHOICES]
 
 
 class ProfileFactory(factory.DjangoModelFactory):
+    @factory.django.mute_signals(
+        signals.pre_save, signals.post_save, signals.pre_delete
+    )
     class Meta:
         model = Profile
 
@@ -85,6 +98,9 @@ class ProfileFactory(factory.DjangoModelFactory):
 
 
 class SectionFactory(factory.DjangoModelFactory):
+    @factory.django.mute_signals(
+        signals.pre_save, signals.post_save, signals.pre_delete
+    )
     class Meta:
         model = Section
 
@@ -99,6 +115,9 @@ PRESENCE_DB_VALUES = [
 
 
 class AttendanceFactory(factory.DjangoModelFactory):
+    @factory.django.mute_signals(
+        signals.pre_save, signals.post_save, signals.pre_delete
+    )
     class Meta:
         model = Attendance
 
@@ -108,6 +127,9 @@ class AttendanceFactory(factory.DjangoModelFactory):
 
 
 class OverrideFactory(factory.DjangoModelFactory):
+    @factory.django.mute_signals(
+        signals.pre_save, signals.post_save, signals.pre_delete
+    )
     class Meta:
         model = Override
 
@@ -231,11 +253,22 @@ def create_demo_accounts():
     print("The password for these accounts is 'pass', log in at localhost:8000/admin/")
 
 
+def disable_signals():
+    for signal in (
+        signals.pre_save,
+        signals.pre_delete,
+        signals.post_save,
+        signals.post_delete,
+    ):
+        signal.receivers = []
+
+
 def generate_test_data(complicate=False):
     if not settings.DEBUG:
         print("This cannot be run in production! Aborting.")
         return
     management.call_command("flush", interactive=True)
+    disable_signals()
     course_names = ("CS70", "CS61A", "CS61B", "CS61C", "EE16A")
     print("Generating test data...")
     for course in (CourseFactory.create(name=name) for name in course_names):
