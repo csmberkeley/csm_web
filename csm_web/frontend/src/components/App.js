@@ -117,11 +117,12 @@ class App extends React.Component {
                   // per user.
 
                   let matchingProfile = null;
-                  for (let profileID in this.state.profiles) {
-                    let profile = this.state.profiles[profileID];
+                  for (let [profileID, profile] of Object.entries(
+                    this.state.profiles
+                  )) {
                     if (
                       profile.section &&
-                      profile.section.id === match.params.id
+                      profile.section.id === Number(match.params.id)
                     ) {
                       matchingProfile = profileID;
                       break;
