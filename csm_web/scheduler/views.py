@@ -27,24 +27,6 @@ VERBOSE = "verbose"
 USERINFO = "userinfo"
 
 
-def login(request):
-    return render(request, "scheduler/login.html")
-
-
-def logout(request):
-    auth_logout(request)
-    return redirect(reverse("index"))
-
-
-def index(request):
-    data = {"user": request.user}
-
-    if request.user.is_authenticated:
-        data["profiles"] = Profile.objects.filter(user=request.user, active=True)
-
-    return render(request, "scheduler/index.html", data)
-
-
 @api_view(http_method_names=["POST"])
 def enroll(request, pk):
     section = get_object_or_404(Section, pk=pk)
