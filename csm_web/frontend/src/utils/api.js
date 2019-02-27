@@ -19,3 +19,8 @@ export function post(endpoint, data) {
     body: JSON.stringify(data)
   });
 }
+
+export function fetchJSON(endpoint) {
+	return fetch(endpoint).then(response => response.json());
+}
+

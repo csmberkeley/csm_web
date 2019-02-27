@@ -2,7 +2,6 @@ import React from "react";
 import {
   MemoryRouter as Router,
   Route,
-  Link,
   Redirect
 } from "react-router-dom";
 import ReactDOM from "react-dom";
@@ -10,6 +9,7 @@ import Section from "./Section";
 import Course from "./Course";
 import CourseNav from "./CourseNav";
 import Navbar from "./Navbar";
+import {fetchJSON} from "../utils/api";
 
 class App extends React.Component {
   state = {
@@ -27,14 +27,12 @@ class App extends React.Component {
 
   updateProfiles() {
     const profilesEndpoint = "/scheduler/profiles/";
-    return fetch(profilesEndpoint)
-      .then(response => response.json())
+    return fetchJSON(profilesEndpoint)
       .then(profiles => {
         this.setState({ profiles_ct: profiles.length }, () => {
           for (let profile of profiles) {
             let id = profile.id;
-            fetch(`${profilesEndpoint}${id}/?verbose=true`)
-              .then(response => response.json())
+            fetchJSON(`${profilesEndpoint}${id}/?verbose=true`)
               .then(profileData =>
                 this.setState((state, props) => {
                   let sections = { ...state.sections };
@@ -54,8 +52,7 @@ class App extends React.Component {
   }
 
   updateCourses() {
-    return fetch("/scheduler/courses")
-      .then(response => response.json())
+    return fetchJSON("/scheduler/courses")
       .then(courses => {
         this.setState({
           courses: courses.reduce((coursesMap, course) => {

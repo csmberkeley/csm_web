@@ -1,4 +1,5 @@
 import React from "react";
+import { fetchJSON } from "../utils/api";
 
 class Roster extends React.Component {
   constructor(props) {
@@ -15,11 +16,10 @@ class Roster extends React.Component {
 
   loadStudentInfo(studentIDs) {
     if (studentIDs.length === 0) {
-      this.setState((state, props) => ({ students: {} }));
+      this.setState({students: {}});
     }
     for (let id of studentIDs) {
-      fetch(`/scheduler/profiles/${id}/?userinfo=true`)
-        .then(response => response.json())
+      fetchJSON(`/scheduler/profiles/${id}/?userinfo=true`)
         .then(studentInfo => {
           const { user } = studentInfo;
           this.setState((state, props) => {

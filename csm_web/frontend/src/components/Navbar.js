@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { SectionSummary } from "./Section";
 import moment from "moment";
 
 function SectionDropdownEntry(props) {
@@ -25,7 +24,7 @@ function Navbar(props) {
     (entry, index) => {
       const [id, section] = entry;
       return (
-        <li key={index}>
+        <li key={id}>
           <Link to={`/sections/${id}`}>
             <SectionDropdownEntry section={section} />
           </Link>
