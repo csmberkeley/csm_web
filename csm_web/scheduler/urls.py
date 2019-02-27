@@ -21,11 +21,7 @@ from rest_framework.routers import DefaultRouter
 
 from . import views
 
-urlpatterns = [
-    path("", views.index, name="index"),
-    path("login", views.login, name="login"),
-    path("logout", views.logout, name="logout"),
-]
+urlpatterns = []
 
 rest_urlpatterns = [
     path("courses/", views.CourseList.as_view()),
