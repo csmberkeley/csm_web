@@ -2,7 +2,7 @@ import React from "react";
 import { Redirect } from "react-router-dom";
 import { groupBy } from "lodash";
 import moment from "moment";
-import { post } from "../utils/api";
+import { post, fetchJSON } from "../utils/api";
 import { alert_modal } from "../utils/common";
 
 const API_TIME_FORMAT = "HH:mm:ss";
@@ -73,31 +73,25 @@ class Course extends React.Component {
       enrollmentOpen: now > enrollmentStart && now < enrollmentEnd
     });
 
-    fetch("/scheduler/profiles/")
-      .then(response => response.json())
-      .then(profiles => {
-        this.setState((state, props) => {
-          return {
-            enrolled: profiles
-              .map(profile => profile.course)
-              .includes(state.course.id)
-          };
-        });
+    fetchJSON("/scheduler/profiles/").then(profiles => {
+      this.setState((state, props) => {
+        enrolled: profiles.some(profile => (profile.course = state.course.id));
       });
-    fetch(`/scheduler/courses/${this.state.course.name}/sections/`)
-      .then(response => response.json())
-      .then(sections => {
+    });
+    fetchJSON(`/scheduler/courses/${this.state.course.name}/sections/`).then(
+      sections => {
         this.setState({
           sections: groupBy(
             sections,
             section => section.defaultSpacetime.dayOfWeek
           )
         });
-      });
+      }
+    );
   }
 
   render() {
-    if (this.state.viewSection != null) {
+    if (this.state.viewSection !== null && this.state.viewSection !== undefined) {
       return <Redirect to={`/sections/${this.state.viewSection}`} push />;
     }
 
@@ -237,7 +231,10 @@ function SectionEnroll(props) {
       });
   }
 
-  const available = Math.max(0, props.section.capacity - props.section.enrolledStudents);
+  const available = Math.max(
+    0,
+    props.section.capacity - props.section.enrolledStudents
+  );
   const pluralized_spot = available === 1 ? "spot" : "spots";
   const disabled = props.enrolled || !props.enrollmentOpen || available <= 0;
 
