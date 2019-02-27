@@ -26,7 +26,7 @@ class App extends React.Component {
   }
 
   updateProfiles() {
-    const profilesEndpoint = "/scheduler/profiles/";
+    const profilesEndpoint = "profiles/";
     return fetchJSON(profilesEndpoint)
       .then(profiles => {
         this.setState({ profiles_ct: profiles.length }, () => {
@@ -52,7 +52,7 @@ class App extends React.Component {
   }
 
   updateCourses() {
-    return fetchJSON("/scheduler/courses")
+		return fetchJSON("courses/")
       .then(courses => {
         this.setState({
           courses: courses.reduce((coursesMap, course) => {

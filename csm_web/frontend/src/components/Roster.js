@@ -19,7 +19,7 @@ class Roster extends React.Component {
       this.setState({students: {}});
     }
     for (let id of studentIDs) {
-      fetchJSON(`/scheduler/profiles/${id}/?userinfo=true`)
+      fetchJSON(`profiles/${id}/?userinfo=true`)
         .then(studentInfo => {
           const { user } = studentInfo;
           this.setState((state, props) => {

@@ -1,9 +1,9 @@
 import React from "react";
-import Cookies from "js-cookie";
 import Override from "./Override";
 import DropSection from "./DropSection";
 import Roster from "./Roster";
 import moment from "moment";
+import { fetchWithMethod } from "../utils/api";
 
 function SectionSummary(props) {
   return (
@@ -60,16 +60,7 @@ class WeekAttendance extends React.Component {
     event.preventDefault();
     for (let pk of this.state.changed) {
       const [studentName, presence] = this.state.attendance[pk];
-      fetch(`/scheduler/attendances/${pk}/`, {
-        method: "PATCH",
-        credentials: "same-origin",
-        headers: {
-          "X-CSRFToken": Cookies.get("csrftoken"),
-          Accept: "application/json",
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ presence: presence })
-      });
+      fetchWithMethod(`attendances/${pk}/`, "PATCH", {presence: presence});
     }
   }
 

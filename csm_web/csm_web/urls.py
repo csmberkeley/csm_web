@@ -20,7 +20,7 @@ from django.shortcuts import render
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("scheduler/", include("scheduler.urls")),
+    path("api/", include("scheduler.urls")),
     path("login/", lambda request: render(request, "frontend/login.html")),
     path("logout/", logout_then_login),
     path("", include("social_django.urls", namespace="social")),
