@@ -1,7 +1,7 @@
 import Cookies from "js-cookie";
 
-export function fetchWithMethod(endpoint, method, data={}) {
-	return fetch(`/api/${endpoint}`, {
+export function fetchWithMethod(endpoint, method, data = {}) {
+  return fetch(`/api/${endpoint}`, {
     method: method,
     credentials: "same-origin",
     headers: {
@@ -14,6 +14,5 @@ export function fetchWithMethod(endpoint, method, data={}) {
 }
 
 export function fetchJSON(endpoint) {
-	return fetch(`/api/${endpoint}`).then(response => response.json());
+  return fetch(`/api/${endpoint}`).then(response => response.json());
 }
-

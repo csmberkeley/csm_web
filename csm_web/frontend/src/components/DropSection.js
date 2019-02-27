@@ -8,8 +8,10 @@ class DropSection extends React.Component {
   }
 
   handleDrop() {
-		return fetchWithMethod(`profiles/${this.props.profileID}/uneroll/`, "DELETE")
-    .then(response => {
+    return fetchWithMethod(
+      `profiles/${this.props.profileID}/uneroll/`,
+      "DELETE"
+    ).then(response => {
       if (response.ok) {
         UIkit.modal(document.getElementById("confirm-drop-modal")).hide();
         UIkit.modal(document.getElementById("drop-successful-modal"))
