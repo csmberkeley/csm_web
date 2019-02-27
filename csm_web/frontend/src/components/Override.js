@@ -1,7 +1,6 @@
 import React from "react";
-import Cookies from "js-cookie";
 import moment from "moment";
-import { post } from "../utils/api.js";
+import { fetchWithMethod } from "../utils/api.js";
 
 // indicies correspond to moment.day()
 const DAYS_OF_WEEK = ["SU", "M", "TU", "W", "TH", "F", "SA"];
@@ -42,7 +41,7 @@ class Override extends React.Component {
       week_start: datetime.startOf("week").format("YYYY-MM-DD"),
       section: this.props.sectionID
     };
-    post("scheduler/overrides/", data)
+    fetchWithMethod("overrides/", "POST", data)
       .then(response => {
         if (response.ok) {
           UIkit.modal(document.getElementById("override-modal")).hide();

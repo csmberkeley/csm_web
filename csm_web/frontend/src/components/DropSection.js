@@ -1,5 +1,5 @@
 import React from "react";
-import Cookies from "js-cookie";
+import { fetchWithMethod } from "../utils/api";
 
 class DropSection extends React.Component {
   constructor(props) {
@@ -8,15 +8,8 @@ class DropSection extends React.Component {
   }
 
   handleDrop() {
-    return fetch(`/scheduler/profiles/${this.props.profileID}/unenroll`, {
-      method: "DELETE",
-      credentials: "same-origin",
-      headers: {
-        "X-CSRFToken": Cookies.get("csrftoken"),
-        Accept: "application/json",
-        "Content-Type": "application/json"
-      }
-    }).then(response => {
+		return fetchWithMethod(`profiles/${this.props.profileID}/uneroll/`, "DELETE")
+    .then(response => {
       if (response.ok) {
         UIkit.modal(document.getElementById("confirm-drop-modal")).hide();
         UIkit.modal(document.getElementById("drop-successful-modal"))

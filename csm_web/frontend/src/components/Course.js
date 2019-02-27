@@ -2,7 +2,7 @@ import React from "react";
 import { Redirect } from "react-router-dom";
 import { groupBy } from "lodash";
 import moment from "moment";
-import { post, fetchJSON } from "../utils/api";
+import { fetchWithMethod, fetchJSON } from "../utils/api";
 import { alert_modal } from "../utils/common";
 
 const API_TIME_FORMAT = "HH:mm:ss";
@@ -73,12 +73,12 @@ class Course extends React.Component {
       enrollmentOpen: now > enrollmentStart && now < enrollmentEnd
     });
 
-    fetchJSON("/scheduler/profiles/").then(profiles => {
+    fetchJSON("profiles/").then(profiles => {
       this.setState((state, props) => {
         enrolled: profiles.some(profile => (profile.course = state.course.id));
       });
     });
-    fetchJSON(`/scheduler/courses/${this.state.course.name}/sections/`).then(
+    fetchJSON(`courses/${this.state.course.name}/sections/`).then(
       sections => {
         this.setState({
           sections: groupBy(
@@ -190,7 +190,7 @@ function SectionEnroll(props) {
     // TODO is there a nicer way to do this with async rather than this external
     // variable?
     var ok = false;
-    post(`scheduler/sections/${props.section.id}/enroll`, {})
+    fetchWithMethod(`sections/${props.section.id}/enroll`, "POST")
       .then(response => {
         ok = response.ok;
         return response.json();
