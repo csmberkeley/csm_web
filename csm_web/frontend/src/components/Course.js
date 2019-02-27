@@ -75,7 +75,7 @@ class Course extends React.Component {
 
     fetchJSON("profiles/").then(profiles => {
       this.setState((state, props) => {
-        enrolled: profiles.some(profile => (profile.course = state.course.id));
+        enrolled: profiles.some(profile => profile.course == state.course.id);
       });
     });
     fetchJSON(`courses/${this.state.course.name}/sections/`).then(sections => {
