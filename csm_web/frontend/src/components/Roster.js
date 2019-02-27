@@ -16,29 +16,28 @@ class Roster extends React.Component {
 
   loadStudentInfo(studentIDs) {
     if (studentIDs.length === 0) {
-      this.setState({students: {}});
+      this.setState({ students: {} });
     }
     for (let id of studentIDs) {
-      fetchJSON(`profiles/${id}/?userinfo=true`)
-        .then(studentInfo => {
-          const { user } = studentInfo;
-          this.setState((state, props) => {
-            if (state.students === null) {
-              return {
-                students: {
-                  [id]: [`${user.firstName} ${user.lastName}`, user.email]
-                }
-              };
-            } else {
-              return {
-                students: {
-                  [id]: [`${user.firstName} ${user.lastName}`, user.email],
-                  ...state.students
-                }
-              };
-            }
-          });
+      fetchJSON(`profiles/${id}/?userinfo=true`).then(studentInfo => {
+        const { user } = studentInfo;
+        this.setState((state, props) => {
+          if (state.students === null) {
+            return {
+              students: {
+                [id]: [`${user.firstName} ${user.lastName}`, user.email]
+              }
+            };
+          } else {
+            return {
+              students: {
+                [id]: [`${user.firstName} ${user.lastName}`, user.email],
+                ...state.students
+              }
+            };
+          }
         });
+      });
     }
   }
 

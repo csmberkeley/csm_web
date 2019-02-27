@@ -1,15 +1,11 @@
 import React from "react";
-import {
-  MemoryRouter as Router,
-  Route,
-  Redirect
-} from "react-router-dom";
+import { MemoryRouter as Router, Route, Redirect } from "react-router-dom";
 import ReactDOM from "react-dom";
 import Section from "./Section";
 import Course from "./Course";
 import CourseNav from "./CourseNav";
 import Navbar from "./Navbar";
-import {fetchJSON} from "../utils/api";
+import { fetchJSON } from "../utils/api";
 
 class App extends React.Component {
   state = {
@@ -27,32 +23,31 @@ class App extends React.Component {
 
   updateProfiles() {
     const profilesEndpoint = "profiles/";
-    return fetchJSON(profilesEndpoint)
-      .then(profiles => {
-        this.setState({ profiles_ct: profiles.length }, () => {
-          for (let profile of profiles) {
-            let id = profile.id;
-            fetchJSON(`${profilesEndpoint}${id}/?verbose=true`)
-              .then(profileData =>
-                this.setState((state, props) => {
-                  let sections = { ...state.sections };
-                  if (profileData.section) {
-                    sections[[profileData.section.id]] = profileData.section;
-                  }
-                  return {
-                    profiles: { [id]: profileData, ...state.profiles },
-                    sections: sections
-                  };
-                })
-              )
-              .then(() => this.updateReadyState());
-          }
-        });
+    return fetchJSON(profilesEndpoint).then(profiles => {
+      this.setState({ profiles_ct: profiles.length }, () => {
+        for (let profile of profiles) {
+          let id = profile.id;
+          fetchJSON(`${profilesEndpoint}${id}/?verbose=true`)
+            .then(profileData =>
+              this.setState((state, props) => {
+                let sections = { ...state.sections };
+                if (profileData.section) {
+                  sections[[profileData.section.id]] = profileData.section;
+                }
+                return {
+                  profiles: { [id]: profileData, ...state.profiles },
+                  sections: sections
+                };
+              })
+            )
+            .then(() => this.updateReadyState());
+        }
       });
+    });
   }
 
   updateCourses() {
-		return fetchJSON("courses/")
+    return fetchJSON("courses/")
       .then(courses => {
         this.setState({
           courses: courses.reduce((coursesMap, course) => {

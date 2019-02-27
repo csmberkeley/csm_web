@@ -78,20 +78,21 @@ class Course extends React.Component {
         enrolled: profiles.some(profile => (profile.course = state.course.id));
       });
     });
-    fetchJSON(`courses/${this.state.course.name}/sections/`).then(
-      sections => {
-        this.setState({
-          sections: groupBy(
-            sections,
-            section => section.defaultSpacetime.dayOfWeek
-          )
-        });
-      }
-    );
+    fetchJSON(`courses/${this.state.course.name}/sections/`).then(sections => {
+      this.setState({
+        sections: groupBy(
+          sections,
+          section => section.defaultSpacetime.dayOfWeek
+        )
+      });
+    });
   }
 
   render() {
-    if (this.state.viewSection !== null && this.state.viewSection !== undefined) {
+    if (
+      this.state.viewSection !== null &&
+      this.state.viewSection !== undefined
+    ) {
       return <Redirect to={`/sections/${this.state.viewSection}`} push />;
     }
 
