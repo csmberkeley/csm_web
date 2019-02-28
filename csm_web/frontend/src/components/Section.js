@@ -23,12 +23,8 @@ function SectionSummary(props) {
           - {props.defaultSpacetime.endTime}
         </p>
         <p>{props.defaultSpacetime.location}</p>
-        <p>
-          {props.mentor.mentorName}{" "}
-          <a href={`mailto:${props.mentor.mentorEmail}`}>
-            {props.mentor.mentorEmail}
-          </a>
-        </p>
+        <p>{`${props.mentor.firstName} ${props.mentor.lastName}`} </p>
+        <a href={`mailto:${props.mentor.email}`}>{props.mentor.email}</a>
       </div>
     </div>
   );
@@ -182,7 +178,7 @@ class Section extends React.Component {
       <div>
         <SectionSummary
           defaultSpacetime={defaultSpacetime}
-          mentor={this.props.mentor}
+          mentor={this.props.mentor.user}
           courseName={this.props.courseName}
           isMentor={this.props.isMentor}
           sectionID={this.props.id}
