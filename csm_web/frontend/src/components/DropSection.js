@@ -1,5 +1,6 @@
 import React from "react";
 import { fetchWithMethod } from "../utils/api";
+import { Modal } from "../utils/common.js";
 
 class DropSection extends React.Component {
   constructor(props) {
@@ -9,16 +10,13 @@ class DropSection extends React.Component {
 
   handleDrop() {
     return fetchWithMethod(
-      `profiles/${this.props.profileID}/uneroll/`,
+      `profiles/${this.props.profileID}/unenroll`,
       "DELETE"
     ).then(response => {
       if (response.ok) {
         UIkit.modal(document.getElementById("confirm-drop-modal")).hide();
-        UIkit.modal(document.getElementById("drop-successful-modal"))
-          .show()
-          .then(() => {
-            location.reload(true);
-          });
+        UIkit.modal(document.getElementById("drop-successful-modal")).show();
+        setTimeout(() => location.reload(true), 2500);
       }
     });
   }
@@ -34,80 +32,41 @@ class DropSection extends React.Component {
           title="Settings"
           data-uk-toggle="target: #drop-modal"
         />
-        <div id="drop-modal" data-uk-modal="stack: true">
-          <div className="uk-modal-dialog uk-modal-body">
+        <Modal id="drop-modal" title="Settings">
+          <button
+            className="uk-button uk-button-danger uk-modal-close"
+            data-uk-toggle="target: #confirm-drop-modal"
+          >
+            Drop Section
+          </button>
+        </Modal>
+        <Modal id="confirm-drop-modal" title="Are you sure?">
+          <p>
+            You are about to drop this section, you will no longer be enrolled
+            as a student. Are you sure this is what you want to do?
+          </p>
+          <div>
             <button
-              className="uk-modal-close"
-              type="button"
+              className="uk-button uk-button-danger"
               style={{ float: "right" }}
-              data-uk-icon="icon: close"
+              onClick={this.handleDrop}
             >
-              {" "}
+              Yes, drop this section
             </button>
-            <h2 className="uk-modal-title" style={{ marginTop: "0px" }}>
-              Settings
-            </h2>
-            <button
-              className="uk-button uk-button-danger uk-modal-close"
-              data-uk-toggle="target: #confirm-drop-modal"
-            >
-              Drop Section
+            <button className="uk-button uk-button-default uk-modal-close">
+              Cancel
             </button>
           </div>
-        </div>
-        <div id="confirm-drop-modal" data-uk-modal="stack: true">
-          <div className="uk-modal-dialog uk-modal-body">
-            <button
-              className="uk-modal-close"
-              type="button"
-              style={{ float: "right" }}
-              data-uk-icon="icon: close"
-            >
-              {" "}
-            </button>
-            <h2 className="uk-modal-title" style={{ marginTop: "0px" }}>
-              Are you sure?
-            </h2>
-            <p>
-              You are about to drop this section, you will no longer be enrolled
-              as a student. Are you sure this is what you want to do?
-            </p>
-            <div>
-              <button
-                className="uk-button uk-button-danger"
-                style={{ float: "right" }}
-                onClick={this.handleDrop}
-              >
-                Yes, drop this section
-              </button>
-              <button className="uk-button uk-button-default uk-modal-close">
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-        <div id="drop-successful-modal" data-uk-modal="stack: true">
-          <div className="uk-modal-dialog uk-modal-body">
-            <button
-              className="uk-modal-close"
-              type="button"
-              style={{ float: "right" }}
-              data-uk-icon="icon: close"
-            >
-              {" "}
-            </button>
-            <h2 className="uk-modal-title" style={{ marginTop: "0px" }}>
-              Section dropped
-            </h2>
-            You have succesfully dropped the section.
-            <button
-              style={{ margin: "5px 5px 5px 0px", display: "block" }}
-              className="uk-button uk-button-primary uk-modal-close"
-            >
-              OK
-            </button>
-          </div>
-        </div>
+        </Modal>
+        <Modal id="drop-successful-modal" title="Section dropped">
+          You have succesfully dropped the section.
+          <button
+            style={{ margin: "5px 5px 5px 0px", display: "block" }}
+            className="uk-button uk-button-primary uk-modal-close"
+          >
+            OK
+          </button>
+        </Modal>
       </div>
     );
   }

@@ -1,5 +1,6 @@
 import React from "react";
 import { fetchJSON } from "../utils/api";
+import { Modal } from "../utils/common.js";
 
 class Roster extends React.Component {
   constructor(props) {
@@ -77,22 +78,9 @@ class Roster extends React.Component {
         >
           Show Roster
         </button>
-        <div id="roster-modal" data-uk-modal>
-          <div className="uk-modal-dialog uk-modal-body">
-            <button
-              className="uk-modal-close"
-              type="button"
-              style={{ float: "right" }}
-              data-uk-icon="icon: close"
-            >
-              {" "}
-            </button>
-            <h2 className="uk-modal-title" style={{ marginTop: "0px" }}>
-              Roster
-            </h2>
-            <ul className="uk-list">{rosterEntries}</ul>
-          </div>
-        </div>
+        <Modal id="roster-modal" title="Roster">
+          <ul className="uk-list">{rosterEntries}</ul>
+        </Modal>
       </div>
     );
   }

@@ -254,13 +254,21 @@ def create_demo_accounts():
 
 
 def disable_signals():
+    original_signals = []
     for signal in (
         signals.pre_save,
         signals.pre_delete,
         signals.post_save,
         signals.post_delete,
     ):
+        original_signals.append((signal, signal.receivers))
         signal.receivers = []
+    return original_signals
+
+
+def reenable_signals(original_signals):
+    for signal, receivers in original_signals:
+        signal.receivers = receivers
 
 
 def generate_test_data(complicate=False):
@@ -268,7 +276,7 @@ def generate_test_data(complicate=False):
         print("This cannot be run in production! Aborting.")
         return
     management.call_command("flush", interactive=True)
-    disable_signals()
+    original_signals = disable_signals()
     course_names = ("CS70", "CS61A", "CS61B", "CS61C", "EE16A")
     print("Generating test data...")
     for course in (CourseFactory.create(name=name) for name in course_names):
@@ -300,7 +308,14 @@ def generate_test_data(complicate=False):
             )
             for junior_mentor in junior_mentors:
                 create_section_for(junior_mentor)
+
         print("Done")
+    open_course = Course.objects.get(name="CS61A")
+    open_course.enrollment_start = timezone.now() - timedelta(days=14)
+    open_course.enrollment_end = timezone.now() + timedelta(days=14)
+    open_course.valid_until = timezone.now() + timedelta(days=100)
+    open_course.save()
     if complicate:
         complicate_data()
     create_demo_accounts()
+    reenable_signals(original_signals)
