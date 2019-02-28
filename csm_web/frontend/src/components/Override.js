@@ -1,6 +1,7 @@
 import React from "react";
 import moment from "moment";
 import { fetchWithMethod } from "../utils/api.js";
+import { Modal } from "../utils/common.js";
 
 // indicies correspond to moment.day()
 const DAYS_OF_WEEK = ["SU", "M", "TU", "W", "TH", "F", "SA"];
@@ -98,42 +99,29 @@ class Override extends React.Component {
         >
           Override
         </button>
-        <div id="override-modal" data-uk-modal>
-          <div className="uk-modal-dialog uk-modal-body">
-            <button
-              className="uk-modal-close"
-              type="button"
-              style={{ float: "right" }}
-              data-uk-icon="icon: close"
+        <Modal id="override-modal" title="Override">
+          {this.state.errorMessage && (
+            <p
+              style={{
+                color: "red",
+                border: "red 1px solid",
+                padding: "5px",
+                "text-align": "center"
+              }}
             >
-              {" "}
+              Error: {this.state.errorMessage}
+            </p>
+          )}
+          <form onSubmit={this.handleSubmit}>
+            {inputs}
+            <button
+              className="uk-button uk-button-default uk-button-small"
+              style={{ marginTop: "5px" }}
+            >
+              Save Override
             </button>
-            <h2 className="uk-modal-title" style={{ marginTop: "0px" }}>
-              Override
-            </h2>
-            {this.state.errorMessage && (
-              <p
-                style={{
-                  color: "red",
-                  border: "red 1px solid",
-                  padding: "5px",
-                  "text-align": "center"
-                }}
-              >
-                Error: {this.state.errorMessage}
-              </p>
-            )}
-            <form onSubmit={this.handleSubmit}>
-              {inputs}
-              <button
-                className="uk-button uk-button-default uk-button-small"
-                style={{ marginTop: "5px" }}
-              >
-                Save Override
-              </button>
-            </form>
-          </div>
-        </div>
+          </form>
+        </Modal>
       </div>
     );
   }
