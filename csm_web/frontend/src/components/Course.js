@@ -74,7 +74,7 @@ class Course extends React.Component {
     });
 
     fetchJSON("profiles/").then(profiles => {
-      this.setState((state, props) => {
+      this.setState(state => {
         enrolled: profiles.some(profile => profile.course == state.course.id);
       });
     });
@@ -102,33 +102,33 @@ class Course extends React.Component {
       return day1 - day2;
     };
 
-    const days = Object.entries(this.state.sections)
-      .sort(dayComparator)
-      .map(item => {
-        const [day, sections] = item;
-        return (
-          <Day
-            key={day}
-            enrolled={this.state.enrolled}
-            enrollmentOpen={this.state.enrollmentOpen}
-            day={day}
-            sections={sections}
-            update={() => this.updateCourse()}
-            viewSection={id => this.setState({ viewSection: id })}
-          />
-        );
-      });
+    const sortedSections = Object.entries(this.state.sections).sort(
+      dayComparator
+    );
 
-    const dayHeaders = Object.entries(this.state.sections)
-      .sort(dayComparator)
-      .map(item => {
-        const [day, sections] = item;
-        return (
-          <li key={day}>
-            <a href="#">{day}</a>
-          </li>
-        );
-      });
+    const days = sortedSections.map(item => {
+      const [day, sections] = item;
+      return (
+        <Day
+          key={day}
+          enrolled={this.state.enrolled}
+          enrollmentOpen={this.state.enrollmentOpen}
+          day={day}
+          sections={sections}
+          update={() => this.updateCourse()}
+          viewSection={id => this.setState({ viewSection: id })}
+        />
+      );
+    });
+
+    const dayHeaders = sortedSections.map(item => {
+      const [day, ,] = item; // ignore second entry of item
+      return (
+        <li key={day}>
+          <a href="#">{day}</a>
+        </li>
+      );
+    });
 
     return (
       <div>
@@ -163,7 +163,7 @@ function Day(props) {
       );
       return time1 - time2;
     })
-    .map((section, index) => (
+    .map(section => (
       <SectionEnroll
         enrolled={props.enrolled}
         enrollmentOpen={props.enrollmentOpen}

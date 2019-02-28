@@ -29,7 +29,7 @@ class App extends React.Component {
           let id = profile.id;
           fetchJSON(`${profilesEndpoint}${id}/?verbose=true`)
             .then(profileData =>
-              this.setState((state, props) => {
+              this.setState(state => {
                 let sections = { ...state.sections };
                 if (profileData.section) {
                   sections[[profileData.section.id]] = profileData.section;

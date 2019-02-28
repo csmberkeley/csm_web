@@ -43,7 +43,7 @@ class WeekAttendance extends React.Component {
 
   handleInputChange(event) {
     const { id, name, value } = event.target;
-    this.setState((state, props) => ({
+    this.setState(state => ({
       attendance: (() => {
         state.attendance[id] = [name, value];
         return state.attendance;
@@ -68,40 +68,38 @@ class WeekAttendance extends React.Component {
       "": "Your mentor has not yet recorded attendance for this week"
     };
     const studentAttendances = Object.entries(this.state.attendance);
-    const studentAttendanceListEntries = studentAttendances.map(
-      (attendance, index) => {
-        const [pk, details] = attendance;
-        const [studentName, presence] = details;
-        if (this.props.isMentor) {
-          return (
-            <div key={pk} className="uk-margin">
-              <label className="uk-form-label" htmlFor={pk}>
-                {" "}
-                {studentName}
-              </label>
-              <select
-                id={pk}
-                className="uk-select uk-form-width-medium"
-                value={presence}
-                name={studentName}
-                onChange={this.handleInputChange}
-              >
-                <option value="">---</option>
-                <option value="EX">{presenceDisplayMap["EX"]}</option>
-                <option value="UN">{presenceDisplayMap["UN"]}</option>
-                <option value="PR">{presenceDisplayMap["PR"]}</option>
-              </select>
-            </div>
-          );
-        } else {
-          return (
-            <div key={pk} className="uk-margin">
-              <p>{presenceDisplayMap[presence]}</p>
-            </div>
-          );
-        }
+    const studentAttendanceListEntries = studentAttendances.map(attendance => {
+      const [pk, details] = attendance;
+      const [studentName, presence] = details;
+      if (this.props.isMentor) {
+        return (
+          <div key={pk} className="uk-margin">
+            <label className="uk-form-label" htmlFor={pk}>
+              {" "}
+              {studentName}
+            </label>
+            <select
+              id={pk}
+              className="uk-select uk-form-width-medium"
+              value={presence}
+              name={studentName}
+              onChange={this.handleInputChange}
+            >
+              <option value="">---</option>
+              <option value="EX">{presenceDisplayMap["EX"]}</option>
+              <option value="UN">{presenceDisplayMap["UN"]}</option>
+              <option value="PR">{presenceDisplayMap["PR"]}</option>
+            </select>
+          </div>
+        );
+      } else {
+        return (
+          <div key={pk} className="uk-margin">
+            <p>{presenceDisplayMap[presence]}</p>
+          </div>
+        );
       }
-    );
+    });
     if (this.props.isMentor) {
       return (
         <li>
@@ -194,14 +192,8 @@ class Section extends React.Component {
   }
 
   componentWillUnmount() {
-    let rosterModal = document.getElementById("roster-modal");
-    let overrideModal = document.getElementById("override-modal");
-    if (rosterModal) {
-      rosterModal.remove();
-    }
-    if (overrideModal) {
-      overrideModal.remove();
-    }
+    const modals = document.querySelectorAll('[data-uk-modal="true"]');
+    modals.forEach(modal => modal.remove());
   }
 }
 export default Section;

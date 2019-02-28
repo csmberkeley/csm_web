@@ -20,18 +20,16 @@ function SectionDropdownEntry(props) {
 }
 
 function Navbar(props) {
-  const sectionListEntries = Object.entries(props.sections).map(
-    (entry, index) => {
-      const [id, section] = entry;
-      return (
-        <li key={id}>
-          <Link to={`/sections/${id}`}>
-            <SectionDropdownEntry section={section} />
-          </Link>
-        </li>
-      );
-    }
-  );
+  const sectionListEntries = Object.entries(props.sections).map(entry => {
+    const [id, section] = entry;
+    return (
+      <li key={id}>
+        <Link to={`/sections/${id}`}>
+          <SectionDropdownEntry section={section} />
+        </Link>
+      </li>
+    );
+  });
 
   return (
     <div uk-sticky="sel-target: .uk-navbar-container; cls-active: uk-navbar-sticky">
