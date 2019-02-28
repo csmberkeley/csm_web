@@ -21,7 +21,7 @@ class Roster extends React.Component {
     for (let id of studentIDs) {
       fetchJSON(`profiles/${id}/?userinfo=true`).then(studentInfo => {
         const { user } = studentInfo;
-        this.setState((state, props) => {
+        this.setState(state => {
           if (state.students === null) {
             return {
               students: {
@@ -54,20 +54,18 @@ class Roster extends React.Component {
   render() {
     var rosterEntries;
     if (this.state.students !== null) {
-      rosterEntries = Object.entries(this.state.students).map(
-        (studentInfo, index) => {
-          const [id, studentDetails] = studentInfo;
-          const [name, email] = studentDetails;
+      rosterEntries = Object.entries(this.state.students).map(studentInfo => {
+        const [id, studentDetails] = studentInfo;
+        const [name, email] = studentDetails;
 
-          return (
-            <li key={id}>
-              {name} - <a href={`mailto:${email}`}>{email}</a>
-            </li>
-          );
-        }
-      );
+        return (
+          <li key={id}>
+            {name} - <a href={`mailto:${email}`}>{email}</a>
+          </li>
+        );
+      });
     } else {
-      rosterEntries = [<p>Loading...</p>];
+      rosterEntries = [<p key="loading">Loading...</p>]; // key specified just to get rid of warning
     }
     return (
       <div>

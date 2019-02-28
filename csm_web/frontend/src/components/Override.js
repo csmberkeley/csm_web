@@ -69,7 +69,7 @@ class Override extends React.Component {
     const inputs = inputParameters.map(parameters => {
       const [label, name, type] = parameters;
       return (
-        <label>
+        <label key={name}>
           {label}
           <input
             name={name}
