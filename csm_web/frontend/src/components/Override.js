@@ -1,6 +1,6 @@
 import React from "react";
 import moment from "moment";
-import { fetchWithMethod } from "../utils/api.js";
+import { fetchWithMethod, HTTP_METHODS } from "../utils/api.js";
 import { Modal } from "../utils/common.js";
 
 // indicies correspond to moment.day()
@@ -42,7 +42,7 @@ class Override extends React.Component {
       week_start: datetime.startOf("week").format("YYYY-MM-DD"),
       section: this.props.sectionID
     };
-    fetchWithMethod("overrides/", "POST", data)
+    fetchWithMethod("overrides/", HTTP_METHODS.POST, data)
       .then(response => {
         if (response.ok) {
           UIkit.modal(document.getElementById("override-modal")).hide();

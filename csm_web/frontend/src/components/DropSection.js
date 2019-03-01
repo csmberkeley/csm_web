@@ -1,5 +1,5 @@
 import React from "react";
-import { fetchWithMethod } from "../utils/api";
+import { fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import { Modal } from "../utils/common.js";
 
 class DropSection extends React.Component {
@@ -11,7 +11,7 @@ class DropSection extends React.Component {
   handleDrop() {
     return fetchWithMethod(
       `profiles/${this.props.profileID}/unenroll`,
-      "DELETE"
+      HTTP_METHODS.DELETE
     ).then(response => {
       if (response.ok) {
         UIkit.modal(document.getElementById("confirm-drop-modal")).hide();

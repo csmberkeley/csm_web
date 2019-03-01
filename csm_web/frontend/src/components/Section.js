@@ -3,7 +3,7 @@ import Override from "./Override";
 import DropSection from "./DropSection";
 import Roster from "./Roster";
 import moment from "moment";
-import { fetchWithMethod } from "../utils/api";
+import { fetchWithMethod, HTTP_METHODS } from "../utils/api";
 
 function SectionSummary(props) {
   return (
@@ -56,7 +56,9 @@ class WeekAttendance extends React.Component {
     event.preventDefault();
     for (let pk of this.state.changed) {
       const [studentName, presence] = this.state.attendance[pk];
-      fetchWithMethod(`attendances/${pk}/`, "PATCH", { presence: presence });
+      fetchWithMethod(`attendances/${pk}/`, HTTP_METHODS.PATCH, {
+        presence: presence
+      });
     }
   }
 
