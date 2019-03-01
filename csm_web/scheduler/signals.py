@@ -30,49 +30,51 @@ def handle_profile_post_save(sender, **kwargs):
     profile = kwargs["instance"]
     raw = kwargs["raw"]
     if not raw and profile.role == models.Profile.STUDENT:
-        with transaction.atomic():
-            if not profile.active:
-                # drop from corresponding 70 section
-                e.info(
-                    "Recognized attempt to drop {} (profile id {}) from dual CS70 section".format(
-                        profile, profile.id
-                    ),
-                    initiator="CS70 Dual-Drop",
-                )
-                other_profiles = models.Profile.objects.filter(
-                    user=profile.user,
-                    active=True,  # important to prevent infinite loop
-                    course__name="CS70",
-                ).update(active=False)
-            else:
-                # enroll in corresponding 70 section
-                e.info(
-                    "Recognized attempt to enroll {} (profile id {}) in dual CS70 section".format(
-                        profile, profile.id
-                    ),
-                    initiator="CS70 Dual-Enroll",
-                )
-                if (
-                    models.Profile.objects.filter(
-                        user=profile.user, course__name="CS70", leader=profile.leader
-                    ).count()
-                    == 1
-                ):
-                    other_section = (
-                        models.Profile.objects.filter(
-                            user=profile.leader.user, course__name="CS70"
-                        )
-                        .exclude(id=profile.leader.id)
-                        .first()
-                        .section
+        if profile.course.name == "CS70":
+            with transaction.atomic():
+                if not profile.active:
+                    # drop from corresponding 70 section
+                    e.info(
+                        "Recognized attempt to drop {} (profile id {}) from dual CS70 section".format(
+                            profile, profile.id
+                        ),
+                        initiator="CS70 Dual-Drop",
                     )
-                    models.Profile.objects.create(
+                    other_profiles = models.Profile.objects.filter(
                         user=profile.user,
-                        course=models.Course.objects.get(name="CS70"),
-                        leader=profile.leader,
-                        section=other_section,
-                        role=models.Profile.STUDENT,
+                        active=True,  # important to prevent infinite loop
+                        course__name="CS70",
+                    ).update(active=False)
+                else:
+                    # enroll in corresponding 70 section
+                    e.info(
+                        "Recognized attempt to enroll {} (profile id {}) in dual CS70 section".format(
+                            profile, profile.id
+                        ),
+                        initiator="CS70 Dual-Enroll",
                     )
+                    if (
+                        models.Profile.objects.filter(
+                            user=profile.user, course__name="CS70", leader=profile.leader
+                        ).count()
+                        == 1
+                    ):
+                        other_mentor_profile = (
+                            models.Profile.objects.filter(
+                                user=profile.leader.user, course__name="CS70"
+                            )
+                            .exclude(id=profile.leader.id)
+                            .first()
+                        )
+                        if other_mentor_profile:
+                            other_section = other_mentor_profile.section
+                            models.Profile.objects.create(
+                                user=profile.user,
+                                course=models.Course.objects.get(name="CS70"),
+                                leader=profile.leader,
+                                section=other_section,
+                                role=models.Profile.STUDENT,
+                            )
 
 
 @receiver(signals.post_save, sender=models.Profile)
