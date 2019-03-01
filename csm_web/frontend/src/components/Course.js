@@ -2,7 +2,7 @@ import React from "react";
 import { Redirect } from "react-router-dom";
 import { groupBy } from "lodash";
 import moment from "moment";
-import { fetchWithMethod, fetchJSON } from "../utils/api";
+import { fetchWithMethod, fetchJSON, HTTP_METHODS } from "../utils/api";
 import { alert_modal } from "../utils/common";
 
 const API_TIME_FORMAT = "HH:mm:ss";
@@ -191,7 +191,7 @@ function SectionEnroll(props) {
     // TODO is there a nicer way to do this with async rather than this external
     // variable?
     var ok = false;
-    fetchWithMethod(`sections/${props.section.id}/enroll`, "POST")
+    fetchWithMethod(`sections/${props.section.id}/enroll`, HTTP_METHODS.POST)
       .then(response => {
         ok = response.ok;
         return response.json();
