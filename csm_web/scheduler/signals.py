@@ -29,6 +29,7 @@ def handle_profile_post_save(sender, **kwargs):
     """
     profile = kwargs["instance"]
     raw = kwargs["raw"]
+    created = kwargs["created"]
     if not raw and profile.role == models.Profile.STUDENT:
         if profile.course.name == "CS70":
             with transaction.atomic():
@@ -45,7 +46,7 @@ def handle_profile_post_save(sender, **kwargs):
                         active=True,  # important to prevent infinite loop
                         course__name="CS70",
                     ).update(active=False)
-                else:
+                elif created:
                     # enroll in corresponding 70 section
                     e.info(
                         "Recognized attempt to enroll {} (profile id {}) in dual CS70 section".format(
