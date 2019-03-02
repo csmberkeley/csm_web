@@ -247,15 +247,6 @@ LOGGING = {
     },
 }
 
-
-if not os.environ.get("DEBUG_LOG_OFF"):
-    LOGGING["loggers"]["django.db.backends"] = {
-        "handlers": ["low-level"],
-        "level": "DEBUG",
-        "propagate": False,
-    }
-
-
 if DJANGO_ENV == PRODUCTION:
     # Security/HTTPS headers
     # https://docs.djangoproject.com/en/2.1/ref/middleware/#module-django.middleware.security
