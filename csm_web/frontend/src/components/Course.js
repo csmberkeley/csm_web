@@ -251,6 +251,9 @@ function SectionEnroll(props) {
             {props.section.mentor.user.firstName}{" "}
             {props.section.mentor.user.lastName}
           </p>
+          <a href={`mailto:${props.section.mentor.user.email}`}>
+            {props.section.mentor.user.email}
+          </a>
           <p className="section-enroll-capacity">
             {props.section.enrolledStudents}/{props.section.capacity} -{" "}
             {available} {pluralized_spot} available
