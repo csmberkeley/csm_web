@@ -56,7 +56,9 @@ def handle_profile_post_save(sender, **kwargs):
                     )
                     if (
                         models.Profile.objects.filter(
-                            user=profile.user, course__name="CS70", leader=profile.leader
+                            user=profile.user,
+                            course__name="CS70",
+                            leader=profile.leader,
                         ).count()
                         == 1
                     ):

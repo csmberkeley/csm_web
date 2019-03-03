@@ -113,3 +113,13 @@ class IsOwner(permissions.BasePermission, ListPermissionMixin):
 
     def has_object_permission(self, request, view, obj):
         return bool(request.user and request.user == obj.user)
+
+
+class DestroyIsOwner(permissions.BasePermission):
+    """
+    Grants permission to destroy the resource only if the requester is the user
+    associated with the object.
+    """
+
+    def has_object_permission(self, request, view, obj):
+        return bool(request.user and request.user == obj.user)

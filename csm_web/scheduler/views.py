@@ -21,7 +21,14 @@ from .serializers import (
     SpacetimeSerializer,
     OverrideSerializer,
 )
-from .permissions import is_leader, IsLeader, IsLeaderOrReadOnly, IsReadIfOwner, IsOwner
+from .permissions import (
+    is_leader,
+    IsLeader,
+    IsLeaderOrReadOnly,
+    IsReadIfOwner,
+    IsOwner,
+    DestroyIsOwner,
+)
 
 VERBOSE = "verbose"
 USERINFO = "userinfo"
@@ -162,8 +169,12 @@ class UserProfileDetail(generics.RetrieveAPIView):
 
 class DeleteProfile(generics.DestroyAPIView):
     # TODO this looks like it should really have a permission class...
+
+    permission_classes = (DestroyIsOwner,)
+
     def destroy(self, request, *args, **kwargs):
         profile = get_object_or_404(Profile, pk=self.kwargs["pk"])
+        self.check_object_permissions(request, profile)
         if not profile.active:
             raise PermissionDenied(
                 "This profile ({}) has been deactivated".format(profile)
