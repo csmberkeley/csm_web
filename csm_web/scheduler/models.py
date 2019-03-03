@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
+from django.utils.translation import gettext_lazy as _
 
 
 class User(AbstractUser):
@@ -85,6 +87,14 @@ class Profile(ActivatableModel):
         "Section", on_delete=models.CASCADE, blank=True, null=True
     )
 
+    def clean(self):
+        if self.section:
+            mentor_set = self.section._get_mentor_set()
+            if mentor_set.count() > 1:
+                raise ValidationError(_("Cannot save section with more than 1 mentor!"))
+            if self.course != self.section.course:
+                raise ValidationError(_("Profile course must match section course!"))
+
     @property
     def name(self):
         return f"{self.user.first_name} {self.user.last_name}"
@@ -98,13 +108,24 @@ class Section(models.Model):
     default_spacetime = models.OneToOneField("Spacetime", on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
 
+    def _get_mentor_set(self):
+        # excluding STUDENT doesn't work because of empty role
+        return self.profile_set.filter(
+            role__in=[
+                Profile.JUNIOR_MENTOR,
+                Profile.ASSOCIATE_MENTOR,
+                Profile.SENIOR_MENTOR,
+                Profile.COORDINATOR,
+            ]
+        )
+
     @property
     def students(self):
         return self.profile_set.filter(role=Profile.STUDENT)
 
     @property
     def mentor(self):
-        mentor_profiles = self.profile_set.exclude(role=Profile.STUDENT)
+        mentor_profiles = mentor_profiles = self._get_mentor_set()
         assert mentor_profiles.count() <= 1
         return mentor_profiles.first()
 

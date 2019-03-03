@@ -179,7 +179,7 @@ class ProfileAdmin(CoordAdmin):
         count = profiles.count()
         if count == 1:
             if "course" not in vals:
-                vals["course"] = ps.first().course
+                vals["course"] = profiles.first().course
         return vals
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
