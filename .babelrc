@@ -15,5 +15,5 @@
       }
     ]
   ],
-  "plugins": ["transform-class-properties", "lodash"]
+  "plugins": ["transform-class-properties", "lodash", "@babel/plugin-transform-runtime"]
 }
