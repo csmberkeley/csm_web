@@ -35,7 +35,8 @@ class WeekAttendance extends React.Component {
     super(props);
     this.state = {
       attendance: Object.assign({}, props.attendance),
-      changed: new Set()
+      changed: new Set(),
+      status: "unchanged"
     };
     this.handleInputChange = this.handleInputChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
@@ -52,13 +53,30 @@ class WeekAttendance extends React.Component {
     }));
   }
 
-  handleSubmit(event) {
+  async handleSubmit(event) {
     event.preventDefault();
+    var ok = true;
+    this.setState({ status: "loading" });
     for (let pk of this.state.changed) {
       const [studentName, presence] = this.state.attendance[pk];
-      fetchWithMethod(`attendances/${pk}/`, HTTP_METHODS.PATCH, {
-        presence: presence
-      });
+      try {
+        let result = await fetchWithMethod(
+          `attendances/${pk}/`,
+          HTTP_METHODS.PATCH,
+          {
+            presence: presence
+          }
+        );
+        ok = ok && result.ok;
+      } catch (err) {
+        ok = false;
+        break;
+      }
+    }
+    if (ok) {
+      this.setState({ status: "successful" });
+    } else {
+      this.setState({ status: "failed" });
     }
   }
 
@@ -103,6 +121,22 @@ class WeekAttendance extends React.Component {
       }
     });
     if (this.props.isMentor) {
+      let prompt;
+      switch (this.state.status) {
+        case "unchanged":
+          prompt = null;
+          break;
+        case "loading":
+          prompt = <div data-uk-spinner />;
+          break;
+        case "successful":
+          prompt = <span data-uk-icon="icon: check; ratio: 2" />;
+          break;
+        case "failed":
+          prompt = <span data-uk-icon="icon: close; ratio: 2" />;
+          break;
+      }
+
       return (
         <li>
           <a className="uk-accordion-title" href="#">
@@ -114,6 +148,7 @@ class WeekAttendance extends React.Component {
               <button className="uk-button uk-button-default uk-button-small">
                 Save changes
               </button>
+              {prompt}
             </form>
           </div>
         </li>
