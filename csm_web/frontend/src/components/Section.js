@@ -55,29 +55,28 @@ class WeekAttendance extends React.Component {
 
   async handleSubmit(event) {
     event.preventDefault();
-    var ok = true;
+    //var ok = true;
     this.setState({ status: "loading" });
-    for (let pk of this.state.changed) {
+    let requests = Array.from(this.state.changed).map(pk => {
       const [studentName, presence] = this.state.attendance[pk];
-      try {
-        let result = await fetchWithMethod(
-          `attendances/${pk}/`,
-          HTTP_METHODS.PATCH,
+      return fetchWithMethod(`attendances/${pk}/`, HTTP_METHODS.PATCH, {
+        presence: presence
+      }).then(response => response.ok);
+    });
+    await Promise.all(requests)
+      .then(() =>
+        this.setState(
           {
-            presence: presence
-          }
-        );
-        ok = ok && result.ok;
-      } catch (err) {
-        ok = false;
-        break;
-      }
-    }
-    if (ok) {
-      this.setState({ status: "successful" });
-    } else {
-      this.setState({ status: "failed" });
-    }
+            status: requests.every(request => request) ? "successful" : "failed"
+          },
+          () => setTimeout(() => this.setState({ status: "unchanged" }), 3000)
+        )
+      )
+      .catch(() =>
+        this.setState({ status: "failed" }, () =>
+          setTimeout(() => this.setState({ status: "unchanged" }), 3000)
+        )
+      );
   }
 
   render() {
@@ -121,22 +120,6 @@ class WeekAttendance extends React.Component {
       }
     });
     if (this.props.isMentor) {
-      let prompt;
-      switch (this.state.status) {
-        case "unchanged":
-          prompt = null;
-          break;
-        case "loading":
-          prompt = <div data-uk-spinner />;
-          break;
-        case "successful":
-          prompt = <span data-uk-icon="icon: check; ratio: 2" />;
-          break;
-        case "failed":
-          prompt = <span data-uk-icon="icon: close; ratio: 2" />;
-          break;
-      }
-
       return (
         <li>
           <a className="uk-accordion-title" href="#">
@@ -148,7 +131,27 @@ class WeekAttendance extends React.Component {
               <button className="uk-button uk-button-default uk-button-small">
                 Save changes
               </button>
-              {prompt}
+              {this.state.status == "loading" && (
+                <span
+                  data-uk-spinner="ratio: 1"
+                  style={{ "margin-left": "5px" }}
+                />
+              )}
+              {this.state.status == "successful" && (
+                <span
+                  data-uk-icon="icon: check; ratio: 1.5"
+                  style={{ color: "green" }}
+                />
+              )}
+              {this.state.status == "failed" && (
+                <span style={{ "font-weight": "bold" }}>
+                  <span
+                    data-uk-icon="icon: close; ratio: 1.5"
+                    style={{ color: "red" }}
+                  />
+                  Unable to save attendance
+                </span>
+              )}
             </form>
           </div>
         </li>
