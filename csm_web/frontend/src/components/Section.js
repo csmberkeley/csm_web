@@ -134,7 +134,7 @@ class WeekAttendance extends React.Component {
               {this.state.status == "loading" && (
                 <span
                   data-uk-spinner="ratio: 1"
-                  style={{ "margin-left": "5px" }}
+                  style={{ marginLeft: "5px" }}
                 />
               )}
               {this.state.status == "successful" && (
@@ -144,7 +144,7 @@ class WeekAttendance extends React.Component {
                 />
               )}
               {this.state.status == "failed" && (
-                <span style={{ "font-weight": "bold" }}>
+                <span style={{ fontWeight: "bold" }}>
                   <span
                     data-uk-icon="icon: close; ratio: 1.5"
                     style={{ color: "red" }}
