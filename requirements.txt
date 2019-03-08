@@ -1,6 +1,8 @@
+Brotli==1.0.7
 certifi==2018.10.15
 chardet==3.0.4
 defusedxml==0.5.0
+dj-database-url==0.5.0
 Django==2.1.5
 django-eventlog==1.1
 django-heroku==0.3.1
@@ -17,7 +19,7 @@ python-dateutil==2.7.5
 python-social-auth[django]==0.3.6
 python3-openid==3.1.0
 pytz==2018.7
-pyyaml==3.13
+PyYAML==3.13
 requests==2.20.1
 requests-oauthlib==1.0.0
 six==1.11.0
@@ -25,3 +27,4 @@ social-auth-app-django==3.1.0
 social-auth-core==2.0.0
 text-unidecode==1.2
 urllib3==1.24.1
+whitenoise==4.1.2

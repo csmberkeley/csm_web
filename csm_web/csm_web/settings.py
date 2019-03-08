@@ -145,6 +145,8 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
+# Enables compression and caching
+STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
 
 AUTHENTICATION_BACKENDS = (
     # Google OAuth2
