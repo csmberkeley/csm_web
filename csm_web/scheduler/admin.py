@@ -210,13 +210,12 @@ class ProfileAdmin(CoordAdmin):
         if request.user.is_superuser:
             return qs
         return qs.filter(
-            role=Profile.STUDENT,  # TODO for now, only allows student creation
             course__in=[
                 p.course
                 for p in request.user.profile_set.filter(
                     active=True, role=Profile.COORDINATOR
                 )
-            ],
+            ]
         )
 
     def save_model(self, request, obj, form, change):
@@ -326,9 +325,6 @@ class AttendanceAdmin(admin.ModelAdmin):
     list_filter = ("presence", "attendee__course")
     search_fields = ("attendee__user__first_name", "attendee__user__last_name")
     ordering = ("-week_start",)
-
-    def has_module_permission(self, request, obj=None):
-        return request.user.is_superuser  # TODO remove when implemented as coord view
 
 
 @admin.register(Override)
