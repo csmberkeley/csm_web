@@ -184,10 +184,13 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
             flat_attendances = [item for lst in nested_attendances for item in lst]
             flat_attendances.sort(key=lambda tuple: tuple[1])
             grouped_attendances = groupby(flat_attendances, key=lambda tuple: tuple[1])
-            attendances = [
-                {str(pk): [name, presence] for name, week_start, presence, pk in group}
+            attendances = {
+                str(key): {
+                    str(pk): [name, presence]
+                    for name, week_start, presence, pk in group
+                }
                 for key, group in grouped_attendances
-            ]
+            }
             return attendances
         else:
             attendances = (
@@ -204,10 +207,12 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
                 + " "
                 + self.context["request"].user.last_name
             )
-            return [
-                {str(attendance.id): [student_name, attendance.presence]}
+            return {
+                str(attendance.week_start): {
+                    str(attendance.id): [student_name, attendance.presence]
+                }
                 for attendance in attendances
-            ]
+            }
 
     def get_course_name(self, obj):
         return obj.course.name
