@@ -56,7 +56,9 @@ class WeekAttendance extends React.Component {
   async handleSubmit(event) {
     event.preventDefault();
     //var ok = true;
-    this.setState({ status: "loading" });
+    this.setState({
+      status: "loading"
+    });
     let requests = Array.from(this.state.changed).map(pk => {
       const [studentName, presence] = this.state.attendance[pk];
       return fetchWithMethod(`attendances/${pk}/`, HTTP_METHODS.PATCH, {
@@ -69,12 +71,29 @@ class WeekAttendance extends React.Component {
           {
             status: requests.every(request => request) ? "successful" : "failed"
           },
-          () => setTimeout(() => this.setState({ status: "unchanged" }), 3000)
+          () =>
+            setTimeout(
+              () =>
+                this.setState({
+                  status: "unchanged"
+                }),
+              3000
+            )
         )
       )
       .catch(() =>
-        this.setState({ status: "failed" }, () =>
-          setTimeout(() => this.setState({ status: "unchanged" }), 3000)
+        this.setState(
+          {
+            status: "failed"
+          },
+          () =>
+            setTimeout(
+              () =>
+                this.setState({
+                  status: "unchanged"
+                }),
+              3000
+            )
         )
       );
   }
@@ -120,10 +139,21 @@ class WeekAttendance extends React.Component {
       }
     });
     if (this.props.isMentor) {
+      const dayOfWeek = {
+        Monday: 0,
+        Tuesday: 1,
+        Wednesday: 2,
+        Thursday: 3,
+        Friday: 4,
+        Saturday: 5,
+        Sunday: 6
+      };
       return (
         <li>
           <a className="uk-accordion-title" href="#">
-            Week {this.props.weekNum}
+            {moment(this.state.attendance, "YYYY-MM-DD")
+              .add(dayOfWeek[this.props.defaultSpacetime.dayOfWeek])
+              .format("YYYY-MM-DD")}
           </a>
           <div className="uk-accordion-content">
             <form className="uk-form-horizontal" onSubmit={this.handleSubmit}>
@@ -178,7 +208,7 @@ class Attendances extends React.Component {
       const weekAttendances = attendances.map((attendance, index) => (
         <WeekAttendance
           attendance={attendance}
-          weekNum={index}
+          defaultSpacetime={this.props.defaultSpacetime}
           key={index}
           isMentor={this.props.isMentor}
         />
@@ -226,6 +256,7 @@ class Section extends React.Component {
         <Attendances
           attendances={this.props.attendances}
           isMentor={this.props.isMentor}
+          defaultSpacetime={defaultSpacetime}
         />
       </div>
     );
