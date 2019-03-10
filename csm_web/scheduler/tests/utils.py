@@ -20,7 +20,7 @@ random.seed(0)
 
 COURSE_NAMES = ("CS88", "CS61A", "CS61B", "CS70", "CS61C", "EE16A")
 ROLE_MAP = Profile.ROLE_MAP
-BASE_PATH = "/scheduler"
+BASE_PATH = "/api"
 
 # ----- REQUEST UTILITIES -----
 def fail_msg(ep, resp):
@@ -28,6 +28,26 @@ def fail_msg(ep, resp):
 
 
 class APITestCase(TestCase):
+    """
+    A test case class that provides utility methods for testing HTTP requests.
+    """
+
+    ALL_METHODS = set("GET", "POST", "PATCH", "PUT", "DELETE")
+    """
+    A mapping of endpoint URL to a list of allowed methods.
+    """
+    ALLOWED_METHODS = {}
+
+    def test_bad_methods(self):
+        """
+        Tests to make sure that for each endpoint that's a key in the ALLOWED_METHODS dict,
+        any method not in the associated list should fail.
+        """
+        for endpoint, methods in self.ALLOWED_METHODS:
+            forbidden = self.ALL_METHODS - methods
+            for f in forbidden:
+                self.req_fails_method(f, endpoint)
+
     def get_client_for(self, user):
         """Returns an APIClient object that is logged in as the provided user."""
         client = APIClient()
@@ -157,13 +177,13 @@ def gen_test_data(cls, NUM_USERS=300):
                 coord = assign(Profile.COORDINATOR, None, c, coords)
                 # SMs
                 for j in range(SM_COUNT):
-                    sm = assign(Profile.SENIOR_MENTOR, coord, c, seniors)
+                    sm = assign(Profile.SENIOR_MENTOR, None, c, seniors)
                     section = create_empty_section_for(sm)
                     for k in range(random.randint(3, 6)):
                         students.append(enroll_user_as_student(next(users), section))
                     # JMs
                     for k in range(JM_COUNT):
-                        jm = assign(Profile.JUNIOR_MENTOR, sm, c, juniors)
+                        jm = assign(Profile.JUNIOR_MENTOR, None, c, juniors)
                         for _ in range(random.randint(3, 6)):
                             students.append(
                                 enroll_user_as_student(next(users), section)

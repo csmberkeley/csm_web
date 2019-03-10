@@ -24,19 +24,33 @@ from . import views
 urlpatterns = []
 
 rest_urlpatterns = [
-    path("courses/", views.CourseList.as_view()),
-    path("courses/<slug:name>/", views.CourseDetail.as_view()),
-    path("courses/<slug:name>/sections/", views.CourseSectionList.as_view()),
-    path("profiles/", views.UserProfileList.as_view()),
-    path("profiles/<int:pk>/", views.UserProfileDetail.as_view()),
-    path("profiles/<int:pk>/attendance", views.UserProfileAttendance.as_view()),
-    path("profiles/<int:pk>/unenroll", views.DeleteProfile.as_view()),
+    path("courses/", views.CourseList.as_view(), name="list-course"),
+    path("courses/<slug:name>/", views.CourseDetail.as_view(), name="view-course"),
+    path(
+        "courses/<slug:name>/sections/",
+        views.CourseSectionList.as_view(),
+        name="list-course-section",
+    ),
+    path("profiles/", views.UserProfileList.as_view(), name="list-profile"),
+    path("profiles/<int:pk>/", views.UserProfileDetail.as_view(), name="view-profile"),
+    path(
+        "profiles/<int:pk>/attendance",
+        views.UserProfileAttendance.as_view(),
+        name="view-attendance",
+    ),
+    path("profiles/<int:pk>/unenroll", views.DeleteProfile.as_view(), name="unenroll"),
     path("sections/<int:pk>/enroll", views.enroll, name="enroll"),
-    path("sections/<int:pk>/", views.SectionDetail.as_view()),
-    path("overrides/", views.CreateOverrideDetail.as_view()),
-    path("overrides/<int:pk>/", views.OverrideDetail.as_view()),
-    path("attendances/", views.CreateAttendanceDetail.as_view()),
-    path("attendances/<int:pk>/", views.AttendanceDetail.as_view()),
+    path("sections/<int:pk>/", views.SectionDetail.as_view(), name="view-section"),
+    path("overrides/", views.CreateOverrideDetail.as_view(), name="create-override"),
+    path("overrides/<int:pk>/", views.OverrideDetail.as_view(), name="view-override"),
+    path(
+        "attendances/", views.CreateAttendanceDetail.as_view(), name="create-attendance"
+    ),
+    path(
+        "attendances/<int:pk>/",
+        views.AttendanceDetail.as_view(),
+        name="update-attendance",
+    ),
     # all endpoints listed here https://paper.dropbox.com/doc/Scheduler-2.0-K0ZNsLU5DZ7JjGudjqKIt
 ]
 
