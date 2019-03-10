@@ -178,7 +178,6 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.user.user_details",
 )
 
-# TODO Roll this for production
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
 SOCIAL_AUTH_GOOGLE_OAUTH2_IGNORE_DEFAULT_SCOPE = True
 SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
@@ -186,12 +185,11 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 
+REST_RENDERERS = ["djangorestframework_camel_case.render.CamelCaseJSONRenderer"]
+if DEBUG:
+    REST_RENDERERS.append("rest_framework.renderers.BrowsableAPIRenderer")
 # REST Framework
-REST_FRAMEWORK = {
-    "DEFAULT_RENDERER_CLASSES": [
-        "djangorestframework_camel_case.render.CamelCaseJSONRenderer"
-    ]
-}
+REST_FRAMEWORK = {"DEFAULT_RENDERER_CLASSES": REST_RENDERERS}
 
 if DJANGO_ENV == DEVELOPMENT:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
