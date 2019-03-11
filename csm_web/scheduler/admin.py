@@ -320,8 +320,70 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
-    fields = ("presence", "week_start", "section", "attendee")
-    list_display = ("attendee", "week_start", "presence", "section")
+    # section1 = Attendance.section.default_spacetime
+    def day_of_week(self, obj):
+        return obj.section.default_spacetime.day_of_week
+
+    def section_time(self, obj):
+        return obj.section.default_spacetime.start_time
+
+    def section_location(self, obj):
+        return obj.section.default_spacetime.location
+
+    def section_mentor_first_name(self, obj):
+        return obj.section.mentor.user.first_name
+
+    def section_mentor_last_name(self, obj):
+        return obj.section.mentor.user.last_name
+
+    def section_mentor_email(self, obj):
+        return obj.section.mentor.user.email
+
+    def student_first_name(self, obj):
+        return obj.attendee.user.first_name
+
+    def student_last_name(self, obj):
+        return obj.attendee.user.last_name
+
+    def student_email(self, obj):
+        return obj.attendee.user.email
+
+    def section_date(self, obj):
+        return "N/A"
+
+    def presence(self, obj):
+        return obj.presence
+
+    # fields = ("presence", "week_start", "section", "attendee", "day_of_week")
+    # list_display = ("attendee", "week_start", "presence", "section", "day_of_week")
+    fields = (
+        "day_of_week",
+        "section_time",
+        "section_location",
+        "section_mentor_first_name",
+        "section_mentor_last_name",
+        "section_mentor_email",
+        "student_first_name",
+        "student_last_name",
+        "student_email",
+        "section_date",
+        "presence",
+    )
+
+    list_display = (
+        "day_of_week",
+        "section_time",
+        "section_location",
+        "section_mentor_first_name",
+        "section_mentor_last_name",
+        "section_mentor_email",
+        "student_first_name",
+        "student_last_name",
+        "student_email",
+        "section_date",
+        "presence",
+    )
+
     list_filter = ("presence", "attendee__course")
     search_fields = ("attendee__user__first_name", "attendee__user__last_name")
     ordering = ("-week_start",)
