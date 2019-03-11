@@ -10,7 +10,7 @@ class TestAttendancePerms(APITestCase):
     """
 
     CREATE_ATTENDANCE = reverse("create-attendance")
-    UPDATE_ATTENDANCE = reverse("update-attendance")
+    UPDATE_ATTENDANCE = reverse("update-attendance", kwargs={"pk": 0})
     ALLOWED_METHODS = {CREATE_ATTENDANCE: set("POST"), UPDATE_ATTENDANCE: set("PATCH")}
 
     @classmethod
@@ -38,7 +38,7 @@ class TestAttendancePerms(APITestCase):
                 for st in section.active_students:
                     self.req_succeeds("POST", self.CREATE_ATTENDANCE, data=get_data(st))
                 not_students = Profile.objects.exclude(section.students)
-                for st in not_students[:20]:
+                for st in not_students[:10]:
                     self.req_fails("POST", self.CREATE_ATTENDANCE, data=get_data(st))
 
     def test_attendance_update(self):

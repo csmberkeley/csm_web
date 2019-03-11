@@ -4,7 +4,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 import random
 
-from scheduler.models import Profile
+from scheduler.models import Profile, User
 from scheduler.factories import (
     CourseFactory,
     SpacetimeFactory,
@@ -32,7 +32,7 @@ class APITestCase(TestCase):
     A test case class that provides utility methods for testing HTTP requests.
     """
 
-    ALL_METHODS = set("GET", "POST", "PATCH", "PUT", "DELETE")
+    ALL_METHODS = set(["GET", "POST", "PATCH", "PUT", "DELETE"])
     """
     A mapping of endpoint URL to a list of allowed methods.
     """
@@ -43,10 +43,11 @@ class APITestCase(TestCase):
         Tests to make sure that for each endpoint that's a key in the ALLOWED_METHODS dict,
         any method not in the associated list should fail.
         """
-        for endpoint, methods in self.ALLOWED_METHODS:
+        client = self.get_client_for(User.objects.first())
+        for endpoint, methods in self.ALLOWED_METHODS.items():
             forbidden = self.ALL_METHODS - methods
             for f in forbidden:
-                self.req_fails_method(f, endpoint)
+                self.req_fails_method(client, f, endpoint)
 
     def get_client_for(self, user):
         """Returns an APIClient object that is logged in as the provided user."""
@@ -54,18 +55,27 @@ class APITestCase(TestCase):
         client.force_authenticate(user)
         return client
 
-    def request(self, method, endpoint, exp_code=None, data=None):
+    def request(self, client, method, endpoint, exp_code=None, data=None):
         """
         Performs a request to the specified endpoint and returns the response object.
         Also checks if the status code of the response is exp_code, if provided.
         The method parameter should be a get/post/etc from an APIClient object.
         """
-        resp = method(path.join(BASE_PATH, endpoint.strip("/")), follow=True, data=data)
+        methods = {
+            "GET": client.get,
+            "POST": client.post,
+            "PATCH": client.patch,
+            "PUT": client.put,
+            "DELETE": client.delete,
+        }
+        resp = methods[method](
+            path.join(BASE_PATH, endpoint.strip("/")), follow=True, data=data
+        )
         if exp_code is not None:
             self.assertEqual(resp.status_code, exp_code, msg=fail_msg(endpoint, resp))
         return resp
 
-    def req_fails_perms(self, method, endpoint, data=None):
+    def req_fails_perms(self, client, method, endpoint, data=None):
         """
         Performs a request to the specified endpoint, and checks that it fails
         due to the user lacking proper permissions.
@@ -73,26 +83,32 @@ class APITestCase(TestCase):
         Returns the response object afterwards.
         """
         return self.request(
-            method, endpoint, exp_code=status.HTTP_403_FORBIDDEN, data=data
+            client, method, endpoint, exp_code=status.HTTP_403_FORBIDDEN, data=data
         )
 
-    def req_fails_method(self, method, endpoint, data=None):
+    def req_fails_method(self, client, method, endpoint, data=None):
         """
         Performs a request to the specified endpoint, and checks that it fails
         due to the endpoint not supporting the provided method.
         Returns the response object.
         """
         return self.request(
-            method, endpoint, exp_code=status.HTTP_405_METHOD_NOT_ALLOWED, data=data
+            client,
+            method,
+            endpoint,
+            exp_code=status.HTTP_405_METHOD_NOT_ALLOWED,
+            data=data,
         )
 
-    def req_succeeds(self, method, endpoint, data=None):
+    def req_succeeds(self, client, method, endpoint, data=None):
         """
         Performs a request to the specified endpoint, and checks that it succeeds.
         The method parameter should be a get/post/etc from an APIClient object.
         Returns the response object.
         """
-        return self.request(method, endpoint, exp_code=status.HTTP_200_OK, data=data)
+        return self.request(
+            client, method, endpoint, exp_code=status.HTTP_200_OK, data=data
+        )
 
 
 # ----- MODEL GENERATION -----
@@ -131,7 +147,7 @@ def create_empty_section_for(mentor):
     """
 	Creates a section for MENTOR without populated students.
 	"""
-    return SectionFactory.create(course=mentor.course, mentor=mentor)
+    return SectionFactory.create(course=mentor.course)
 
 
 def enroll_user_as_student(user, section):

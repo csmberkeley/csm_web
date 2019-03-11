@@ -75,7 +75,7 @@ class UserFactory(factory.DjangoModelFactory):
     username = factory.LazyAttributeSequence(
         lambda o, n: "%s_%s%d" % (o.first_name, o.last_name, n)
     )
-    email = factory.LazyAttribute(lambda o: "%s@gmail.com" % o.username)
+    email = factory.LazyAttribute(lambda o: "%s@berkeley.edu" % o.username)
 
 
 ROLE_DB_CHOICES = [db_value for db_value, display_name in Profile.ROLE_CHOICES]
