@@ -193,6 +193,7 @@ if DEBUG:
 # REST Framework
 REST_FRAMEWORK = {"DEFAULT_RENDERER_CLASSES": REST_RENDERERS}
 
+<<<<<<< HEAD
 if DJANGO_ENV == DEVELOPMENT:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
         "rest_framework.renderers.BrowsableAPIRenderer"
