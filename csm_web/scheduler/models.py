@@ -3,6 +3,8 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
+from django.utils import timezone
+import datetime
 
 
 class User(AbstractUser):
@@ -25,24 +27,32 @@ class Attendance(models.Model):
         (UNEXCUSED_ABSENCE, "Unexcused absence"),
         (EXCUSED_ABSENCE, "Excused absence"),
     )
-    section = models.ForeignKey("Section", on_delete=models.CASCADE)
-    week_start = models.DateField()
+    # section = models.ForeignKey("Section", on_delete=models.CASCADE)
+    date = models.DateField()
     presence = models.CharField(max_length=2, choices=PRESENCE_CHOICES, blank=True)
     attendee = models.ForeignKey("Profile", on_delete=models.CASCADE)
 
     def __str__(self):
-        return "%s %s %s" % (
-            self.week_start,
-            self.presence,
-            self.attendee.user.username,
-        )
+        return "%s %s %s" % (self.date, self.presence, self.attendee.user.username)
 
     @property
     def leader(self):
-        return self.section.mentor
+        return self.attendee.section.mentor
+
+    @property
+    def section(self):
+        return self.attendee.section
+
+    @property
+    def week_start(self):
+        return self.get_week_start_from_date()
+
+    def get_week_start_from_date(self):
+        day_of_week = timezone.now().weekday()
+        return self.date - datetime.timedelta(days=day_of_week)
 
     class Meta:
-        unique_together = ("section", "week_start", "attendee")
+        unique_together = ("date", "attendee")
 
 
 class Course(models.Model):
