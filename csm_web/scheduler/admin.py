@@ -386,7 +386,10 @@ class AttendanceAdmin(admin.ModelAdmin):
 
     list_filter = ("presence", "attendee__course")
     search_fields = ("attendee__user__first_name", "attendee__user__last_name")
-    ordering = ("-week_start",)
+    ordering = ("-date",)
+
+    def section(self, obj):
+        return obj.attendee.section
 
 
 @admin.register(Override)

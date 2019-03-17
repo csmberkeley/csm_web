@@ -59,7 +59,7 @@ class UserSerializer(serializers.ModelSerializer):
 class AttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attendance
-        fields = ("id", "section", "week_start", "presence", "attendee")
+        fields = ("id", "date", "presence", "attendee")
 
 
 class ProfileSerializer(serializers.ModelSerializer):

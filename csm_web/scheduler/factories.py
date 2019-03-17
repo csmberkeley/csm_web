@@ -122,7 +122,7 @@ class AttendanceFactory(factory.DjangoModelFactory):
         model = Attendance
 
     presence = factory.fuzzy.FuzzyChoice(PRESENCE_DB_VALUES)
-    section = factory.SubFactory(SectionFactory)
+    # section = factory.SubFactory(SectionFactory)
     attendee = factory.SubFactory(ProfileFactory)
 
 
@@ -162,19 +162,10 @@ def create_attendances_for(student):
         current_date += timedelta(days=1)
     while current_date < student.course.valid_until:
         if current_date < today:
-            AttendanceFactory.create(
-                attendee=student,
-                section=student.section,
-                week_start=current_date - timedelta(days=current_date.weekday()),
-            )
+            AttendanceFactory.create(attendee=student, date=current_date)
         else:
             # Students cannot have attended or not attended sections that haven't happened yet
-            AttendanceFactory.create(
-                attendee=student,
-                section=student.section,
-                week_start=current_date - timedelta(days=current_date.weekday()),
-                presence="",
-            )
+            AttendanceFactory.create(attendee=student, date=current_date, presence="")
         current_date += timedelta(weeks=1)
 
 
