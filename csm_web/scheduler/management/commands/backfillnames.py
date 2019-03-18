@@ -16,9 +16,9 @@ class Command(BaseCommand):
             next(reader)  # eat header
             with transaction.atomic():
                 for row in reader:
-                    firstname = row[1]
-                    lastname = row[2]
-                    email = row[3]
+                    firstname = row[0]
+                    lastname = row[1]
+                    email = row[2]
                     u = User.objects.filter(email=email)
                     if len(u) == 1:
                         fst = u.first()
