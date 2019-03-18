@@ -188,10 +188,15 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
 
 # REST Framework
 REST_FRAMEWORK = {
-    "DEFAULT_RENDERER_CLASSES": (
-        "djangorestframework_camel_case.render.CamelCaseJSONRenderer",
-    )
+    "DEFAULT_RENDERER_CLASSES": [
+        "djangorestframework_camel_case.render.CamelCaseJSONRenderer"
+    ]
 }
+
+if DJANGO_ENV == DEVELOPMENT:
+    REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
+        "rest_framework.renderers.BrowsableAPIRenderer"
+    )
 
 # Logging
 LOGGING = {
