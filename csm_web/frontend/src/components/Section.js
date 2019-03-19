@@ -112,9 +112,17 @@ class WeekAttendance extends React.Component {
           </div>
         );
       } else {
+        const presenceColor = {
+          EX: "blue",
+          UN: "black",
+          PR: "pink",
+          "": "gray"
+        };
         return (
           <div key={pk} className="uk-margin">
-            <p>{presenceDisplayMap[presence]}</p>
+            <p style={{ borderBlockColor: presenceColor[presence] }}>
+              {presenceDisplayMap[presence]}
+            </p>
           </div>
         );
       }
