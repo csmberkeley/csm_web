@@ -154,7 +154,7 @@ class WeekAttendance extends React.Component {
           <a className="uk-accordion-title" href="#">
             {moment(this.state.weekStart, "YYYY-MM-DD")
               .add(dayOfWeek[this.props.defaultSpacetime.dayOfWeek], "days")
-              .format("YYYY-MM-DD")}
+              .format("MMMM Do")}
           </a>
           <div className="uk-accordion-content">
             <form className="uk-form-horizontal" onSubmit={this.handleSubmit}>
@@ -245,7 +245,6 @@ class Section extends React.Component {
       defaultSpacetime.endTime,
       "HH:mm:ss"
     ).format("hh:mm A");
-    console.log(this.props.attendances);
     return (
       <div>
         <SectionSummary
