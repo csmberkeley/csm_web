@@ -6,6 +6,12 @@ import moment from "moment";
 import { fetchWithMethod, HTTP_METHODS } from "../utils/api";
 
 function SectionSummary(props) {
+  let overrideColor = null;
+  if (props.activeOverride) {
+    overrideColor = {
+      color: "red"
+    };
+  }
   return (
     <div className="uk-section uk-section-primary section-summary">
       <div className="uk-container">
@@ -18,11 +24,11 @@ function SectionSummary(props) {
             <Roster studentIDs={props.studentIDs} sectionID={props.sectionID} />
           )}
         </div>
-        <p>
+        <p style={overrideColor}>
           {props.defaultSpacetime.dayOfWeek} {props.defaultSpacetime.startTime}{" "}
           - {props.defaultSpacetime.endTime}
         </p>
-        <p>{props.defaultSpacetime.location}</p>
+        <p style={overrideColor}>{props.defaultSpacetime.location}</p>
         <p>{`${props.mentor.firstName} ${props.mentor.lastName}`} </p>
         <a href={`mailto:${props.mentor.email}`}>{props.mentor.email}</a>
       </div>
@@ -255,6 +261,7 @@ class Section extends React.Component {
           sectionID={this.props.id}
           profile={this.props.profile}
           studentIDs={this.props.students}
+          activeOverride={this.props.activeOverride}
         />
         <Attendances
           attendances={this.props.attendances}
