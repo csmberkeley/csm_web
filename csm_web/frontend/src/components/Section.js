@@ -34,7 +34,8 @@ class WeekAttendance extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      attendance: Object.assign({}, props.attendance),
+      attendance: props.attendance[1],
+      weekStart: props.attendance[0],
       changed: new Set(),
       status: "unchanged"
     };
@@ -140,19 +141,19 @@ class WeekAttendance extends React.Component {
     });
     if (this.props.isMentor) {
       const dayOfWeek = {
-        Monday: 0,
-        Tuesday: 1,
-        Wednesday: 2,
-        Thursday: 3,
-        Friday: 4,
-        Saturday: 5,
-        Sunday: 6
+        Sunday: 0,
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6
       };
       return (
         <li>
           <a className="uk-accordion-title" href="#">
-            {moment(this.state.attendance, "YYYY-MM-DD")
-              .add(dayOfWeek[this.props.defaultSpacetime.dayOfWeek])
+            {moment(this.state.weekStart, "YYYY-MM-DD")
+              .add(dayOfWeek[this.props.defaultSpacetime.dayOfWeek], "days")
               .format("YYYY-MM-DD")}
           </a>
           <div className="uk-accordion-content">
@@ -190,7 +191,7 @@ class WeekAttendance extends React.Component {
       return (
         <li>
           <a className="uk-accordion-title" href="#">
-            Week {this.props.weekNum}
+            Week
           </a>
           <div className="uk-accordion-content">
             {studentAttendanceListEntries}
@@ -205,14 +206,16 @@ class Attendances extends React.Component {
   render() {
     const attendances = this.props.attendances;
     if (attendances) {
-      const weekAttendances = attendances.map((attendance, index) => (
-        <WeekAttendance
-          attendance={attendance}
-          defaultSpacetime={this.props.defaultSpacetime}
-          key={index}
-          isMentor={this.props.isMentor}
-        />
-      ));
+      const weekAttendances = Object.entries(attendances).map(
+        (attendance, index) => (
+          <WeekAttendance
+            attendance={attendance}
+            defaultSpacetime={this.props.defaultSpacetime}
+            key={index}
+            isMentor={this.props.isMentor}
+          />
+        )
+      );
       weekAttendances.reverse();
       return (
         <div className="uk-container">
@@ -242,6 +245,7 @@ class Section extends React.Component {
       defaultSpacetime.endTime,
       "HH:mm:ss"
     ).format("hh:mm A");
+    console.log(this.props.attendances);
     return (
       <div>
         <SectionSummary
