@@ -24,25 +24,33 @@ class App extends React.Component {
   updateProfiles() {
     const profilesEndpoint = "profiles/";
     return fetchJSON(profilesEndpoint).then(profiles => {
-      this.setState({ profiles_ct: profiles.length }, () => {
-        for (let profile of profiles) {
-          let id = profile.id;
-          fetchJSON(`${profilesEndpoint}${id}/?verbose=true`)
-            .then(profileData =>
-              this.setState(state => {
-                let sections = { ...state.sections };
-                if (profileData.section) {
-                  sections[[profileData.section.id]] = profileData.section;
-                }
-                return {
-                  profiles: { [id]: profileData, ...state.profiles },
-                  sections: sections
-                };
-              })
-            )
-            .then(() => this.updateReadyState());
+      this.setState(
+        {
+          profiles_ct: profiles.length
+        },
+        () => {
+          for (let profile of profiles) {
+            let id = profile.id;
+            fetchJSON(`${profilesEndpoint}${id}/?verbose=true`)
+              .then(profileData =>
+                this.setState(state => {
+                  let sections = { ...state.sections };
+                  if (profileData.section) {
+                    sections[[profileData.section.id]] = profileData.section;
+                  }
+                  return {
+                    profiles: {
+                      [id]: profileData,
+                      ...state.profiles
+                    },
+                    sections: sections
+                  };
+                })
+              )
+              .then(() => this.updateReadyState());
+          }
         }
-      });
+      );
     });
   }
 
@@ -65,7 +73,9 @@ class App extends React.Component {
       this.state.profiles_ct != null &&
       Object.keys(this.state.profiles).length === this.state.profiles_ct
     ) {
-      this.setState({ ready: true });
+      this.setState({
+        ready: true
+      });
     }
   }
 
