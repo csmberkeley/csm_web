@@ -11,6 +11,7 @@ We don't know what specific minimum version you would need for any of the follow
   * [prettier](https://prettier.io/) (`npm install -g prettier`)
   * [eslint](https://eslint.org/) (`npm install -g eslint`; `npm install -g eslint-plugin-react`)
 * [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install) (`brew tap heroku/brew && brew install heroku`)
+  * Create an account on [Heroku](https://id.heroku.com/login) and [login](https://devcenter.heroku.com/articles/heroku-cli#getting-started)
 
 Other miscellaneous requirements will be installed by the commands below.
 
