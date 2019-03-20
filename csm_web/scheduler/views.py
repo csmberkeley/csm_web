@@ -9,7 +9,16 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 
-from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
+from .models import (
+    User,
+    Attendance,
+    Course,
+    Profile,
+    Section,
+    Spacetime,
+    Override,
+    Flag,
+)
 from .serializers import (
     UserSerializer,
     AttendanceSerializer,
@@ -20,6 +29,7 @@ from .serializers import (
     SectionSerializer,
     SpacetimeSerializer,
     OverrideSerializer,
+    FlagSerializer,
 )
 from .permissions import (
     is_leader,
@@ -90,6 +100,17 @@ def enroll(request, pk):
     return Response(serialized_profile)
 
 
+@api_view(http_method_names=["POST"])
+def toggle_flag(request, pk):
+    flag = get_object_or_404(Flag, pk=pk)
+
+    flag.on = not flag.on
+    flag.save()
+
+    serialized_flag = FlagSerializer(flag).data
+    return Response(serialized_flag)
+
+
 # REST Framework API Views
 
 
@@ -130,6 +151,12 @@ class CourseSectionList(generics.ListAPIView):
 
     def get_queryset(self):
         return Section.objects.filter(course__name__iexact=self.kwargs["name"])
+
+
+class CreateFlag(generics.CreateAPIView):
+
+    queryset = Flag.objects.all().order_by("-date_joined")
+    serializer_class = FlagSerializer
 
 
 class UserProfileList(generics.ListAPIView):

@@ -58,6 +58,13 @@ class Course(models.Model):
         unique_together = ("name",)
 
 
+class Flag(models.Model):
+    on = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{'On' if self.on == 1 else 'Off'}"
+
+
 class Profile(ActivatableModel):
     STUDENT = "ST"
     JUNIOR_MENTOR = "JM"
