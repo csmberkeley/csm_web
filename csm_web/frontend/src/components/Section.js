@@ -6,12 +6,11 @@ import moment from "moment";
 import { fetchWithMethod, HTTP_METHODS } from "../utils/api";
 
 function SectionSummary(props) {
-  let overrideColor = null;
-  if (props.activeOverride) {
-    overrideColor = {
-      color: "red"
-    };
-  }
+  let overrideColor = props.activeOverride
+    ? {
+        color: "red"
+      }
+    : null;
   return (
     <div className="uk-section uk-section-primary section-summary">
       <div className="uk-container">
