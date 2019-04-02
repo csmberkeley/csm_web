@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     "social_django",
     "eventlog.apps.EventLogConfig",
     "frontend",
+    "logistinator",
+    "logistinator_frontend",
 ]
 
 MIDDLEWARE = [
