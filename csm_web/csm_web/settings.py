@@ -57,6 +57,8 @@ INSTALLED_APPS = [
     "eventlog.apps.EventLogConfig",
     "frontend",
     "django_filters",
+    "logistinator",
+    "logistinator_frontend",
 ]
 
 MIDDLEWARE = [
