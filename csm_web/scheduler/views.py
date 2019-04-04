@@ -9,7 +9,16 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 
-from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
+from .models import (
+    User,
+    Attendance,
+    Course,
+    Profile,
+    Section,
+    Spacetime,
+    Override,
+    Flag,
+)
 from .serializers import (
     UserSerializer,
     AttendanceSerializer,
@@ -20,6 +29,7 @@ from .serializers import (
     SectionSerializer,
     SpacetimeSerializer,
     OverrideSerializer,
+    FlagSerializer,
 )
 from .permissions import (
     is_leader,
@@ -263,6 +273,23 @@ class AttendanceDetail(generics.RetrieveUpdateDestroyAPIView):
 
     def get_object(self):
         return self.queryset.get(pk=self.kwargs["pk"])
+
+
+class CreateFlag(generics.CreateAPIView):
+    """Create Flag instance"""
+
+    queryset = Flag.objects.all()
+    serializer_class = FlagSerializer
+
+
+class ToggleFlag(generics.CreateAPIView):
+    queryset = Flag.objects.all()
+    serializer_class = FlagSerializer
+
+    def toggle_flag(self, serializer):
+        current_flag = serializer.save()
+        current_flag.on = not current_flag.on
+        current_flag.save()
 
 
 # API Stubs
