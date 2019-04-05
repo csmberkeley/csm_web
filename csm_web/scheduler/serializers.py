@@ -10,6 +10,7 @@ from .models import (
     Spacetime,
     Override,
     Flag,
+    RoomAvailabilities,
 )
 from .permissions import is_leader
 from itertools import groupby
@@ -29,6 +30,12 @@ class FlagSerializer(serializers.ModelSerializer):
     class Meta:
         model = Flag
         fields = ("id", "on")
+
+
+class RoomAvailabilitiesSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = RoomAvailabilities
+        fields = ("id", "availability_bitstring")
 
 
 class SpacetimeSerializer(serializers.ModelSerializer):

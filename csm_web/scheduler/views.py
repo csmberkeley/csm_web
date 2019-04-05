@@ -18,6 +18,7 @@ from .models import (
     Spacetime,
     Override,
     Flag,
+    RoomAvailabilities,
 )
 from .serializers import (
     UserSerializer,
@@ -30,6 +31,7 @@ from .serializers import (
     SpacetimeSerializer,
     OverrideSerializer,
     FlagSerializer,
+    RoomAvailabilitiesSerializer,
 )
 from .permissions import (
     is_leader,

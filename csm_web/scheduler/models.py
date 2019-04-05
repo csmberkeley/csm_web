@@ -210,3 +210,8 @@ class Flag(models.Model):
 #     type =
 #     event_bitstring =
 #     active = models.BooleanField()
+
+
+class RoomAvailabilities(models.Model):
+    room_id = models.CharField(max_length=50)
+    availability_bitstring = models.BinaryField()
