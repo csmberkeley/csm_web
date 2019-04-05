@@ -1,5 +1,8 @@
 import datetime
 from django.shortcuts import render
+from rest_framework import viewsets
+from .models import Availability, ImposedEvent
+from .serializers import AvailabilitySerializer, ImposedEventSerializer
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -12,6 +15,24 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from .models import Matching, Availability, ImposedEvent, Conflict
 from .serializers import MatchingSerializer, AvailabilitySerializer, ImposedEventSerializer, ConflictSerializer
+
+from rest_framework import generics, permissions, viewsets, status
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
+
+from .models import Matching
+from .serializers import (
+    MatchingSerializer
+)
+from .permissions import (
+    is_leader,
+    IsLeader,
+    IsLeaderOrReadOnly,
+    IsReadIfOwner,
+    IsOwner,
+    DestroyIsOwner,
+)
 
 # Matching
 
@@ -96,6 +117,40 @@ class MatchingRoomList(generics.ListAPIView):
 class DeleteMatching(generics.DestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         matching = get_object_or_404(Matching, pk=self.kwargs["pk"])
+
+
+@api_view(http_method_names=["POST"])
+def get_by_user(request):
+
+    dic = request.POST
+
+    serialized_matching = MatchingSerializer(Matching.objects.filter(user_id=dic["user_id"])).data
+    return Response(serialized_matching)
+
+@api_view(http_method_names=["POST"])
+def get_by_room(request):
+    
+	dic = request.POST
+
+	serialized_matching = MatchingSerializer(Matching.objects.filter(room_id=dic["room_id"])).data
+    return Response(serialized_matching)
+
+# REST Framework API Views
+
+class CreateMatching(generics.CreateAPIView):
+
+    queryset = Matching.objects.all().order_by("-date_joined")
+    serializer_class = MatchingSerializer
+
+    def create(self, request, *args, **kwargs):
+	    return Response(status=204)
+
+class DeleteMatching(generics.DestroyAPIView):
+
+	permission_classes = (DestroyIsOwner,)
+
+    def destroy(self, request, *args, **kwargs):
+        matching = get_object_or_404(Matching, pk=self.kwargs["pk"])
         self.check_object_permissions(request, matching)
         if not matching.active:
             raise PermissionDenied(
@@ -148,6 +203,7 @@ def set_availability(request, pk):
     serialized_availability = AvailabilitySerializer(availability).data
     return Response(serialized_availability)
 
+
 class CreateConflict(generics.CreateAPIView):
 
     queryset = Conflict.objects.all()
@@ -158,3 +214,4 @@ class ConflictList(generics.ListAPIView):
 
     queryset = Conflict.objects.all()
     serializer_class = ConflictSerializer
+
