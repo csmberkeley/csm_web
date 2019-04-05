@@ -6,6 +6,11 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from . import views
 from .views import AvailabilityViewSet
 
+from rest_framework.urlpatterns import format_suffix_patterns
+from rest_framework.routers import DefaultRouter
+
+from . import views
+
 urlpatterns = []
 
 rest_urlpatterns = [
@@ -42,8 +47,6 @@ implementation
     path("conflict/create", views.CreateConflict.as_view()),
     path("conflict/get_all", views.ConflictList.as_view())
 ]
-
-urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
 
 router = DefaultRouter()
 router.register(r"availabilities", AvailabilityViewSet, basename="availability")
