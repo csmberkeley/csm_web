@@ -61,7 +61,7 @@ class Availability(models.Model):
         # The number of bits to skip one day for a little endian day system
         bit_skip = intervals_per_day * (7 - day - 1)
 
-        return (self._bitstring >> bit_skip) % one_day
+        return (self._bitstring_int >> bit_skip) % one_day
 
     def _valid_timepoint(self, timepoint):
         """
@@ -120,11 +120,12 @@ class Availability(models.Model):
             return timepoint.hour + 24
 
     @property
-    def _bitstring(self):
+    def _bitstring_int(self):
         """
         Returns the bitstring of this Availability as an integer number
         """
         return int.from_bytes(self.bitstring, Availability.BYTE_ORDER)
+<<<<<<< HEAD
 =======
 # Create your models here.
 
@@ -181,3 +182,10 @@ class Matching(ActivatableModel):
             end=self.end_datetime,
             weekly="Yes" if self.weekly else "No",
         )
+
+    @property
+    def _bitstring_view(self):
+        """
+        Returns the bitstring of this Availability as a string of 1s and 0s
+        """
+        return bin(int.from_bytes(self.bitstring, Availability.BYTE_ORDER))[2:]
