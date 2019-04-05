@@ -29,12 +29,8 @@ class Availability(models.Model):
 
     INTERVAL_COUNT = INTERVALS_PER_HOUR * HOURS_PER_DAY * DAYS
 
-    # By default, all slots are available
-    default_bitstring = (1 << INTERVAL_COUNT) - 1
-    # .to_bytes(INTERVAL_COUNT // 8, BYTE_ORDER)
-    default_bitstring &= 1 << 10
-    default_bitstring = default_bitstring.to_bytes(INTERVAL_COUNT // 8, BYTE_ORDER)
-    bitstring = models.BinaryField(default=default_bitstring)
+    # By default, all slots are unavailable
+    bitstring = models.BinaryField(default=0)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     def get_availability(self, day, start_time, end_time):
