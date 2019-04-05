@@ -185,7 +185,6 @@ class Availability(models.Model):
         """
         return int.from_bytes(self.bitstring, Availability.BYTE_ORDER)
 
-
 class ActivatableModel(models.Model):
     active = models.BooleanField(default=True)
 
