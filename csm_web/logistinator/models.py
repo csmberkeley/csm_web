@@ -185,9 +185,12 @@ class Availability(models.Model):
         """
         return int.from_bytes(self.bitstring, Availability.BYTE_ORDER)
 
+
 class Matching(ActivatableModel):
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     room_id = models.CharField(max_length=16)
+    start_datetime = models.DateTimeField(default=datetime.now, blank=True)
+    end_datetime = models.DateTimeField(default=datetime.now, blank=True)
     start_datetime = models.DateField()
     end_datetime = models.DateField()
     weekly = models.BooleanField(default=True)
