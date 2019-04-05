@@ -1,5 +1,12 @@
+<<<<<<< HEAD
 from rest_framework import serializers
 from .models import Matching, Availability
+=======
+from datetime import timedelta
+from django.utils import timezone
+from rest_framework import serializers
+from .models import Matching
+>>>>>>> Added Matching model and endpoints
 from .permissions import is_leader
 from itertools import groupby
 from datetime import datetime

@@ -3,7 +3,6 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from datetime import datetime
-
 from scheduler.models import ActivatableModel
 
 class Availability(models.Model):
@@ -185,19 +184,11 @@ class Availability(models.Model):
         """
         return int.from_bytes(self.bitstring, Availability.BYTE_ORDER)
 
-class ActivatableModel(models.Model):
-    active = models.BooleanField(default=True)
-
-    class Meta:
-        abstract = True
-
-
 class Matching(ActivatableModel):
-
     user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     room_id = models.CharField(max_length=16)
-    start_datetime = models.DateTimeField(default=datetime.now, blank=True)
-    end_datetime = models.DateTimeField(default=datetime.now, blank=True)
+    start_datetime = models.DateField()
+    end_datetime = models.DateField()
     weekly = models.BooleanField(default=True)
 
     def __str__(self):
