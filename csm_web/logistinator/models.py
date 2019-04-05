@@ -17,15 +17,6 @@ class Availability(models.Model):
     000 111 ... 111
     """
 
-    # TODO Is there a cleaner way of doing this?
-    MON = 0
-    TUE = 1
-    WED = 2
-    THUR = 3
-    FRI = 4
-    SAT = 5
-    SUN = 6
-
     BYTE_ORDER = "little"
 
     DAYS = 7
