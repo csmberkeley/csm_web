@@ -15,8 +15,7 @@ fi
 
 # Node and Python requirements
 npm i
-npm run dev
-pip3 install -r requirements.txt
+pip3 install --no-cache-dir -r requirements.txt
 
 # Set up environment variables
 echo "Setting up environment variables..."
@@ -34,7 +33,7 @@ echo "SECRET_KEY='$SECRET_KEY'" >> .env
 if ! command -v heroku 1>/dev/null
 then
 	echo "Did not find Heroku CLI installation. OAUTH keys have not been set, so you will be unable to log in with your email."
-elif heroku whoami
+elif heroku whoami 1>/dev/null
 then
 	echo "Attempting to set OAUTH keys from Heroku config..."
 	heroku config:get SOCIAL_AUTH_GOOGLE_OAUTH2_KEY -s >> .env
@@ -45,7 +44,7 @@ fi
 
 pwd > "$VIRTUAL_ENV/.project_dir"
 
-# Add env variables to bin/activate so that not everything needs to be run with 'heroku local'
+# Add env variables to virutalenv activate script so that not everything needs to be run with 'heroku local'
 sed 's/^/export /' .env >> "$VIRTUAL_ENV/bin/activate"
 
 # Utility function for running the dev server
@@ -60,5 +59,12 @@ function run() {
 # TODO put precommit hooks in git?
 echo "Getting precommit hooks..."
 curl "http://inst.eecs.berkeley.edu/~cs199-eug/pre-commit" -o .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+
+# Dev init
+npm run dev
+source .env # need the relevant env variables for django, but can't count on the Heroku CLI being installed
+python csm_web/manage.py migrate
+python csm_web/manage.py createtestdata
+
 
 echo "Done installing. Please reactivate your virtualenv before running any more commands."

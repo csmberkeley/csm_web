@@ -275,7 +275,7 @@ def generate_test_data(complicate=False):
     if not settings.DEBUG:
         print("This cannot be run in production! Aborting.")
         return
-    management.call_command("flush", interactive=True)
+    management.call_command("flush", interactive=False)
     original_signals = disable_signals()
     course_names = ("CS70", "CS61A", "CS61B", "CS61C", "EE16A")
     print("Generating test data...")
