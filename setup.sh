@@ -52,7 +52,7 @@ echo '
 function run() {
 	start_dir=$(pwd)
 	project_dir=$(cat "$VIRTUAL_ENV/.project_dir")
-	cd "$project_dir" && npm run dev && heroku local:run csm_web/manage.py runserver 
+	cd "$project_dir" && npm run dev && python csm_web/manage.py runserver
 	cd "$start_dir"
 }' >> "$VIRTUAL_ENV/bin/activate"
 
