@@ -48,6 +48,15 @@ pwd > "$VIRTUAL_ENV/.project_dir"
 # Add env variables to bin/activate so that not everything needs to be run with 'heroku local'
 sed 's/^/export /' .env >> "$VIRTUAL_ENV/bin/activate"
 
+# Utility function for running the dev server
+echo '
+function run() {
+	start_dir=$(pwd)
+	project_dir=$(cat "$VIRTUAL_ENV/.project_dir")
+	cd "$project_dir" && npm run dev && heroku local:run csm_web/manage.py runserver 
+	cd "$start_dir"
+}' >> "$VIRTUAL_ENV/bin/activate"
+
 # TODO put precommit hooks in git?
 echo "Getting precommit hooks..."
 curl "http://inst.eecs.berkeley.edu/~cs199-eug/pre-commit" -o .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
