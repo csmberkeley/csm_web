@@ -59,8 +59,18 @@ function run() {
 # TODO put precommit hooks in git?
 echo "Getting precommit hooks..."
 curl "http://inst.eecs.berkeley.edu/~cs199-eug/pre-commit" -o .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# precommit hook uses prettier and black
+if ! command -v prettier
+then
+	echo 'Please make sure to install prettier (see README)'
+fi
 
-# Dev init
+if ! command -v black
+then
+	echo 'Please make sure to install black (see README)'
+fi
+
+# Initialize for local development
 npm run dev
 source .env # need the relevant env variables for django, but can't count on the Heroku CLI being installed
 python csm_web/manage.py migrate
