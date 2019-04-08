@@ -320,27 +320,37 @@ class CourseAdmin(admin.ModelAdmin):
 
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
-    # section1 = Attendance.section.default_spacetime
+    DAY_DICT = {
+        Spacetime.MONDAY: "Monday",
+        Spacetime.TUESDAY: "Tuesday",
+        Spacetime.WEDNESDAY: "Wednesday",
+        Spacetime.THURSDAY: "Thursday",
+        Spacetime.FRIDAY: "Friday",
+        Spacetime.SATURDAY: "Saturday",
+        Spacetime.SUNDAY: "Sunday",
+    }
+
     def day_of_week(self, obj):
-        return obj.section.default_spacetime.day_of_week
+        return AttendanceAdmin.DAY_DICT[
+            obj.attendee.section.default_spacetime.day_of_week
+        ]
 
     def section_time(self, obj):
-        return obj.section.default_spacetime.start_time
+        return obj.attendee.section.default_spacetime.start_time
 
     def section_location(self, obj):
-        return obj.section.default_spacetime.location
+        return obj.attendee.section.default_spacetime.location
 
-    def section_mentor_first_name(self, obj):
-        return obj.section.mentor.user.first_name
-
-    def section_mentor_last_name(self, obj):
-        return obj.section.mentor.user.last_name
+    def section_mentor_name(self, obj):
+        user = obj.attendee.section.mentor.user
+        return user.first_name + " " + user.last_name
 
     def section_mentor_email(self, obj):
-        return obj.section.mentor.user.email
+        return obj.attendee.section.mentor.user.email
 
-    def student_first_name(self, obj):
-        return obj.attendee.user.first_name
+    def student_name(self, obj):
+        user = obj.attendee.user
+        return user.first_name + " " + user.last_name
 
     def student_last_name(self, obj):
         return obj.attendee.user.last_name
@@ -360,25 +370,32 @@ class AttendanceAdmin(admin.ModelAdmin):
         "day_of_week",
         "section_time",
         "section_location",
-        "section_mentor_first_name",
-        "section_mentor_last_name",
+        "section_mentor_name",
         "section_mentor_email",
-        "student_first_name",
-        "student_last_name",
+        "student_name",
         "student_email",
         "section_date",
         "presence",
+    )
+
+    readonly_fields = (
+        "day_of_week",
+        "section_time",
+        "section_location",
+        "section_mentor_name",
+        "section_mentor_email",
+        "student_name",
+        "student_email",
+        "section_date",
     )
 
     list_display = (
         "day_of_week",
         "section_time",
         "section_location",
-        "section_mentor_first_name",
-        "section_mentor_last_name",
+        "section_mentor_name",
         "section_mentor_email",
-        "student_first_name",
-        "student_last_name",
+        "student_name",
         "student_email",
         "section_date",
         "presence",
