@@ -213,5 +213,61 @@ class Flag(models.Model):
 
 
 class RoomAvailabilities(models.Model):
-    room_id = models.CharField(max_length=50)
+    ### Create Enums for the rooms
+    Cory144MB = "Cory-144MB"
+    Cory258 = "Cory-258"
+    Cory400 = "Cory-400"
+    Cory504 = "Cory-504"
+    Cory521 = "Cory-521"
+    Cory531 = "Cory-531"
+    Cory540AB = "Cory-540AB"
+    Cory557 = "Cory-557"
+    CoryClassroom293 = "Cory-Classroom-293"
+    CoryClassroom299 = "Cory-Classroom-299"
+    Soda306 = "Soda-306"
+    Soda310 = "Soda-310"
+    Soda320 = "Soda-320"
+    Soda373 = "Soda-373"
+    Soda380 = "Soda-380"
+    Soda405 = "Soda-405"
+    Soda430_438 = "Soda-430-438"
+    Soda511 = "Soda-511"
+    Soda606 = "Soda-606"
+    SodaAlcove283E = "Soda-Alcove-283E"
+    SodaAlcove283H = "Soda-Alcove-283H"
+    SodaAlcove283A = "Soda-Alcove-341A"
+    SodaAlcove283B = "Soda-Alcove-341B"
+    SodaAlcove411 = "Soda-Alcove-411"
+    SodaAlcove611 = "Soda-Alcove-611"
+
+    ROOM_CHOICES = (
+        (Cory144MB, "Cory-144MB"),
+        (Cory258, "Cory-258"),
+        (Cory400, "Cory-400"),
+        (Cory504, "Cory-504"),
+        (Cory521, "Cory-521"),
+        (Cory531, "Cory-531"),
+        (Cory540AB, "Cory-540AB"),
+        (Cory557, "Cory-557"),
+        (CoryClassroom293, "Cory-Classroom-293"),
+        (CoryClassroom299, "Cory-Classroom-299"),
+        (Soda306, "Soda-306"),
+        (Soda310, "Soda-310"),
+        (Soda320, "Soda-320"),
+        (Soda373, "Soda-373"),
+        (Soda380, "Soda-380"),
+        (Soda405, "Soda-405"),
+        (Soda430_438, "Soda-430-438"),
+        (Soda511, "Soda-511"),
+        (Soda606, "Soda-606"),
+        (SodaAlcove283E, "Soda-Alcove-283E"),
+        (SodaAlcove283H, "Soda-Alcove-283H"),
+        (SodaAlcove283A, "Soda-Alcove-341A"),
+        (SodaAlcove283B, "Soda-Alcove-341B"),
+        (SodaAlcove411, "Soda-Alcove-411"),
+        (SodaAlcove611, "Soda-Alcove-611"),
+    )
+    ROOM_CHOICES = PotentialRooms.ROOM_CHOICES
+
+    room_name = models.CharField(max_length=50, choices=ROOM_CHOICES)
     availability_bitstring = models.BinaryField()

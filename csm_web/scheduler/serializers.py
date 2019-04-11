@@ -31,11 +31,14 @@ class FlagSerializer(serializers.ModelSerializer):
         model = Flag
         fields = ("id", "on")
 
+    def create(self, validated_data):
+        return Flag.objects.create(**validated_data)
+
 
 class RoomAvailabilitiesSerializer(serializers.ModelSerializer):
     class Meta:
         model = RoomAvailabilities
-        fields = ("id", "availability_bitstring")
+        fields = ("id", "room_name", "availability_bitstring")
 
 
 class SpacetimeSerializer(serializers.ModelSerializer):
