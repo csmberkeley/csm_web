@@ -1,8 +1,8 @@
 import datetime
 from django.shortcuts import render
 from rest_framework import viewsets
-from .models import Availability, ImposedEvent
-from .serializers import AvailabilitySerializer, ImposedEventSerializer
+from .models import Availability, ImposedEvent, Matching
+from .serializers import AvailabilitySerializer, ImposedEventSerializer, MatchingSerializer
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
