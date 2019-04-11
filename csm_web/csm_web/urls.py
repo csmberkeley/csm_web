@@ -31,6 +31,7 @@ urlpatterns = [
     path("logout/", logout_then_login),
     path("", include("social_django.urls", namespace="social")),
     path("", include("frontend.urls")),
+    path("logistinator/", include("logistinator_frontend.urls")),
 ]
 
 if settings.DJANGO_ENV == settings.DEVELOPMENT:
