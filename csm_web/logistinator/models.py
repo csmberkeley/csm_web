@@ -35,6 +35,56 @@ class Availability(models.Model):
     bitstring = models.BinaryField(default=0)
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
+    def set_availability(self, day, start_time, end_time):
+        
+        start_index = self._timepoint_to_day_index(start_time)
+        end_index = self._timepoint_to_day_index(end_time)
+        intervals_per_day = Availability.INTERVALS_PER_HOUR * Availability.HOURS_PER_DAY
+        bit_skip = intervals_per_day * (7 - day)
+        
+        for i in range(start_index, end_index):
+            bit_mask = (1 << bit_skip - i)
+            self.bitstring = str(bin(int(self.bitstring, 2) | bit_mask)[2:])
+            #messy workaround to get it to save as a binary string without leading '0b'
+
+    def get_weekly_availability(self, start_time, end_time, interval):
+        """
+        Was get_availability in the spec
+        Get the availability between start_time and end_time for all days of the week
+        represented as a dictionary indexed by days, containing lists of booleans
+
+        {
+        timedelta: 1 hour
+        availabilities: {
+
+          Monday: [[8:00, True], [9:00, False], [10:00, False]]
+          Tuesday: [[8:00, True], [9:00, False], [10:00, False]]
+          …
+
+        }
+        }
+        """
+        num_intervals = (interval.seconds // 60) // 15
+        availabilities_obj = {}
+        for i in range(Availability.DAYS):
+            day_list = []
+            day_available = self.get_availability(i, start_time, end_time)
+            idx = 0
+            new_start = datetime.datetime(1, 1, 1, start_time.hour, start_time.minute)
+            # end_datetime = datetime.datetime(1, 1, 1, end_time.hour, end_time.minute)
+            for j in range(len(day_available)/num_intervals):
+                is_available = True
+                for k in range(num_intervals):
+                    is_available = is_available and day_available[idx]
+                    idx += 1
+                start_time_string = str(new_start.hour) + ":" + str(new_start.minute)
+                day_list.append([start_time_string, is_available])
+                new_start += interval
+            availabilities_obj[i] = day_list
+
+        return availabilities_obj
+
+
     def get_availability(self, day, start_time, end_time):
         """
         Get the availability as a tuple list of 1s and 0s between start_time and
@@ -42,7 +92,7 @@ class Availability(models.Model):
         """
         day_availability = self.get_day_availability(day)
         start_index = self._timepoint_to_day_index(start_time)
-        end_index = self._timepoint_to_day_index(start_time)
+        end_index = self._timepoint_to_day_index(end_time)
 
         # Extract each bit separately from the bitstring and convert into list of bits
         availabilities = tuple(
@@ -159,3 +209,15 @@ class Matching(ActivatableModel):
         Returns the bitstring of this Availability as a string of 1s and 0s
         """
         return bin(int.from_bytes(self.bitstring, Availability.BYTE_ORDER))[2:]
+
+
+class ImposedEvents(models.Model):
+    bitstring = models.BinaryField(default=0)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    active = models.BooleanField()
+
+    def deactivate(self):
+        self.active = False
+
+    def activate(self):
+        self.active = True 
