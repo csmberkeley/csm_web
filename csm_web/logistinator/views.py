@@ -130,3 +130,5 @@ def set_availability(request, pk):
 
     serialized_availability = AvailabilitySerializer(availability).data
     return Response(serialized_availability)
+=======
+>>>>>>> Add stubbed Availability endpoint
