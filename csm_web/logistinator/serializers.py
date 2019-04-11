@@ -5,6 +5,8 @@ from .models import Matching
 from .permissions import is_leader
 from itertools import groupby
 from datetime import datetime
+from rest_framework import serializers
+from .models import Availability
 
 
 class MatchingSerializer(serializers.ModelSerializer):
@@ -18,3 +20,9 @@ class MatchingSerializer(serializers.ModelSerializer):
             "end datetime",
             "weekly",
         )
+
+
+class AvailabilitySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Availability
+        fields = ("user", "bitstring", "_bitstring_view")
