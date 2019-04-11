@@ -125,8 +125,7 @@ class Availability(models.Model):
         Returns the bitstring of this Availability as an integer number
         """
         return int.from_bytes(self.bitstring, Availability.BYTE_ORDER)
-<<<<<<< HEAD
-=======
+
 # Create your models here.
 
 
