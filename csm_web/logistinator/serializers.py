@@ -1,12 +1,8 @@
-from datetime import timedelta
-from django.utils import timezone
 from rest_framework import serializers
-from .models import Matching
+from .models import Matching, Availability
 from .permissions import is_leader
 from itertools import groupby
 from datetime import datetime
-from rest_framework import serializers
-from .models import Availability
 
 
 class MatchingSerializer(serializers.ModelSerializer):
@@ -16,8 +12,8 @@ class MatchingSerializer(serializers.ModelSerializer):
             "id",
             "user_id",
             "room_id",
-            "start datetime",
-            "end datetime",
+            "start_datetime",
+            "end_datetime",
             "weekly",
         )
 
