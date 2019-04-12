@@ -21,7 +21,6 @@ from common import (
 )
 
 ROOMS_PATH = "rooms.csv"
-OUTPUT_FILE = "scouted_rooms.csv"
 START_DATE = "01/01/19"  # Scout rooms after this date.
 START_TIME = "08:00"  # Scout rooms after this time.
 END_DATE = "12/31/19"  # Scout rooms before this date
@@ -67,11 +66,11 @@ def main():
 
 
 def tz_localize(START_DATE, START_TIME, END_DATE, END_TIME):
-    unf_datetime = f"{START_DATE} {START_TIME}"
+    start_datetime = f"{START_DATE} {START_TIME}"
     end_datetime = f"{END_DATE} {END_TIME}"
     date_format = "%m/%d/%y %H:%M"
     tz = pytz.timezone(TIMEZONE)
-    start_date = tz.localize(datetime.datetime.strptime(unf_datetime, date_format))
+    start_date = tz.localize(datetime.datetime.strptime(start_datetime, date_format))
     end_date = tz.localize(datetime.datetime.strptime(end_datetime, date_format))
     return start_date, end_date
 
