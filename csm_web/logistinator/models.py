@@ -5,6 +5,7 @@ from django.utils import timezone
 from datetime import datetime
 from scheduler.models import ActivatableModel
 
+
 class Availability(models.Model):
     """
     Byte order is little endian, but the days are big endian.
