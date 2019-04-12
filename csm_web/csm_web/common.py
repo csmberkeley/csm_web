@@ -19,33 +19,7 @@ CALENDAR_ID = "primary"
 
 # File paths
 CREATED_PATH = "created_events.csv"
-CONFLICTS_PATH = "conflicts.csv"
 EVENTS_PATH = "gcal_events.csv"
-
-
-def get_room_conflicts(room_email, start, end, service, occurrences, room_data=None):
-    """Takes in the same arguments as is_room_free, and additionally,
-    the number of occurrences of the event.
-
-    Optionally takes in room_data, as returned by get_room_data. If this is
-    used, no API calls will be made, and instead is_room_free will return
-    using the provided room_data.
-
-    Iterates through the weeks (till the number of occurrences), and
-    checks whether the provided room is free or not.
-
-    Returns a list of week-indices (starting at 0), at which the room
-    is busy. If the room is always free, returns an empty list.
-    """
-    busy_indices = []
-    for i in range(occurrences):
-        _start = start + datetime.timedelta(weeks=i)
-        _end = end + datetime.timedelta(weeks=i)
-
-        if not is_room_free(room_email, _start, _end, service, room_data):
-            busy_indices.append(i)
-
-    return busy_indices
 
 
 def get_all_rooms_data(room_metadata, beginning, ending, service):
