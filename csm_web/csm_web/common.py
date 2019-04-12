@@ -7,7 +7,6 @@ from oauth2client import file, client, tools
 import pytz
 import copy
 import argparse
-import pprint
 import dateutil.parser
 import pickle
 
@@ -247,16 +246,6 @@ def is_room_free(room_email, start, end, service, room_data=None):
     result = service.freebusy().query(body=freebusy_query).execute()
     booked_events = result["calendars"][room_email]["busy"]
     return len(booked_events) == 0  # There are no booked events at this time.
-
-
-def append_to_csv(row, path):
-    """Takes in a row, and appends it to the provided
-    csv file.
-    """
-    with open(path, "a") as csvfile:
-        fieldnames = row.keys()
-        writer = csv.DictWriter(csvfile, fieldnames)
-        writer.writerow(row)
 
 
 def create_empty_file(path):
