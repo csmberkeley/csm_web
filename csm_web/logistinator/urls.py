@@ -10,8 +10,8 @@ urlpatterns = []
 
 rest_urlpatterns = [
     path("matching/create", views.CreateMatching.as_view()),
-    path("matching/delete", views.DeleteMatching.as_view()),
-    path("matching/<int:pk>/update", views.update, name="update"),
+    path("matching/delete/<int:pk>", views.DeleteMatching.as_view()),
+    path("matching/update/<int:pk>", views.update, name="update"),
     path(
         "matching/get_by_user/<int:user_id>",
         views.MatchingUserList.as_view(),

@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime
+from django.conf import settings
 
 # Create your models here.
 
@@ -13,7 +14,7 @@ class ActivatableModel(models.Model):
 
 class Matching(ActivatableModel):
 
-    user_id = models.CharField(max_length=100)
+    user_id = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     room_id = models.CharField(max_length=16)
     start_datetime = models.DateTimeField(default=datetime.now, blank=True)
     end_datetime = models.DateTimeField(default=datetime.now, blank=True)
