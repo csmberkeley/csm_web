@@ -11,14 +11,10 @@ from multiprocessing import Pool
 import time
 import calendar
 
-from common import (
-    get_rooms,
-    gcal_api_authenticate,
-    is_room_free,
-    TIMEZONE,
-    get_room_data,
-    get_all_rooms_data,
-)
+from common import get_rooms, is_room_free, TIMEZONE, get_room_data, get_all_rooms_data
+
+from gcal_reader import gcal_api_authenticate
+
 
 ROOMS_PATH = "rooms.csv"
 START_DATE = "01/01/19"  # Scout rooms after this date.
