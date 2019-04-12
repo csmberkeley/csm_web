@@ -44,9 +44,7 @@ def main():
     # Initial datetime object
     init_date, end_date = tz_localize(START_DATE, START_TIME, END_DATE, END_TIME)
     # Load all events for all rooms.
-    all_room_data = get_all_rooms_data(
-        room_metadata, init_date, end_date, service, use_cache=True
-    )
+    all_room_data = get_all_rooms_data(room_metadata, init_date, end_date, service)
     # all the 15 minute intervals between the start and end date
     dts = [
         dt.strftime("%Y-%m-%d T%H:%M Z")
@@ -73,9 +71,9 @@ def tz_localize(START_DATE, START_TIME, END_DATE, END_TIME):
     end_datetime = f"{END_DATE} {END_TIME}"
     date_format = "%m/%d/%y %H:%M"
     tz = pytz.timezone(TIMEZONE)
-    init_date = tz.localize(datetime.datetime.strptime(unf_datetime, date_format))
+    start_date = tz.localize(datetime.datetime.strptime(unf_datetime, date_format))
     end_date = tz.localize(datetime.datetime.strptime(end_datetime, date_format))
-    return init_date, end_date
+    return start_date, end_date
 
 
 if __name__ == "__main__":

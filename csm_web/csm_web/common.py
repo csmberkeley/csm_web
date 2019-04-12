@@ -48,9 +48,9 @@ def get_room_conflicts(room_email, start, end, service, occurrences, room_data=N
     return busy_indices
 
 
-def get_all_rooms_data(room_metadata, beginning, ending, service, use_cache):
+def get_all_rooms_data(room_metadata, beginning, ending, service):
     return {
-        k: get_room_data(v, beginning, ending, service, use_cache)
+        k: get_room_data(v, beginning, ending, service)
         for k, v in room_metadata.items()
     }
 
@@ -62,26 +62,14 @@ def write_rows(csvfile_path, rows):
             writer.writerow(row)
 
 
-def get_room_data(room_email, beginning, ending, service, use_cache=False):
+def get_room_data(room_email, beginning, ending, service):
     """Takes in the email of the calendar for a room,
     a start and end tz aware datetime object.
-
-    Optionally, takes in use_cache. If this is true, it
-    loads from the cached result. Please note that
-    this completely ignores the beginning and ending, so
-    make sure to make a first call to this using use_cache
-    being False.
 
     Returns a list of tuples of the form
     (start, end), where start and end are timezone aware
     datetime objects. This represents the event slots
     created on the room."""
-
-    if use_cache:
-        # Load from cache.
-        with open("cache/" + room_email + ".pickle", "rb") as f:
-            return pickle.load(f)
-
     beginning = beginning.isoformat()
     ending = ending.isoformat()
     events_result = (
@@ -131,10 +119,6 @@ def get_room_data(room_email, beginning, ending, service, use_cache=False):
         end = end.astimezone(tz)
 
         event_slots.append((start, end))
-
-    # Always add to cache if this method is called with use_cache=False
-    with open("cache/" + room_email + ".pickle", "wb") as f:
-        pickle.dump(event_slots, f)
 
     return event_slots
 
