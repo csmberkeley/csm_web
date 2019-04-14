@@ -5,6 +5,10 @@ from django.contrib.admin.views.decorators import staff_member_required
 from django.core.exceptions import ValidationError
 from django.utils.html import format_html
 from django.urls import reverse
+import django_filters
+
+from django.db.models import Q
+
 from scheduler.models import (
     User,
     Attendance,
@@ -318,6 +322,44 @@ class CourseAdmin(admin.ModelAdmin):
         return self._number_of_role(obj, Profile.SENIOR_MENTOR)
 
 
+class InputFilter(admin.SimpleListFilter):
+    template = "admin/input_filter.html"
+
+    def lookups(self, request, model_admin):
+        # Dummy, required to show the filter.
+        return ((),)
+
+    def choices(self, changelist):
+        # Grab only the "all" option.
+        all_choice = next(super().choices(changelist))
+        all_choice["query_parts"] = (
+            (k, v)
+            for k, v in changelist.get_filters_params().items()
+            if k != self.parameter_name
+        )
+        yield all_choice
+
+
+class DayStartFilter(InputFilter):
+    parameter_name = "day_start"
+    title = "Day_start(YYYY-MM-DD)"
+
+    def queryset(self, request, queryset):
+        if self.value() is not None:
+            filter_day_start = self.value()
+            return queryset.filter(Q(week_start__gte=filter_day_start))
+
+
+class DayEndFilter(InputFilter):
+    parameter_name = "week_end"
+    title = "Day_end(YYYY-MM-DD)"
+
+    def queryset(self, request, queryset):
+        if self.value() is not None:
+            filter_day_end = self.value()
+            return queryset.filter(Q(week_start__lte=filter_day_end))
+
+
 @admin.register(Attendance)
 class AttendanceAdmin(admin.ModelAdmin):
     DAY_DICT = {
@@ -381,6 +423,7 @@ class AttendanceAdmin(admin.ModelAdmin):
         "student_email",
         "section_date",
         "presence",
+        "=week_start",
     )
 
     readonly_fields = (
@@ -395,6 +438,7 @@ class AttendanceAdmin(admin.ModelAdmin):
     )
 
     list_display = (
+        "week_start",
         "day_of_week",
         "section_time",
         "section_location",
@@ -406,8 +450,17 @@ class AttendanceAdmin(admin.ModelAdmin):
         "presence",
     )
 
-    list_filter = ("presence", "attendee__course")
-    search_fields = ("attendee__user__first_name", "attendee__user__last_name")
+    list_filter = (
+        "presence",
+        "attendee__course",
+        "date",
+        DayStartFilter,
+        DayEndFilter,
+    )
+    search_fields = (
+        "attendee__user__first_name",
+        "attendee__user__last_name",
+    )
     ordering = ("-date",)
 
 
