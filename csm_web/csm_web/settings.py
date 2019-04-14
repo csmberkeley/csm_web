@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "social_django",
     "eventlog.apps.EventLogConfig",
     "frontend",
+    "django_filters",
 ]
 
 MIDDLEWARE = [
