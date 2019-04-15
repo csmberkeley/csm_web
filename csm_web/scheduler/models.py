@@ -27,7 +27,6 @@ class Attendance(models.Model):
         (UNEXCUSED_ABSENCE, "Unexcused absence"),
         (EXCUSED_ABSENCE, "Excused absence"),
     )
-    # section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
     presence = models.CharField(max_length=2, choices=PRESENCE_CHOICES, blank=True)
     attendee = models.ForeignKey("Profile", on_delete=models.CASCADE)

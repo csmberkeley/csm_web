@@ -341,19 +341,22 @@ class AttendanceAdmin(admin.ModelAdmin):
     def section_location(self, obj):
         return obj.attendee.section.default_spacetime.location
 
-    def section_mentor_name(self, obj):
-        user = obj.attendee.section.mentor.user
-        return user.first_name + " " + user.last_name
+    def get_mentor_display(self, obj):
+        mentor = obj.attendee.section.mentor
+        admin_url = reverse("admin:scheduler_profile_change", args=(mentor.id,))
+        return format_html(
+            '<a href="{}">{}</a>', admin_url, mentor.user.get_full_name()
+        )
 
     def section_mentor_email(self, obj):
         return obj.attendee.section.mentor.user.email
 
-    def student_name(self, obj):
-        user = obj.attendee.user
-        return user.first_name + " " + user.last_name
-
-    def student_last_name(self, obj):
-        return obj.attendee.user.last_name
+    def get_student_display(self, obj):
+        student = obj.attendee
+        admin_url = reverse("admin:scheduler_profile_change", args=(student.id,))
+        return format_html(
+            '<a href="{}">{}</a>', admin_url, student.user.get_full_name()
+        )
 
     def student_email(self, obj):
         return obj.attendee.user.email
@@ -364,15 +367,13 @@ class AttendanceAdmin(admin.ModelAdmin):
     def presence(self, obj):
         return obj.presence
 
-    # fields = ("presence", "week_start", "section", "attendee", "day_of_week")
-    # list_display = ("attendee", "week_start", "presence", "section", "day_of_week")
     fields = (
         "day_of_week",
         "section_time",
         "section_location",
-        "section_mentor_name",
+        "get_mentor_display",
         "section_mentor_email",
-        "student_name",
+        "get_student_display",
         "student_email",
         "section_date",
         "presence",
@@ -382,9 +383,9 @@ class AttendanceAdmin(admin.ModelAdmin):
         "day_of_week",
         "section_time",
         "section_location",
-        "section_mentor_name",
+        "get_mentor_display",
         "section_mentor_email",
-        "student_name",
+        "get_student_display",
         "student_email",
         "section_date",
     )
@@ -393,9 +394,9 @@ class AttendanceAdmin(admin.ModelAdmin):
         "day_of_week",
         "section_time",
         "section_location",
-        "section_mentor_name",
+        "get_mentor_display",
         "section_mentor_email",
-        "student_name",
+        "get_student_display",
         "student_email",
         "section_date",
         "presence",
@@ -404,9 +405,6 @@ class AttendanceAdmin(admin.ModelAdmin):
     list_filter = ("presence", "attendee__course")
     search_fields = ("attendee__user__first_name", "attendee__user__last_name")
     ordering = ("-date",)
-
-    def section(self, obj):
-        return obj.attendee.section
 
 
 @admin.register(Override)
