@@ -348,6 +348,8 @@ class AttendanceAdmin(admin.ModelAdmin):
             '<a href="{}">{}</a>', admin_url, mentor.user.get_full_name()
         )
 
+    get_mentor_display.short_description = "Mentor"
+
     def section_mentor_email(self, obj):
         return obj.attendee.section.mentor.user.email
 
@@ -357,6 +359,8 @@ class AttendanceAdmin(admin.ModelAdmin):
         return format_html(
             '<a href="{}">{}</a>', admin_url, student.user.get_full_name()
         )
+
+    get_student_display.short_description = "Student"
 
     def student_email(self, obj):
         return obj.attendee.user.email
