@@ -122,7 +122,6 @@ class AttendanceFactory(factory.DjangoModelFactory):
         model = Attendance
 
     presence = factory.fuzzy.FuzzyChoice(PRESENCE_DB_VALUES)
-    # section = factory.SubFactory(SectionFactory)
     attendee = factory.SubFactory(ProfileFactory)
 
 
