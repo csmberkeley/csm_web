@@ -347,7 +347,7 @@ class DayStartFilter(InputFilter):
     def queryset(self, request, queryset):
         if self.value() is not None:
             filter_day_start = self.value()
-            return queryset.filter(Q(week_start__gte=filter_day_start))
+            return queryset.filter(Q(date__gte=filter_day_start))
 
 
 class DayEndFilter(InputFilter):
@@ -357,7 +357,7 @@ class DayEndFilter(InputFilter):
     def queryset(self, request, queryset):
         if self.value() is not None:
             filter_day_end = self.value()
-            return queryset.filter(Q(week_start__lte=filter_day_end))
+            return queryset.filter(Q(date__lte=filter_day_end))
 
 
 @admin.register(Attendance)
@@ -450,17 +450,8 @@ class AttendanceAdmin(admin.ModelAdmin):
         "presence",
     )
 
-    list_filter = (
-        "presence",
-        "attendee__course",
-        "date",
-        DayStartFilter,
-        DayEndFilter,
-    )
-    search_fields = (
-        "attendee__user__first_name",
-        "attendee__user__last_name",
-    )
+    list_filter = ("presence", "attendee__course", "date", DayStartFilter, DayEndFilter)
+    search_fields = ("attendee__user__first_name", "attendee__user__last_name")
     ordering = ("-date",)
 
 
