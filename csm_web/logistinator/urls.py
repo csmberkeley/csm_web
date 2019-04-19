@@ -39,6 +39,8 @@ implementation
         views.set_availability,
         name="set_availability",
     ),
+    path("conflict/create", views.CreateConflict.as_view()),
+    path("conflict/get_all", views.ConflictList.as_view())
 ]
 
 urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))

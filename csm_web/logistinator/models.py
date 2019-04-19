@@ -211,3 +211,13 @@ class Matching(ActivatableModel):
 
 class ImposedEvent(models.Model):
     active = models.BooleanField()
+
+class Conflict(ActivatableModel):
+
+    user_id = models.CharField(max_length=100)
+    room_id = models.CharField(max_length=16)
+    start_datetime = models.DateTimeField(default=datetime.now, blank=True)
+    end_datetime = models.DateTimeField(default=datetime.now, blank=True)
+
+    def __str__(self):
+        return f"{self.user_id}, {self.room_id}, {self.start_datetime}, {self.end_datetime}"
