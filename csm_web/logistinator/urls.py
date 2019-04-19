@@ -10,8 +10,8 @@ urlpatterns = []
 
 rest_urlpatterns = [
     path("matching/create", views.CreateMatching.as_view()),
-    path("matching/delete", views.DeleteMatching.as_view()),
-    path("matching/<int:pk>/update", views.update, name="update"),
+    path("matching/delete/<int:pk>", views.DeleteMatching.as_view()),
+    path("matching/update/<int:pk>", views.update_matching, name="update_matching"),
     path(
         "matching/get_by_user/<int:user_id>",
         views.MatchingUserList.as_view(),
@@ -22,7 +22,7 @@ rest_urlpatterns = [
         views.MatchingRoomList.as_view(),
         name="get_by_room",
     ),
-    # all endpoints listed here https://paper.dropbox.com/doc/Scheduler-2.0-K0ZNsLU5DZ7JjGudjqKIt
+    path("matching/get_all", views.MatchingList.as_view()),
 ]
 
 urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
