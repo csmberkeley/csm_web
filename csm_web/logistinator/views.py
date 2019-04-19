@@ -13,12 +13,11 @@ from rest_framework.exceptions import PermissionDenied
 from .models import Matching, Availability
 from .serializers import MatchingSerializer, AvailabilitySerializer
 
-
 # Matching
 
 
 @api_view(http_method_names=["POST"])
-def update(request, pk):
+def update_matching(request, pk):
 
     matching = get_object_or_404(Matching, pk=pk)
 
@@ -50,7 +49,9 @@ class MatchingUserList(generics.ListAPIView):
     serializer_class = MatchingSerializer
 
     def get_queryset(self):
-        return Matching.objects.filter(user_id=self.kwargs["user_id"])
+        return Matching.objects.filter(active=True).filter(
+            user_id=self.kwargs["user_id"]
+        )
 
 
 class MatchingRoomList(generics.ListAPIView):
@@ -58,13 +59,22 @@ class MatchingRoomList(generics.ListAPIView):
     serializer_class = MatchingSerializer
 
     def get_queryset(self):
-        return Matching.objects.filter(user_id=self.kwargs["room_id"])
+        return Matching.objects.filter(active=True).filter(
+            room_id=self.kwargs["room_id"]
+        )
+
+
+class MatchingList(generics.ListAPIView):
+
+    serializer_class = MatchingSerializer
+
+    def get_queryset(self):
+        return Matching.objects.all()
 
 
 class DeleteMatching(generics.DestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         matching = get_object_or_404(Matching, pk=self.kwargs["pk"])
-        self.check_object_permissions(request, matching)
         if not matching.active:
             raise PermissionDenied(
                 "This matching ({}) has been deactivated".format(matching)
