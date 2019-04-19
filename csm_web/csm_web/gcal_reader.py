@@ -1,8 +1,8 @@
 from oauth2client import file, client, tools
-
-SCOPES = "https://www.googleapis.com/auth/calendar"
 from googleapiclient.discovery import build
 from httplib2 import Http
+
+SCOPES = "https://www.googleapis.com/auth/calendar"
 
 
 def gcal_api_authenticate():

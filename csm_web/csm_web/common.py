@@ -148,10 +148,11 @@ def _is_room_free(start, end, room_data):
     """
 
     # Sort by start of events.
-    room_data = sorted(room_data, key=lambda x: x[0])
 
-    start_times = [x[0] for x in room_data]
-
+    start_times = []
+    for room in room_data:
+        for data in room_data[room]:
+            start_times.append(data[0])
     slot_idx = binsearch_larger(start_times, end)
     if slot_idx == len(room_data):
         """There are no events that start after the
