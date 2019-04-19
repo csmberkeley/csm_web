@@ -1,3 +1,10 @@
+from oauth2client import file, client, tools
+
+SCOPES = "https://www.googleapis.com/auth/calendar"
+from googleapiclient.discovery import build
+from httplib2 import Http
+
+
 def gcal_api_authenticate():
     """Google Calendar Authentication. Returns the service object to be used
     for making calls to the api."""

@@ -1,14 +1,14 @@
 from __future__ import print_function
 import csv
 import datetime
-from googleapiclient.discovery import build
-from httplib2 import Http
-from oauth2client import file, client, tools
 import pytz
 import copy
 import argparse
 import dateutil.parser
 import pickle
+
+from gcal_reader import gcal_api_authenticate
+
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = "https://www.googleapis.com/auth/calendar"
@@ -21,9 +21,14 @@ EVENTS_PATH = "gcal_events.csv"
 
 
 def get_all_rooms_data(room_metadata, beginning, ending):
+    temp_dict = {}
+    for i in room_metadata.keys():
+        if not i == "service":
+            temp_dict[i] = room_metadata[i]
+
     return {
         k: get_room_data(v, beginning, ending, room_metadata)
-        for k, v in room_metadata.items()
+        for k, v in temp_dict.items()
     }
 
 
@@ -38,7 +43,7 @@ def get_room_data(room_email, beginning, ending, room_metadata):
     beginning = beginning.isoformat()
     ending = ending.isoformat()
     events_result = (
-        room_metadata[service]
+        room_metadata["service"]
         .events()
         .list(
             calendarId=room_email,
@@ -102,7 +107,7 @@ def get_rooms(path):
             title, email = row
             assert title not in rooms, f"{title} has multiple emails"
             rooms[title] = email
-            rooms[service] = gcal_api_authenticate()
+            rooms["service"] = gcal_api_authenticate()
     return rooms
 
 
@@ -217,6 +222,6 @@ def is_room_free(room_email, start, end, room_data=None):
         "items": items,
     }
 
-    result = room_data[service].freebusy().query(body=freebusy_query).execute()
+    result = room_data["service"].freebusy().query(body=freebusy_query).execute()
     booked_events = result["calendars"][room_email]["busy"]
     return len(booked_events) == 0  # There are no booked events at this time.

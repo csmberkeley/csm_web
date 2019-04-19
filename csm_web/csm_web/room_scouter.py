@@ -1,6 +1,7 @@
 from __future__ import print_function
 import csv
 import datetime
+from datetimerange import DateTimeRange
 from googleapiclient.discovery import build
 from httplib2 import Http
 from oauth2client import file, client, tools
@@ -22,6 +23,7 @@ START_TIME = "08:00"  # Scout rooms after this time.
 END_DATE = "12/31/19"  # Scout rooms before this date
 END_TIME = "20:00"
 START_TIME_INT = 8
+date_format = "%m/%d/%y %H:%M"
 
 
 def main():
@@ -40,10 +42,9 @@ def main():
     # Load all events for all rooms.
     all_room_data = get_all_rooms_data(room_metadata, init_date, end_date)
     # all the 15 minute intervals between the start and end date
-    dts = [
-        dt.strftime("%Y-%m-%d T%H:%M Z")
-        for dt in datetime_range(init_date, end_date, timedelta(minutes=15))
-    ]
+
+    time_range = DateTimeRange(init_date, end_date)
+    dts = [val for val in time_range.range(datetime.timedelta(minutes=15))]
     # availabilities for each room in 15 minute intervals
     room_availabilities = {}
     # Iterate through all rooms and get each room's availabilities
