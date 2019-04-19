@@ -148,11 +148,14 @@ def _is_room_free(start, end, room_data):
     """
 
     # Sort by start of events.
-
     start_times = []
     for room in room_data:
         for data in room_data[room]:
             start_times.append(data[0])
+    events = []
+    for ev in room_data:
+        for ev in room_data[ev]:
+            events.append(ev)
     slot_idx = binsearch_larger(start_times, end)
     if slot_idx == len(room_data):
         """There are no events that start after the
@@ -161,7 +164,7 @@ def _is_room_free(start, end, room_data):
         As long as the last event ends before
         the 'start' time, the room is free."""
 
-        last_event = room_data[-1]
+        last_event = events[-1]
         return last_event[1] <= start
     elif slot_idx == 0:
         """The first event that starts after my
@@ -169,7 +172,7 @@ def _is_room_free(start, end, room_data):
 
         As long as the first event starts after
         the 'end' time, the room is free."""
-        first_event = room_data[0]
+        first_event = events[0]
         return first_event[0] >= end
     else:
         """
@@ -183,8 +186,8 @@ def _is_room_free(start, end, room_data):
         and second_end starts after 'end', the room
         is free.
         """
-        second_slot = room_data[slot_idx]
-        first_slot = room_data[slot_idx - 1]
+        second_slot = events[slot_idx - 1]
+        first_slot = events[slot_idx - 2]
         return first_slot[1] <= start and second_slot[0] >= end
 
 

@@ -71,3 +71,4 @@ def tz_localize(START_DATE, START_TIME, END_DATE, END_TIME):
 
 if __name__ == "__main__":
     room_availabilities = main()
+    print(room_availabilities)
