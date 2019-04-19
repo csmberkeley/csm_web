@@ -6,9 +6,6 @@ from rest_framework.urlpatterns import format_suffix_patterns
 from . import views
 from .views import AvailabilityViewSet
 
-from rest_framework.urlpatterns import format_suffix_patterns
-from rest_framework.routers import DefaultRouter
-
 urlpatterns = []
 
 rest_urlpatterns = [
