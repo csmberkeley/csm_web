@@ -22,7 +22,7 @@ rest_urlpatterns = [
         views.MatchingRoomList.as_view(),
         name="get_by_room",
     ),
-    path("matching/get_all", views.MatchingList.as_view())
+    path("matching/get_all", views.MatchingList.as_view()),
 ]
 
 urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
