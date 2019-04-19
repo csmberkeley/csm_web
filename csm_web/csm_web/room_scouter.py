@@ -33,13 +33,12 @@ def main():
     """
 
     room_metadata = get_rooms(ROOMS_PATH)
-    service = gcal_api_authenticate()
 
     # SET THE FOLLOWING VARIABLES
     # Initial datetime object
     init_date, end_date = tz_localize(START_DATE, START_TIME, END_DATE, END_TIME)
     # Load all events for all rooms.
-    all_room_data = get_all_rooms_data(room_metadata, init_date, end_date, service)
+    all_room_data = get_all_rooms_data(room_metadata, init_date, end_date)
     # all the 15 minute intervals between the start and end date
     dts = [
         dt.strftime("%Y-%m-%d T%H:%M Z")
@@ -53,9 +52,7 @@ def main():
         for start_time in dts:
             # gets 15 minutes after the start_time we are checking
             end_time = start_time + datetime.timedelta(minutes=15)
-            free_or_not = is_room_free(
-                room_email, start_time, end_time, service, all_room_data
-            )
+            free_or_not = is_room_free(room_email, start_time, end_time, all_room_data)
             one_room_availability[(start_time, end_time)] = free_or_not
     room_availabilities[room_name] = one_room_availability
     return room_availabilities

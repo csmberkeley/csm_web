@@ -20,21 +20,14 @@ CREATED_PATH = "created_events.csv"
 EVENTS_PATH = "gcal_events.csv"
 
 
-def get_all_rooms_data(room_metadata, beginning, ending, service):
+def get_all_rooms_data(room_metadata, beginning, ending):
     return {
-        k: get_room_data(v, beginning, ending, service)
+        k: get_room_data(v, beginning, ending, room_metadata)
         for k, v in room_metadata.items()
     }
 
 
-def write_rows(csvfile_path, rows):
-    with open(csvfile_path, "w") as csvfile:
-        writer = csv.writer(csvfile)
-        for row in rows:
-            writer.writerow(row)
-
-
-def get_room_data(room_email, beginning, ending, service):
+def get_room_data(room_email, beginning, ending, room_metadata):
     """Takes in the email of the calendar for a room,
     a start and end tz aware datetime object.
 
@@ -45,7 +38,8 @@ def get_room_data(room_email, beginning, ending, service):
     beginning = beginning.isoformat()
     ending = ending.isoformat()
     events_result = (
-        service.events()
+        room_metadata[service]
+        .events()
         .list(
             calendarId=room_email,
             timeMin=beginning,
@@ -108,28 +102,8 @@ def get_rooms(path):
             title, email = row
             assert title not in rooms, f"{title} has multiple emails"
             rooms[title] = email
+            rooms[service] = gcal_api_authenticate()
     return rooms
-
-
-def book_event(event, service):
-    """Takes in an event object as per the specification of Google Calendar's API,
-    and books it."""
-    event = service.events().insert(calendarId=CALENDAR_ID, body=event).execute()
-    storage_data = {"Timestamp": datetime.datetime.now(), "EventID": event["id"]}
-    return storage_data
-
-
-def delete_event(eventid, service):
-    """Deletes a provided event, given its eventid.
-
-    Exceptions occur when trying to delete an event which does not exist. We do not care for this.
-    """
-    try:
-        event = (
-            service.events().delete(calendarId=CALENDAR_ID, eventId=eventid).execute()
-        )
-    except:
-        pass
 
 
 def binsearch_larger(arr, item):
@@ -208,7 +182,7 @@ def _is_room_free(start, end, room_data):
         return first_slot[1] <= start and second_slot[0] >= end
 
 
-def is_room_free(room_email, start, end, service, room_data=None):
+def is_room_free(room_email, start, end, room_data=None):
     """Takes in the ID (email) of a particular room,
     timezone aware start and end datetime objects,
     and the google calendar API service object.
@@ -243,12 +217,6 @@ def is_room_free(room_email, start, end, service, room_data=None):
         "items": items,
     }
 
-    result = service.freebusy().query(body=freebusy_query).execute()
+    result = room_data[service].freebusy().query(body=freebusy_query).execute()
     booked_events = result["calendars"][room_email]["busy"]
     return len(booked_events) == 0  # There are no booked events at this time.
-
-
-def create_empty_file(path):
-    """Creates an empty file."""
-    with open(path, "w+") as f:
-        pass
