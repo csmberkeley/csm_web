@@ -36,7 +36,7 @@ class Availability(models.Model):
     bitstring = models.BinaryField(default=0)
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    def _set_availability(self, day, start_time, end_time):
+    def _set_availability(self, day, start_time, end_time, is_available):
 
         start_index = self._timepoint_to_day_index(start_time)
         end_index = self._timepoint_to_day_index(end_time)
@@ -44,9 +44,14 @@ class Availability(models.Model):
         bit_skip = intervals_per_day * (7 - day)
 
         s = int.from_bytes(self.bitstring, Availability.BYTE_ORDER)
+
         for i in range(start_index, end_index):
             bit_mask = 1 << (bit_skip - i - 1)
-            s = s | bit_mask
+
+            if is_available:
+                s = s | bit_mask
+            else:
+                s = s & ~bit_mask
 
         self.bitstring = s.to_bytes(56, Availability.BYTE_ORDER)
         # messy workaround to get it to save as a binary string without leading '0b'
@@ -188,28 +193,5 @@ class Availability(models.Model):
         return bin(int.from_bytes(self.bitstring, Availability.BYTE_ORDER))[2:]
 
 
-# class ImposedEvent(ActivatableModel):
-#     bitstring = models.BinaryField(default=0)
-#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
-
-#     @property
-#     def _bitstring_int(self):
-#         """
-#         Returns the bitstring of this ImposedEvent as an integer number
-#         """
-#         return int.from_bytes(self.bitstring, Availability.BYTE_ORDER)
-
-#     @property
-#     def _bitstring_view(self):
-#         """
-#         Returns the bitstring of this ImposedEvent as a string of 1s and 0s
-#         """
-#         return bin(int.from_bytes(self.bitstring, Availability.BYTE_ORDER))[2:]
 class ImposedEvent(models.Model):
     active = models.BooleanField()
-
-    # def deactivate(self):
-    #     self.active = False
-
-    # def activate(self):
-    #     self.active = True
