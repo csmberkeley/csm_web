@@ -3,6 +3,7 @@ from django.shortcuts import render
 from rest_framework import viewsets
 from .models import Availability, ImposedEvent, Matching
 from .serializers import AvailabilitySerializer, ImposedEventSerializer, MatchingSerializer
+
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
 from django.urls import reverse
@@ -35,7 +36,6 @@ from .permissions import (
 )
 
 # Matching
-
 
 @api_view(http_method_names=["POST"])
 def update_matching(request, pk):
