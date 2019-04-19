@@ -392,7 +392,7 @@ class AttendanceAdmin(admin.ModelAdmin):
 
     get_mentor_display.short_description = "Mentor"
 
-    def section_mentor_email(self, obj):
+    def mentor_email(self, obj):
         return obj.attendee.section.mentor.user.email
 
     def get_student_display(self, obj):
@@ -418,12 +418,12 @@ class AttendanceAdmin(admin.ModelAdmin):
         "section_time",
         "section_location",
         "get_mentor_display",
-        "section_mentor_email",
+        "mentor_email",
         "get_student_display",
         "student_email",
         "section_date",
         "presence",
-        "=week_start",
+        "date",
     )
 
     readonly_fields = (
@@ -431,19 +431,19 @@ class AttendanceAdmin(admin.ModelAdmin):
         "section_time",
         "section_location",
         "get_mentor_display",
-        "section_mentor_email",
+        "mentor_email",
         "get_student_display",
         "student_email",
         "section_date",
     )
 
     list_display = (
-        "week_start",
+        "date",
         "day_of_week",
         "section_time",
         "section_location",
         "get_mentor_display",
-        "section_mentor_email",
+        "mentor_email",
         "get_student_display",
         "student_email",
         "section_date",

@@ -27,7 +27,6 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
-# TODO
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
@@ -188,11 +187,12 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 
-REST_RENDERERS = ["djangorestframework_camel_case.render.CamelCaseJSONRenderer"]
-if DEBUG:
-    REST_RENDERERS.append("rest_framework.renderers.BrowsableAPIRenderer")
 # REST Framework
-REST_FRAMEWORK = {"DEFAULT_RENDERER_CLASSES": REST_RENDERERS}
+REST_FRAMEWORK = {
+    "DEFAULT_RENDERER_CLASSES": [
+        "djangorestframework_camel_case.render.CamelCaseJSONRenderer"
+    ]
+}
 
 if DJANGO_ENV == DEVELOPMENT:
     REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"].append(
@@ -222,17 +222,7 @@ LOGGING = {
             "class": "django.utils.log.AdminEmailHandler",
             "formatter": "default",
         },
-        "info": {
-            "level": "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "default",
-        },
         "low-level": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "default",
-        },
-        "models": {
             "level": "DEBUG",
             "class": "logging.StreamHandler",
             "formatter": "default",
@@ -240,7 +230,7 @@ LOGGING = {
     },
     "loggers": {
         "django": {
-            "handlers": ["console-django", "info", "mail_admins"],
+            "handlers": ["console-django", "mail_admins"],
             "level": "INFO",
         },
         "django.request": {
@@ -249,7 +239,7 @@ LOGGING = {
             "propagate": False,
         },
         "scheduler.signals": {
-            "handlers": ["console-models", "mail_admins", "models"],
+            "handlers": ["console-models", "mail_admins"],
             "level": "DEBUG",
             "propagate": False,
         },
