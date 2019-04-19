@@ -46,12 +46,12 @@ def get_availability(request, pk):
 def set_availability(request, pk):
     availability = get_object_or_404(Availability, pk=pk)
     params = request.POST
-
     start_time = datetime.datetime.strptime(params["start_time"], "%H:%M").time()
     end_time = datetime.datetime.strptime(params["end_time"], "%H:%M").time()
     day = int(params["day"])
+    is_available = int(params["is_available"])
 
-    availability._set_availability(day, start_time, end_time)
+    availability._set_availability(day, start_time, end_time, is_available)
     availability.save()
 
     serialized_availability = AvailabilitySerializer(availability).data
