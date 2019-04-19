@@ -261,10 +261,23 @@ def reenable_signals(original_signals):
         signal.receivers = receivers
 
 
-def generate_test_data(complicate=False):
+def generate_test_data(complicate=False, preconfirm=False):
     if not settings.DEBUG:
         print("This cannot be run in production! Aborting.")
         return
+    if not preconfirm:
+        choice = input(
+            """You have requested a flush of the database.
+                This will DELETE EVERYTHING IN THE DATABASE, and return all tables to an empty state.
+
+                Are you sure you want to do this?
+
+                Type 'yes' to continue, or 'no' to abort:  """
+        )
+        while choice not in ("yes", "no"):
+            choice = input("Please type 'yes' or 'no' (without the quotes):  ")
+        if choice == "no":
+            return
     management.call_command("flush", interactive=False)
     original_signals = disable_signals()
     course_names = ("CS70", "CS61A", "CS61B", "CS61C", "EE16A")

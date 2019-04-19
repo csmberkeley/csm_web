@@ -5,13 +5,8 @@
 { [ ! -d 'csm_web' ] || [ ! -f 'package.json' ]; } && echo 'You are in the wrong directory!' 1>&2 && exit 1
 [ -z "$VIRTUAL_ENV" ] && echo 'You must activate your virtualenv first!' 1>&2 && exit 1
 
-target_version=$(sed 's/[^0-9.]//g' runtime.txt)
-installed_version=$(python3 --version | sed 's/[^0-9.]//g')
-if [ "$target_version" != "$installed_version" ]
-then
-   echo "You have python version $installed_version installed, but the expected version is $target_version.
-This may cause problems."
-fi
+echo 'Beginning setup, this may take a minute or so...'
+sleep 1 # Give user time to read above message 
 
 # Node and Python requirements
 npm i
@@ -56,25 +51,33 @@ function run() {
 	cd "$start_dir"
 }' >> "$VIRTUAL_ENV/bin/activate"
 
-# TODO put precommit hooks in git?
-echo "Getting precommit hooks..."
-curl "http://inst.eecs.berkeley.edu/~cs199-eug/pre-commit" -o .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
-# precommit hook uses prettier and black
-if ! command -v prettier
-then
-	echo 'Please make sure to install prettier (see README)'
-fi
-
-if ! command -v black
-then
-	echo 'Please make sure to install black (see README)'
-fi
-
 # Initialize for local development
 npm run dev
 source .env # need the relevant env variables for django, but can't count on the Heroku CLI being installed
 python csm_web/manage.py migrate
-python csm_web/manage.py createtestdata
+python csm_web/manage.py createtestdata --yes 
 
+# TODO put precommit hooks in git?
+echo "Getting precommit hooks..."
+curl "http://inst.eecs.berkeley.edu/~cs199-eug/pre-commit" -o .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+# precommit hook uses prettier and black
+if ! command -v prettier > /dev/null
+then
+	echo 'Please make sure to install prettier (see README)'
+fi
+
+if ! command -v black > /dev/null
+then
+	echo 'Please make sure to install black (see README)'
+fi
+
+
+target_version=$(sed 's/[^0-9.]//g' runtime.txt)
+installed_version=$(python3 --version | sed 's/[^0-9.]//g')
+if [ "$target_version" != "$installed_version" ]
+then
+   echo "You have python version $installed_version installed, but the expected version is $target_version.
+This may cause problems."
+fi
 
 echo "Done installing. Please reactivate your virtualenv before running any more commands."
