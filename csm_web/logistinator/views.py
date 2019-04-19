@@ -10,8 +10,8 @@ from rest_framework import generics, permissions, viewsets, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from .models import Matching, Availability, ImposedEvent
-from .serializers import MatchingSerializer, AvailabilitySerializer, ImposedEventSerializer
+from .models import Matching, Availability, ImposedEvent, Conflict
+from .serializers import MatchingSerializer, AvailabilitySerializer, ImposedEventSerializer, ConflictSerializer
 
 # Matching
 
@@ -148,3 +148,13 @@ def set_availability(request, pk):
     serialized_availability = AvailabilitySerializer(availability).data
     return Response(serialized_availability)
 
+class CreateConflict(generics.CreateAPIView):
+
+    queryset = Conflict.objects.all()
+    serializer_class = ConflictSerializer
+
+
+class ConflictList(generics.ListAPIView):
+
+    queryset = Conflict.objects.all()
+    serializer_class = ConflictSerializer
