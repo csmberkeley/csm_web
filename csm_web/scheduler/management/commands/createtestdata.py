@@ -13,5 +13,12 @@ class Command(BaseCommand):
             help="Complicate data by allowing users to have multiple profiles, potentially across different courses or roles.",
         )
 
+        parser.add_argument(
+            "--yes",
+            action="store_true",
+            dest="preconfirm",
+            help="Run without asking for confirmation",
+        )
+
     def handle(self, *args, **options):
-        generate_test_data(options["complicated"])
+        generate_test_data(options["complicated"], options["preconfirm"])
