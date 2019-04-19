@@ -16,12 +16,13 @@ rest_urlpatterns = [
         "matching/get_by_user/<int:user_id>",
         views.MatchingUserList.as_view(),
         name="get_by_user",
-    ),
+    ),  
     path(
         "matching/get_by_room/<int:room_id>",
         views.MatchingRoomList.as_view(),
         name="get_by_room",
     ),
+    path("matching/get_all", views.MatchingList.as_view())
     # all endpoints listed here https://paper.dropbox.com/doc/Scheduler-2.0-K0ZNsLU5DZ7JjGudjqKIt
 ]
 

@@ -65,6 +65,12 @@ class MatchingRoomList(generics.ListAPIView):
             room_id=self.kwargs["room_id"]
         )
 
+class MatchingList(generics.ListAPIView):
+
+    serializer_class = MatchingSerializer
+
+    def get_queryset(self):
+        return Matching.objects.all()
 
 class DeleteMatching(generics.DestroyAPIView):
     def destroy(self, request, *args, **kwargs):
