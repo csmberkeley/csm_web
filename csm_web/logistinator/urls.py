@@ -16,7 +16,7 @@ rest_urlpatterns = [
         "matching/get_by_user/<int:user_id>",
         views.MatchingUserList.as_view(),
         name="get_by_user",
-    ),  
+    ),
     path(
         "matching/get_by_room/<int:room_id>",
         views.MatchingRoomList.as_view(),
