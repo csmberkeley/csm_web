@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from datetime import datetime
+from django.conf import settings
 from scheduler.models import ActivatableModel
 
 
