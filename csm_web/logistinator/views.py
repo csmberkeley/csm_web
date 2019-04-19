@@ -133,7 +133,9 @@ class MatchingUserList(generics.ListAPIView):
     serializer_class = MatchingSerializer
 
     def get_queryset(self):
-        return Matching.objects.filter(user_id=self.kwargs["user_id"])
+        return Matching.objects.filter(active=True).filter(
+            user_id=self.kwargs["user_id"]
+        )
 
 
 class MatchingRoomList(generics.ListAPIView):
@@ -141,13 +143,22 @@ class MatchingRoomList(generics.ListAPIView):
     serializer_class = MatchingSerializer
 
     def get_queryset(self):
-        return Matching.objects.filter(user_id=self.kwargs["room_id"])
+        return Matching.objects.filter(active=True).filter(
+            room_id=self.kwargs["room_id"]
+        )
+
+
+class MatchingList(generics.ListAPIView):
+
+    serializer_class = MatchingSerializer
+
+    def get_queryset(self):
+        return Matching.objects.all()
 
 
 class DeleteMatching(generics.DestroyAPIView):
     def destroy(self, request, *args, **kwargs):
         matching = get_object_or_404(Matching, pk=self.kwargs["pk"])
-        self.check_object_permissions(request, matching)
         if not matching.active:
             raise PermissionDenied(
                 "This matching ({}) has been deactivated".format(matching)
