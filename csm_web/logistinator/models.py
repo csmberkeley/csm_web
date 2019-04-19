@@ -3,7 +3,8 @@ from django.db import models
 from django.conf import settings
 from django.utils import timezone
 from datetime import datetime
-from django.conf import settings
+
+from scheduler.models import ActivatableModel
 
 class Availability(models.Model):
     """
@@ -33,19 +34,22 @@ class Availability(models.Model):
 
     # By default, all slots are unavailable
     bitstring = models.BinaryField(default=0)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
-    def set_availability(self, day, start_time, end_time):
-        
+    def _set_availability(self, day, start_time, end_time):
+
         start_index = self._timepoint_to_day_index(start_time)
         end_index = self._timepoint_to_day_index(end_time)
         intervals_per_day = Availability.INTERVALS_PER_HOUR * Availability.HOURS_PER_DAY
         bit_skip = intervals_per_day * (7 - day)
-        
+
+        s = int.from_bytes(self.bitstring, Availability.BYTE_ORDER)
         for i in range(start_index, end_index):
-            bit_mask = (1 << bit_skip - i)
-            self.bitstring = str(bin(int(self.bitstring, 2) | bit_mask)[2:])
-            #messy workaround to get it to save as a binary string without leading '0b'
+            bit_mask = 1 << (bit_skip - i - 1)
+            s = s | bit_mask
+
+        self.bitstring = s.to_bytes(56, Availability.BYTE_ORDER)
+        # messy workaround to get it to save as a binary string without leading '0b'
 
     def get_weekly_availability(self, start_time, end_time, interval):
         """
@@ -71,8 +75,7 @@ class Availability(models.Model):
             day_available = self.get_availability(i, start_time, end_time)
             idx = 0
             new_start = datetime.datetime(1, 1, 1, start_time.hour, start_time.minute)
-            # end_datetime = datetime.datetime(1, 1, 1, end_time.hour, end_time.minute)
-            for j in range(len(day_available)/num_intervals):
+            for j in range(len(day_available) // num_intervals):
                 is_available = True
                 for k in range(num_intervals):
                     is_available = is_available and day_available[idx]
@@ -83,7 +86,6 @@ class Availability(models.Model):
             availabilities_obj[i] = day_list
 
         return availabilities_obj
-
 
     def get_availability(self, day, start_time, end_time):
         """
@@ -96,7 +98,8 @@ class Availability(models.Model):
 
         # Extract each bit separately from the bitstring and convert into list of bits
         availabilities = tuple(
-            ((day_availability >> i) % 2) for i in range(start_index, end_index)
+            ((day_availability >> (64 - i - 1)) % 2)
+            for i in range(start_index, end_index)
         )
         return availabilities
 
@@ -158,7 +161,6 @@ class Availability(models.Model):
         return (
             hour_delta * Availability.INTERVALS_PER_HOUR
             + minute_delta // Availability.MINS_PER_INTERVAL
-            - 1
         )
 
     def _cross_day_aware_hour(self, timepoint):
@@ -211,13 +213,28 @@ class Matching(ActivatableModel):
         return bin(int.from_bytes(self.bitstring, Availability.BYTE_ORDER))[2:]
 
 
-class ImposedEvents(models.Model):
-    bitstring = models.BinaryField(default=0)
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+# class ImposedEvent(ActivatableModel):
+#     bitstring = models.BinaryField(default=0)
+#     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+#     @property
+#     def _bitstring_int(self):
+#         """
+#         Returns the bitstring of this ImposedEvent as an integer number
+#         """
+#         return int.from_bytes(self.bitstring, Availability.BYTE_ORDER)
+
+#     @property
+#     def _bitstring_view(self):
+#         """
+#         Returns the bitstring of this ImposedEvent as a string of 1s and 0s
+#         """
+#         return bin(int.from_bytes(self.bitstring, Availability.BYTE_ORDER))[2:]
+class ImposedEvent(models.Model):
     active = models.BooleanField()
 
-    def deactivate(self):
-        self.active = False
+    # def deactivate(self):
+    #     self.active = False
 
-    def activate(self):
-        self.active = True 
+    # def activate(self):
+    #     self.active = True
