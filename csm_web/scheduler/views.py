@@ -242,8 +242,8 @@ class CreateAttendanceDetail(generics.CreateAPIView):
 
     def perform_create(self, serializer):
         # Deny attendance creation if not leader of section
-        section = serializer.validated_data["section"]
         profile = serializer.validated_data["attendee"]
+        section = profile.section
         if not is_leader(self.request.user, section):
             raise PermissionDenied(
                 "You are not allowed to create Attendances for that section"

@@ -9,6 +9,9 @@ def is_leader(user, obj):
     while leader:
         if user == leader.user:
             return True
+        elif leader == leader.leader:
+            # Prevent infinite loop
+            break
         else:
             leader = leader.leader
     return False

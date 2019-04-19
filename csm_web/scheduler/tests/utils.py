@@ -1,10 +1,13 @@
+from datetime import timedelta
+from random import randrange
 from django.test import TestCase
+from django.utils import timezone
 from os import path
 from rest_framework import status
 from rest_framework.test import APIClient
 import random
 
-from scheduler.models import Profile, User
+from scheduler.models import Profile, User, Attendance
 from scheduler.factories import (
     CourseFactory,
     SpacetimeFactory,
@@ -20,7 +23,6 @@ random.seed(0)
 
 COURSE_NAMES = ("CS88", "CS61A", "CS61B", "CS70", "CS61C", "EE16A")
 ROLE_MAP = Profile.ROLE_MAP
-BASE_PATH = "/api"
 
 # ----- REQUEST UTILITIES -----
 def fail_msg(ep, resp):
@@ -38,6 +40,18 @@ class APITestCase(TestCase):
     """
     ALLOWED_METHODS = {}
 
+
+    """
+    Maps an HTTP method to the appropriate success status code.
+    """
+    _SUCCESS_CODES = {
+        "GET": status.HTTP_200_OK,
+        "POST": status.HTTP_201_CREATED,
+        "PUT": status.HTTP_200_OK,
+        "PATCH": status.HTTP_204_NO_CONTENT,
+        "DELETE": status.HTTP_200_OK
+    }
+
     def test_bad_methods(self):
         """
         Tests to make sure that for each endpoint that's a key in the ALLOWED_METHODS dict,
@@ -45,7 +59,7 @@ class APITestCase(TestCase):
         """
         client = self.get_client_for(User.objects.first())
         for endpoint, methods in self.ALLOWED_METHODS.items():
-            forbidden = self.ALL_METHODS - methods
+            forbidden = self.ALL_METHODS - set(methods)
             for f in forbidden:
                 self.req_fails_method(client, f, endpoint)
 
@@ -68,9 +82,7 @@ class APITestCase(TestCase):
             "PUT": client.put,
             "DELETE": client.delete,
         }
-        resp = methods[method](
-            path.join(BASE_PATH, endpoint.strip("/")), follow=True, data=data
-        )
+        resp = methods[method](endpoint, follow=True, data=data)
         if exp_code is not None:
             self.assertEqual(resp.status_code, exp_code, msg=fail_msg(endpoint, resp))
         return resp
@@ -107,8 +119,15 @@ class APITestCase(TestCase):
         Returns the response object.
         """
         return self.request(
-            client, method, endpoint, exp_code=status.HTTP_200_OK, data=data
+            client, method, endpoint, exp_code=APITestCase._SUCCESS_CODES[method], data=data
         )
+
+# ------ MISCELLANEOUS TESTING TOOLS -----
+def rand_date(before=1000, after=1000):
+    """
+    Generates a random date in [today - before, today + after].
+    """
+    return timezone.now().date() + timedelta(days=randrange(-before, after))
 
 
 # ----- MODEL GENERATION -----
@@ -147,7 +166,10 @@ def create_empty_section_for(mentor):
     """
 	Creates a section for MENTOR without populated students.
 	"""
-    return SectionFactory.create(course=mentor.course)
+    section = SectionFactory.create(course=mentor.course)
+    mentor.section = section
+    mentor.save()
+    return section
 
 
 def enroll_user_as_student(user, section):
@@ -159,6 +181,7 @@ def enroll_user_as_student(user, section):
     student = give_role(user, Profile.STUDENT, section.course)
     student.section = section
     student.leader = section.leader
+    student.save()
     create_attendances_for(student)
     return student
 
@@ -174,41 +197,40 @@ def gen_test_data(cls, NUM_USERS=300):
     courses = make_test_courses()
     # for sanity tests, everyone only has one role for now
     num_courses = len(courses)
-    coords, seniors, juniors, students = [], [], [], []
     COORD_COUNT = 2
     SM_COUNT = 4
+    # These are per SM /shrug
     JM_COUNT = 3
+    AM_COUNT = 1
 
-    def assign(role, leader, c, lst):
+    def assign(role, leader, c):
         # returns the profile created
         profile = give_role(next(users), role, c)
         profile.leader = leader
-        lst.append(profile)
+        profile.save()
         return profile
 
     try:
         for c in courses:
             # coords
-            for i in range(COORD_COUNT):
-                coord = assign(Profile.COORDINATOR, None, c, coords)
+            for _ in range(COORD_COUNT):
+                coord = assign(Profile.COORDINATOR, None, c)
                 # SMs
-                for j in range(SM_COUNT):
-                    sm = assign(Profile.SENIOR_MENTOR, None, c, seniors)
+                for _ in range(SM_COUNT):
+                    sm = assign(Profile.SENIOR_MENTOR, None, c)
                     section = create_empty_section_for(sm)
-                    for k in range(random.randint(3, 6)):
-                        students.append(enroll_user_as_student(next(users), section))
+                    for _ in range(random.randint(3, 6)):
+                        enroll_user_as_student(next(users), section)
                     # JMs
-                    for k in range(JM_COUNT):
-                        jm = assign(Profile.JUNIOR_MENTOR, None, c, juniors)
+                    for _ in range(JM_COUNT):
+                        jm = assign(Profile.JUNIOR_MENTOR, None, c)
+                        section = create_empty_section_for(jm)
                         for _ in range(random.randint(3, 6)):
-                            students.append(
-                                enroll_user_as_student(next(users), section)
-                            )
+                            enroll_user_as_student(next(users), section)
+                    for _ in range(AM_COUNT):
+                        am = assign(Profile.ASSOCIATE_MENTOR, None, c)
+                        section = create_empty_section_for(am)
+                        for _ in range(random.randint(3, 6)):
+                            enroll_user_as_student(next(users), section)
     except StopIteration:
         pass
-    cls.users = users
-    cls.courses = courses
-    cls.coords = coords
-    cls.seniors = seniors
-    cls.juniors = juniors
-    cls.students = students
