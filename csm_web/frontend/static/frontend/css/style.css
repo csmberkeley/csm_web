@@ -196,3 +196,7 @@ html, body {
 .section-enroll-btn > button {
   bottom: 1em;
 }
+
+.student-week{
+  margin: 0px;
+}

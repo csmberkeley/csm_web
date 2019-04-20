@@ -86,10 +86,22 @@ class WeekAttendance extends React.Component {
       PR: "Present",
       "": "Your mentor has not yet recorded attendance for this week"
     };
+    const presenceColor = {
+      EX: "#D6EAF8", //light blue
+      UN: "#F1948A", //light red
+      PR: "#ABEBC6", //light green
+      "": "#D6DBDF" //light gray
+    };
     const studentAttendances = Object.entries(this.state.attendance);
     const studentAttendanceListEntries = studentAttendances.map(attendance => {
       const [pk, details] = attendance;
       const [studentName, presence] = details;
+      const presenceColor = {
+        EX: "#D6EAF8", //light blue
+        UN: "#F1948A", //light red
+        PR: "#ABEBC6", //light green
+        "": "#D6DBDF" //light gray
+      };
       if (this.props.isMentor) {
         return (
           <div key={pk} className="uk-margin">
@@ -112,15 +124,9 @@ class WeekAttendance extends React.Component {
           </div>
         );
       } else {
-        const presenceColor = {
-          EX: "blue",
-          UN: "black",
-          PR: "pink",
-          "": "gray"
-        };
         return (
           <div key={pk} className="uk-margin">
-            <p style={{ borderBlockColor: presenceColor[presence] }}>
+            <p style={{ backgroundColor: presenceColor[presence] }}>
               {presenceDisplayMap[presence]}
             </p>
           </div>
@@ -165,14 +171,15 @@ class WeekAttendance extends React.Component {
         </li>
       );
     } else {
+      const [pk, details] = studentAttendances[0];
+      const [studentName, presence] = details;
+      const weekColor = presenceColor[presence];
       return (
         <li>
-          <a className="uk-accordion-title" href="#">
+          <h4 style={{ backgroundColor: weekColor }} className="student-week">
             Week {this.props.weekNum}
-          </a>
-          <div className="uk-accordion-content">
-            {studentAttendanceListEntries}
-          </div>
+          </h4>
+          <p>{studentAttendanceListEntries}</p>
         </li>
       );
     }
