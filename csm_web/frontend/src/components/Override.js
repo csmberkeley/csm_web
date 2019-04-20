@@ -21,7 +21,9 @@ class Override extends React.Component {
 
   handleInputChange(event) {
     const { name, value } = event.target;
-    this.setState({ [name]: value });
+    this.setState({
+      [name]: value
+    });
   }
 
   handleSubmit(event) {
@@ -29,7 +31,9 @@ class Override extends React.Component {
     const datetime = moment(`${this.state.date} ${this.state.startTime}`);
     const today = moment();
     if (datetime.isBefore(today)) {
-      this.setState({ errorMessage: "You must select a date in the future" });
+      this.setState({
+        errorMessage: "You must select a date in the future"
+      });
       return;
     }
     const spacetime = {
