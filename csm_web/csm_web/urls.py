@@ -18,6 +18,11 @@ from django.contrib.auth.views import logout_then_login
 from django.urls import path, include
 from django.shortcuts import render
 
+from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib.staticfiles.views import serve
+from django.views.decorators.cache import cache_control
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("scheduler.urls")),
@@ -26,3 +31,10 @@ urlpatterns = [
     path("", include("social_django.urls", namespace="social")),
     path("", include("frontend.urls")),
 ]
+
+if settings.DJANGO_ENV == settings.DEVELOPMENT:
+    # Don't cache static files in development
+    urlpatterns += static(
+        settings.STATIC_URL,
+        view=cache_control(no_cache=True, must_revalidate=True)(serve),
+    )
