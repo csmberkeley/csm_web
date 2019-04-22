@@ -1,4 +1,5 @@
 from rest_framework.reverse import reverse
+from scheduler.factories import create_attendances_for
 from scheduler.models import Profile, Attendance
 from scheduler.tests.utils import gen_test_data, APITestCase, random_objs, rand_date
 
@@ -36,10 +37,14 @@ class TestAttendancePerms(APITestCase):
             }
             client = self.get_client_for(profile.user)
             if role == Profile.STUDENT:
-                self.req_fails_perms(client, "POST", self.CREATE_ATTENDANCE, data=get_data(profile))
+                self.req_fails_perms(
+                    client, "POST", self.CREATE_ATTENDANCE, data=get_data(profile)
+                )
             else:
                 for st in section.active_students:
-                    self.req_succeeds(client, "POST", self.CREATE_ATTENDANCE, data=get_data(st))
+                    self.req_succeeds(
+                        client, "POST", self.CREATE_ATTENDANCE, data=get_data(st)
+                    )
                 # Should be unable to update attendances of everyone but their students
                 # (We don't care if they can create an attendance for themselves as mentors)
                 not_students = Profile.objects.exclude(
@@ -53,13 +58,34 @@ class TestAttendancePerms(APITestCase):
                     # care enough about this trivial information leakage of the fact that an attendance
                     # at a given date and user profile exists, and it quite frankly is unimportant.
                     if st.section and not Attendance.objects.filter(attendee=st.id):
-                        self.req_fails_perms(client, "POST", self.CREATE_ATTENDANCE, data=get_data(st))
+                        self.req_fails_perms(
+                            client, "POST", self.CREATE_ATTENDANCE, data=get_data(st)
+                        )
 
     def test_attendance_update(self):
         """
         Tests that the only user allowed to update attendances by this endpoint
         is the mentor of the student.
         """
-        update_attendance = reverse("update-attendance", kwargs={"pk": 0})
-        # allowed method is patch only
-        # mentor = 
+        Attendance.objects.all().delete()
+        get_data = lambda st: {
+            # Generate a random time between today and 10 days in the future
+            "presence": Attendance.PRESENT
+        }
+        for student in Profile.objects.filter(role=Profile.STUDENT)[0:10]:
+            create_attendances_for(student)
+            attendance = Attendance.objects.filter(attendee=student).first()
+            update_attendance = reverse(
+                "update-attendance", kwargs={"pk": attendance.pk}
+            )
+            mentor = student.leader
+            not_mentor = Profile.objects.exclude(id=mentor.id).first()
+            data = get_data(student)
+            mentor_client = self.get_client_for(mentor.user)
+            self.req_succeeds(mentor_client, "PATCH", update_attendance, data=data)
+            not_mentor_client = self.get_client_for(not_mentor.user)
+            self.req_fails_perms(
+                not_mentor_client, "PATCH", update_attendance, data=data
+            )
+            own_client = self.get_client_for(student.user)
+            self.req_fails_perms(own_client, "PATCH", update_attendance, data=data)

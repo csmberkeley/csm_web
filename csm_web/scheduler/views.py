@@ -213,7 +213,9 @@ class SectionDetail(generics.RetrieveAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
 
     def get_object(self):
-        return self.queryset.get(pk=self.kwargs["pk"])
+        obj = get_object_or_404(self.get_queryset(), pk=self.kwargs["pk"])
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class CreateOverrideDetail(generics.CreateAPIView):
@@ -232,7 +234,9 @@ class OverrideDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeaderOrReadOnly)
 
     def get_object(self):
-        return self.queryset.get(pk=self.kwargs["pk"])
+        obj = get_object_or_404(self.get_queryset(), pk=self.kwargs["pk"])
+        self.check_object_permissions(self.request, obj)
+        return obj
 
 
 class CreateAttendanceDetail(generics.CreateAPIView):
@@ -262,37 +266,6 @@ class AttendanceDetail(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = (permissions.IsAuthenticatedOrReadOnly, IsLeader)
 
     def get_object(self):
-        return self.queryset.get(pk=self.kwargs["pk"])
-
-
-# API Stubs
-
-
-class UserViewSet(viewsets.ModelViewSet):
-    queryset = User.objects.all()
-    serializer_class = UserSerializer
-
-
-class AttendanceViewSet(viewsets.ModelViewSet):
-    queryset = Attendance.objects.all()
-    serializer_class = AttendanceSerializer
-
-
-class ProfileViewSet(viewsets.ModelViewSet):
-    queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
-
-
-class SectionViewSet(viewsets.ModelViewSet):
-    queryset = Section.objects.all()
-    serializer_class = SectionSerializer
-
-
-class SpacetimeViewSet(viewsets.ModelViewSet):
-    queryset = Spacetime.objects.all()
-    serializer_class = SpacetimeSerializer
-
-
-class OverrideViewSet(viewsets.ModelViewSet):
-    queryset = Override.objects.all()
-    serializer_class = OverrideSerializer
+        obj = get_object_or_404(self.get_queryset(), pk=self.kwargs["pk"])
+        self.check_object_permissions(self.request, obj)
+        return obj
