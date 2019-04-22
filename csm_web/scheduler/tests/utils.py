@@ -40,7 +40,6 @@ class APITestCase(TestCase):
     """
     ALLOWED_METHODS = {}
 
-
     """
     Maps an HTTP method to the appropriate success status code.
     """
@@ -48,8 +47,8 @@ class APITestCase(TestCase):
         "GET": status.HTTP_200_OK,
         "POST": status.HTTP_201_CREATED,
         "PUT": status.HTTP_200_OK,
-        "PATCH": status.HTTP_204_NO_CONTENT,
-        "DELETE": status.HTTP_200_OK
+        "PATCH": status.HTTP_200_OK,
+        "DELETE": status.HTTP_200_OK,
     }
 
     def test_bad_methods(self):
@@ -63,11 +62,24 @@ class APITestCase(TestCase):
             for f in forbidden:
                 self.req_fails_method(client, f, endpoint)
 
+    def test_unauthenticated(self):
+        """
+        Tests to make sure that endpoints can't be accessed by unauthenticated users.
+        """
+        client = self.get_empty_client()
+        for endpoint, methods in self.ALLOWED_METHODS.items():
+            for m in methods:
+                self.req_fails_perms(client, m, endpoint)
+
     def get_client_for(self, user):
         """Returns an APIClient object that is logged in as the provided user."""
         client = APIClient()
         client.force_authenticate(user)
         return client
+
+    def get_empty_client(self):
+        """Returns an APIClient object that is not logged in as anybody."""
+        return APIClient()
 
     def request(self, client, method, endpoint, exp_code=None, data=None):
         """
@@ -119,8 +131,13 @@ class APITestCase(TestCase):
         Returns the response object.
         """
         return self.request(
-            client, method, endpoint, exp_code=APITestCase._SUCCESS_CODES[method], data=data
+            client,
+            method,
+            endpoint,
+            exp_code=APITestCase._SUCCESS_CODES[method],
+            data=data,
         )
+
 
 # ------ MISCELLANEOUS TESTING TOOLS -----
 def rand_date(before=1000, after=1000):
