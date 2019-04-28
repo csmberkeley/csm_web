@@ -322,12 +322,14 @@ class CourseAdmin(admin.ModelAdmin):
         return self._number_of_role(obj, Profile.SENIOR_MENTOR)
 
 
-class InputFilter(admin.SimpleListFilter):
+class DayStartFilter(admin.SimpleListFilter):
     template = "admin/input_filter.html"
+
+    title = "start date"
 
     def lookups(self, request, model_admin):
         # Dummy, required to show the filter.
-        return ((),)
+        return (("start_day"),)
 
     def choices(self, changelist):
         # Grab only the "all" option.
@@ -339,20 +341,33 @@ class InputFilter(admin.SimpleListFilter):
         )
         yield all_choice
 
-
-class DayStartFilter(InputFilter):
-    parameter_name = "day_start"
-    title = "Day_start(YYYY-MM-DD)"
-
     def queryset(self, request, queryset):
         if self.value() is not None:
             filter_day_start = self.value()
-            return queryset.filter(Q(date__gte=filter_day_start))
+            if self.value() is not None:
+                filter_day_end = self.value()
+                return queryset.filter(Q(date__gte=filter_day_start))
 
 
-class DayEndFilter(InputFilter):
+class DayEndFilter(admin.SimpleListFilter):
+    template = "admin/input_filter.html"
+
     parameter_name = "week_end"
-    title = "Day_end(YYYY-MM-DD)"
+    title = "end date"
+
+    def lookups(self, request, model_admin):
+        # Dummy, required to show the filter.
+        return (("start_day"),)
+
+    def choices(self, changelist):
+        # Grab only the "all" option.
+        all_choice = next(super().choices(changelist))
+        all_choice["query_parts"] = (
+            (k, v)
+            for k, v in changelist.get_filters_params().items()
+            if k != self.parameter_name
+        )
+        yield all_choice
 
     def queryset(self, request, queryset):
         if self.value() is not None:
