@@ -324,6 +324,7 @@ class CourseAdmin(admin.ModelAdmin):
 
 class DayStartFilter(admin.SimpleListFilter):
     template = "admin/input_filter.html"
+    parameter_name = "start_date"
     title = "start date"
 
     def lookups(self, request, model_admin):
@@ -341,15 +342,19 @@ class DayStartFilter(admin.SimpleListFilter):
         yield all_choice
 
     def queryset(self, request, queryset):
-        if self.value() is not None:
-            filter_day_start = self.value()
-            return queryset.filter(Q(date__gte=filter_day_start))
-        else:
-            return queryset.none()
+        try:
+            if self.value() is not None:
+                filter_day_start = self.value()
+                return queryset.filter(Q(date__gte=filter_day_start))
+            else:
+                return queryset.all()
+        except ValidationError as e:
+            return queryset.all()
 
 
 class DayEndFilter(admin.SimpleListFilter):
     template = "admin/input_filter.html"
+    parameter_name = "end_date"
     title = "end date"
 
     def lookups(self, request, model_admin):
@@ -367,11 +372,14 @@ class DayEndFilter(admin.SimpleListFilter):
         yield all_choice
 
     def queryset(self, request, queryset):
-        if self.value() is not None:
-            filter_day_end = self.value()
-            return queryset.filter(Q(date__lte=filter_day_end))
-        else:
-            return queryset.none()
+        try:
+            if self.value() is not None:
+                filter_day_end = self.value()
+                return queryset.filter(Q(date__lte=filter_day_end))
+            else:
+                return queryset.all()
+        except ValidationError as e:
+            return queryset.all()
 
 
 @admin.register(Attendance)

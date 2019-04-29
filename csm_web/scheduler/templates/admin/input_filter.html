@@ -1,5 +1,3 @@
-
-
 {% load i18n %}
 
 <h3>{% blocktrans with filter_title=title %} By {{ filter_title }} {% endblocktrans %}</h3>
@@ -7,24 +5,11 @@
   <li>
     {% with choices.0 as all_choice %}
     <form method="GET" action="">
-
-
       {% for k, v in all_choice.query_parts %}
       <input type="hidden" name="{{ k }}" value="{{ v }}" />
       {% endfor %}
-
-
-
-      <input
-          type="date"
-          value="{{ spec.value|default_if_none:'' }}"
-          name="{{ spec.parameter_name }}"
-          value="2019-06-22" >
-
-          <!--min="2019-01-01" max="2019-08-31"-->
-
-        <input type="submit">
-
+      <input type="date" value="{{ spec.value|default_if_none:'' }}" name="{{ spec.parameter_name }}">
+      <input type="submit">
     </form>
     {% endwith %}
   </li>
