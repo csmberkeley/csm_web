@@ -472,7 +472,7 @@ class AttendanceAdmin(admin.ModelAdmin):
         "presence",
     )
 
-    list_filter = ("presence", "attendee__course", "date", DayStartFilter, DayEndFilter)
+    list_filter = ("presence", "attendee__course", DayStartFilter, DayEndFilter)
     search_fields = ("attendee__user__first_name", "attendee__user__last_name")
     ordering = ("-date",)
 
