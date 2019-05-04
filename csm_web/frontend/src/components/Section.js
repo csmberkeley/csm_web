@@ -6,11 +6,9 @@ import moment from "moment";
 import { fetchWithMethod, HTTP_METHODS } from "../utils/api";
 
 function SectionSummary(props) {
-  let overrideColor = props.activeOverride
-    ? {
-        color: "red"
-      }
-    : null;
+  let overrideStyle = props.activeOverride
+    ? "section-summary-override-flex-item"
+    : "section-summary-default-flex-item";
   return (
     <div className="uk-section uk-section-primary section-summary">
       <div className="uk-container">
@@ -23,11 +21,14 @@ function SectionSummary(props) {
             <Roster studentIDs={props.studentIDs} sectionID={props.sectionID} />
           )}
         </div>
-        <p style={overrideColor}>
-          {props.defaultSpacetime.dayOfWeek} {props.defaultSpacetime.startTime}{" "}
-          - {props.defaultSpacetime.endTime}
-        </p>
-        <p style={overrideColor}>{props.defaultSpacetime.location}</p>
+        <div className="section-summary-flex-container">
+          <p className={overrideStyle}>{props.defaultSpacetime.dayOfWeek}</p>
+          <p className={overrideStyle}>
+            {props.defaultSpacetime.startTime} -{" "}
+            {props.defaultSpacetime.endTime}
+          </p>
+        </div>
+        <p className={overrideStyle}>{props.defaultSpacetime.location}</p>
         <p>{`${props.mentor.firstName} ${props.mentor.lastName}`} </p>
         <a href={`mailto:${props.mentor.email}`}>{props.mentor.email}</a>
       </div>
@@ -250,6 +251,7 @@ class Section extends React.Component {
       defaultSpacetime.endTime,
       "HH:mm:ss"
     ).format("hh:mm A");
+    console.log(this.props.activeOverride);
     return (
       <div>
         <SectionSummary
