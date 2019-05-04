@@ -209,6 +209,26 @@ class WeekAttendance extends React.Component {
 }
 
 class Attendances extends React.Component {
+  constructor(props) {
+    super(props);
+    this.shownWeeks = 2;
+    this.toggleWeeks = this.toggleWeeks.bind(this);
+    this.render = this.render.bind(this);
+    this.buttonName = "Show More";
+  }
+
+  toggleWeeks() {
+    if (this.shownWeeks === 2) {
+      this.shownWeeks = this.props.attendances.length;
+      this.buttonName = "Show Less";
+    } else {
+      this.shownWeeks = 2;
+      this.buttonName = "Show More";
+    }
+    this.render();
+    this.forceUpdate();
+  }
+
   render() {
     const attendances = this.props.attendances;
     if (attendances) {
@@ -223,9 +243,18 @@ class Attendances extends React.Component {
         )
       );
       weekAttendances.reverse();
+      const shownAttendances = weekAttendances.slice(0, this.shownWeeks);
       return (
         <div className="uk-container">
-          <ul data-uk-accordion="active: 0">{weekAttendances}</ul>
+          <ul data-uk-accordion="active: 0">{shownAttendances}</ul>
+          <button
+            id="show-more-btn"
+            type="button"
+            className="uk-button uk-button-default uk-button-small"
+            onClick={this.toggleWeeks}
+          >
+            {this.buttonName}
+          </button>
         </div>
       );
     }
