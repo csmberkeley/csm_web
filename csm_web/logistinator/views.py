@@ -2,7 +2,6 @@ import datetime
 from django.shortcuts import render
 from rest_framework import viewsets
 from .models import Availability, ImposedEvent, Matching
-from .serializers import AvailabilitySerializer, ImposedEventSerializer, MatchingSerializer
 
 from django.db import transaction
 from django.shortcuts import render, redirect, get_object_or_404
@@ -22,7 +21,7 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from .models import Matching, Availability, ImposedEvent, Conflict
-from .serializers import MatchingSerializer, AvailabilitySerializer, ImposedEventSerializer, ConflictSerializer
+from .serializers import MatchingSerializer, AvailabilitySerializer, ConflictSerializer
 
 from rest_framework import generics, permissions, viewsets, status
 from rest_framework.decorators import api_view
@@ -218,15 +217,15 @@ class ConflictList(generics.ListAPIView):
 # Room Availability Model
 
 class CreateRoomAvailability(generics.CreateAPIView):
-    queryset = RoomAvailabilities.objects.all()
-    serializer_class = RoomAvailabilitiesSerializer
+    queryset = RoomAvailability.objects.all()
+    serializer_class = RoomAvailabilitySerializer
 
 @api_view(http_method_names=["GET"])
 def get_room_availability(request, pk):
     room_availability = get_object_or_404(RoomAvailability, pk)
     params = request.POST
-    start_week = datetime.datetime.strptime(params["start_week"] "%Y-%m-%d").date()
-    end_week = datetime.datetime.strptime(params["end_week"] "%Y-%m-%d").date()
+    start_week = datetime.datetime.strptime(params["start_week"], "%Y-%m-%d").date()
+    end_week = datetime.datetime.strptime(params["end_week"], "%Y-%m-%d").date()
     ## Ensure that start_week and end_week start on Monday and Friday, respectively
     if start_week.weekday() < 1:
         start_week = start_week + datetime.timedelta(7)
@@ -248,8 +247,8 @@ def get_room_availability(request, pk):
 def get_all_room_availability(request, pk):
     room_availability = get_object_or_404(RoomAvailability, pk)
     params = request.POST
-    start_week = datetime.datetime.strptime(params["start_week"] "%Y-%m-%d").date()
-    end_week = datetime.datetime.strptime(params["end_week"] "%Y-%m-%d").date()
+    start_week = datetime.datetime.strptime(params["start_week"], "%Y-%m-%d").date()
+    end_week = datetime.datetime.strptime(params["end_week"], "%Y-%m-%d").date()
     ## Ensure that start_week and end_week start on Monday and Friday, respectively
     if start_week.weekday() < 1:
         start_week = start_week + datetime.timedelta(7)
@@ -264,4 +263,3 @@ def get_all_room_availability(request, pk):
     days = int(params["days"])
 
     return Response(room_availability.get_all_availabilities(interval))
->>>>>>> Room Availability model added

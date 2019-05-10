@@ -2,7 +2,6 @@ import datetime
 from django.db import models
 from django.conf import settings
 from django.utils import timezone
-from datetime import datetime
 from django.conf import settings
 from scheduler.models import ActivatableModel
 
@@ -35,7 +34,7 @@ class Availability(models.Model):
 
     # By default, all slots are unavailable
     bitstring = models.BinaryField(default=0)
-    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, null=True)
 
     def _set_availability(self, day, start_time, end_time, is_available):
 
@@ -218,8 +217,8 @@ class Conflict(ActivatableModel):
 
     user_id = models.CharField(max_length=100)
     room_id = models.CharField(max_length=16)
-    start_datetime = models.DateTimeField(default=datetime.now, blank=True)
-    end_datetime = models.DateTimeField(default=datetime.now, blank=True)
+    start_datetime = models.DateTimeField(default=datetime.datetime.now, blank=True)
+    end_datetime = models.DateTimeField(default=datetime.datetime.now, blank=True)
 
     def __str__(self):
         return f"{self.user_id}, {self.room_id}, {self.start_datetime}, {self.end_datetime}"

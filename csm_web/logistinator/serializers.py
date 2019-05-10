@@ -1,14 +1,5 @@
 from rest_framework import serializers
-from datetime import timedelta
-from django.utils import timezone
-from rest_framework import serializers
-from .models import Matching, Availability, RoomAvailability
-from datetime import timedelta
-from django.utils import timezone
-from .permissions import is_leader
-from itertools import groupby
-from datetime import datetime
-from .models import Matching, 
+from .models import Matching, Availability, RoomAvailability, Conflict
 
 class MatchingSerializer(serializers.ModelSerializer):
     class Meta:
@@ -35,6 +26,6 @@ class ConflictSerializer(serializers.ModelSerializer):
 
 class RoomAvailabilitySerializer(serializers.ModelSerializer):
     class Meta:
-        model = RoomAvailabilities
+        model = RoomAvailability
         fields = ("id", "availability_bitstring")
 
