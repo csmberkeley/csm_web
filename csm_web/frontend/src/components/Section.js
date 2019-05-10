@@ -251,7 +251,6 @@ class Section extends React.Component {
       defaultSpacetime.endTime,
       "HH:mm:ss"
     ).format("hh:mm A");
-    console.log(this.props.activeOverride);
     return (
       <div>
         <SectionSummary
