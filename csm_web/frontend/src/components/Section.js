@@ -6,6 +6,9 @@ import moment from "moment";
 import { fetchWithMethod, HTTP_METHODS } from "../utils/api";
 
 function SectionSummary(props) {
+  let overrideStyle = props.activeOverride
+    ? "section-summary-override-flex-item"
+    : "section-summary-default-flex-item";
   return (
     <div className="uk-section uk-section-primary section-summary">
       <div className="uk-container">
@@ -18,11 +21,14 @@ function SectionSummary(props) {
             <Roster studentIDs={props.studentIDs} sectionID={props.sectionID} />
           )}
         </div>
-        <p>
-          {props.defaultSpacetime.dayOfWeek} {props.defaultSpacetime.startTime}{" "}
-          - {props.defaultSpacetime.endTime}
-        </p>
-        <p>{props.defaultSpacetime.location}</p>
+        <div className="section-summary-flex-container">
+          <p className={overrideStyle}>{props.defaultSpacetime.dayOfWeek}</p>
+          <p className={overrideStyle}>
+            {props.defaultSpacetime.startTime} -{" "}
+            {props.defaultSpacetime.endTime}
+          </p>
+        </div>
+        <p className={overrideStyle}>{props.defaultSpacetime.location}</p>
         <p>{`${props.mentor.firstName} ${props.mentor.lastName}`} </p>
         <a href={`mailto:${props.mentor.email}`}>{props.mentor.email}</a>
       </div>
@@ -34,7 +40,8 @@ class WeekAttendance extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      attendance: Object.assign({}, props.attendance),
+      attendance: props.attendance[1],
+      weekStart: props.attendance[0],
       changed: new Set(),
       status: "unchanged"
     };
@@ -56,7 +63,9 @@ class WeekAttendance extends React.Component {
   async handleSubmit(event) {
     event.preventDefault();
     //var ok = true;
-    this.setState({ status: "loading" });
+    this.setState({
+      status: "loading"
+    });
     let requests = Array.from(this.state.changed).map(pk => {
       const [studentName, presence] = this.state.attendance[pk];
       return fetchWithMethod(`attendances/${pk}/`, HTTP_METHODS.PATCH, {
@@ -69,12 +78,29 @@ class WeekAttendance extends React.Component {
           {
             status: requests.every(request => request) ? "successful" : "failed"
           },
-          () => setTimeout(() => this.setState({ status: "unchanged" }), 3000)
+          () =>
+            setTimeout(
+              () =>
+                this.setState({
+                  status: "unchanged"
+                }),
+              3000
+            )
         )
       )
       .catch(() =>
-        this.setState({ status: "failed" }, () =>
-          setTimeout(() => this.setState({ status: "unchanged" }), 3000)
+        this.setState(
+          {
+            status: "failed"
+          },
+          () =>
+            setTimeout(
+              () =>
+                this.setState({
+                  status: "unchanged"
+                }),
+              3000
+            )
         )
       );
   }
@@ -120,10 +146,21 @@ class WeekAttendance extends React.Component {
       }
     });
     if (this.props.isMentor) {
+      const dayOfWeek = {
+        Sunday: 0,
+        Monday: 1,
+        Tuesday: 2,
+        Wednesday: 3,
+        Thursday: 4,
+        Friday: 5,
+        Saturday: 6
+      };
       return (
         <li>
           <a className="uk-accordion-title" href="#">
-            Week {this.props.weekNum}
+            {moment(this.state.weekStart, "YYYY-MM-DD")
+              .add(dayOfWeek[this.props.defaultSpacetime.dayOfWeek], "days")
+              .format("MMMM Do")}
           </a>
           <div className="uk-accordion-content">
             <form className="uk-form-horizontal" onSubmit={this.handleSubmit}>
@@ -160,7 +197,7 @@ class WeekAttendance extends React.Component {
       return (
         <li>
           <a className="uk-accordion-title" href="#">
-            Week {this.props.weekNum}
+            Week
           </a>
           <div className="uk-accordion-content">
             {studentAttendanceListEntries}
@@ -175,14 +212,16 @@ class Attendances extends React.Component {
   render() {
     const attendances = this.props.attendances;
     if (attendances) {
-      const weekAttendances = attendances.map((attendance, index) => (
-        <WeekAttendance
-          attendance={attendance}
-          weekNum={index}
-          key={index}
-          isMentor={this.props.isMentor}
-        />
-      ));
+      const weekAttendances = Object.entries(attendances).map(
+        (attendance, index) => (
+          <WeekAttendance
+            attendance={attendance}
+            defaultSpacetime={this.props.defaultSpacetime}
+            key={index}
+            isMentor={this.props.isMentor}
+          />
+        )
+      );
       weekAttendances.reverse();
       return (
         <div className="uk-container">
@@ -222,10 +261,12 @@ class Section extends React.Component {
           sectionID={this.props.id}
           profile={this.props.profile}
           studentIDs={this.props.students}
+          activeOverride={this.props.activeOverride}
         />
         <Attendances
           attendances={this.props.attendances}
           isMentor={this.props.isMentor}
+          defaultSpacetime={defaultSpacetime}
         />
       </div>
     );

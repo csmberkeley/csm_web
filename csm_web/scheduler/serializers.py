@@ -126,14 +126,12 @@ class ActiveOverrideField(serializers.RelatedField):
             timezone.now().weekday() + 1
         ) % 7  # Shift to make Sunday first day of the week
         current_week_start = timezone.now().date() - timedelta(days=weekday)
-        current_week_end = current_week_start + timedelta(days=7)
+        #        current_week_end = current_week_start + timedelta(days=7)
 
-        valid_set = overrides.filter(
-            week_start__gte=current_week_start, week_start__lt=current_week_end
-        )
+        valid_set = overrides.filter(week_start__gte=current_week_start)
 
         # Get the one created most recently
-        first_valid_override = valid_set.order_by("-id").first()
+        first_valid_override = valid_set.order_by("week_start").first()
 
         if len(valid_set) > 0:
             return OverrideSerializer(first_valid_override).data
@@ -184,10 +182,13 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
             flat_attendances = [item for lst in nested_attendances for item in lst]
             flat_attendances.sort(key=lambda tuple: tuple[1])
             grouped_attendances = groupby(flat_attendances, key=lambda tuple: tuple[1])
-            attendances = [
-                {str(pk): [name, presence] for name, week_start, presence, pk in group}
+            attendances = {
+                str(key): {
+                    str(pk): [name, presence]
+                    for name, week_start, presence, pk in group
+                }
                 for key, group in grouped_attendances
-            ]
+            }
             return attendances
         else:
             attendances = (
@@ -204,10 +205,12 @@ class VerboseSectionSerializer(serializers.ModelSerializer):
                 + " "
                 + self.context["request"].user.last_name
             )
-            return [
-                {str(attendance.id): [student_name, attendance.presence]}
+            return {
+                str(attendance.week_start): {
+                    str(attendance.id): [student_name, attendance.presence]
+                }
                 for attendance in attendances
-            ]
+            }
 
     def get_course_name(self, obj):
         return obj.course.name

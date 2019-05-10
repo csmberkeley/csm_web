@@ -196,3 +196,23 @@ html, body {
 .section-enroll-btn > button {
   bottom: 1em;
 }
+
+.section-summary-flex-container {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+}
+
+.section-summary-override-flex-item {
+  font-style: italic;
+  font-size: 2em;
+  white-space: nowrap;
+  overflow: hidden;
+  padding-right: 6px;
+  margin-top: 0em;
+}
+
+.section-summary-default-flex-item {
+  padding-right: 4px;
+  margin-top: 0em;
+}
