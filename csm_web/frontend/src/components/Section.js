@@ -215,15 +215,12 @@ class Attendances extends React.Component {
       expanded: false
     };
     this.toggleWeeks = this.toggleWeeks.bind(this);
-    this.render = this.render.bind(this);
   }
 
   toggleWeeks() {
-    if (this.state.expanded) {
-      this.setState({ expanded: false });
-    } else {
-      this.setState({ expanded: true });
-    }
+    this.setState(state => {
+      return { expanded: !state.expanded };
+    });
   }
 
   render() {
