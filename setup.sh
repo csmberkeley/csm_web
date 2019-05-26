@@ -58,8 +58,9 @@ python csm_web/manage.py migrate
 python csm_web/manage.py createtestdata --yes 
 
 # TODO put precommit hooks in git?
-echo "Getting precommit hooks..."
-curl "http://inst.eecs.berkeley.edu/~cs199-eug/pre-commit" -o .git/hooks/pre-commit && chmod +x .git/hooks/pre-commit
+echo "Getting precommit hook..."
+ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
+
 # precommit hook uses prettier and black
 if ! command -v prettier > /dev/null
 then
