@@ -1,8 +1,3 @@
-# NPM Built
-main.js
-
-.DS_Store
-
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -213,5 +208,16 @@ typings/
 # FuseBox cache
 .fusebox/
 
+### Misc ###
 # Vim swp files
 .*.sw?
+
+# VSCode settings
+.vscode
+.code-workspace
+
+# NPM Built
+main.js
+
+# Mac OS X dir files
+.DS_Store
