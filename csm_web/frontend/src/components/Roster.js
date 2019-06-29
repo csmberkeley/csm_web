@@ -71,12 +71,11 @@ class Roster extends React.Component {
     return (
       <div>
         <button
-          className="uk-button uk-button-default"
-          type="button"
-          style={{ float: "right", clear: "right", width: "150px" }}
           data-uk-toggle="target: #roster-modal"
+					title="Show student roster"
+					className="show-roster-button"
         >
-          Show Roster
+					<span data-uk-icon="users"/>
         </button>
         <Modal id="roster-modal" title="Roster">
           <ul className="uk-list">{rosterEntries}</ul>

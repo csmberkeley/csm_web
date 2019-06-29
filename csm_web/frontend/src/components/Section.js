@@ -5,33 +5,51 @@ import Roster from "./Roster";
 import moment from "moment";
 import { fetchWithMethod, HTTP_METHODS } from "../utils/api";
 
-function SectionSummary(props) {
+function SectionHeader(props) {
   let overrideStyle = props.activeOverride
     ? "section-summary-override-flex-item"
     : "section-summary-default-flex-item";
   return (
-    <div className="uk-section uk-section-primary section-summary">
-      <div className="uk-container">
-        <div>
-          {!props.isMentor && <DropSection profileID={props.profile} />}
+    <div className="section-header">
+      {!props.isMentor && <DropSection profileID={props.profile} />}
 
-          <h2 style={{ clear: "both" }}>{props.courseName}</h2>
-          {props.isMentor && <Override sectionID={props.sectionID} />}
-          {props.isMentor && (
-            <Roster studentIDs={props.studentIDs} sectionID={props.sectionID} />
-          )}
-        </div>
-        <div className="section-summary-flex-container">
-          <p className={overrideStyle}>{props.defaultSpacetime.dayOfWeek}</p>
-          <p className={overrideStyle}>
+      <h3>{props.courseName.replace(/^(CS|EE)/, "$1 ")}</h3>
+      <div className="section-information">
+        <span title="Mentor">
+          <span className="field-icon" data-uk-icon="user" />
+          {`${props.mentor.firstName} ${props.mentor.lastName}`}
+        </span>
+        <span title="Mentor email">
+          <span className="field-icon" data-uk-icon="mail" />
+
+          <a
+            href={`mailto:${props.mentor.email}`}
+            title="Send an email to your mentor"
+          >
+            {props.mentor.email}
+          </a>
+        </span>
+
+        <span className="editable-field" title="Section time">
+          <span className="field-icon" data-uk-icon="calendar" />
+          <span className="editable-content">
+            {moment(props.defaultSpacetime.dayOfWeek, "dddd").format("ddd")}{" "}
             {props.defaultSpacetime.startTime} -{" "}
             {props.defaultSpacetime.endTime}
-          </p>
-        </div>
-        <p className={overrideStyle}>{props.defaultSpacetime.location}</p>
-        <p>{`${props.mentor.firstName} ${props.mentor.lastName}`} </p>
-        <a href={`mailto:${props.mentor.email}`}>{props.mentor.email}</a>
+          </span>
+        </span>
+        <span className="editable-field" title="Section location">
+          <span className="field-icon" data-uk-icon="location" />
+          <span className="editable-content">
+            {props.defaultSpacetime.location}
+          </span>
+        </span>
       </div>
+
+      {props.isMentor && <Override sectionID={props.sectionID} />}
+      {props.isMentor && (
+        <Roster studentIDs={props.studentIDs} sectionID={props.sectionID} />
+      )}
     </div>
   );
 }
@@ -272,14 +290,14 @@ class Section extends React.Component {
     defaultSpacetime.startTime = moment(
       defaultSpacetime.startTime,
       "HH:mm:ss"
-    ).format("hh:mm A");
+    ).format("h:mm A");
     defaultSpacetime.endTime = moment(
       defaultSpacetime.endTime,
       "HH:mm:ss"
-    ).format("hh:mm A");
+    ).format("h:mm A");
     return (
       <div>
-        <SectionSummary
+        <SectionHeader
           defaultSpacetime={defaultSpacetime}
           mentor={this.props.mentor.user}
           courseName={this.props.courseName}
@@ -304,4 +322,4 @@ class Section extends React.Component {
   }
 }
 export default Section;
-export { SectionSummary };
+export { SectionHeader };
