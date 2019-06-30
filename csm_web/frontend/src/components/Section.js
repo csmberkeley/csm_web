@@ -4,54 +4,158 @@ import DropSection from "./DropSection";
 import Roster from "./Roster";
 import moment from "moment";
 import { fetchWithMethod, HTTP_METHODS } from "../utils/api";
+const DAYS_OF_WEEK = Object.freeze({
+  Sunday: 0,
+  Monday: 1,
+  Tuesday: 2,
+  Wednesday: 3,
+  Thursday: 4,
+  Friday: 5,
+  Saturday: 6
+});
 
-function SectionHeader(props) {
-  let overrideStyle = props.activeOverride
-    ? "section-summary-override-flex-item"
-    : "section-summary-default-flex-item";
+function InfoField(props) {
   return (
-    <div className="section-header">
-      {!props.isMentor && <DropSection profileID={props.profile} />}
-
-      <h3>{props.courseName.replace(/^(CS|EE)/, "$1 ")}</h3>
-      <div className="section-information">
-        <span title="Mentor">
-          <span className="field-icon" data-uk-icon="user" />
-          {`${props.mentor.firstName} ${props.mentor.lastName}`}
-        </span>
-        <span title="Mentor email">
-          <span className="field-icon" data-uk-icon="mail" />
-
-          <a
-            href={`mailto:${props.mentor.email}`}
-            title="Send an email to your mentor"
-          >
-            {props.mentor.email}
-          </a>
-        </span>
-
-        <span className="editable-field" title="Section time">
-          <span className="field-icon" data-uk-icon="calendar" />
-          <span className="editable-content">
-            {moment(props.defaultSpacetime.dayOfWeek, "dddd").format("ddd")}{" "}
-            {props.defaultSpacetime.startTime} -{" "}
-            {props.defaultSpacetime.endTime}
-          </span>
-        </span>
-        <span className="editable-field" title="Section location">
-          <span className="field-icon" data-uk-icon="location" />
-          <span className="editable-content">
-            {props.defaultSpacetime.location}
-          </span>
-        </span>
-      </div>
-
-      {props.isMentor && <Override sectionID={props.sectionID} />}
-      {props.isMentor && (
-        <Roster studentIDs={props.studentIDs} sectionID={props.sectionID} />
-      )}
-    </div>
+    <span title={props.title} onClick={props.onClick}>
+      <span className="field-icon" data-uk-icon={props.icon} />
+      {props.children}
+    </span>
   );
+}
+
+class SectionHeader extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      isEditing: false,
+      ...props.defaultSpacetime,
+      originalSpacetime: { ...props.defaultSpacetime }
+    };
+    this._handleClickEditableField = this._handleClickEditableField.bind(this);
+    this._handleChange = this._handleChange.bind(this);
+		this._handleCancel = this._handleCancel.bind(this);
+		this._handleSave = this._handleSave.bind(this);
+  }
+
+  _handleClickEditableField() {
+    this.setState({ isEditing: true });
+  }
+
+  _handleChange(event) {
+    this.setState({ [event.target.name]: event.target.value });
+  }
+
+	_handleCancel() {
+		this.setState(state => ({...state.originalSpacetime, isEditing: false}));
+	}
+
+	_handleSave(event) {
+		//TODO: PATCH to API
+		event.preventDefault();
+		this.setState({isEditing: false});
+
+	}
+
+  render() {
+    return (
+      <div className="section-header">
+        {!this.props.isMentor && <DropSection profileID={this.props.profile} />}
+
+        <h3>{this.props.courseName.replace(/^(CS|EE)/, "$1 ")}</h3>
+        <div className="section-information">
+          <InfoField title="Mentor" icon="user">{`${
+            this.props.mentor.firstName
+          } ${this.props.mentor.lastName}`}</InfoField>
+          <InfoField title="Mentor email" icon="mail">
+            <a href={`mailto:${this.props.mentor.email}`}>
+              {this.props.mentor.email}
+            </a>
+          </InfoField>
+					{/* associate inputs with a hidden form element so that we can use the HTML5 required attribute */}
+					{this.state.isEditing && <form hidden id="override-form"/>}
+          <InfoField
+            title="Section time"
+            icon="calendar"
+            onClick={this._handleClickEditableField}
+          >
+
+            {this.state.isEditing ? (
+              <span>
+                <select
+                  onChange={this._handleChange}
+                  value={this.state.dayOfWeek}
+                  name="dayOfWeek"
+									form="override-form"
+                >
+                  {Object.keys(DAYS_OF_WEEK).map(day => (
+                    <option key={day} value={day}>
+                      {day}
+                    </option>
+                  ))}
+                </select>
+                <input
+                  onChange={this._handleChange}
+                  type="time"
+                  value={this.state.startTime}
+                  name="startTime"
+									form="override-form"
+									required
+                />
+                <input
+                  onChange={this._handleChange}
+                  type="time"
+                  value={this.state.endTime}
+                  name="endTime"
+									form="override-form"
+									required
+                />
+              </span>
+            ) : (
+              <span className="editable-content">
+                {moment(this.state.dayOfWeek, "dddd").format("ddd")}{" "}
+                {moment(this.state.startTime, "HH:mm").format("h:mm A")} -{" "}
+                {moment(this.state.endTime, "HH:mm").format("h:mm A")}
+              </span>
+            )}
+          </InfoField>
+          <InfoField
+            title="Section location"
+            icon="location"
+            onClick={this._handleClickEditableField}
+          >
+            {this.state.isEditing ? (
+              <input
+                onChange={this._handleChange}
+                name="location"
+                type="text"
+                value={this.state.location}
+								form="override-form"
+								required
+              />
+            ) : (
+              <span className="editable-field" title="Section location">
+                <span className="editable-content">{this.state.location}</span>
+              </span>
+            )}
+          </InfoField>
+          {this.state.isEditing && (
+							<div className="edit-buttons-container">
+								<button form="override-form" type="submit" onClick={this._handleSave} value="Save">Save</button>
+								<button onClick={this._handleCancel} value="Cancel">Cancel</button>
+							</div>)}
+
+        </div>
+
+				{/* remember to remove this and actually render the roster button */}
+        {this.props.isMentor && false && ( 
+          <Roster
+            studentIDs={this.props.studentIDs}
+            sectionID={this.props.sectionID}
+          />
+        )}
+      </div>
+    );
+  }
 }
 
 class WeekAttendance extends React.Component {
@@ -164,20 +268,11 @@ class WeekAttendance extends React.Component {
       }
     });
     if (this.props.isMentor) {
-      const dayOfWeek = {
-        Sunday: 0,
-        Monday: 1,
-        Tuesday: 2,
-        Wednesday: 3,
-        Thursday: 4,
-        Friday: 5,
-        Saturday: 6
-      };
       return (
         <li>
           <a className="uk-accordion-title" href="#">
             {moment(this.state.weekStart, "YYYY-MM-DD")
-              .add(dayOfWeek[this.props.defaultSpacetime.dayOfWeek], "days")
+              .add(DAYS_OF_WEEK[this.props.defaultSpacetime.dayOfWeek], "days")
               .format("MMMM Do")}
           </a>
           <div className="uk-accordion-content">
@@ -290,11 +385,11 @@ class Section extends React.Component {
     defaultSpacetime.startTime = moment(
       defaultSpacetime.startTime,
       "HH:mm:ss"
-    ).format("h:mm A");
+    ).format("HH:mm");
     defaultSpacetime.endTime = moment(
       defaultSpacetime.endTime,
       "HH:mm:ss"
-    ).format("h:mm A");
+    ).format("HH:mm");
     return (
       <div>
         <SectionHeader

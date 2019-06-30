@@ -232,8 +232,21 @@ html, body {
 	color: inherit;
 }
 
+.section-header .edit-buttons-container button {
 
-.section-header .editable-field .editable-content:hover {
+	width: 50px;
+	margin-right: 10px;
+	border-radius: 0px;
+	vertical-align: middle;
+	overflow: hidden;
+	background-color: #fffffe; /* border-radius doesn't work unless I set background-color to something besides #ffffff, probably a Chrome bug */
+}
+
+.section-header .edit-buttons-container {
+	
+}
+
+.section-header .editable-content:hover {
 	outline: 2px #dedede solid;
 
 }
