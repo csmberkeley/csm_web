@@ -13,6 +13,23 @@ const DAYS_OF_WEEK = Object.freeze({
   Friday: 5,
   Saturday: 6
 });
+const DAYS_OF_WEEK_VALUES = ["SU", "M", "TU", "W", "TH", "F", "SA"];
+
+function Toast(props) {
+  return (
+    <div className="toast">
+      <div>
+        <span
+          data-uk-icon={`icon: ${
+            props.success ? "check" : "close"
+          }; ratio: 1.5`}
+          style={{ color: props.success ? "green" : "red" }}
+        />
+        {props.message}
+      </div>
+    </div>
+  );
+}
 
 function InfoField(props) {
   return (
@@ -29,12 +46,14 @@ class SectionHeader extends React.Component {
     this.state = {
       isEditing: false,
       ...props.defaultSpacetime,
-      originalSpacetime: { ...props.defaultSpacetime }
+      originalSpacetime: { ...props.defaultSpacetime },
+      toast: { show: false, message: "", success: false }
     };
     this._handleClickEditableField = this._handleClickEditableField.bind(this);
     this._handleChange = this._handleChange.bind(this);
-		this._handleCancel = this._handleCancel.bind(this);
-		this._handleSave = this._handleSave.bind(this);
+    this._handleCancel = this._handleCancel.bind(this);
+    this._handleSave = this._handleSave.bind(this);
+    this.showToast = this.showToast.bind(this);
   }
 
   _handleClickEditableField() {
@@ -45,22 +64,102 @@ class SectionHeader extends React.Component {
     this.setState({ [event.target.name]: event.target.value });
   }
 
-	_handleCancel() {
-		this.setState(state => ({...state.originalSpacetime, isEditing: false}));
-	}
+  showToast(success, message) {
+    this.setState({ toast: { show: true, success, message } });
+    setTimeout(
+      () =>
+        this.setState({ toast: { show: false, success: false, message: "" } }),
+      3000
+    );
+  }
 
-	_handleSave(event) {
-		//TODO: PATCH to API
-		event.preventDefault();
-		this.setState({isEditing: false});
+  _handleCancel() {
+    this.setState(state => ({ ...state.originalSpacetime, isEditing: false }));
+  }
 
-	}
+  _handleSave(event) {
+    //TODO: PATCH to API
+    event.preventDefault();
+    this.setState({ isEditing: false });
+    /*
+     * The logic for creating an appropriate override without requiring the user to explicity specify the date
+     * There are two scenarios:
+     * - 1. Section has already occurred this week (e.g. today is Wednesday and section is normally scheduled for Monday)
+     *			> Simply schedule next week's section for the given time and day
+     *
+     * - 2. Section has _not_ yet occureed this week (e.g. today is Tuesday and section is normally scheduled for Friday)
+     *			> Selected day must be >= today
+     *			> If the selected day == today, then it must be that selected time >= normally scheduled time
+     *			> If both of the above criteria are met, reschedule this week's section for the selected day and time
+     *			> Otherwise reject the override and notify the user this is invalid
+     */
+    const now = moment();
+    const scheduledDay = DAYS_OF_WEEK[this.state.originalSpacetime.dayOfWeek];
+    const scheduledTime = moment(
+      this.state.originalSpacetime.startTime,
+      "HH:mm"
+    );
+    const overrideDay = DAYS_OF_WEEK[this.state.dayOfWeek];
+    const { startTime: overrideStartTime } = this.state;
+    const sectionAlreadyHeldThisWeek =
+      now.day() > scheduledDay ||
+      (now.day() == scheduledDay && now.isAfter(scheduledTime, "hour"));
+    let overrideWeekStart;
+    if (sectionAlreadyHeldThisWeek) {
+      overrideWeekStart = moment()
+        .startOf("week")
+        .add(1, "weeks")
+        .format("YYYY-MM-DD"); // start of next week
+    } else {
+      if (
+        !(
+          overrideDay > now.day() ||
+          (overrideDay == now.day() &&
+            moment(overrideStartTime, "HH:mm").isAfter(scheduledTime, "hour"))
+        )
+      ) {
+        this.showToast(false, "Please select a time in the future");
+        return;
+        //invalid! throw error
+      }
+      overrideWeekStart = moment()
+        .startOf("week")
+        .format("YYYY-MM-DD"); // start of this week
+    }
+    const overrideSpacetime = {
+      location: this.state.location,
+      start_time: moment(this.state.startTime, "HH:mm").format("HH:mm:ss"),
+      day_of_week_value: DAYS_OF_WEEK_VALUES[overrideDay]
+    };
+    const data = {
+      spacetime: overrideSpacetime,
+      week_start: overrideWeekStart,
+      section: this.props.sectionID
+    };
+    fetchWithMethod("overrides/", HTTP_METHODS.POST, data)
+      .then(response => {
+        if (response.ok) {
+          this.showToast(true, "Details updated for next section");
+        } else {
+          this.showToast(false, "Something went wrong, try again later");
+        }
+      })
+      .catch(() =>
+        this.showToast(false, "Something went wrong, try again later")
+      );
+    this.setState({ isEditing: false });
+  }
 
   render() {
     return (
       <div className="section-header">
         {!this.props.isMentor && <DropSection profileID={this.props.profile} />}
-
+        {this.state.toast.show && (
+          <Toast
+            success={this.state.toast.success}
+            message={this.state.toast.message}
+          />
+        )}
         <h3>{this.props.courseName.replace(/^(CS|EE)/, "$1 ")}</h3>
         <div className="section-information">
           <InfoField title="Mentor" icon="user">{`${
@@ -71,21 +170,22 @@ class SectionHeader extends React.Component {
               {this.props.mentor.email}
             </a>
           </InfoField>
-					{/* associate inputs with a hidden form element so that we can use the HTML5 required attribute */}
-					{this.state.isEditing && <form hidden id="override-form"/>}
+          {/* associate inputs with a hidden form element so that we can use the HTML5 required attribute */}
+          {this.state.isEditing && (
+            <form id="override-form" hidden onSubmit={this._handleSave} />
+          )}
           <InfoField
             title="Section time"
             icon="calendar"
             onClick={this._handleClickEditableField}
           >
-
             {this.state.isEditing ? (
               <span>
                 <select
                   onChange={this._handleChange}
                   value={this.state.dayOfWeek}
                   name="dayOfWeek"
-									form="override-form"
+                  form="override-form"
                 >
                   {Object.keys(DAYS_OF_WEEK).map(day => (
                     <option key={day} value={day}>
@@ -98,16 +198,8 @@ class SectionHeader extends React.Component {
                   type="time"
                   value={this.state.startTime}
                   name="startTime"
-									form="override-form"
-									required
-                />
-                <input
-                  onChange={this._handleChange}
-                  type="time"
-                  value={this.state.endTime}
-                  name="endTime"
-									form="override-form"
-									required
+                  form="override-form"
+                  required
                 />
               </span>
             ) : (
@@ -129,8 +221,8 @@ class SectionHeader extends React.Component {
                 name="location"
                 type="text"
                 value={this.state.location}
-								form="override-form"
-								required
+                form="override-form"
+                required
               />
             ) : (
               <span className="editable-field" title="Section location">
@@ -139,15 +231,19 @@ class SectionHeader extends React.Component {
             )}
           </InfoField>
           {this.state.isEditing && (
-							<div className="edit-buttons-container">
-								<button form="override-form" type="submit" onClick={this._handleSave} value="Save">Save</button>
-								<button onClick={this._handleCancel} value="Cancel">Cancel</button>
-							</div>)}
-
+            <div className="edit-buttons-container">
+              <button form="override-form" type="submit" value="Save">
+                Save
+              </button>
+              <button onClick={this._handleCancel} value="Cancel">
+                Cancel
+              </button>
+            </div>
+          )}
         </div>
 
-				{/* remember to remove this and actually render the roster button */}
-        {this.props.isMentor && false && ( 
+        {/* remember to remove this and actually render the roster button */}
+        {this.props.isMentor && false && (
           <Roster
             studentIDs={this.props.studentIDs}
             sectionID={this.props.sectionID}

@@ -131,7 +131,7 @@ class ActiveOverrideField(serializers.RelatedField):
         valid_set = overrides.filter(week_start__gte=current_week_start)
 
         # Get the one created most recently
-        first_valid_override = valid_set.order_by("week_start").first()
+        first_valid_override = valid_set.order_by("-id").first()
 
         if len(valid_set) > 0:
             return OverrideSerializer(first_valid_override).data

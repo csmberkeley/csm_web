@@ -204,6 +204,7 @@ html, body {
 }
 .section-header h3 {
 	margin-bottom: 0;
+	margin-top: 0px;
 	color: #373d3f;
 }
 
@@ -248,8 +249,46 @@ html, body {
 
 .section-header .editable-content:hover {
 	outline: 2px #dedede solid;
+}
+
+
+@keyframes toast-appear {
+	from {
+		right: -300px;
+	}
+
+	to {
+		right: 20px;
+	}
+}
+
+.toast {
+	position: fixed;
+	top: 100px;
+	right: 20px;
+	height: 50px;
+	z-index: 1000;
+	animation-name: toast-appear;
+	animation-duration: 0.7s;
+	box-shadow: 1px 3px 3px gray;
+	border-radius: 5px;
+	border: 1px solid #cecece;
 
 }
+
+.toast span[data-uk-icon] {
+	border-radius: 50%;
+	border: 2px solid #cccccc;
+	padding: 2px;
+	margin-right: 5px;
+}
+
+.toast > div {
+	margin: 7px 10px 0px;
+}
+
+
+
 
 
 
