@@ -337,3 +337,17 @@ html, body {
 #show-more-btn {
   margin-left: 50%;
 }
+
+/* Invisible component used for clipboard copy/paste https://stackoverflow.com/a/30810322 */
+.clipboard-textarea {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 2em;
+  height: 2em;
+  padding: 0;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+}

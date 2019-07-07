@@ -5,12 +5,17 @@ import { Modal } from "../utils/common.js";
 class Roster extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { currentSectionID: props.sectionID, students: null }; // will contain entries of the form studentID: [studentName, studentEmail]
+    this.state = {
+      currentSectionID: props.sectionID,
+      students: null, // will contain entries of the form studentID: [studentName, studentEmail]
+      emailsCopied: false
+    };
+    this.handleEmailCopy = this.handleEmailCopy.bind(this);
   }
 
   static getDerivedStateFromProps(state, props) {
     if (props.sectionID !== state.currentSectionID) {
-      return { currentSectionID: props.sectionID, students: null };
+      return { currentSectionID: props.sectionID, students: null, emailsCopied: false };
     }
     return null; // does not update state
   }
@@ -40,6 +45,24 @@ class Roster extends React.Component {
         });
       });
     }
+  }
+
+  handleEmailCopy() {
+    this.setState(state =>{
+      // Be careful with this map, as we need to make sure the function arguments
+      // aren't interpreted as (value, index)
+      let emailList = Object.values(state.students).map(([_, email]) => email);
+      // Create fake textArea per https://stackoverflow.com/a/30810322
+      let clipboardElement = document.createElement("textarea");
+      clipboardElement.classList.add("clipboard-textarea");
+      clipboardElement.value = emailList.join(",");
+      document.body.appendChild(clipboardElement);
+      clipboardElement.focus();
+      clipboardElement.select();
+      let newState = { emailsCopied: document.execCommand("copy") };
+      document.body.removeChild(clipboardElement);
+      return newState;
+    });
   }
 
   componentDidMount() {
@@ -79,6 +102,19 @@ class Roster extends React.Component {
         </button>
         <Modal id="roster-modal" title="Roster">
           <ul className="uk-list">{rosterEntries}</ul>
+          <div data-uk-grid className="uk-grid-small">
+            <button className="uk-button uk-button-default uk-button-small" onClick={this.handleEmailCopy}>
+              Copy Emails
+            </button>
+            {this.state.emailsCopied && (
+              <span
+                data-uk-icon="icon: check; ratio: 1.5"
+                style={{ color: "green" }}
+              >
+                Copied to clipboard
+              </span>
+            )}
+          </div>
         </Modal>
       </div>
     );
