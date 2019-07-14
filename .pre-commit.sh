@@ -8,15 +8,15 @@ git diff --cached --name-only --diff-filter=MRA > "$staged_files"
 javascript_files=$(grep -e '.*/src/.*\.js$' -e '\.json$' "$staged_files" | tr '\n' ' ' | sed 's/ *$//')
 if [ -n "$javascript_files" ]
 then
-	prettier --write --list-different "$javascript_files" >> "$reformatted_files"
+	npx prettier --write --list-different $javascript_files >> "$reformatted_files"
 fi
 
 python_files=$(grep '\.py$' "$staged_files" | tr '\n' ' ' | sed 's/ *$//')
 if [ -n "$python_files" ]
 then
 	# Get filenames of python files that would be reformated
-	black --check "$python_files" 2>&1 | grep '^would reformat' | sed 's/^would reformat *//' >> "$reformatted_files"
-	black -q "$python_files"
+	black --check $python_files 2>&1 | grep '^would reformat' | sed 's/^would reformat *//' >> "$reformatted_files"
+	black -q $python_files
 fi
 
 if [ -s "$reformatted_files" ]
