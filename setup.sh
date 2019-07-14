@@ -58,20 +58,9 @@ python csm_web/manage.py migrate
 python csm_web/manage.py createtestdata --yes 
 
 # TODO put precommit hooks in git?
-echo "Getting precommit hook..."
+echo "Installing pre-commit hook..."
+pip3 install black # pre-commit hook requires this
 ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
-
-# precommit hook uses prettier and black
-if ! command -v prettier > /dev/null
-then
-	echo 'Please make sure to install prettier (see README)'
-fi
-
-if ! command -v black > /dev/null
-then
-	echo 'Please make sure to install black (see README)'
-fi
-
 
 target_version=$(sed 's/[^0-9.]//g' runtime.txt)
 installed_version=$(python3 --version | sed 's/[^0-9.]//g')
