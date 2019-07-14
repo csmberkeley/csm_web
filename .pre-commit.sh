@@ -5,9 +5,11 @@ reformatted_files=$(mktemp)
 # Look only at staged files that have been modified, renamed, or newly added
 git diff --cached --name-only --diff-filter=MRA > "$staged_files"
 
-javascript_files=$(grep -e '.*/src/.*\.js$' -e '\.json$' "$staged_files" | tr '\n' ' ' | sed 's/ *$//')
+javascript_files=$(grep -E '.*/src/.*\.jsx?$' "$staged_files" | tr '\n' ' ' | sed 's/ *$//')
+
 if [ -n "$javascript_files" ]
 then
+	npx eslint --quiet $javascript_files || exit 1
 	npx prettier --write --list-different $javascript_files >> "$reformatted_files"
 fi
 
