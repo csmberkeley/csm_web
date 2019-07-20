@@ -29,7 +29,11 @@ To start the Django server, run `python csm_web/manage.py runserver` and visit `
 
 Run `python csm_web/manage.py createtestdata` to generate some test data.
 
-*If you make any frontend changes*: run `npm run dev` to rebuild the frontend JS bundle (this has to be done manually at the moment).
+*If you are working on the frontend*:
+
+Run `npm run watch`, which will automatically rebuild the JS bundle if any changes to the frontend JS are detected
+
+(Alternatively you can run `npm run dev` manually each time you make changes to the frontend)
 
 ## Troubleshooting
 * OSX: error on running `pip`
