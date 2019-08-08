@@ -1,10 +1,10 @@
-from datetime import timedelta
+from datetime import datetime, timedelta
+from itertools import groupby
+
 from django.utils import timezone
 from rest_framework import serializers
 from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
 from .permissions import is_leader
-from itertools import groupby
-from datetime import datetime
 
 
 class CourseSerializer(serializers.ModelSerializer):

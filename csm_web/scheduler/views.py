@@ -1,24 +1,20 @@
 from django.db import transaction
-from django.shortcuts import render, redirect, get_object_or_404
-from django.urls import reverse
+from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from django.contrib.auth import logout as auth_logout
 
-from rest_framework import generics, permissions, viewsets, status
+from rest_framework import generics, permissions, status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 
-from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
+from .models import Attendance, Course, Profile, Section, Override
 from .serializers import (
-    UserSerializer,
     AttendanceSerializer,
     CourseSerializer,
     ProfileSerializer,
     VerboseProfileSerializer,
     UserProfileSerializer,
     SectionSerializer,
-    SpacetimeSerializer,
     OverrideSerializer,
 )
 from .permissions import (

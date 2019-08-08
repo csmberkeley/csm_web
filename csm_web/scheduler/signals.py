@@ -4,8 +4,8 @@ from django.db.models import signals
 from django.db import transaction
 from django.dispatch import receiver
 from django.contrib.auth.models import User as AuthUser
-import scheduler.models as models
 from eventlog.events import EventGroup
+import scheduler.models as models
 
 ### ATTENDANCE GENERATION
 

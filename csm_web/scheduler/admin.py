@@ -1,13 +1,8 @@
-from django.db import models
-from django.db.models import Count
+from django.db.models import Count, Q
 from django.contrib import admin
-from django.contrib.admin.views.decorators import staff_member_required
 from django.core.exceptions import ValidationError
 from django.utils.html import format_html
 from django.urls import reverse
-import django_filters
-
-from django.db.models import Q
 
 from scheduler.models import (
     User,
@@ -348,7 +343,7 @@ class DayStartFilter(admin.SimpleListFilter):
                 return queryset.filter(Q(date__gte=filter_day_start))
             else:
                 return queryset.all()
-        except ValidationError as e:
+        except ValidationError:
             return queryset.all()
 
 
@@ -378,7 +373,7 @@ class DayEndFilter(admin.SimpleListFilter):
                 return queryset.filter(Q(date__lte=filter_day_end))
             else:
                 return queryset.all()
-        except ValidationError as e:
+        except ValidationError:
             return queryset.all()
 
 

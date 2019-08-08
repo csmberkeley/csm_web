@@ -6,4 +6,5 @@ class SchedulerConfig(AppConfig):
 
     def ready(self):
         # registers signals
+        # pylint:disable=unused-variable
         import scheduler.signals

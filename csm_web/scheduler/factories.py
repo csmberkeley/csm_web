@@ -1,8 +1,8 @@
+from datetime import timedelta
+import random
 import factory
 import factory.fuzzy
-from datetime import timedelta
 from django.utils import timezone
-import random
 from django.core import management
 from django.conf import settings
 from django.db.models import signals
