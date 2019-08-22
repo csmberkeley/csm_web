@@ -57,8 +57,6 @@ INSTALLED_APPS = [
     "eventlog.apps.EventLogConfig",
     "frontend",
     "django_filters",
-    "logistinator",
-    "logistinator_frontend",
 ]
 
 MIDDLEWARE = [
@@ -231,10 +229,7 @@ LOGGING = {
         },
     },
     "loggers": {
-        "django": {
-            "handlers": ["console-django", "mail_admins"],
-            "level": "INFO",
-        },
+        "django": {"handlers": ["console-django", "mail_admins"], "level": "INFO"},
         "django.request": {
             "handlers": ["low-level"],
             "level": "DEBUG",

@@ -6,7 +6,6 @@
   "scripts": {
     "dev": "webpack --mode development ./csm_web/frontend/src/index.js --output ./csm_web/frontend/static/frontend/main.js",
     "build": "webpack --mode production ./csm_web/frontend/src/index.js --output ./csm_web/frontend/static/frontend/main.js",
-    "logistinator_dev": "webpack --mode development ./csm_web/logistinator_frontend/src/index.js --output ./csm_web/logistinator_frontend/static/logistinator_frontend/main.js",
     "watch": "nodemon --watch ./csm_web/frontend/src/components --exec './.nodemon.sh'"
   },
   "heroku-run-build-script": true,
