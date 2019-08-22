@@ -7,13 +7,6 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument(
-            "--complicated",
-            action="store_true",
-            dest="complicated",
-            help="Complicate data by allowing users to have multiple profiles, potentially across different courses or roles.",
-        )
-
-        parser.add_argument(
             "--yes",
             action="store_true",
             dest="preconfirm",
@@ -21,4 +14,4 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        generate_test_data(options["complicated"], options["preconfirm"])
+        generate_test_data(options["preconfirm"])
