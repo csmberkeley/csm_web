@@ -3,7 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
-from django.core.exceptions import ValidationError
+from rest_framework.serializers import ValidationError
 
 
 class User(AbstractUser):
@@ -47,6 +47,17 @@ class Course(models.Model):
 
     def __str__(self):
         return self.name
+
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        if self.enrollment_end <= self.enrollment_start:
+            raise ValidationError("enrollment_end must be after enrollment_start")
+        if self.valid_until < self.enrollment_end:
+            raise ValidationError("valid_until must be after enrollment_end")
 
 
 class Profile(models.Model):
@@ -175,10 +186,14 @@ class Override(models.Model):
     overriden_spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE)
     date = models.DateField()
 
+    def save(self, *args, **kwargs):
+        self.clean()
+        super().save(*args, **kwargs)
+
     def clean(self):
         super().clean()
         if self.spacetime == self.overriden_spacetime:
-            raise ValidationError("A spacetime cannot override itself.")
+            raise ValidationError("A spacetime cannot override itself")
 
     def __str__(self):
         return f"Override for {self.overriden_spacetime.section} : {self.spacetime}"
