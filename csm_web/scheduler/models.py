@@ -3,6 +3,7 @@ from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
+from django.core.exceptions import ValidationError
 
 
 class User(AbstractUser):
@@ -69,7 +70,11 @@ class Profile(models.Model):
 
 class Student(Profile):
     section = models.ForeignKey(
-        "Section", on_delete=models.CASCADE, blank=True, null=True
+        "Section",
+        on_delete=models.CASCADE,
+        blank=True,
+        null=True,
+        related_name="students",
     )
 
 
@@ -79,7 +84,7 @@ class Mentor(Profile):
 
 class Section(models.Model):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    spacetime = models.OneToOneField("SpacetimeProxy", on_delete=models.CASCADE)
+    spacetime = models.OneToOneField("Spacetime", on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
     mentor = models.ForeignKey(Mentor, on_delete=models.SET_NULL, blank=True, null=True)
 
@@ -95,7 +100,7 @@ class Section(models.Model):
             mentor="(no mentor)" if not self.mentor else self.mentor.name,
             enrolled=self.current_student_count,
             cap=self.capacity,
-            spacetime=str(self.default_spacetime),
+            spacetime=str(self.spacetime),
         )
 
     class Meta:
@@ -119,10 +124,41 @@ class Spacetime(models.Model):
         (SATURDAY, "Saturday"),
         (SUNDAY, "Sunday"),
     )
-    location = models.CharField(max_length=100)
-    start_time = models.TimeField()
-    duration = models.DurationField()
-    day_of_week = models.CharField(max_length=2, choices=DAY_OF_WEEK_CHOICES)
+    _location = models.CharField(max_length=100)
+    _start_time = models.TimeField()
+    _duration = models.DurationField()
+    _day_of_week = models.CharField(max_length=2, choices=DAY_OF_WEEK_CHOICES)
+
+    """
+    Unfortunately the Django models.Model class doesn't play nice with standard Python metaprogramming
+    functionality like __getattribute__, and Django doesn't allow you to shadow fields in a descendant class,
+    so we have to resort to this boilerplate @property solution in order to have Spacetime 'magically' return
+    the overriden value if there is one
+    """
+
+    @property
+    def location(self):
+        if hasattr(self, "override"):
+            return self.override.spacetime.location
+        return self._location
+
+    @property
+    def start_time(self):
+        if hasattr(self, "override"):
+            return self.override.spacetime.start_time
+        return self._start_time
+
+    @property
+    def duration(self):
+        if hasattr(self, "override"):
+            return self.override.spacetime.duration
+        return self._duration
+
+    @property
+    def day_of_week(self):
+        if hasattr(self, "override"):
+            return self.override.spacetime.day_of_week
+        return self._day_of_week
 
     def __str__(self):
         formatted_time = self.start_time.strftime("%I:%M %p")
@@ -132,27 +168,17 @@ class Spacetime(models.Model):
         )
 
 
-class SpacetimeProxy(Spacetime):
-    def __getattribute__(self, name):
-        if self.override and name in (
-            "location",
-            "start_time",
-            "duration",
-            "day_of_week",
-        ):
-            return getattr(self.override.spacetime, name)
-        return super().__getattribute__(name)
-
-    class Meta:
-        proxy = True
-
-
 class Override(models.Model):
     spacetime = models.OneToOneField(
-        SpacetimeProxy, on_delete=models.CASCADE, related_name="+"
+        Spacetime, on_delete=models.CASCADE, related_name="+"
     )  # related_name='+' means Django does not create the reverse relation
-    overriden_spacetime = models.OneToOneField(SpacetimeProxy, on_delete=models.CASCADE)
+    overriden_spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE)
     date = models.DateField()
 
+    def clean(self):
+        super().clean()
+        if self.spacetime == self.overriden_spacetime:
+            raise ValidationError("A spacetime cannot override itself.")
+
     def __str__(self):
-        return f"Override for {self.section} : {self.spacetime}"
+        return f"Override for {self.overriden_spacetime.section} : {self.spacetime}"
