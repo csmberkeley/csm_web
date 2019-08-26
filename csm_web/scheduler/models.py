@@ -28,13 +28,10 @@ class Attendance(models.Model):
 
     @property
     def section(self):
-        return self.attendee.section
+        return self.student.section
 
     @property
     def week_start(self):
-        return self.get_week_start_from_date()
-
-    def get_week_start_from_date(self):
         day_of_week = timezone.now().weekday()
         return self.date - datetime.timedelta(days=day_of_week)
 
@@ -77,6 +74,9 @@ class Student(Profile):
         related_name="students",
     )
 
+    class Meta:
+        unique_together = ("user", "section")
+
 
 class Mentor(Profile):
     pass
@@ -108,13 +108,13 @@ class Section(models.Model):
 
 
 class Spacetime(models.Model):
-    MONDAY = "M"
-    TUESDAY = "TU"
-    WEDNESDAY = "W"
-    THURSDAY = "TH"
-    FRIDAY = "F"
-    SATURDAY = "SA"
-    SUNDAY = "SU"
+    MONDAY = "Mon"
+    TUESDAY = "Tue"
+    WEDNESDAY = "Wed"
+    THURSDAY = "Thu"
+    FRIDAY = "Fri"
+    SATURDAY = "Sat"
+    SUNDAY = "Sun"
     DAY_OF_WEEK_CHOICES = (
         (MONDAY, "Monday"),
         (TUESDAY, "Tuesday"),
@@ -127,7 +127,7 @@ class Spacetime(models.Model):
     _location = models.CharField(max_length=100)
     _start_time = models.TimeField()
     _duration = models.DurationField()
-    _day_of_week = models.CharField(max_length=2, choices=DAY_OF_WEEK_CHOICES)
+    _day_of_week = models.CharField(max_length=3, choices=DAY_OF_WEEK_CHOICES)
 
     """
     Unfortunately the Django models.Model class doesn't play nice with standard Python metaprogramming

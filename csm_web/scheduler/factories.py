@@ -257,7 +257,7 @@ def generate_test_data(preconfirm=False):
             )
             for student in students:
                 create_attendances_for(student)
-            section.students = students
+            section.students.set(students)
             section.save()
         print("Done")
     create_demo_accounts()
