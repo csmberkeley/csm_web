@@ -60,12 +60,12 @@ class SpacetimeFactory(factory.DjangoModelFactory):
     class Meta:
         model = Spacetime
 
-    location = factory.LazyFunction(
+    _location = factory.LazyFunction(
         lambda: "%s %d" % (random.choice(BUILDINGS), random.randint(1, 500))
     )
-    start_time = factory.Faker("time_object")
-    duration = factory.LazyFunction(lambda: timedelta(minutes=random.choice((60, 90))))
-    day_of_week = factory.fuzzy.FuzzyChoice(DAY_OF_WEEK_DB_CHOICES)
+    _start_time = factory.Faker("time_object")
+    _duration = factory.LazyFunction(lambda: timedelta(minutes=random.choice((60, 90))))
+    _day_of_week = factory.fuzzy.FuzzyChoice(DAY_OF_WEEK_DB_CHOICES)
 
 
 class UserFactory(factory.DjangoModelFactory):
@@ -146,8 +146,8 @@ class OverrideFactory(factory.DjangoModelFactory):
     def date(obj):
         return factory.Faker(
             "date_between_dates",
-            date_start=obj.section.course.enrollment_start.date(),
-            date_end=obj.section.course.valid_until,
+            date_start=obj.overriden_spacetime.section.course.enrollment_start.date(),
+            date_end=obj.overriden_spacetime.section.course.valid_until,
         ).generate({})
 
     spacetime = factory.SubFactory(SpacetimeFactory)
