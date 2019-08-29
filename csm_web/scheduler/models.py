@@ -40,7 +40,7 @@ class Attendance(models.Model):
 
 
 class Course(models.Model):
-    name = models.SlugField(max_length=100, unique=True)
+    name = models.SlugField(max_length=100, unique_for_month="enrollment_start")
     valid_until = models.DateField()
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
@@ -49,14 +49,18 @@ class Course(models.Model):
         return self.name
 
     def save(self, *args, **kwargs):
-        self.clean()
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def clean(self):
         super().clean()
         if self.enrollment_end <= self.enrollment_start:
             raise ValidationError("enrollment_end must be after enrollment_start")
-        if self.valid_until < self.enrollment_end:
+        if type(self.enrollment_end) == datetime.datetime:
+            enrollment_end = self.enrollment_end.date()
+        else:
+            enrollment_end = self.enrollment_end
+        if self.valid_until < enrollment_end:
             raise ValidationError("valid_until must be after enrollment_end")
 
 
@@ -104,6 +108,17 @@ class Section(models.Model):
         return self.students.count()
 
     current_student_count.fget.short_description = "Number of students enrolled"
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    def clean(self):
+        super().clean()
+        if self.students.count() > self.capacity:
+            raise ValidationError(
+                "Number of enrolled students exceeds section capacity"
+            )
 
     def __str__(self):
         return "{course} section ({enrolled}/{cap}, {mentor}, {spacetime})".format(
@@ -187,7 +202,7 @@ class Override(models.Model):
     date = models.DateField()
 
     def save(self, *args, **kwargs):
-        self.clean()
+        self.full_clean()
         super().save(*args, **kwargs)
 
     def clean(self):

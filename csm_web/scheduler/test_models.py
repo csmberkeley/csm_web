@@ -1,9 +1,11 @@
 from django.test import TestCase
+from rest_framework.serializers import ValidationError
 from scheduler.factories import (
     SpacetimeFactory,
     OverrideFactory,
     CourseFactory,
     SectionFactory,
+    StudentFactory,
 )
 
 
@@ -25,3 +27,22 @@ class SpacetimeTest(TestCase):
         self.assertEqual(self.spacetime.day_of_week, override.spacetime.day_of_week)
         self.assertEqual(self.spacetime.start_time, override.spacetime.start_time)
         self.assertEqual(self.spacetime.duration, override.spacetime.duration)
+
+
+class SectionTest(TestCase):
+    def setUp(self):
+        course = CourseFactory.create()
+        self.section = SectionFactory.create(course=course, capacity=5)
+
+    def test_capacity_validation_valid(self):
+        self.section.students.set(
+            StudentFactory.create_batch(self.section.capacity, section=self.section)
+        )
+
+    def test_capacity_validation_invalid(self):
+        with self.assertRaises(ValidationError):
+            self.section.students.set(
+                StudentFactory.create_batch(self.section.capacity, section=self.section)
+            )
+            self.section.students.add(StudentFactory.create(section=self.section))
+            self.section.save()
