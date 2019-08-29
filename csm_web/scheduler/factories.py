@@ -163,7 +163,7 @@ def create_attendances_for(student):
     current_date = student.section.course.enrollment_start.date()
     while WEEKDAY_MAP[current_date.weekday()] != student.section.spacetime.day_of_week:
         current_date += timedelta(days=1)
-    while current_date < student.section.course.valid_until.date():
+    while current_date < student.section.course.valid_until:
         if current_date < today:
             AttendanceFactory.create(student=student, date=current_date)
         else:
