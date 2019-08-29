@@ -10,7 +10,21 @@ class User(AbstractUser):
     pass
 
 
-class Attendance(models.Model):
+class ValidatingModel(models.Model):
+    """
+    By default, Django models do not validate on save!
+    This abstract class fixes that insanity
+    """
+
+    def save(self, *args, **kwargs):
+        self.full_clean()
+        super().save(*args, **kwargs)
+
+    class Meta:
+        abstract = True
+
+
+class Attendance(ValidatingModel):
     PRESENT = "PR"
     UNEXCUSED_ABSENCE = "UN"
     EXCUSED_ABSENCE = "EX"
@@ -39,7 +53,7 @@ class Attendance(models.Model):
         unique_together = ("date", "student")
 
 
-class Course(models.Model):
+class Course(ValidatingModel):
     name = models.SlugField(max_length=100, unique_for_month="enrollment_start")
     valid_until = models.DateField()
     enrollment_start = models.DateTimeField()
@@ -47,10 +61,6 @@ class Course(models.Model):
 
     def __str__(self):
         return self.name
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
 
     def clean(self):
         super().clean()
@@ -64,7 +74,7 @@ class Course(models.Model):
             raise ValidationError("valid_until must be after enrollment_end")
 
 
-class Profile(models.Model):
+class Profile(ValidatingModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     @property
@@ -97,7 +107,7 @@ class Mentor(Profile):
     pass
 
 
-class Section(models.Model):
+class Section(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     spacetime = models.OneToOneField("Spacetime", on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
@@ -108,10 +118,6 @@ class Section(models.Model):
         return self.students.count()
 
     current_student_count.fget.short_description = "Number of students enrolled"
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
 
     def clean(self):
         super().clean()
@@ -133,7 +139,7 @@ class Section(models.Model):
         unique_together = ("course", "spacetime")
 
 
-class Spacetime(models.Model):
+class Spacetime(ValidatingModel):
     MONDAY = "Mon"
     TUESDAY = "Tue"
     WEDNESDAY = "Wed"
@@ -194,16 +200,12 @@ class Spacetime(models.Model):
         )
 
 
-class Override(models.Model):
+class Override(ValidatingModel):
     spacetime = models.OneToOneField(
         Spacetime, on_delete=models.CASCADE, related_name="+"
     )  # related_name='+' means Django does not create the reverse relation
     overriden_spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE)
     date = models.DateField()
-
-    def save(self, *args, **kwargs):
-        self.full_clean()
-        super().save(*args, **kwargs)
 
     def clean(self):
         super().clean()
