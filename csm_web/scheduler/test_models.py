@@ -1,5 +1,6 @@
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
+from datetime import datetime, timedelta
 from scheduler.factories import (
     SpacetimeFactory,
     OverrideFactory,
@@ -46,3 +47,21 @@ class SectionTest(TestCase):
             )
             self.section.students.add(StudentFactory.create(section=self.section))
             self.section.save()
+
+
+class CourseTest(TestCase):
+    def test_enrollment_start_after_end_validation(self):
+        with self.assertRaises(ValidationError):
+            CourseFactory.create(
+                enrollment_start=datetime.now(),
+                enrollment_end=(datetime.now() - timedelta(days=1)),
+                valid_until=(datetime.now() + timedelta(days=10)),
+            )
+
+    def test_valid_until_after_enrollment(self):
+        with self.assertRaises(ValidationError):
+            CourseFactory.create(
+                enrollment_start=datetime.now(),
+                enrollment_end=(datetime.now() + timedelta(days=1)),
+                valid_until=(datetime.now() - timedelta(days=10)),
+            )
