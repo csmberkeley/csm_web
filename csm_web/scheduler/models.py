@@ -168,27 +168,30 @@ class Spacetime(ValidatingModel):
     the overriden value if there is one
     """
 
+    def has_valid_override(self):
+        return hasattr(self, "override") and not self.override.is_expired()
+
     @property
     def location(self):
-        if hasattr(self, "override"):
+        if self.has_valid_override():
             return self.override.spacetime.location
         return self._location
 
     @property
     def start_time(self):
-        if hasattr(self, "override"):
+        if self.has_valid_override():
             return self.override.spacetime.start_time
         return self._start_time
 
     @property
     def duration(self):
-        if hasattr(self, "override"):
+        if self.has_valid_override():
             return self.override.spacetime.duration
         return self._duration
 
     @property
     def day_of_week(self):
-        if hasattr(self, "override"):
+        if self.has_valid_override():
             return self.override.spacetime.day_of_week
         return self._day_of_week
 
@@ -211,6 +214,9 @@ class Override(ValidatingModel):
         super().clean()
         if self.spacetime == self.overriden_spacetime:
             raise ValidationError("A spacetime cannot override itself")
+
+    def is_expired(self):
+        return self.date < timezone.now().date()
 
     def __str__(self):
         return f"Override for {self.overriden_spacetime.section} : {self.spacetime}"
