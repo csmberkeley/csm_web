@@ -59,7 +59,6 @@ python csm_web/manage.py createtestdata --yes
 
 # TODO put precommit hooks in git?
 echo "Installing pre-commit hook..."
-pip3 install black # pre-commit hook requires this
 ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
 
 target_version=$(sed 's/[^0-9.]//g' runtime.txt)

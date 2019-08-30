@@ -6,7 +6,7 @@ We don't know what specific minimum version you would need for any of the follow
 
 * Python 3.7
   * [virtualenv](https://packaging.python.org/guides/installing-using-pip-and-virtualenv/) (`pip install virtualenv`)
-  * [black](https://black.readthedocs.io/en/stable/) (`pip install black`)
+  * [autopep8](https://pypi.org/project/autopep8/) (`pip install autopep8`)
 * [npm](https://www.npmjs.com/get-npm)
   * [prettier](https://prettier.io/) (`npm install -g prettier`)
   * [eslint](https://eslint.org/) (`npm install -g eslint`; `npm install -g eslint-plugin-react`)
