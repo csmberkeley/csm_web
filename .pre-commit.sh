@@ -17,8 +17,8 @@ python_files=$(grep '\.py$' "$staged_files" | tr '\n' ' ' | sed 's/ *$//')
 if [ -n "$python_files" ]
 then
 	# Get filenames of python files that would be reformated
-	black --check $python_files 2>&1 | grep '^would reformat' | sed 's/^would reformat *//' >> "$reformatted_files"
-	black -q $python_files
+	pycodestyle --max-line-length 120 --format '%(path)s' $python_files | sort | uniq >> "$reformatted_files"
+	autopep8 --max-line-length 120 -i $python_files
 fi
 
 if [ -s "$reformatted_files" ]
