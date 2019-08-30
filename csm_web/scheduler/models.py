@@ -112,19 +112,13 @@ class Section(ValidatingModel):
     spacetime = models.OneToOneField("Spacetime", on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
     mentor = models.ForeignKey(Mentor, on_delete=models.SET_NULL, blank=True, null=True)
+    description = models.CharField(max_length=100, blank=True)
 
     @property
     def current_student_count(self):
         return self.students.count()
 
     current_student_count.fget.short_description = "Number of students enrolled"
-
-    def clean(self):
-        super().clean()
-        if self.students.count() > self.capacity:
-            raise ValidationError(
-                "Number of enrolled students exceeds section capacity"
-            )
 
     def __str__(self):
         return "{course} section ({enrolled}/{cap}, {mentor}, {spacetime})".format(
