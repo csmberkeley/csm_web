@@ -19,9 +19,7 @@ from .models import (
 
 
 class CourseFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(
-        signals.pre_save, signals.post_save, signals.pre_delete
-    )
+    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Course
 
@@ -48,49 +46,33 @@ class CourseFactory(factory.DjangoModelFactory):
 
 
 BUILDINGS = ("Cory", "Soda", "Kresge", "Moffitt")
-DAY_OF_WEEK_DB_CHOICES = [
-    db_value for db_value, display_name in Spacetime.DAY_OF_WEEK_CHOICES
-]
+DAY_OF_WEEK_DB_CHOICES = [db_value for db_value, display_name in Spacetime.DAY_OF_WEEK_CHOICES]
 
 
 class SpacetimeFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(
-        signals.pre_save, signals.post_save, signals.pre_delete
-    )
+    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Spacetime
 
-    _location = factory.LazyFunction(
-        lambda: "%s %d" % (random.choice(BUILDINGS), random.randint(1, 500))
-    )
+    _location = factory.LazyFunction(lambda: "%s %d" % (random.choice(BUILDINGS), random.randint(1, 500)))
     _start_time = factory.Faker("time_object")
     _duration = factory.LazyFunction(lambda: timedelta(minutes=random.choice((60, 90))))
     _day_of_week = factory.fuzzy.FuzzyChoice(DAY_OF_WEEK_DB_CHOICES)
 
 
 class UserFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(
-        signals.pre_save, signals.post_save, signals.pre_delete
-    )
+    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = User
 
-    first_name = factory.LazyFunction(
-        lambda: factory.Faker("name").generate({}).split()[0]
-    )
-    last_name = factory.LazyFunction(
-        lambda: factory.Faker("name").generate({}).split()[-1]
-    )
-    username = factory.LazyAttributeSequence(
-        lambda o, n: "%s_%s%d" % (o.first_name, o.last_name, n)
-    )
+    first_name = factory.LazyFunction(lambda: factory.Faker("name").generate({}).split()[0])
+    last_name = factory.LazyFunction(lambda: factory.Faker("name").generate({}).split()[-1])
+    username = factory.LazyAttributeSequence(lambda o, n: "%s_%s%d" % (o.first_name, o.last_name, n))
     email = factory.LazyAttribute(lambda o: "%s@berkeley.edu" % o.username)
 
 
 class StudentFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(
-        signals.pre_save, signals.post_save, signals.pre_delete
-    )
+    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Student
 
@@ -98,9 +80,7 @@ class StudentFactory(factory.DjangoModelFactory):
 
 
 class MentorFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(
-        signals.pre_save, signals.post_save, signals.pre_delete
-    )
+    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Mentor
 
@@ -108,9 +88,7 @@ class MentorFactory(factory.DjangoModelFactory):
 
 
 class SectionFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(
-        signals.pre_save, signals.post_save, signals.pre_delete
-    )
+    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Section
 
@@ -119,15 +97,11 @@ class SectionFactory(factory.DjangoModelFactory):
     mentor = factory.SubFactory(MentorFactory)
 
 
-PRESENCE_DB_VALUES = [
-    db_value for db_value, display_name in Attendance.PRESENCE_CHOICES
-]
+PRESENCE_DB_VALUES = [db_value for db_value, display_name in Attendance.PRESENCE_CHOICES]
 
 
 class AttendanceFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(
-        signals.pre_save, signals.post_save, signals.pre_delete
-    )
+    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Attendance
 
@@ -136,9 +110,7 @@ class AttendanceFactory(factory.DjangoModelFactory):
 
 
 class OverrideFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(
-        signals.pre_save, signals.post_save, signals.pre_delete
-    )
+    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Override
 
@@ -153,9 +125,7 @@ class OverrideFactory(factory.DjangoModelFactory):
     spacetime = factory.SubFactory(SpacetimeFactory)
 
 
-WEEKDAY_MAP = {
-    number: pair[0] for number, pair in enumerate(Spacetime.DAY_OF_WEEK_CHOICES)
-}
+WEEKDAY_MAP = {number: pair[0] for number, pair in enumerate(Spacetime.DAY_OF_WEEK_CHOICES)}
 
 
 def create_attendances_for(student):
@@ -176,7 +146,7 @@ def demoify_user(user, username):
     user.is_staff = True
     user.is_superuser = True
     user.username = username
-    user.email = "{}@berkeley.edu".format(username)
+    user.email = f"{username}@berkeley.edu"
     name_parts = username.split("_")
     user.first_name, user.last_name = (
         name_parts[0].capitalize(),
@@ -191,20 +161,13 @@ def create_demo_accounts():
     demoify_user(demo_mentor.user, "demo_mentor")
     demo_student = random.choice(Student.objects.all())
     demoify_user(demo_student.user, "demo_student")
-    print(
-        "\nDemo accounts have been created with usernames demo_mentor and demo_student"
-    )
+    print("\nDemo accounts have been created with usernames demo_mentor and demo_student")
     print("The password for these accounts is 'pass', log in at localhost:8000/admin/")
 
 
 def disable_signals():
     original_signals = []
-    for signal in (
-        signals.pre_save,
-        signals.pre_delete,
-        signals.post_save,
-        signals.post_delete,
-    ):
+    for signal in (signals.pre_save, signals.pre_delete, signals.post_save, signals.post_delete):
         original_signals.append((signal, signal.receivers))
         signal.receivers = []
     return original_signals
@@ -243,18 +206,12 @@ def generate_test_data(preconfirm=False):
     enrollment_end = timezone.now() + timedelta(days=50)
     valid_until = timezone.now() + timedelta(days=100)
     for course_name in course_names:
-        course = CourseFactory.create(
-            name=course_name,
-            enrollment_start=enrollment_start,
-            enrollment_end=enrollment_end,
-            valid_until=valid_until,
-        )
+        course = CourseFactory.create(name=course_name, enrollment_start=enrollment_start, enrollment_end=enrollment_end,
+                                      valid_until=valid_until)
         print(course_name + "...", end=" ")
         for _ in range(random.randint(5, 10)):
             section = SectionFactory.create(course=course)
-            students = StudentFactory.create_batch(
-                random.randint(0, section.capacity), section=section
-            )
+            students = StudentFactory.create_batch(random.randint(0, section.capacity), section=section)
             for student in students:
                 create_attendances_for(student)
             section.students.set(students)
