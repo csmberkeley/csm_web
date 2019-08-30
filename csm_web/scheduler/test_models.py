@@ -41,25 +41,6 @@ class SpacetimeTest(TestCase):
         self.assertEqual(self.spacetime.duration, self.spacetime._duration)
 
 
-class SectionTest(TestCase):
-    def setUp(self):
-        course = CourseFactory.create()
-        self.section = SectionFactory.create(course=course, capacity=5)
-
-    def test_capacity_validation_valid(self):
-        self.section.students.set(
-            StudentFactory.create_batch(self.section.capacity, section=self.section)
-        )
-
-    def test_capacity_validation_invalid(self):
-        with self.assertRaises(ValidationError):
-            self.section.students.set(
-                StudentFactory.create_batch(self.section.capacity, section=self.section)
-            )
-            self.section.students.add(StudentFactory.create(section=self.section))
-            self.section.save()
-
-
 class CourseTest(TestCase):
     def test_enrollment_start_after_end_validation(self):
         with self.assertRaises(ValidationError):
