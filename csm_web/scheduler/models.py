@@ -91,13 +91,7 @@ class Profile(ValidatingModel):
 
 
 class Student(Profile):
-    section = models.ForeignKey(
-        "Section",
-        on_delete=models.CASCADE,
-        blank=True,
-        null=True,
-        related_name="students",
-    )
+    section = models.ForeignKey("Section", on_delete=models.CASCADE, blank=True, null=True, related_name="students")
 
     class Meta:
         unique_together = ("user", "section")
@@ -192,15 +186,12 @@ class Spacetime(ValidatingModel):
     def __str__(self):
         formatted_time = self.start_time.strftime("%I:%M %p")
         num_minutes = int(self.duration.total_seconds() // 60)
-        return (
-            f"{self.location} {self.day_of_week} {formatted_time} for {num_minutes} min"
-        )
+        return f"{self.location} {self.day_of_week} {formatted_time} for {num_minutes} min"
 
 
 class Override(ValidatingModel):
-    spacetime = models.OneToOneField(
-        Spacetime, on_delete=models.CASCADE, related_name="+"
-    )  # related_name='+' means Django does not create the reverse relation
+    # related_name='+' means Django does not create the reverse relation
+    spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE, related_name="+")
     overriden_spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE)
     date = models.DateField()
 
