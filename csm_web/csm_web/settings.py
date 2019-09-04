@@ -36,10 +36,9 @@ DEBUG = DJANGO_ENV == DEVELOPMENT
 
 ALLOWED_HOSTS = []
 
-# Change this when Matthew graduates I guess
 ADMINS = [
     ("Jonathan Shi", "jhshi@berkeley.edu"),
-    ("Matthew Soh", "matthewsoh@berkeley.edu"),
+    ("Kevin Svetlitski", "kevin_svetlitski@berkeley.edu"),
 ]
 
 # Application definition
@@ -58,6 +57,9 @@ INSTALLED_APPS = [
     "frontend",
     "django_filters",
 ]
+
+if DJANGO_ENV == DEVELOPMENT:
+    INSTALLED_APPS.append("django_extensions")
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
