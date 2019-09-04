@@ -58,6 +58,7 @@ class Course(ValidatingModel):
     valid_until = models.DateField()
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
+    permitted_absences = models.PositiveSmallIntegerField()
 
     def __str__(self):
         return self.name
@@ -82,8 +83,6 @@ class Profile(ValidatingModel):
         return f"{self.user.first_name} {self.user.last_name}"
 
     def __str__(self):
-        if self.section:
-            return f"{self.name} ({self.section.course.name})"
         return self.name
 
     class Meta:
@@ -92,13 +91,22 @@ class Profile(ValidatingModel):
 
 class Student(Profile):
     section = models.ForeignKey("Section", on_delete=models.CASCADE, blank=True, null=True, related_name="students")
+    active = models.BooleanField(default=True)
+
+    def __str__(self):
+        if self.section:
+            return f"{self.name} ({self.section.course.name})"
+        return self.name
 
     class Meta:
         unique_together = ("user", "section")
 
 
 class Mentor(Profile):
-    pass
+    def __str__(self):
+        if self.section_set.first():
+            return f"{self.name} ({self.section_set.first().course.name})"
+        return self.name
 
 
 class Section(ValidatingModel):
@@ -110,7 +118,7 @@ class Section(ValidatingModel):
 
     @property
     def current_student_count(self):
-        return self.students.count()
+        return self.students.filter(active=True).count()
 
     current_student_count.fget.short_description = "Number of students enrolled"
 
@@ -207,6 +215,8 @@ class Override(ValidatingModel):
         super().clean()
         if self.spacetime == self.overriden_spacetime:
             raise ValidationError("A spacetime cannot override itself")
+        if self.spacetime.day_of_week != self.date.strftime("%a")[:3]:
+            raise ValidationError("Day of week of spacetime and day of week of date do not matchf")
 
     def is_expired(self):
         return self.date < timezone.now().date()
