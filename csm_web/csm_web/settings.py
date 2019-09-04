@@ -60,6 +60,10 @@ INSTALLED_APPS = [
 
 if DJANGO_ENV == DEVELOPMENT:
     INSTALLED_APPS.append("django_extensions")
+    from rest_framework.serializers import ModelSerializer, Serializer
+    from factory import DjangoModelFactory
+    SHELL_PLUS_SUBCLASSES_IMPORT = [ModelSerializer, Serializer, DjangoModelFactory]
+    SHELL_PLUS_SUBCLASSES_IMPORT_MODULES_BLACKLIST = ['scheduler.tests']
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",

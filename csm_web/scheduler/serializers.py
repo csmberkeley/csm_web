@@ -1,238 +1,69 @@
-from datetime import datetime, timedelta
-from itertools import groupby
-
-from django.utils import timezone
 from rest_framework import serializers
-from .models import User, Attendance, Course, Profile, Section, Spacetime, Override
-from .permissions import is_leader
+from django.utils import timezone, dateparse
+from datetime import datetime
+from .models import Attendance, Course, Student, Section, Mentor
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    enrollment_open = serializers.SerializerMethodField()
+
+    def get_enrollment_open(self, obj):
+        return obj.enrollment_start < timezone.now() < obj.enrollment_end
+
     class Meta:
         model = Course
-        fields = ("id", "name", "valid_until", "enrollment_start", "enrollment_end")
+        fields = ("id", "name", "enrollment_open")
 
 
-# Serializer Stubs
-
-
-class SpacetimeSerializer(serializers.ModelSerializer):
-    end_time = serializers.SerializerMethodField()
-    # day_of_week = serializers.SerializerMethodField()
-    day_of_week_value = serializers.CharField(source="day_of_week")
-    day_of_week = serializers.CharField(
-        source="get_day_of_week_display", read_only=True
-    )
+class MentorSerializer(serializers.ModelSerializer):
+    name = serializers.CharField()
+    email = serializers.EmailField(source='user.email')
 
     class Meta:
-        model = Spacetime
-        fields = (
-            "location",
-            "start_time",
-            "day_of_week_value",
-            "end_time",
-            "day_of_week",
-        )
-
-    def get_end_time(self, obj):
-        start_datetime = datetime(
-            year=1,
-            day=1,
-            month=1,
-            hour=obj.start_time.hour,
-            minute=obj.start_time.minute,
-            second=obj.start_time.second,
-        )
-        end_time = (start_datetime + obj.duration).time()
-        return end_time
-
-    # def get_day_of_week(self, obj):
-    #    return obj.get_day_of_week_display()
-
-
-class UserSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = User
-        fields = ("id", "username", "first_name", "last_name", "email")
+        model = Mentor
+        fields = ("name", "email")
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attendance
-        fields = ("id", "date", "presence", "attendee")
+        fields = ("id", "presence", "week_start")
 
 
-class ProfileSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Profile
-        fields = ("id", "leader", "course", "role", "user", "section")
-
-
-class UserProfileSerializer(serializers.ModelSerializer):
-    user = UserSerializer()
+class StudentSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source='user.email')
+    attendances = AttendanceSerializer(source='attendance_set', many=True)
 
     class Meta:
-        model = Profile
-        fields = ("id", "leader", "course", "role", "user", "section")
+        model = Student
+        fields = ("id", "name", "email", "attendances")
 
 
 class SectionSerializer(serializers.ModelSerializer):
-    default_spacetime = SpacetimeSerializer()
-    # This is not VerboseProfileSerializer otherwise there would be a cyclic dependency
-    mentor = UserProfileSerializer()
-    enrolled_students = serializers.SerializerMethodField()
+    time = serializers.SerializerMethodField()
+    location = serializers.CharField(source='spacetime.location')
+    num_students_enrolled = serializers.IntegerField(source='current_student_count')
+    mentor = MentorSerializer()
+
+    def get_time(self, obj):
+        return f"{obj.spacetime.day_of_week} {obj.spacetime.start_time.strftime('%I:%M %p')}-{obj.spacetime.end_time.strftime('%I:%M %p')}"
 
     class Meta:
         model = Section
-        fields = (
-            "id",
-            "course",
-            "mentor",
-            "default_spacetime",
-            "capacity",
-            "enrolled_students",
-        )
-
-    def get_enrolled_students(self, obj):
-        return obj.active_students.count()
+        fields = ("id", "time", "location", "mentor", "capacity", "num_students_enrolled", "description", "mentor")
 
 
-class OverrideSerializer(serializers.ModelSerializer):
-    spacetime = SpacetimeSerializer()
+class OverrideSerializer(serializers.Serializer):
+    def to_representation(self, obj):
+        rep = super().to_representation(obj)
+        start_time = obj.spacetime.start_time
+        rep['datetime'] = datetime(year=obj.date.year, month=obj.date.month, day=obj.date.day,
+                                   hour=start_time.hour, minute=start_time.minute, second=start_time.second)
+        rep['location'] = obj.spacetime.location
+        return rep
 
-    class Meta:
-        model = Override
-        fields = ("spacetime", "week_start", "section")
-
-    def create(self, validated_data):
-        default_spacetime = validated_data["section"].default_spacetime
-        spacetime_data = validated_data["spacetime"]
-        spacetime_data["duration"] = default_spacetime.duration
-        spacetime = SpacetimeSerializer().create(spacetime_data)
-
-        validated_data["spacetime"] = spacetime
-        return super().create(validated_data)
-
-
-class ActiveOverrideField(serializers.RelatedField):
-    read_only = True
-
-    def to_representation(self, value):
-        overrides = value.all()
-
-        # We want the latest override for this week
-
-        weekday = (
-            timezone.now().weekday() + 1
-        ) % 7  # Shift to make Sunday first day of the week
-        current_week_start = timezone.now().date() - timedelta(days=weekday)
-        #        current_week_end = current_week_start + timedelta(days=7)
-
-        valid_set = overrides.filter(week_start__gte=current_week_start)
-
-        # Get the one created most recently
-        first_valid_override = valid_set.order_by("week_start").first()
-
-        if len(valid_set) > 0:
-            return OverrideSerializer(first_valid_override).data
-        else:
-            return None
-
-
-class VerboseSectionSerializer(serializers.ModelSerializer):
-    default_spacetime = SpacetimeSerializer()
-    active_override = ActiveOverrideField(source="override_set", read_only=True)
-    students = serializers.PrimaryKeyRelatedField(
-        source="active_students", many=True, read_only=True
-    )
-    course_name = serializers.SerializerMethodField()
-    is_mentor = serializers.SerializerMethodField()
-    attendances = serializers.SerializerMethodField()
-    # This is not VerboseProfileSerializer otherwise there would be a cyclic dependency
-    mentor = UserProfileSerializer()
-
-    class Meta:
-        model = Section
-        fields = (
-            "id",
-            "course_name",
-            "mentor",
-            "default_spacetime",
-            "capacity",
-            "active_override",
-            "students",
-            "is_mentor",
-            "attendances",
-        )
-
-    def get_attendances(self, obj):
-        if is_leader(self.context["request"].user, obj):
-            nested_attendances = [
-                [
-                    (
-                        student.user.first_name + " " + student.user.last_name,
-                        attendance.week_start,
-                        attendance.presence,
-                        attendance.id,
-                    )
-                    for attendance in student.attendance_set.all()
-                ]
-                for student in obj.active_students.all()
-            ]
-            flat_attendances = [item for lst in nested_attendances for item in lst]
-            flat_attendances.sort(key=lambda tuple: tuple[1])
-            grouped_attendances = groupby(flat_attendances, key=lambda tuple: tuple[1])
-            attendances = {
-                str(key): {
-                    str(pk): [name, presence]
-                    for name, week_start, presence, pk in group
-                }
-                for key, group in grouped_attendances
-            }
-            return attendances
-        else:
-            attendances = (
-                self.context["request"]
-                .user.profile_set.filter(section=obj)
-                .first()
-                .attendance_set.all()
-            )
-            attendances = sorted(
-                attendances, key=lambda attendance: attendance.week_start
-            )
-            student_name = (
-                self.context["request"].user.first_name
-                + " "
-                + self.context["request"].user.last_name
-            )
-            return {
-                str(attendance.week_start): {
-                    str(attendance.id): [student_name, attendance.presence]
-                }
-                for attendance in attendances
-            }
-
-    def get_course_name(self, obj):
-        return obj.course.name
-
-    def get_is_mentor(self, obj):
-        return is_leader(
-            self.context["request"].user, obj
-        )  # obj.mentor in self.context["request"].user.profile_set.all()
-
-    def to_representation(self, instance):
-        # Serialize section with students only if leader is viewing
-        user = self.context["request"].user
-
-        if not is_leader(user, instance):
-            self.fields.pop("students")
-
-        return super().to_representation(instance)
-
-
-class VerboseProfileSerializer(serializers.ModelSerializer):
-    section = VerboseSectionSerializer()
-
-    class Meta:
-        model = Profile
-        fields = ("id", "leader", "course", "role", "user", "section")
+    def to_internal_value(self, data):
+        value = super().to_internal_value(data)
+        value['datetime'] = dateparse.parse_datetime(data['datetime'])
+        value['location'] = data['location']
+        return value
