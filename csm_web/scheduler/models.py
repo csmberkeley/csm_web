@@ -183,6 +183,14 @@ class Spacetime(ValidatingModel):
             return self.override.spacetime.day_of_week
         return self._day_of_week
 
+    @property
+    def end_time(self):
+        return (datetime.datetime(year=1, day=1, month=1,
+                                  hour=self.start_time.hour,
+                                  minute=self.start_time.minute,
+                                  second=self.start_time.second)
+                + self.duration).time()
+
     def __str__(self):
         formatted_time = self.start_time.strftime("%I:%M %p")
         num_minutes = int(self.duration.total_seconds() // 60)
