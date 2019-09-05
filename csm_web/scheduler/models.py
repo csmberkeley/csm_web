@@ -80,7 +80,7 @@ class Profile(ValidatingModel):
 
     @property
     def name(self):
-        return f"{self.user.first_name} {self.user.last_name}"
+        return self.user.get_full_name()
 
     def __str__(self):
         if hasattr(self, "section") and self.section:
@@ -92,23 +92,51 @@ class Profile(ValidatingModel):
 
 
 class Student(Profile):
+    """
+    Represents a given "instance" of a student. Every section in which a student enrolls should
+    have a new Mentor profile.
+    """
     section = models.ForeignKey("Section", on_delete=models.CASCADE, blank=True, null=True, related_name="students")
-    active = models.BooleanField(default=True)
+    active = models.BooleanField(default=True, help_text="An inactive student is a dropped student.")
 
     class Meta:
         unique_together = ("user", "section")
 
 
 class Mentor(Profile):
+    """
+    Represents a given "instance" of a mentor. Every section a mentor teaches in every course should
+    have a new Mentor profile.
+    """
     pass
+
+
+class Coordinator(Profile):
+    """
+    This profile is used to allow coordinators to acess the admin page.
+    """
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} ({self.course.name})"
 
 
 class Section(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    spacetime = models.OneToOneField("Spacetime", on_delete=models.CASCADE)
+    spacetime = models.OneToOneField(
+        "Spacetime",
+        on_delete=models.CASCADE,
+        help_text="The recurring time and location of a section. This can be temporarily overriden "
+        "by the mentor, in which case the admin page will display the overriding times."
+    )
     capacity = models.PositiveSmallIntegerField()
     mentor = models.OneToOneField(Mentor, on_delete=models.SET_NULL, blank=True, null=True)
-    description = models.CharField(max_length=100, blank=True)
+    description = models.CharField(
+        max_length=100,
+        blank=True,
+        help_text="A brief note to add some extra information about the section, e.g. \"EOP\" or "
+        "\"early start\"."
+    )
 
     @property
     def current_student_count(self):
