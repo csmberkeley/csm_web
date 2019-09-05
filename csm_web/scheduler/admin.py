@@ -38,14 +38,6 @@ def get_admin_link_for(obj_property, reverse_path):
     )
 
 
-def get_obj_or_none(model, **kwargs):
-    """Wraps model queries in what amounts to an Optional."""
-    try:
-        return model.objects.get(**kwargs)
-    except model.DoesNotExist:
-        return None
-
-
 def get_visible_courses(user):
     """
     Returns a list of Course objects that the request's user can see.
@@ -57,7 +49,7 @@ def get_visible_courses(user):
 
 
 def is_user_admin(user):
-    return user.is_superuser or user.is_staff or get_obj_or_none(Coordinator, user=user) is not None
+    return user.is_superuser or user.is_staff
 
 
 class CoordAdmin(admin.ModelAdmin):
