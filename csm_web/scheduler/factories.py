@@ -43,6 +43,7 @@ class CourseFactory(factory.DjangoModelFactory):
             ).generate({})
         )
     )
+    permitted_absences = factory.LazyFunction(lambda: random.randint(1, 4))
 
 
 BUILDINGS = ("Cory", "Soda", "Kresge", "Moffitt")
@@ -109,6 +110,9 @@ class AttendanceFactory(factory.DjangoModelFactory):
     student = factory.SubFactory(StudentFactory)
 
 
+DAYS = [db_value for db_value, display_name in Spacetime.DAY_OF_WEEK_CHOICES]
+
+
 class OverrideFactory(factory.DjangoModelFactory):
     @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
@@ -116,11 +120,12 @@ class OverrideFactory(factory.DjangoModelFactory):
 
     @factory.lazy_attribute
     def date(obj):
-        return factory.Faker(
+        date = factory.Faker(
             "date_between_dates",
             date_start=obj.overriden_spacetime.section.course.enrollment_start.date(),
             date_end=obj.overriden_spacetime.section.course.valid_until,
         ).generate({})
+        return date + timedelta(days=(DAYS.index(obj.spacetime.day_of_week) - date.weekday()))
 
     spacetime = factory.SubFactory(SpacetimeFactory)
 
