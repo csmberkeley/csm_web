@@ -10,6 +10,8 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
+from factory import DjangoModelFactory
+from rest_framework.serializers import ModelSerializer, Serializer
 import os
 
 # Analogous to RAILS_ENV, is one of {prod, dev}. Defaults to dev. This default can be
@@ -56,14 +58,11 @@ INSTALLED_APPS = [
     "eventlog.apps.EventLogConfig",
     "frontend",
     "django_filters",
+    "django_extensions",
 ]
 
-if DJANGO_ENV == DEVELOPMENT:
-    INSTALLED_APPS.append("django_extensions")
-    from rest_framework.serializers import ModelSerializer, Serializer
-    from factory import DjangoModelFactory
-    SHELL_PLUS_SUBCLASSES_IMPORT = [ModelSerializer, Serializer, DjangoModelFactory]
-    SHELL_PLUS_SUBCLASSES_IMPORT_MODULES_BLACKLIST = ['scheduler.tests']
+SHELL_PLUS_SUBCLASSES_IMPORT = [ModelSerializer, Serializer, DjangoModelFactory]
+SHELL_PLUS_SUBCLASSES_IMPORT_MODULES_BLACKLIST = ['scheduler.tests']
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
