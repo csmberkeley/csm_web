@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.utils import timezone, dateparse
 from datetime import datetime
-from .models import Attendance, Course, Student, Section, Mentor
+from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -64,6 +64,29 @@ class OverrideSerializer(serializers.Serializer):
 
     def to_internal_value(self, data):
         value = super().to_internal_value(data)
-        value['datetime'] = dateparse.parse_datetime(data['datetime'])
+        override_datetime = dateparse.parse_datetime(data['datetime'])
         value['location'] = data['location']
+        value['overriden_spacetime'] = Spacetime.objects.get(section=data['section_id'])
+        value['day_of_week'] = Spacetime.DAY_OF_WEEK_CHOICES[override_datetime.weekday()][0]
+        value['start_time'] = override_datetime.time()
+        value['date'] = override_datetime.date()
         return value
+
+    def create(self, validated_data):
+        spacetime = Spacetime.objects.create(_day_of_week=validated_data['day_of_week'],
+                                             _location=validated_data['location'],
+                                             _start_time=validated_data['start_time'],
+                                             _duration=validated_data['overriden_spacetime'].duration)
+
+        return Override.objects.create(date=validated_data['date'], overriden_spacetime=validated_data['overriden_spacetime'],
+                                       spacetime=spacetime)
+
+    def update(self, instance, validated_data):
+        instance.date = validated_data['date']
+        instance.spacetime._day_of_week = validated_data['day_of_week']
+        instance.spacetime._location = validated_data['location']
+        instance.spacetime._start_time = validated_data['start_time']
+        instance.spacetime._duration = validated_data['overriden_spacetime'].duration
+        instance.spacetime.save()
+        instance.save()
+        return instance
