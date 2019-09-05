@@ -213,7 +213,7 @@ class MentorAdmin(CoordAdmin):
 
     def get_readonly_fields(self, request, obj):
         fields = ["get_course", "get_email", "get_section", "name", "get_students"]
-        if request.user.is_superuser:
+        if not request.user.is_superuser:
             fields.insert(0, "get_user")
         return tuple(fields)
 
@@ -250,7 +250,7 @@ class MentorAdmin(CoordAdmin):
 
     def get_students(self, obj):
         student_links = []
-        for student in obj.section.student_set.all():
+        for student in obj.section.students.all():
             student_links.append(get_admin_link_for(student, "admin:scheduler_student_change"))
         student_links.sort()
         return format_html("".join(student_links))
@@ -306,18 +306,11 @@ class SectionAdmin(CoordAdmin):
         "spacetime___location",
     )
 
-    # def get_queryset(self, request):
-    #     qs = super().get_queryset(request)
-    #     if request.user.is_superuser:
-    #         return qs
-    #     return qs.filter(
-    #         course__in=[
-    #             p.course
-    #             for p in request.user.profile_set.filter(
-    #                 active=True, role=Profile.COORDINATOR
-    #             )
-    #         ]
-    #     )
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(course__in=get_visible_courses(request.user))
 
     # Custom fields
 
@@ -412,7 +405,7 @@ class CourseAdmin(CoordAdmin):
 class DayStartFilter(admin.SimpleListFilter):
     template = "admin/input_filter.html"
     parameter_name = "start_date"
-    title = "Start date"
+    title = "start date"
 
     def lookups(self, request, model_admin):
         # Dummy, required to show the filter.
@@ -442,7 +435,7 @@ class DayStartFilter(admin.SimpleListFilter):
 class DayEndFilter(admin.SimpleListFilter):
     template = "admin/input_filter.html"
     parameter_name = "end_date"
-    title = "End date"
+    title = "end date"
 
     def lookups(self, request, model_admin):
         # Dummy, required to show the filter.
@@ -508,6 +501,19 @@ class AttendanceAdmin(CoordAdmin):
     search_fields = ("student__user__first_name", "student__user__last_name")
     ordering = ("-date",)
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if not request.user.is_superuser:
+            courses = get_visible_courses(request.user)
+            if db_field.name == "student":
+                kwargs["queryset"] = Student.objects.filter(student__section__course__in=courses)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
+    def get_queryset(self, request):
+        qs = super().get_queryset(request)
+        if request.user.is_superuser:
+            return qs
+        return qs.filter(student__section__course__in=get_visible_courses(request.user))
+
     def section_time(self, obj):
         return obj.student.section.spacetime.start_time
 
@@ -536,10 +542,11 @@ class AttendanceAdmin(CoordAdmin):
 
 @admin.register(Override)
 class OverrideAdmin(admin.ModelAdmin):
-    fields = ("week_start", "spacetime", "section")
-    ordering = ("-week_start",)
+    # TODO make all this info more useful
+    fields = ("date", "spacetime", "overriden_spacetime")
+    ordering = ("-date",)
 
-    list_filter = ("spacetime__day_of_week", "section__course")
+    list_filter = ("spacetime___day_of_week", "spacetime__section__course")
 
     def has_module_permission(self, request, obj=None):
         return request.user.is_superuser  # TODO remove when implemented as coord view
