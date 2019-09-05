@@ -83,6 +83,8 @@ class Profile(ValidatingModel):
         return f"{self.user.first_name} {self.user.last_name}"
 
     def __str__(self):
+        if hasattr(self, "section") and self.section:
+            return f"{self.name} ({self.section.course.name})"
         return self.name
 
     class Meta:
@@ -93,27 +95,19 @@ class Student(Profile):
     section = models.ForeignKey("Section", on_delete=models.CASCADE, blank=True, null=True, related_name="students")
     active = models.BooleanField(default=True)
 
-    def __str__(self):
-        if self.section:
-            return f"{self.name} ({self.section.course.name})"
-        return self.name
-
     class Meta:
         unique_together = ("user", "section")
 
 
 class Mentor(Profile):
-    def __str__(self):
-        if self.section_set.first():
-            return f"{self.name} ({self.section_set.first().course.name})"
-        return self.name
+    pass
 
 
 class Section(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     spacetime = models.OneToOneField("Spacetime", on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
-    mentor = models.ForeignKey(Mentor, on_delete=models.SET_NULL, blank=True, null=True)
+    mentor = models.OneToOneField(Mentor, on_delete=models.SET_NULL, blank=True, null=True)
     description = models.CharField(max_length=100, blank=True)
 
     @property
