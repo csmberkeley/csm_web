@@ -53,20 +53,11 @@ def is_user_admin(user):
 
 
 class CoordAdmin(admin.ModelAdmin):
-    def has_view_permission(self, request, obj=None):
+    def has_permission(self, request, obj=None):
         return is_user_admin(request.user)
 
-    def has_add_permission(self, request):
-        return is_user_admin(request.user)
+    has_view_permission = has_add_permission = has_change_permission = has_delete_permission = has_module_permission = has_permission
 
-    def has_change_permission(self, request, obj=None):
-        return is_user_admin(request.user)
-
-    def has_delete_permission(self, request, obj=None):
-        return is_user_admin(request.user)
-
-    def has_module_permission(self, request):
-        return is_user_admin(request.user)
 
 # Custom views
 
@@ -163,7 +154,7 @@ class StudentAdmin(CoordAdmin):
         attendance_links = sorted(
             get_admin_link_for(
                 attendance,
-                'admin:scheduler_attendance_change',
+                "admin:scheduler_attendance_change",
                 f"Date {attendance.date}: {attendance.presence or '--'}"
             ) for attendance in obj.attendance_set.all()
         )
@@ -184,7 +175,12 @@ class MentorAdmin(CoordAdmin):
         return False  # delete sections + mentor by deleting sections, drop by deactivating
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request).select_related('user', 'section__course')
+        queryset = (
+            super()
+            .get_queryset(request)
+            .select_related("user", "section__course")
+            .prefetch_related("section__students")
+        )
         if request.user.is_superuser:
             return queryset
         return queryset.filter(section__course__in=get_visible_courses(request.user))
@@ -227,7 +223,7 @@ class MentorAdmin(CoordAdmin):
         student_links = sorted(
             get_admin_link_for(
                 student,
-                'admin:scheduler_student_change',
+                "admin:scheduler_student_change",
             ) for student in obj.section.students.all()
         )
         return format_html("".join(student_links))
@@ -284,7 +280,12 @@ class SectionAdmin(CoordAdmin):
     )
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request).select_related("mentor", "spacetime", "mentor__user")
+        queryset = (
+            super()
+            .get_queryset(request)
+            .select_related("mentor", "spacetime", "mentor__user")
+            .prefetch_related("students")
+        )
         if request.user.is_superuser:
             return queryset
         return queryset.filter(course__in=get_visible_courses(request.user))
@@ -326,7 +327,7 @@ class SectionAdmin(CoordAdmin):
         student_links = sorted(
             get_admin_link_for(
                 student,
-                'admin:scheduler_student_change',
+                "admin:scheduler_student_change",
             ) for student in obj.students.all()
         )
         return format_html("".join(student_links))
@@ -365,7 +366,7 @@ class CourseAdmin(CoordAdmin):
     )
 
     def get_queryset(self, request):
-        return super().get_queryset(request)
+        return super().get_queryset(request).prefetch_related("section_set")
 
     def number_of_sections(self, obj):
         return obj.section_set.count()
