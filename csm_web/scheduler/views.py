@@ -29,7 +29,11 @@ class CourseViewSet(*viewset_with('list')):
 
 class SectionViewSet(*viewset_with('retrieve')):
     serializer_class = SectionSerializer
-    queryset = Section.objects.all()
+
+    def get_queryset(self):
+        mentor_sections = Section.objects.filter(mentor__user=self.request.user)
+        student_sections = Section.objects.filter(students__user=self.request.user)
+        return mentor_sections.union(student_sections)
 
     @action(detail=True, methods=['get', 'put'])
     def students(self, request, pk=None):
@@ -50,7 +54,11 @@ class SectionViewSet(*viewset_with('retrieve')):
 
 class StudentViewSet(viewsets.GenericViewSet):
     serializer_class = StudentSerializer
-    queryset = Student.objects.filter(active=True)
+
+    def get_queryset(self):
+        own_profiles = Student.objects.filter(user=self.request.user)
+        pupil_profiles = Student.objects.filter(section__mentor__user=self.request.user)
+        return own_profiles.union(pupil_profiles)
 
     @action(detail=True, methods=['patch'])
     def drop(self, request, pk=None):
@@ -83,8 +91,10 @@ class ProfileViewSet(*viewset_with('list')):
 
 
 class SpacetimeViewSet(viewsets.GenericViewSet):
-    queryset = Spacetime.objects.all()
     serializer_class = None
+
+    def get_queryset(self):
+        return Spacetime.objects.filter(section__mentor__user=self.request.user)
 
     @action(detail=True, methods=['put'])
     def override(self, request, pk=None):
