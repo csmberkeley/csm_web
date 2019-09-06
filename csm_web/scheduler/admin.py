@@ -21,12 +21,12 @@ admin.site.register(Coordinator)
 # Helper methods
 
 
-def get_admin_link_for(obj_property, reverse_path):
+def get_admin_link_for(obj_property, reverse_path, display_text=None):
     """
     Returns embeddable HTML for an admin URL to the specified property.
     obj_property should be the object that was looked up, e.g. "obj.user" should be passed
     rather than "user".
-    Uses the provided str of obj_property.
+    If display_text is provided, then uses the provided str of obj_property as the URL text.
     """
     admin_url = reverse(
         reverse_path, args=(obj_property.id,)
@@ -34,7 +34,7 @@ def get_admin_link_for(obj_property, reverse_path):
     return format_html(
         '<a style="display: block" href="{}">{}</a>',
         admin_url,
-        obj_property
+        display_text or obj_property
     )
 
 
@@ -99,13 +99,13 @@ class StudentAdmin(CoordAdmin):
     def get_fields(self, request, obj):
         fields = ["name", "get_email", "get_course", "section", "get_attendances"]
         fields.insert(4, "user" if request.user.is_superuser else "get_user")
-        return tuple(fields)
+        return fields
 
     def get_readonly_fields(self, request, obj):
         fields = ["get_course", "get_email", "name", "get_attendances"]
         if not request.user.is_superuser:
             fields.insert(0, "get_user")
-        return tuple(fields)
+        return fields
 
     def has_delete_permission(self, request, obj=None):
         return (
@@ -113,17 +113,15 @@ class StudentAdmin(CoordAdmin):
         )  # delete sections + mentor by deleting sections, drop by deactivating
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if not request.user.is_superuser:
-            courses = get_visible_courses(request.user)
-            if db_field.name == "section":
-                kwargs["queryset"] = Section.objects.filter(course__in=courses)
+        if not request.user.is_superuser and db_field.name == "section":
+            kwargs["queryset"] = Section.objects.filter(course__in=get_visible_courses(request.user))
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        queryset = super().get_queryset(request).select_related("user", "section__course", "section__mentor")
         if request.user.is_superuser:
-            return qs
-        return qs.filter(section__course__in=get_visible_courses(request.user))
+            return queryset
+        return queryset.filter(section__course__in=get_visible_courses(request.user))
 
     def drop_students(self, request, queryset):
         queryset.update(active=False)
@@ -159,21 +157,16 @@ class StudentAdmin(CoordAdmin):
     def get_mentor(self, obj):
         return get_admin_link_for(obj.section.mentor, "admin:scheduler_mentor_change")
 
+    get_mentor.short_description = "Mentor"
+
     def get_attendances(self, obj):
-        attendance_links = []
-        for attendance in obj.attendance_set.all():
-            admin_url = reverse(
-                "admin:scheduler_attendance_change", args=(attendance.id,)
-            )
-            attendance_links.append(
-                format_html(
-                    '<a style="display: block" href="{}">Date {}: {}</a>',
-                    admin_url,
-                    attendance.date,
-                    attendance.presence if attendance.presence else "--",
-                )
-            )
-        attendance_links.sort()
+        attendance_links = sorted(
+            get_admin_link_for(
+                attendance,
+                'admin:scheduler_attendance_change',
+                f"Date {attendance.date}: {attendance.presence or '--'}"
+            ) for attendance in obj.attendance_set.all()
+        )
         return format_html("".join(attendance_links))
 
     get_attendances.short_description = "Attendances"
@@ -188,26 +181,24 @@ class MentorAdmin(CoordAdmin):
     # autocomplete_fields = ("section", "user")
 
     def has_delete_permission(self, request, obj=None):
-        return (
-            False
-        )  # delete sections + mentor by deleting sections, drop by deactivating
+        return False  # delete sections + mentor by deleting sections, drop by deactivating
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        queryset = super().get_queryset(request).select_related('user', 'section__course')
         if request.user.is_superuser:
-            return qs
-        return qs.filter(section__course__in=get_visible_courses(request.user))
+            return queryset
+        return queryset.filter(section__course__in=get_visible_courses(request.user))
 
     def get_fields(self, request, obj):
         fields = ["name", "get_email", "get_course", "get_section", "get_students"]
         fields.insert(4, "user" if request.user.is_superuser else "get_user")
-        return tuple(fields)
+        return fields
 
     def get_readonly_fields(self, request, obj):
         fields = ["get_course", "get_email", "get_section", "name", "get_students"]
         if not request.user.is_superuser:
-            fields.insert(0, "get_user")
-        return tuple(fields)
+            fields.append("get_user")
+        return fields
 
     # Custom fields
 
@@ -228,23 +219,17 @@ class MentorAdmin(CoordAdmin):
     get_section.short_description = "Section"
 
     def get_course(self, obj):
-        course = obj.section.course
-        admin_url = reverse(
-            "admin:scheduler_course_change", args=(course.id,)
-        )
-        return format_html(
-            '<a style="display: block" href="{}">{}</a>',
-            admin_url,
-            course
-        )
+        return get_admin_link_for(obj.section.course, "admin:scheduler_course_change")
 
     get_course.short_description = "Course"
 
     def get_students(self, obj):
-        student_links = []
-        for student in obj.section.students.all():
-            student_links.append(get_admin_link_for(student, "admin:scheduler_student_change"))
-        student_links.sort()
+        student_links = sorted(
+            get_admin_link_for(
+                student,
+                'admin:scheduler_student_change',
+            ) for student in obj.section.students.all()
+        )
         return format_html("".join(student_links))
 
     get_students.short_description = "Students"
@@ -299,14 +284,14 @@ class SectionAdmin(CoordAdmin):
     )
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        queryset = super().get_queryset(request).select_related("mentor", "spacetime", "mentor__user")
         if request.user.is_superuser:
-            return qs
-        return qs.filter(course__in=get_visible_courses(request.user))
+            return queryset
+        return queryset.filter(course__in=get_visible_courses(request.user))
 
     # Custom fields
 
-    # TODO add signifier that clicking this link allow sinline editing
+    # TODO add signifier that clicking this link allows inline editing
     def get_spacetime(self, obj):
         admin_url = reverse(
             "admin:scheduler_spacetime_change", args=(obj.spacetime.id,)
@@ -338,10 +323,12 @@ class SectionAdmin(CoordAdmin):
     get_mentor_name.short_description = "Name"
 
     def get_students(self, obj):
-        student_links = []
-        for student in obj.students.filter(active=True):
-            student_links.append(get_admin_link_for(student, "admin:scheduler_student_change"))
-        student_links.sort()
+        student_links = sorted(
+            get_admin_link_for(
+                student,
+                'admin:scheduler_student_change',
+            ) for student in obj.students.all()
+        )
         return format_html("".join(student_links))
 
 
@@ -376,6 +363,9 @@ class CourseAdmin(CoordAdmin):
         "number_of_students",
         "number_of_mentors",
     )
+
+    def get_queryset(self, request):
+        return super().get_queryset(request)
 
     def number_of_sections(self, obj):
         return obj.section_set.count()
@@ -494,17 +484,20 @@ class AttendanceAdmin(CoordAdmin):
     ordering = ("-date",)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if not request.user.is_superuser:
-            courses = get_visible_courses(request.user)
-            if db_field.name == "student":
-                kwargs["queryset"] = Student.objects.filter(student__section__course__in=courses)
+        if not request.user.is_superuser and db_field.name == "student":
+            kwargs["queryset"] = Student.objects.filter(student__section__course__in=get_visible_courses(request.user))
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
-        qs = super().get_queryset(request)
+        queryset = super().get_queryset(request).select_related(
+            "student__section",
+            "student__section__spacetime",
+            "student__section__mentor__user",
+            "student__user"
+        )
         if request.user.is_superuser:
-            return qs
-        return qs.filter(student__section__course__in=get_visible_courses(request.user))
+            return queryset
+        return queryset.filter(student__section__course__in=get_visible_courses(request.user))
 
     def section_time(self, obj):
         return obj.student.section.spacetime.start_time

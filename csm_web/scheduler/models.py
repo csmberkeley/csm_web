@@ -134,8 +134,8 @@ class Section(ValidatingModel):
     description = models.CharField(
         max_length=100,
         blank=True,
-        help_text="A brief note to add some extra information about the section, e.g. \"EOP\" or "
-        "\"early start\"."
+        help_text='A brief note to add some extra information about the section, e.g. "EOP" or '
+        '"early start".'
     )
 
     @property
