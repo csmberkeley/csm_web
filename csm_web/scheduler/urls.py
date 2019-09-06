@@ -16,40 +16,15 @@ Including another URLconf
 from django.urls import path
 
 from rest_framework.urlpatterns import format_suffix_patterns
+from rest_framework.routers import DefaultRouter
 
 from . import views
 
-urlpatterns = []
+router = DefaultRouter()
+router.register(r'courses', views.CourseViewSet, basename='course')
+router.register(r'sections', views.SectionViewSet, basename='section')
+router.register(r'students', views.StudentViewSet, basename='student')
+router.register(r'profiles', views.ProfileViewSet, basename='profile')
+router.register(r'spacetimes', views.SpacetimeViewSet, basename='spacetime')
 
-rest_urlpatterns = [
-    path("courses/", views.CourseList.as_view(), name="list-course"),
-    path("courses/<slug:name>/", views.CourseDetail.as_view(), name="view-course"),
-    path(
-        "courses/<slug:name>/sections/",
-        views.CourseSectionList.as_view(),
-        name="list-course-section",
-    ),
-    path("profiles/", views.UserProfileList.as_view(), name="list-profile"),
-    path("profiles/<int:pk>/", views.UserProfileDetail.as_view(), name="view-profile"),
-    path(
-        "profiles/<int:pk>/attendance",
-        views.UserProfileAttendance.as_view(),
-        name="view-attendance",
-    ),
-    path("profiles/<int:pk>/unenroll", views.DeleteProfile.as_view(), name="unenroll"),
-    path("sections/<int:pk>/enroll", views.enroll, name="enroll"),
-    path("sections/<int:pk>/", views.SectionDetail.as_view(), name="view-section"),
-    path("overrides/", views.CreateOverrideDetail.as_view(), name="create-override"),
-    path("overrides/<int:pk>/", views.OverrideDetail.as_view(), name="view-override"),
-    path(
-        "attendances/", views.CreateAttendanceDetail.as_view(), name="create-attendance"
-    ),
-    path(
-        "attendances/<int:pk>/",
-        views.AttendanceDetail.as_view(),
-        name="update-attendance",
-    ),
-    # all endpoints listed here https://paper.dropbox.com/doc/Scheduler-2.0-K0ZNsLU5DZ7JjGudjqKIt
-]
-
-urlpatterns.extend(format_suffix_patterns(rest_urlpatterns))
+urlpatterns = router.urls

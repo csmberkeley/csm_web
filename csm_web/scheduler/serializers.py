@@ -27,7 +27,10 @@ class MentorSerializer(serializers.ModelSerializer):
 class AttendanceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Attendance
-        fields = ("id", "presence", "week_start")
+        fields = ("id", "presence", "week_start", "date", "student")
+        read_only_fields = ("week_start",)
+        extra_kwargs = {'student': {'write_only': True},
+                        'date': {'write_only': True}}
 
 
 class StudentSerializer(serializers.ModelSerializer):
@@ -66,7 +69,7 @@ class OverrideSerializer(serializers.Serializer):
         value = super().to_internal_value(data)
         override_datetime = dateparse.parse_datetime(data['datetime'])
         value['location'] = data['location']
-        value['overriden_spacetime'] = Spacetime.objects.get(section=data['section_id'])
+        value['overriden_spacetime'] = data.get('overriden_spacetime')
         value['day_of_week'] = Spacetime.DAY_OF_WEEK_CHOICES[override_datetime.weekday()][0]
         value['start_time'] = override_datetime.time()
         value['date'] = override_datetime.date()
@@ -86,7 +89,7 @@ class OverrideSerializer(serializers.Serializer):
         instance.spacetime._day_of_week = validated_data['day_of_week']
         instance.spacetime._location = validated_data['location']
         instance.spacetime._start_time = validated_data['start_time']
-        instance.spacetime._duration = validated_data['overriden_spacetime'].duration
+        instance.spacetime._duration = instance.overriden_spacetime.duration
         instance.spacetime.save()
         instance.save()
         return instance
