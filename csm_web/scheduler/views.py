@@ -41,12 +41,12 @@ class CourseViewSet(*viewset_with('list')):
     def get_queryset(self):
         queryset = Course.objects.filter(valid_until__gte=timezone.now().date())
         if self.action == 'sections':
-            queryset = queryset.filter(enrollment_open__lte=timezone.now(), enrollment_closed__gt=timezone.now())
+            queryset = queryset.filter(enrollment_start__lte=timezone.now(), enrollment_end__gt=timezone.now())
         return queryset
 
     @action(detail=True)
     def sections(self, request, pk=None):
-        course = get_object_or_error(self.queryset, pk=pk)
+        course = get_object_or_error(self.get_queryset(), pk=pk)
         return Response(SectionSerializer(course.section_set.all(), many=True).data)
 
 
