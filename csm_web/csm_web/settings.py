@@ -61,7 +61,6 @@ INSTALLED_APPS = [
 ]
 
 SHELL_PLUS_SUBCLASSES_IMPORT = [ModelSerializer, Serializer, DjangoModelFactory]
-SHELL_PLUS_SUBCLASSES_IMPORT_MODULES_BLACKLIST = ['scheduler.tests']
 
 MIDDLEWARE = [
     "django.middleware.security.SecurityMiddleware",
