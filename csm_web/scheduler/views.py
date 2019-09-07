@@ -19,16 +19,20 @@ logger = logging.getLogger(__name__)
 def log_str(obj):
     def log_format(*args):
         return '<' + ';'.join(f'{attr}={attrgetter(attr)(obj)}' for attr in args) + '>'
-    if isinstance(obj, User):
-        return log_format('pk', 'email')
-    if isinstance(obj, Section):
-        return log_format('pk', 'course.name', 'spacetime.location', 'spacetime.start_time')
-    if isinstance(obj, Spacetime):
-        return log_format('pk', 'section.course.name', '_location', '_start_time')
-    if isinstance(obj, Override):
-        return log_format('pk', 'date', 'spacetime.pk')
-    if isinstance(obj, Attendance):
-        return log_format('pk', 'date', 'presence')
+    try:
+        if isinstance(obj, User):
+            return log_format('pk', 'email')
+        if isinstance(obj, Section):
+            return log_format('pk', 'course.name', 'spacetime.location', 'spacetime.start_time')
+        if isinstance(obj, Spacetime):
+            return log_format('pk', 'section.course.name', '_location', '_start_time')
+        if isinstance(obj, Override):
+            return log_format('pk', 'date', 'spacetime.pk')
+        if isinstance(obj, Attendance):
+            return log_format('pk', 'date', 'presence')
+    except Exception as error:
+        logger.error(f"<Logging> Exception while logging: {error}")
+        return ''
 
 
 def get_object_or_error(specific_queryset, **kwargs):
