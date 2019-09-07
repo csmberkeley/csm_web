@@ -7,7 +7,9 @@ from rest_framework.serializers import ValidationError
 
 
 class User(AbstractUser):
-    pass
+    def can_enroll_in_course(self, course):
+        return not (self.student_set.filter(active=True, section__course=course).count() or
+                    self.mentor_set.filter(section__course=course).count())
 
 
 class ValidatingModel(models.Model):
