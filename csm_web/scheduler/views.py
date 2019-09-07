@@ -37,7 +37,12 @@ def viewset_with(*permitted_methods):
 
 class CourseViewSet(*viewset_with('list')):
     serializer_class = CourseSerializer
-    queryset = Course.objects.filter(valid_until__gte=timezone.now().date())
+
+    def get_queryset(self):
+        queryset = Course.objects.filter(valid_until__gte=timezone.now().date())
+        if self.action == 'sections':
+            queryset = queryset.filter(enrollment_open__lte=timezone.now(), enrollment_closed__gt=timezone.now())
+        return queryset
 
     @action(detail=True)
     def sections(self, request, pk=None):
@@ -71,13 +76,13 @@ class SectionViewSet(*viewset_with('retrieve')):
             section = Section.objects.select_for_update().get(pk=section.pk)
             if section.current_student_count >= section.capacity:
                 raise PermissionDenied("There is no space available in this section", status.HTTP_423_LOCKED)
-            try:
+            try:  # Student dropped a section in this course and is now enrolling in a different one
                 student = Student.objects.get(active=False, section__course=section.course, user=request.user)
                 student.section = section
                 student.active = True
                 student.save()
                 return Response(status=status.HTTP_204_NO_CONTENT)
-            except Student.DoesNotExist:
+            except Student.DoesNotExist:  # Student is enrolling in this course for the first time
                 student = Student.objects.create(user=request.user, section=section)
                 return Response({'id': student.id}, status=status.HTTP_201_CREATED)
 
