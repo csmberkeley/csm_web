@@ -66,8 +66,8 @@ class SectionViewSet(*viewset_with('retrieve')):
 
     @action(detail=True, methods=['get', 'put'])
     def students(self, request, pk=None):
-        section = get_object_or_error(self.get_queryset(), pk=pk)
         if request.method == 'GET':
+            section = get_object_or_error(self.get_queryset(), pk=pk)
             return Response(StudentSerializer(section.students.filter(active=True), many=True).data)
         # PUT
         with transaction.atomic():
@@ -76,8 +76,11 @@ class SectionViewSet(*viewset_with('retrieve')):
             the section directly, any student trying to enroll must first acquire a lock on the
             desired section. This allows us to assume that current_student_count is correct.
             """
+            section = get_object_or_error(Section.objects, pk=pk)
             section = Section.objects.select_for_update().get(pk=section.pk)
             if not request.user.can_enroll_in_course(section.course):
+                logger.warn(
+                    f"<Enrollment:Failure> User {request.user.pk} was unable to enroll in Section {section.pk} because they are already involved in this course")
                 raise PermissionDenied(
                     "You are already either mentoring for this course or enrolled in a section", status.HTTP_422_UNPROCESSABLE_ENTITY)
 

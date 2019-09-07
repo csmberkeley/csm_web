@@ -55,7 +55,6 @@ INSTALLED_APPS = [
     "scheduler.apps.SchedulerConfig",
     "rest_framework",
     "social_django",
-    "eventlog.apps.EventLogConfig",
     "frontend",
     "django_filters",
     "django_extensions",
@@ -209,45 +208,24 @@ if DJANGO_ENV == DEVELOPMENT:
 
 # Logging
 LOGGING = {
-    "version": 1,
-    "disable_existing_loggers": False,
-    "formatters": {
-        "default": {"format": "{asctime} {module} {levelname} {message}", "style": "{"}
-    },
-    "handlers": {
-        "console-django": {
-            "level": "INFO",
-            "class": "logging.StreamHandler",
-            "formatter": "default",
-        },
-        "console-models": {
-            "level": "ERROR",
-            "class": "logging.StreamHandler",
-            "formatter": "default",
-        },
-        "mail_admins": {
-            "level": "ERROR",
-            "class": "django.utils.log.AdminEmailHandler",
-            "formatter": "default",
-        },
-        "low-level": {
-            "level": "DEBUG",
-            "class": "logging.StreamHandler",
-            "formatter": "default",
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
         },
     },
-    "loggers": {
-        "django": {"handlers": ["console-django", "mail_admins"], "level": "INFO"},
-        "django.request": {
-            "handlers": ["low-level"],
-            "level": "DEBUG",
-            "propagate": False,
+    'loggers': {
+        'django': {
+            'handlers': ['console'],
+            'level': 'INFO',
         },
-        "scheduler.signals": {
-            "handlers": ["console-models", "mail_admins"],
-            "level": "DEBUG",
-            "propagate": False,
+        'scheduler.views': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propogate': True,
         },
+
     },
 }
 
