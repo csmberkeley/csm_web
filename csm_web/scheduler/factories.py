@@ -5,7 +5,6 @@ import factory.fuzzy
 from django.utils import timezone
 from django.core import management
 from django.conf import settings
-from django.db.models import signals
 from .models import (
     Course,
     Section,
@@ -19,7 +18,6 @@ from .models import (
 
 
 class CourseFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Course
 
@@ -51,7 +49,6 @@ DAY_OF_WEEK_DB_CHOICES = [db_value for db_value, display_name in Spacetime.DAY_O
 
 
 class SpacetimeFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Spacetime
 
@@ -62,7 +59,6 @@ class SpacetimeFactory(factory.DjangoModelFactory):
 
 
 class UserFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = User
 
@@ -73,7 +69,6 @@ class UserFactory(factory.DjangoModelFactory):
 
 
 class StudentFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Student
 
@@ -81,7 +76,6 @@ class StudentFactory(factory.DjangoModelFactory):
 
 
 class MentorFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Mentor
 
@@ -89,7 +83,6 @@ class MentorFactory(factory.DjangoModelFactory):
 
 
 class SectionFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Section
 
@@ -102,7 +95,6 @@ PRESENCE_DB_VALUES = [db_value for db_value, display_name in Attendance.PRESENCE
 
 
 class AttendanceFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Attendance
 
@@ -114,7 +106,6 @@ DAYS = [db_value for db_value, display_name in Spacetime.DAY_OF_WEEK_CHOICES]
 
 
 class OverrideFactory(factory.DjangoModelFactory):
-    @factory.django.mute_signals(signals.pre_save, signals.post_save, signals.pre_delete)
     class Meta:
         model = Override
 
@@ -170,19 +161,6 @@ def create_demo_accounts():
     print("The password for these accounts is 'pass', log in at localhost:8000/admin/")
 
 
-def disable_signals():
-    original_signals = []
-    for signal in (signals.pre_save, signals.pre_delete, signals.post_save, signals.post_delete):
-        original_signals.append((signal, signal.receivers))
-        signal.receivers = []
-    return original_signals
-
-
-def reenable_signals(original_signals):
-    for signal, receivers in original_signals:
-        signal.receivers = receivers
-
-
 def confirm_run():
     choice = input(
         """You have requested a flush of the database.
@@ -204,7 +182,6 @@ def generate_test_data(preconfirm=False):
     if (not preconfirm) and (not confirm_run()):
         return
     management.call_command("flush", interactive=False)
-    original_signals = disable_signals()
     course_names = ("CS70", "CS61A", "CS61B", "CS61C", "EE16A")
     print("Generating test data...")
     enrollment_start = timezone.now() - timedelta(days=14)
@@ -223,4 +200,3 @@ def generate_test_data(preconfirm=False):
             section.save()
         print("Done")
     create_demo_accounts()
-    reenable_signals(original_signals)
