@@ -187,7 +187,10 @@ class Spacetime(ValidatingModel):
     """
 
     def has_valid_override(self):
-        return hasattr(self, "override") and not self.override.is_expired()
+        return self.has_override() and not self.override.is_expired()
+
+    def has_override(self):
+        return hasattr(self, "override")
 
     @property
     def location(self):
