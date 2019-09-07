@@ -21,12 +21,11 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class MentorSerializer(serializers.ModelSerializer):
-    name = serializers.CharField()
     email = serializers.EmailField(source='user.email')
 
     class Meta:
         model = Mentor
-        fields = ("name", "email")
+        fields = ("id", "name", "email")
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
