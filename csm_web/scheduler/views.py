@@ -74,8 +74,7 @@ class SectionViewSet(*viewset_with('retrieve')):
             desired section. This allows us to assume that current_student_count is correct.
             """
             section = Section.objects.select_for_update().get(pk=section.pk)
-            if request.user.student_set.filter(active=True, section__course=section.course).count() or \
-                    request.user.mentor_set.filter(active=True, section__course=section.course).count():
+            if not request.user.can_enroll_in_course(section.course):
                 raise PermissionDenied(
                     "You are already either mentoring for this course or enrolled in a section", status.HTTP_422_UNPROCESSABLE_ENTITY)
 
@@ -132,7 +131,7 @@ class ProfileViewSet(*viewset_with('list')):
 
     def list(self, request):
         student_profiles = StudentSerializer(request.user.student_set.filter(active=True), many=True).data
-        mentor_profiles = MentorSerializer(request.user.mentor_set.filter(active=True), many=True).data
+        mentor_profiles = MentorSerializer(request.user.mentor_set.all(), many=True).data
         return Response({'mentor_profiles': mentor_profiles, 'student_profiles': student_profiles})
 
 

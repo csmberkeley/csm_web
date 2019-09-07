@@ -6,13 +6,18 @@ from .models import Attendance, Course, Student, Section, Mentor, Override, Spac
 
 class CourseSerializer(serializers.ModelSerializer):
     enrollment_open = serializers.SerializerMethodField()
+    user_can_enroll = serializers.SerializerMethodField()
 
     def get_enrollment_open(self, obj):
         return obj.enrollment_start < timezone.now() < obj.enrollment_end
 
+    def get_user_can_enroll(self, obj):
+        user = self.context.get('request') and self.context.get('request').user
+        return user and user.can_enroll_in_course(obj)
+
     class Meta:
         model = Course
-        fields = ("id", "name", "enrollment_open")
+        fields = ("id", "name", "enrollment_open", "user_can_enroll")
 
 
 class MentorSerializer(serializers.ModelSerializer):
