@@ -1,4 +1,5 @@
 from django.shortcuts import get_object_or_404
+from django.db import transaction
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -53,7 +54,7 @@ class SectionViewSet(*viewset_with('retrieve')):
     def get_queryset(self):
         mentor_sections = Section.objects.filter(mentor__user=self.request.user)
         student_sections = Section.objects.filter(students__user=self.request.user)
-        return mentor_sections | student_sections
+        return (mentor_sections | student_sections).distinct()
 
     @action(detail=True, methods=['get', 'put'])
     def students(self, request, pk=None):
@@ -61,15 +62,24 @@ class SectionViewSet(*viewset_with('retrieve')):
         if request.method == 'GET':
             return Response(StudentSerializer(section.students.filter(active=True), many=True).data)
         # PUT
-        try:
-            student = Student.objects.get(active=False, user=request.user)
-            student.section = section
-            student.active = True
-            student.save()
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        except Student.DoesNotExist:
-            student = Student.objects.create(user=request.user, section=section)
-            return Response({'id': student.id}, status=status.HTTP_201_CREATED)
+        with transaction.atomic():
+            """
+            We reload the section object for atomicity. Even though we do not update
+            the section directly, any student trying to enroll must first acquire a lock on the
+            desired section. This allows us to assume that current_student_count is correct.
+            """
+            section = Section.objects.select_for_update().get(pk=section.pk)
+            if section.current_student_count >= section.capacity:
+                raise PermissionDenied("There is no space available in this section", status.HTTP_423_LOCKED)
+            try:
+                student = Student.objects.get(active=False, section__course=section.course, user=request.user)
+                student.section = section
+                student.active = True
+                student.save()
+                return Response(status=status.HTTP_204_NO_CONTENT)
+            except Student.DoesNotExist:
+                student = Student.objects.create(user=request.user, section=section)
+                return Response({'id': student.id}, status=status.HTTP_201_CREATED)
 
 
 class StudentViewSet(viewsets.GenericViewSet):
@@ -78,7 +88,7 @@ class StudentViewSet(viewsets.GenericViewSet):
     def get_queryset(self):
         own_profiles = Student.objects.filter(user=self.request.user)
         pupil_profiles = Student.objects.filter(section__mentor__user=self.request.user)
-        return own_profiles | pupil_profiles
+        return (own_profiles | pupil_profiles).distinct()
 
     @action(detail=True, methods=['patch'])
     def drop(self, request, pk=None):
