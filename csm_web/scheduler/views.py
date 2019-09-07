@@ -74,10 +74,15 @@ class SectionViewSet(*viewset_with('retrieve')):
             desired section. This allows us to assume that current_student_count is correct.
             """
             section = Section.objects.select_for_update().get(pk=section.pk)
+            if request.user.student_set.filter(active=True, section__course=section.course).count() or \
+                    request.user.mentor_set.filter(active=True, section__course=section.course).count():
+                raise PermissionDenied(
+                    "You are already either mentoring for this course or enrolled in a section", status.HTTP_422_UNPROCESSABLE_ENTITY)
+
             if section.current_student_count >= section.capacity:
                 raise PermissionDenied("There is no space available in this section", status.HTTP_423_LOCKED)
             try:  # Student dropped a section in this course and is now enrolling in a different one
-                student = Student.objects.get(active=False, section__course=section.course, user=request.user)
+                student = request.user.student_set.get(active=False, section__course=section.course)
                 student.section = section
                 student.active = True
                 student.save()
@@ -126,8 +131,8 @@ class ProfileViewSet(*viewset_with('list')):
     serializer_class = None
 
     def list(self, request):
-        student_profiles = StudentSerializer(request.user.student_set.all(), many=True).data
-        mentor_profiles = MentorSerializer(request.user.mentor_set.all(), many=True).data
+        student_profiles = StudentSerializer(request.user.student_set.filter(active=True), many=True).data
+        mentor_profiles = MentorSerializer(request.user.mentor_set.filter(active=True), many=True).data
         return Response({'mentor_profiles': mentor_profiles, 'student_profiles': student_profiles})
 
 
@@ -140,7 +145,7 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
     @action(detail=True, methods=['put'])
     def override(self, request, pk=None):
         spacetime = get_object_or_error(self.get_queryset(), pk=pk)
-        if hasattr(spacetime, "override"):  # update
+        if spacetime.has_override():  # update
             serializer = OverrideSerializer(spacetime.override, data=request.data)
         else:  # create
             serializer = OverrideSerializer(data={'overriden_spacetime': spacetime, **request.data})
