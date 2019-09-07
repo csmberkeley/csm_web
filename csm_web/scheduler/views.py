@@ -10,6 +10,9 @@ from .models import Course, Section, Student, Spacetime
 from rest_framework import mixins
 from .serializers import CourseSerializer, SectionSerializer, StudentSerializer, AttendanceSerializer, MentorSerializer, OverrideSerializer
 from django.core.exceptions import ObjectDoesNotExist
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 def get_object_or_error(specific_queryset, **kwargs):
@@ -79,15 +82,22 @@ class SectionViewSet(*viewset_with('retrieve')):
                     "You are already either mentoring for this course or enrolled in a section", status.HTTP_422_UNPROCESSABLE_ENTITY)
 
             if section.current_student_count >= section.capacity:
+                logger.warn(
+                    f"<Enrollment:Failure> User {request.user.pk} was unable to enroll in Section {section.pk} because it was full")
                 raise PermissionDenied("There is no space available in this section", status.HTTP_423_LOCKED)
             try:  # Student dropped a section in this course and is now enrolling in a different one
                 student = request.user.student_set.get(active=False, section__course=section.course)
+                old_section_pk = student.section.pk
                 student.section = section
                 student.active = True
                 student.save()
+                logger.info(
+                    "f<Enrollment:Success> User {request.user.pk} swapped into Section {section.pk} from Section {old_section_pk}")
                 return Response(status=status.HTTP_204_NO_CONTENT)
             except Student.DoesNotExist:  # Student is enrolling in this course for the first time
                 student = Student.objects.create(user=request.user, section=section)
+                logger.info(
+                    "f<Enrollment:Success> User {request.user.pk} enrolled in Section {section.pk}")
                 return Response({'id': student.id}, status=status.HTTP_201_CREATED)
 
 
@@ -104,6 +114,7 @@ class StudentViewSet(viewsets.GenericViewSet):
         student = get_object_or_error(self.get_queryset(), pk=pk)
         student.active = False
         student.save()
+        logger.info("<Drop> User {request.user.pk} dropped Section {student.section.pk}")
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['get', 'put'])
@@ -120,8 +131,11 @@ class StudentViewSet(viewsets.GenericViewSet):
         except ObjectDoesNotExist:  # create
             serializer = AttendanceSerializer(data={'student': student.id, **request.data})
         if serializer.is_valid():
-            serializer.save()
+            attendance = serializer.save()
+            logger.info("<Attendance:Success> Attendance {attendance.pk} recorded for User {request.user.pk}")
             return Response(status=status.HTTP_204_NO_CONTENT)
+        logger.error(
+            "<Attendance:Failure> Could not record attendance for User {request.user.pk}, errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
@@ -149,6 +163,8 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         else:  # create
             serializer = OverrideSerializer(data={'overriden_spacetime': spacetime, **request.data})
         if serializer.is_valid():
-            serializer.save()
+            override = serializer.save()
+            logger.info(f"<Override:Success> Overrode Spacetime {spacetime.pk} with Override {override.pk}")
             return Response(status=status.HTTP_202_ACCEPTED)
+        logger.error(f"<Override:Failure> Could not override Spacetime {spacetime.pk}, errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
