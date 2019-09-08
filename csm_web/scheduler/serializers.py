@@ -25,7 +25,7 @@ class MentorSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Mentor
-        fields = ("id", "name", "email")
+        fields = ("id", "name", "email", "section")
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
@@ -43,7 +43,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ("id", "name", "email", "attendances")
+        fields = ("id", "name", "email", "attendances", "section")
 
 
 class SectionSerializer(serializers.ModelSerializer):
