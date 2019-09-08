@@ -40,7 +40,7 @@ export default class App extends React.Component {
           <Route
             path="/"
             exact
-            render={() => <Redirect to={!currentProfile ? `/sections/${currentProfile.section}` : "/courses"} />}
+            render={() => <Redirect to={currentProfile ? `/sections/${currentProfile.section}` : "/courses"} />}
           />
           <Route
             path="/sections/:id"
