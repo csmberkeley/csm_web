@@ -1,12 +1,31 @@
 import React from "react";
 import { Route, NavLink } from "react-router-dom";
-import { fetchJSON } from "../utils/api";
+import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import PropTypes from "prop-types";
+
+function Section({ id, mentor, location, time }) {
+  function handleEnrollment() {
+    fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT);
+  }
+  return (
+    <div>
+      {id} {mentor.name} {mentor.email} {location} {time}
+      <button onClick={handleEnrollment}>Enroll</button>
+    </div>
+  );
+}
+
+Section.propTypes = {
+  id: PropTypes.number,
+  mentor: PropTypes.object,
+  location: PropTypes.string,
+  time: PropTypes.string
+};
 
 export default class Courses extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { currentCourseId: null, courses: null, ready: false, sectionCache: {} };
+    this.state = { courses: null, ready: false, sectionCache: {} };
     this.fetchCourses = this.fetchCourses.bind(this);
     this.updateSectionCache = this.updateSectionCache.bind(this);
   }
@@ -14,9 +33,7 @@ export default class Courses extends React.Component {
   static propTypes = { match: PropTypes.object };
 
   fetchCourses() {
-    return fetchJSON(this.props.match.url).then(courses =>
-      this.setState({ courses, currentCourseId: courses[0] && courses[0].id, ready: true })
-    );
+    fetchJSON(this.props.match.url).then(courses => this.setState({ courses, ready: true }));
   }
 
   updateSectionCache(courseId, sections) {
@@ -49,7 +66,6 @@ export default class Courses extends React.Component {
             />
           )}
         />
-        {JSON.stringify(this.state)}
       </div>
     );
   }
@@ -83,6 +99,12 @@ class Course extends React.Component {
     if (!this.state.ready) {
       return <div>Loading sections for course...</div>;
     }
-    return <div>{JSON.stringify(this.props.cachedSections || this.state.sections)}</div>;
+    return (
+      <div>
+        {(this.props.cachedSections || this.state.sections).map(section => (
+          <Section key={section.id} {...section} />
+        ))}
+      </div>
+    );
   }
 }
