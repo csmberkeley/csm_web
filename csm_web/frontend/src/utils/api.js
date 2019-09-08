@@ -13,11 +13,9 @@ const HTTP_METHODS = Object.freeze({
 export { HTTP_METHODS };
 
 export function fetchWithMethod(endpoint, method, data = {}) {
-  if (!HTTP_METHODS.hasOwnProperty(method)) {
+  if (!Object.prototype.hasOwnProperty.call(HTTP_METHODS, method)) {
     // check that method choice is valid
-    throw new Error(
-      "HTTP method must be one of: POST, GET, PUT, PATCH, or DELETE"
-    );
+    throw new Error("HTTP method must be one of: POST, GET, PUT, PATCH, or DELETE");
   }
   return fetch(`/api/${endpoint}`, {
     method: method,
@@ -32,5 +30,8 @@ export function fetchWithMethod(endpoint, method, data = {}) {
 }
 
 export function fetchJSON(endpoint) {
+  if (endpoint[0] == "/") {
+    endpoint = endpoint.slice(1);
+  }
   return fetch(`/api/${endpoint}`).then(response => response.json());
 }
