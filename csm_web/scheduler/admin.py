@@ -88,7 +88,7 @@ class StudentAdmin(CoordAdmin):
     # autocomplete_fields = ("section", "user")
 
     def get_fields(self, request, obj):
-        fields = ["name", "get_email", "get_course", "section", "get_attendances"]
+        fields = ["name", "get_email", "get_course", "section", "get_attendances", "active"]
         fields.insert(4, "user" if request.user.is_superuser else "get_user")
         return fields
 
@@ -451,6 +451,7 @@ class AttendanceAdmin(CoordAdmin):
 
     fields = (
         "date",
+        "student",
         "get_student_display",
         "student_email",
         "section_time",
