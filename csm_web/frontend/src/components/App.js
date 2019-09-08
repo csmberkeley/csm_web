@@ -2,14 +2,10 @@ import React from "react";
 import { MemoryRouter as Router, Route, Redirect } from "react-router-dom";
 import ReactDOM from "react-dom";
 import Section from "./Section";
-//import Course from "./Course";
+import Courses from "./Courses";
 //import CourseNav from "./CourseNav";
 //import Navbar from "./Navbar";
 import { fetchJSON } from "../utils/api";
-
-function Courses() {
-  return <div>Courses</div>;
-}
 
 export default class App extends React.Component {
   constructor(props) {
@@ -44,7 +40,7 @@ export default class App extends React.Component {
           <Route
             path="/"
             exact
-            render={() => <Redirect to={currentProfile ? `/sections/${currentProfile.section}/` : "/courses/"} />}
+            render={() => <Redirect to={!currentProfile ? `/sections/${currentProfile.section}` : "/courses"} />}
           />
           <Route
             path="/sections/:id"
@@ -56,7 +52,7 @@ export default class App extends React.Component {
               />
             )}
           />
-          <Route path="/courses/" component={Courses} />
+          <Route path="/courses" component={Courses} />
         </React.Fragment>
       </Router>
     );
