@@ -48,7 +48,7 @@ class Attendance(ValidatingModel):
 
     @property
     def week_start(self):
-        day_of_week = timezone.now().weekday()
+        day_of_week = self.date.weekday()
         return self.date - datetime.timedelta(days=day_of_week)
 
     class Meta:
