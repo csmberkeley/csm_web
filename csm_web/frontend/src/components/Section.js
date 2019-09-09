@@ -36,11 +36,12 @@ export default class Section extends React.Component {
     return (
       <div>
         {/* Displays section info */}
-        <SectionDetail sectionInfo={this.state.sectionInfo} />
+        <h2>Section</h2>
+        {this.state.ready && <SectionDetail sectionInfo={this.state.sectionInfo} />}
         {/* Displays attendances*/}
         {this.state.ready ? (
           <React.Fragment>
-            <h4> Attendances </h4>
+            <h4>Attendances</h4>
             <div>
               {this.props.isMentor ? (
                 <AsMentorAttendance students={this.state.students} />

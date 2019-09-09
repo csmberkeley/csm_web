@@ -218,6 +218,9 @@ class Spacetime(ValidatingModel):
             return self.override.spacetime.day_of_week
         return self._day_of_week
 
+    def get_day_of_week_display(self):
+        return dict(Spacetime.DAY_OF_WEEK_CHOICES).get(self.day_of_week, "Invalid day of week")
+
     @property
     def end_time(self):
         return (datetime.datetime(year=1, day=1, month=1,
