@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
+import SectionDetail from "./SectionDetail";
 import { AsStudentAttendance, AsMentorAttendance } from "./Attendance";
 
 export default class Section extends React.Component {
@@ -18,7 +19,7 @@ export default class Section extends React.Component {
 
   fetchInfo() {
     Promise.all([
-      fetchJSON(this.props.match.url).then(sectionInfo => this.setState({ ...sectionInfo })),
+      fetchJSON(this.props.match.url).then(sectionInfo => this.setState({ sectionInfo: sectionInfo })),
       this.props.isMentor
         ? fetchJSON(`${this.props.match.url}/students`).then(students => this.setState({ students }))
         : fetchJSON(`/students/${this.props.currentProfileId}/attendances`).then(attendances =>
@@ -32,19 +33,25 @@ export default class Section extends React.Component {
   }
 
   render() {
-    if (!this.state.ready) {
-      return <div>Loading attendances...</div>;
-    }
     return (
       <div>
-        <h4> Attendances </h4>
-        <div>
-          {this.props.isMentor ? (
-            <AsMentorAttendance students={this.state.students} />
-          ) : (
-            <AsStudentAttendance attendances={this.state.attendances} />
-          )}
-        </div>
+        {/* Displays section info */}
+        <SectionDetail sectionInfo={this.state.sectionInfo} />
+        {/* Displays attendances*/}
+        {this.state.ready ? (
+          <React.Fragment>
+            <h4> Attendances </h4>
+            <div>
+              {this.props.isMentor ? (
+                <AsMentorAttendance students={this.state.students} />
+              ) : (
+                <AsStudentAttendance attendances={this.state.attendances} />
+              )}
+            </div>
+          </React.Fragment>
+        ) : (
+          <div>Loading attendances...</div>
+        )}
       </div>
     );
   }
