@@ -51,13 +51,15 @@ class SectionSerializer(serializers.ModelSerializer):
     location = serializers.CharField(source='spacetime.location')
     num_students_enrolled = serializers.IntegerField(source='current_student_count')
     mentor = MentorSerializer()
+    course = serializers.CharField(source='course.name')
 
     def get_time(self, obj):
         return f"{obj.spacetime.get_day_of_week_display()} {obj.spacetime.start_time.strftime('%-I:%M')}-{obj.spacetime.end_time.strftime('%-I:%M %p')}"
 
     class Meta:
         model = Section
-        fields = ("id", "time", "location", "mentor", "capacity", "num_students_enrolled", "description", "mentor")
+        fields = ("id", "time", "location", "mentor", "capacity",
+                  "num_students_enrolled", "description", "mentor", "course")
 
 
 class OverrideSerializer(serializers.Serializer):
