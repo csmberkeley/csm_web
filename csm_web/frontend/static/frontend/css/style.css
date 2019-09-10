@@ -40,13 +40,43 @@ nav.course-selection {
 	border-radius: 20px;
 	padding: 15px;
 	margin-bottom: 15px;
-
+	background-color: white;
 }
 
-section button {
-	width: 75px;
+.course-sections-group section i {
+	margin-right: 5px;
+	width: 15px;
 }
 
-section button:hover {
+.course-sections-group section.full {
+	background-color: #989898;
+}
+
+.course-sections-group section.full button {
+	visibility: hidden;
+}
+
+.enrollment-btn {
+	position: relative;
+	top: 15px;
+}
+
+
+.enrollment-btn button {
+	width: 100px;
+	margin-right: 15px;
+	font-size: 1em;
+	background-color: white;
+	border: 1px #989898 solid;
+	cursor: pointer;
+}
+
+
+
+.mentor-email-link {
+	margin-left: 5px;
+}
+
+.course-sections-group section button:hover {
 	background-color: #aaaaaa;
 }

@@ -17,19 +17,37 @@ SectionGroup.propTypes = { key: PropTypes.string, sections: PropTypes.arrayOf(Pr
 
 function Section({ id, mentor, location, time, key, numStudentsEnrolled, capacity }) {
   function handleEnrollment() {
-    fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT);
+    fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT).then(response => {
+      if (response.ok) {
+        window.location.replace("/");
+      } else {
+        response.json().then(({ detail }) => alert(detail));
+      }
+    });
   }
   return (
-    <section key={key}>
-      <div>{time}</div>
-      <div>{location}</div>
+    <section key={key} className={numStudentsEnrolled == capacity ? "full" : undefined}>
       <div>
-        {mentor.name} <a href={`mailto:${mentor.email}`}>(Email)</a>
+        <i className="fas fa-clock" />
+        {time}
       </div>
-      <button onClick={handleEnrollment}>Enroll</button>{" "}
-      <span>
-        {numStudentsEnrolled}/{capacity}
-      </span>
+      <div>
+        <i className="fas fa-map-marker-alt" />
+        {location}
+      </div>
+      <div>
+        <i className="far fa-user" />
+        {mentor.name}
+        <a className="mentor-email-link" title="Email mentor" href={`mailto:${mentor.email}`}>
+          <i className="far fa-envelope" />
+        </a>
+      </div>
+      <div className="enrollment-btn">
+        <button onClick={handleEnrollment}>Enroll</button>{" "}
+        <span>
+          <i className="fas fa-users" /> {numStudentsEnrolled}/{capacity}
+        </span>
+      </div>
     </section>
   );
 }
