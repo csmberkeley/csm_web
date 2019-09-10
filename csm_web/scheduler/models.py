@@ -176,6 +176,8 @@ class Spacetime(ValidatingModel):
         (SATURDAY, "Saturday"),
         (SUNDAY, "Sunday"),
     )
+    DAY_INDEX = tuple(day for day, _ in DAY_OF_WEEK_CHOICES)
+
     _location = models.CharField(max_length=100)
     _start_time = models.TimeField()
     _duration = models.DurationField()
@@ -193,6 +195,9 @@ class Spacetime(ValidatingModel):
 
     def has_override(self):
         return hasattr(self, "override")
+
+    def day_number(self):
+        return self.DAY_INDEX.index(self.day_of_week)
 
     @property
     def location(self):
