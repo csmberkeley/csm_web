@@ -21,7 +21,7 @@ export default class SectionDetail extends React.Component {
   render() {
     return (
       <div>
-        <h3>[TODO COURSE] Section</h3>
+        <h3>{this.props.sectionInfo.course}</h3>
         <div>
           <p>
             {this.props.sectionInfo.mentor.name}{" "}
@@ -33,7 +33,6 @@ export default class SectionDetail extends React.Component {
           <p>{this.props.sectionInfo.location}</p>
         </div>
         <br />
-        {JSON.stringify(this.props.sectionInfo)}
       </div>
     );
   }
