@@ -3,9 +3,9 @@ import { Route, NavLink } from "react-router-dom";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import PropTypes from "prop-types";
 
-function SectionGroup({ key, sections }) {
+function SectionGroup({ sections }) {
   return (
-    <div className="course-sections-group" key={key}>
+    <div className="course-sections-group">
       {sections.map(section => (
         <Section key={section.id} {...section} />
       ))}
@@ -13,41 +13,47 @@ function SectionGroup({ key, sections }) {
   );
 }
 
-SectionGroup.propTypes = { key: PropTypes.string, sections: PropTypes.arrayOf(PropTypes.object) };
+SectionGroup.propTypes = { sections: PropTypes.arrayOf(PropTypes.object) };
 
-function Section({ id, mentor, location, time, key, numStudentsEnrolled, capacity }) {
+function Section({ id, mentor, location, time, numStudentsEnrolled, capacity, placeholder }) {
   function handleEnrollment() {
     fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT).then(response => {
       if (response.ok) {
-        window.location.replace("/");
+        alert("Successfully enrolled in course");
       } else {
         response.json().then(({ detail }) => alert(detail));
       }
     });
   }
   return (
-    <section key={key} className={numStudentsEnrolled == capacity ? "full" : undefined}>
-      <div>
-        <i className="fas fa-clock" />
-        {time}
-      </div>
-      <div>
-        <i className="fas fa-map-marker-alt" />
-        {location}
-      </div>
-      <div>
-        <i className="far fa-user" />
-        {mentor.name}
-        <a className="mentor-email-link" title="Email mentor" href={`mailto:${mentor.email}`}>
-          <i className="far fa-envelope" />
-        </a>
-      </div>
-      <div className="enrollment-btn">
-        <button onClick={handleEnrollment}>Enroll</button>{" "}
-        <span>
-          <i className="fas fa-users" /> {numStudentsEnrolled}/{capacity}
-        </span>
-      </div>
+    <section className={numStudentsEnrolled == capacity ? "full" : undefined}>
+      {!placeholder && (
+        <React.Fragment>
+          <div>
+            <i className="fas fa-clock" />
+            {time}
+          </div>
+          <div>
+            <i className="fas fa-map-marker-alt" />
+            {location}
+          </div>
+          <div>
+            <i className="far fa-user" />
+            {mentor ? mentor.name : "Mentor TBD"}
+            {mentor && (
+              <a className="mentor-email-link" title="Email mentor" href={`mailto:${mentor.email}`}>
+                <i className="far fa-envelope" />
+              </a>
+            )}
+          </div>
+          <div className="enrollment-btn">
+            <button onClick={handleEnrollment}>Enroll</button>{" "}
+            <span>
+              <i className="fas fa-users" /> {numStudentsEnrolled}/{capacity}
+            </span>
+          </div>
+        </React.Fragment>
+      )}
     </section>
   );
 }
@@ -57,9 +63,9 @@ Section.propTypes = {
   mentor: PropTypes.object,
   location: PropTypes.string,
   time: PropTypes.string,
-  key: PropTypes.number,
   numStudentsEnrolled: PropTypes.number,
-  capacity: PropTypes.number
+  capacity: PropTypes.number,
+  placeholder: PropTypes.bool
 };
 
 export default class Courses extends React.Component {
@@ -70,10 +76,12 @@ export default class Courses extends React.Component {
     this.updateSectionCache = this.updateSectionCache.bind(this);
   }
 
-  static propTypes = { match: PropTypes.object };
+  static propTypes = { match: PropTypes.object.isRequired };
 
   fetchCourses() {
-    fetchJSON(this.props.match.url).then(courses => this.setState({ courses, ready: true }));
+    fetchJSON(this.props.match.url).then(courses =>
+      this.setState({ courses: Object.fromEntries(courses.map(course => [course.id, course])), ready: true })
+    );
   }
 
   updateSectionCache(courseId, sections) {
@@ -88,7 +96,7 @@ export default class Courses extends React.Component {
     if (!this.state.ready) {
       return <div>Loading courses...</div>;
     }
-    const courseLinks = this.state.courses.map(course => (
+    const courseLinks = Object.values(this.state.courses).map(course => (
       <NavLink key={course.id} to={`${this.props.match.path}/${course.id}`}>
         {course.name}
       </NavLink>
@@ -100,6 +108,7 @@ export default class Courses extends React.Component {
           path={`${this.props.match.path}/:id`}
           render={routeProps => (
             <Course
+              enrollmentOpen={this.state.courses[routeProps.match.params.id].enrollmentOpen}
               updateSectionCache={this.updateSectionCache}
               cachedSections={this.state.sectionCache[routeProps.match.params.id]}
               key={routeProps.match.params.id}
@@ -124,7 +133,12 @@ class Course extends React.Component {
     this.fetchSections = this.fetchSections.bind(this);
   }
 
-  static propTypes = { match: PropTypes.object, cachedSections: PropTypes.array, updateSectionCache: PropTypes.func };
+  static propTypes = {
+    match: PropTypes.object.isRequired,
+    cachedSections: PropTypes.object,
+    updateSectionCache: PropTypes.func.isRequired,
+    enrollmentOpen: PropTypes.bool.isRequired
+  };
 
   fetchSections() {
     return fetchJSON(`${this.props.match.url}/sections?grouped=true`).then(sections => {
@@ -142,13 +156,16 @@ class Course extends React.Component {
   }
 
   render() {
+    if (!this.props.enrollmentOpen) {
+      return <h4>Enrollment is not yet open for this course</h4>;
+    }
     if (!this.state.ready) {
       return (
         <div className="course-sections">
           {Array(4)
             .fill()
             .map((_, i) => (
-              <Section key={i} mentor={{}} />
+              <Section key={i} placeholder={true} />
             ))}
         </div>
       );
