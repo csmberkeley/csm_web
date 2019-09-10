@@ -3,15 +3,34 @@ import { Route, NavLink } from "react-router-dom";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import PropTypes from "prop-types";
 
-function Section({ id, mentor, location, time }) {
+function SectionGroup({ key, sections }) {
+  return (
+    <div className="course-sections-group" key={key}>
+      {sections.map(section => (
+        <Section key={section.id} {...section} />
+      ))}
+    </div>
+  );
+}
+
+SectionGroup.propTypes = { key: PropTypes.string, sections: PropTypes.arrayOf(PropTypes.object) };
+
+function Section({ id, mentor, location, time, key, numStudentsEnrolled, capacity }) {
   function handleEnrollment() {
     fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT);
   }
   return (
-    <div>
-      {id} {mentor.name} {mentor.email} {location} {time}
-      <button onClick={handleEnrollment}>Enroll</button>
-    </div>
+    <section key={key}>
+      <div>{time}</div>
+      <div>{location}</div>
+      <div>
+        {mentor.name} <a href={`mailto:${mentor.email}`}>(Email)</a>
+      </div>
+      <button onClick={handleEnrollment}>Enroll</button>{" "}
+      <span>
+        {numStudentsEnrolled}/{capacity}
+      </span>
+    </section>
   );
 }
 
@@ -19,7 +38,10 @@ Section.propTypes = {
   id: PropTypes.number,
   mentor: PropTypes.object,
   location: PropTypes.string,
-  time: PropTypes.string
+  time: PropTypes.string,
+  key: PropTypes.number,
+  numStudentsEnrolled: PropTypes.number,
+  capacity: PropTypes.number
 };
 
 export default class Courses extends React.Component {
@@ -48,13 +70,14 @@ export default class Courses extends React.Component {
     if (!this.state.ready) {
       return <div>Loading courses...</div>;
     }
+    const courseLinks = this.state.courses.map(course => (
+      <NavLink key={course.id} to={`${this.props.match.path}/${course.id}`}>
+        {course.name}
+      </NavLink>
+    ));
     return (
       <div>
-        {this.state.courses.map(course => (
-          <NavLink key={course.id} to={`${this.props.match.path}/${course.id}`}>
-            {course.name}
-          </NavLink>
-        ))}
+        <nav className="course-selection">{courseLinks}</nav>
         <Route
           path={`${this.props.match.path}/:id`}
           render={routeProps => (
@@ -71,6 +94,11 @@ export default class Courses extends React.Component {
   }
 }
 
+const DAYS = Object.freeze(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]);
+function dayComparator(day1, day2) {
+  return DAYS.indexOf(day1) - DAYS.indexOf(day2);
+}
+
 class Course extends React.Component {
   constructor(props) {
     super(props);
@@ -81,7 +109,7 @@ class Course extends React.Component {
   static propTypes = { match: PropTypes.object, cachedSections: PropTypes.array, updateSectionCache: PropTypes.func };
 
   fetchSections() {
-    return fetchJSON(`${this.props.match.url}/sections`).then(sections => {
+    return fetchJSON(`${this.props.match.url}/sections?grouped=true`).then(sections => {
       this.setState({ sections, ready: true });
       return sections;
     });
@@ -97,14 +125,19 @@ class Course extends React.Component {
 
   render() {
     if (!this.state.ready) {
-      return <div>Loading sections for course...</div>;
+      return (
+        <div className="course-sections">
+          {Array(4)
+            .fill()
+            .map((_, i) => (
+              <Section key={i} mentor={{}} />
+            ))}
+        </div>
+      );
     }
-    return (
-      <div>
-        {(this.props.cachedSections || this.state.sections).map(section => (
-          <Section key={section.id} {...section} />
-        ))}
-      </div>
-    );
+    let sections = Object.entries(this.props.cachedSections || this.state.sections);
+    sections.sort(([day1], [day2]) => dayComparator(day1, day2));
+    sections = sections.map(([day, sections]) => <SectionGroup key={day} sections={sections} />);
+    return <div className="course-sections">{sections}</div>;
   }
 }
