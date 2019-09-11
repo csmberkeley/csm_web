@@ -32,6 +32,13 @@ export default class Section extends React.Component {
     this.fetchInfo();
   }
 
+  componentDidUpdate(prevProps) {
+    if (prevProps.match.params.id != this.props.match.params.id) {
+      this.setState({ ready: false });
+      this.fetchInfo();
+    }
+  }
+
   render() {
     return (
       <div>

@@ -35,7 +35,7 @@ export default class Navbar extends React.Component {
   }
 
   render() {
-    let ready = this.state.ready;
+    let { ready } = this.state;
     let makeSectionLink = section => (
       <li key={section.id}>
         <NavLink to={`/sections/${section.id}`}>
