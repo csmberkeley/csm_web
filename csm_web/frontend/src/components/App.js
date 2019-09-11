@@ -4,7 +4,7 @@ import ReactDOM from "react-dom";
 import Section from "./Section";
 import Courses from "./Courses";
 //import CourseNav from "./CourseNav";
-//import Navbar from "./Navbar";
+import Navbar from "./Navbar";
 import { fetchJSON } from "../utils/api";
 
 export default class App extends React.Component {
@@ -37,6 +37,7 @@ export default class App extends React.Component {
     return (
       <Router>
         <React.Fragment>
+          <Navbar studentProfiles={this.state.studentProfiles} mentorProfiles={this.state.mentorProfiles} />
           <Route
             path="/"
             exact
