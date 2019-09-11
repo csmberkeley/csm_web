@@ -103,6 +103,7 @@ export default class Courses extends React.Component {
     ));
     return (
       <div>
+        <h3 style={{ textAlign: "center" }}>Select a course to enroll in</h3>
         <nav className="course-selection">{courseLinks}</nav>
         <Route
           path={`${this.props.match.path}/:id`}
