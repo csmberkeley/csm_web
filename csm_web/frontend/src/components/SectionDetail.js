@@ -35,7 +35,7 @@ class DropButton extends React.Component {
   handleClick() {
     let p = this.props.sectionInfo;
     let confirmed = window.confirm(
-      `Are you sure you want to drop this section (${p.course}, ${p.mentor.name} at ${p.time})?`
+      `Are you sure you want to drop this section (${p.course}, ${p.mentor.name} on ${p.time})?`
     );
     if (confirmed) {
       this.doDrop();
