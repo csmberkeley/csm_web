@@ -89,13 +89,15 @@ class StudentAdmin(CoordAdmin):
 
     def get_fields(self, request, obj):
         fields = ["name", "get_email", "get_course", "section", "get_attendances", "active"]
-        fields.insert(4, "user" if request.user.is_superuser else "get_user")
+        # TODO distinguish between edit (which should have it read_only) and add
+        fields.insert(4, "user")
+        # fields.insert(4, "user" if request.user.is_superuser else "get_user")
         return fields
 
     def get_readonly_fields(self, request, obj):
         fields = ["get_course", "get_email", "name", "get_attendances"]
-        if not request.user.is_superuser:
-            fields.insert(0, "get_user")
+        # if not request.user.is_superuser:
+        # fields.insert(0, "get_user")
         return fields
 
     def has_delete_permission(self, request, obj=None):
@@ -331,6 +333,8 @@ class SectionAdmin(CoordAdmin):
             ) for student in obj.students.all()
         )
         return format_html("".join(student_links))
+
+    get_students.short_description = "Students"
 
 
 @admin.register(Spacetime)
