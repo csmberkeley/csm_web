@@ -132,7 +132,7 @@ class Section(ValidatingModel):
         "by the mentor, in which case the admin page will display the overriding times."
     )
     capacity = models.PositiveSmallIntegerField()
-    mentor = models.OneToOneField(Mentor, on_delete=models.SET_NULL, blank=True, null=True)
+    mentor = models.OneToOneField(Mentor, on_delete=models.CASCADE, blank=True, null=True)
     description = models.CharField(
         max_length=100,
         blank=True,
