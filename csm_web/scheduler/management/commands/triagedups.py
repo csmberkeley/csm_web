@@ -14,12 +14,12 @@ class Command(BaseCommand):
 
     def _triage(self, tup):
         course, time, loc, day, email = tup
-        profs = Profile.objects.filter(
+        profs = Mentor.objects.filter(
             course=course,
             user__email=email,
-            section__default_spacetime__start_time=time,
-            section__default_spacetime__location=loc,
-            section__default_spacetime__day_of_week=day,
+            section__spacetime___start_time=time,
+            section__spacetime___location=loc,
+            section__spacetime___day_of_week=day,
         )
         profs = iter(profs)
         keep = next(profs)
