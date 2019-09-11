@@ -1,7 +1,6 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
-import { Link } from "react-router-dom";
 import SectionDetail from "./SectionDetail";
 import { AsStudentAttendance, AsMentorAttendance } from "./Attendance";
 
@@ -37,7 +36,6 @@ export default class Section extends React.Component {
     return (
       <div>
         {/* Displays section info */}
-        <Link to="/courses">Enroll in another course</Link>
         <h2>Section</h2>
         {this.state.ready && (
           <SectionDetail

@@ -13,6 +13,17 @@ nav.course-selection {
   justify-content: space-evenly;
 }
 
+#header ol {
+  list-style-type: none;
+  padding-right: 0em;
+  padding-left: 0em;
+}
+
+#header ol * {
+  display: inline-block;
+  margin-right: 1em;
+}
+
 .course-sections {
   display: flex;
   justify-content: space-evenly;
