@@ -132,8 +132,8 @@ class StudentViewSet(viewsets.GenericViewSet):
     serializer_class = StudentSerializer
 
     def get_queryset(self):
-        own_profiles = Student.objects.filter(user=self.request.user)
-        pupil_profiles = Student.objects.filter(section__mentor__user=self.request.user)
+        own_profiles = Student.objects.filter(user=self.request.user, active=True)
+        pupil_profiles = Student.objects.filter(section__mentor__user=self.request.user, active=True)
         return (own_profiles | pupil_profiles).distinct()
 
     @action(detail=True, methods=['patch'])

@@ -39,7 +39,13 @@ export default class Section extends React.Component {
         {/* Displays section info */}
         <Link to="/courses">Enroll in another course</Link>
         <h2>Section</h2>
-        {this.state.ready && <SectionDetail sectionInfo={this.state.sectionInfo} />}
+        {this.state.ready && (
+          <SectionDetail
+            sectionInfo={this.state.sectionInfo}
+            isStudent={!this.props.isMentor}
+            profileId={this.props.currentProfileId}
+          />
+        )}
         {/* Displays attendances*/}
         {this.state.ready ? (
           <React.Fragment>

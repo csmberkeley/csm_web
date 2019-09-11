@@ -20,6 +20,7 @@ function Section({ id, mentor, location, time, numStudentsEnrolled, capacity, pl
     fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT).then(response => {
       if (response.ok) {
         alert("Successfully enrolled in course");
+        window.location.reload();
       } else {
         response.json().then(({ detail }) => alert(detail));
       }
@@ -105,6 +106,7 @@ export default class Courses extends React.Component {
       <div>
         <h3 style={{ textAlign: "center" }}>Select a course to enroll in</h3>
         <nav className="course-selection">{courseLinks}</nav>
+        <br />
         <Route
           path={`${this.props.match.path}/:id`}
           render={routeProps => (
@@ -113,6 +115,8 @@ export default class Courses extends React.Component {
               updateSectionCache={this.updateSectionCache}
               cachedSections={this.state.sectionCache[routeProps.match.params.id]}
               key={routeProps.match.params.id}
+              // Are we guaranteed to get these in iteration order?
+              courseName={this.state.courses[routeProps.match.params.id].name}
               {...routeProps}
             />
           )}
@@ -138,7 +142,8 @@ class Course extends React.Component {
     match: PropTypes.object.isRequired,
     cachedSections: PropTypes.object,
     updateSectionCache: PropTypes.func.isRequired,
-    enrollmentOpen: PropTypes.bool.isRequired
+    enrollmentOpen: PropTypes.bool.isRequired,
+    courseName: PropTypes.string.isRequired
   };
 
   fetchSections() {
@@ -158,7 +163,7 @@ class Course extends React.Component {
 
   render() {
     if (!this.props.enrollmentOpen) {
-      return <h4>Enrollment is not yet open for this course</h4>;
+      return <h4>Enrollment is not yet open for this course. Please check back later!</h4>;
     }
     if (!this.state.ready) {
       return (
@@ -173,7 +178,26 @@ class Course extends React.Component {
     }
     let sections = Object.entries(this.props.cachedSections || this.state.sections);
     sections.sort(([day1], [day2]) => dayComparator(day1, day2));
-    sections = sections.map(([day, sections]) => <SectionGroup key={day} sections={sections} />);
-    return <div className="course-sections">{sections}</div>;
+    let headers = sections.map(([day]) => <th key={day}>{day}</th>);
+    sections = sections.map(([day, sections]) => (
+      <td key={day}>
+        <SectionGroup sections={sections} />
+      </td>
+    ));
+    return (
+      <React.Fragment>
+        <h3 style={{ textAlign: "center" }}>Showing sections for {this.props.courseName}</h3>
+        <div className="course-sections">
+          <table>
+            <thead>
+              <tr>{headers}</tr>
+            </thead>
+            <tbody>
+              <tr>{sections}</tr>
+            </tbody>
+          </table>
+        </div>
+      </React.Fragment>
+    );
   }
 }
