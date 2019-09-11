@@ -46,6 +46,7 @@ export default class Section extends React.Component {
         <h2>Section</h2>
         {this.state.ready && (
           <SectionDetail
+            key={this.props.match.params.id}
             sectionInfo={this.state.sectionInfo}
             isStudent={!this.props.isMentor}
             profileId={this.props.currentProfileId}

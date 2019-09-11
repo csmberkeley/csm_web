@@ -33,11 +33,11 @@ export default class App extends React.Component {
     if (!this.state.ready) {
       return <div>Loading...</div>;
     }
-    const { currentProfile, mentorProfiles } = this.state;
+    const { currentProfile, mentorProfiles, studentProfiles } = this.state;
     return (
       <Router>
         <React.Fragment>
-          <Navbar studentProfiles={this.state.studentProfiles} mentorProfiles={this.state.mentorProfiles} />
+          <Navbar studentProfiles={studentProfiles} mentorProfiles={mentorProfiles} />
           <Route
             path="/"
             exact
@@ -47,8 +47,13 @@ export default class App extends React.Component {
             path="/sections/:id"
             render={routeProps => (
               <Section
-                currentProfileId={currentProfile.id}
-                isMentor={mentorProfiles.map(profile => profile.id).includes(currentProfile.id)}
+                key={routeProps.match.params.id}
+                currentProfileId={
+                  mentorProfiles
+                    .concat(studentProfiles)
+                    .filter(profile => profile.section == routeProps.match.params.id)[0].id
+                }
+                isMentor={mentorProfiles.map(profile => profile.section).includes(Number(routeProps.match.params.id))}
                 {...routeProps}
               />
             )}

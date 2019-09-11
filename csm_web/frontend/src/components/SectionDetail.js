@@ -26,6 +26,7 @@ class DropButton extends React.Component {
   constructor(props) {
     super(props);
     this.handleClick = this.handleClick.bind(this);
+    this.doDrop = this.doDrop.bind(this);
   }
 
   doDrop() {
