@@ -318,10 +318,15 @@ class SectionAdmin(CoordAdmin):
             admin_url = reverse("admin:scheduler_spacetime_add")
             msg = "Room creation is disabled at the moment. Please ask the resident tech person for help."  # "Create spacetime"
             return format_html(
-                '<div class="related-widget-wrapper"> \
-                <a class="related-widget-wrapper-link change-related"change-related" \
-                id="change_id_spacetime" \
-                href="{}?_to_field=id&_popup=1">{}</a></div>',
+                """
+                <div class="related-widget-wrapper">
+                    <a class="related-widget-wrapper-link change-related"change-related"
+                       id="change_id_spacetime"
+                       href="{}?_to_field=id&_popup=1">
+                       {}
+                    </a>
+                </div>
+                """,
                 admin_url,
                 msg
             )

@@ -80,7 +80,7 @@ class Course(ValidatingModel):
 
     def is_open(self):
         now = timezone.now()
-        return now > self.enrollment_start and now < self.enrollment_end
+        return self.enrollment_start < now < self.enrollment_end
 
 
 class Profile(ValidatingModel):
