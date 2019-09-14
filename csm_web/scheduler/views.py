@@ -16,6 +16,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+logger.info = logger.warn
+
 
 def log_str(obj):
     def log_format(*args):
