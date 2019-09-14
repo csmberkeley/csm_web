@@ -81,11 +81,11 @@ class UserAdmin(CoordAdmin):
 
 @admin.register(Student)
 class StudentAdmin(CoordAdmin):
-    list_filter = ("active",)
+    list_filter = ("active", "section__course")
     list_display = ("name", "get_email", "get_course", "get_mentor", "section")
     search_fields = ("user__email", "user__first_name", "user__last_name")
     actions = ("drop_students", "undrop_students")
-    # autocomplete_fields = ("section", "user")
+    autocomplete_fields = ("section", "user")
 
     def get_fields(self, request, obj):
         fields = ["name", "get_email", "get_course", "section", "get_attendances", "active"]
@@ -101,9 +101,7 @@ class StudentAdmin(CoordAdmin):
         return fields
 
     def has_delete_permission(self, request, obj=None):
-        return (
-            False
-        )  # delete sections + mentor by deleting sections, drop by deactivating
+        return False  # drop students by deactivating their section
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if not request.user.is_superuser and db_field.name == "section":
@@ -148,7 +146,9 @@ class StudentAdmin(CoordAdmin):
     get_course.short_description = "Course"
 
     def get_mentor(self, obj):
-        return get_admin_link_for(obj.section.mentor, "admin:scheduler_mentor_change")
+        if obj.section is not None and obj.section.mentor is not None:
+            return get_admin_link_for(obj.section.mentor, "admin:scheduler_mentor_change")
+        return "-"
 
     get_mentor.short_description = "Mentor"
 
@@ -167,11 +167,11 @@ class StudentAdmin(CoordAdmin):
 
 @admin.register(Mentor)
 class MentorAdmin(CoordAdmin):
-    # list_filter = ("get_course", "active")
+    list_filter = ("section__course",)
     list_display = ("name", "get_email", "get_course", "get_section")
     search_fields = ("user__email", "user__first_name", "user__last_name")
     actions = ("deactivate_profiles", "activate_profiles")
-    # autocomplete_fields = ("section", "user")
+    autocomplete_fields = ("user",)
 
     def has_delete_permission(self, request, obj=None):
         return False  # delete sections + mentor by deleting sections, drop by deactivating
@@ -260,7 +260,6 @@ class SectionAdmin(CoordAdmin):
         "get_mentor_email",
         "get_mentor_id",
         "get_spacetime",
-        "course",
         "current_student_count",
         "get_students",
     )
@@ -281,6 +280,17 @@ class SectionAdmin(CoordAdmin):
         "spacetime___location",
     )
 
+    def formfield_for_foreignkey(self, db_field, request, **kwargs):
+        if not request.user.is_superuser:
+            if db_field.name == "course":
+                kwargs["queryset"] = get_visible_courses(request.user)
+            elif db_field.name == "spacetime":
+                # Used to prevent people from changing wrongly the pointer to a Spacetime
+                # but also to allow modification of the existing spacetime
+                # TODO make this actually work
+                kwargs["queryset"] = Spacetime.objects.none()
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
     def get_queryset(self, request):
         queryset = (
             super()
@@ -292,21 +302,29 @@ class SectionAdmin(CoordAdmin):
             return queryset
         return queryset.filter(course__in=get_visible_courses(request.user))
 
-    # Custom fields
-
     # TODO add signifier that clicking this link allows inline editing
     def get_spacetime(self, obj):
-        admin_url = reverse(
-            "admin:scheduler_spacetime_change", args=(obj.spacetime.id,)
-        )
-        return format_html(
-            '<div class="related-widget-wrapper"> \
-            <a class="related-widget-wrapper-link change-related"change-related" \
-            id="change_id_spacetime" \
-            href="{}?_to_field=id&_popup=1">{}</a></div>',
-            admin_url,
-            str(obj.spacetime),
-        )
+        if obj.id is not None:
+            admin_url = reverse("admin:scheduler_spacetime_change", args=(obj.spacetime.id,))
+            return format_html(
+                '<div class="related-widget-wrapper"> \
+                <a class="related-widget-wrapper-link change-related"change-related" \
+                id="change_id_spacetime" \
+                href="{}?_to_field=id&_popup=1">{}</a></div>',
+                admin_url,
+                str(obj.spacetime)
+            )
+        else:
+            admin_url = reverse("admin:scheduler_spacetime_add")
+            msg = "Room creation is disabled at the moment. Please ask the resident tech person for help."  # "Create spacetime"
+            return format_html(
+                '<div class="related-widget-wrapper"> \
+                <a class="related-widget-wrapper-link change-related"change-related" \
+                id="change_id_spacetime" \
+                href="{}?_to_field=id&_popup=1">{}</a></div>',
+                admin_url,
+                msg
+            )
 
     get_spacetime.short_description = "Room/time"
 
@@ -330,7 +348,7 @@ class SectionAdmin(CoordAdmin):
             get_admin_link_for(
                 student,
                 "admin:scheduler_student_change",
-            ) for student in obj.students.all()
+            ) for student in obj.students.filter(active=True)
         )
         return format_html("".join(student_links))
 
