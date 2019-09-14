@@ -8,8 +8,10 @@ from rest_framework.serializers import ValidationError
 
 class User(AbstractUser):
     def can_enroll_in_course(self, course):
-        return not (self.student_set.filter(active=True, section__course=course).count() or
-                    self.mentor_set.filter(section__course=course).count())
+        return course.is_open() and (
+            not (self.student_set.filter(active=True, section__course=course).count() or
+                 self.mentor_set.filter(section__course=course).count())
+        )
 
 
 class ValidatingModel(models.Model):
@@ -75,6 +77,10 @@ class Course(ValidatingModel):
             enrollment_end = self.enrollment_end
         if self.valid_until < enrollment_end:
             raise ValidationError("valid_until must be after enrollment_end")
+
+    def is_open(self):
+        now = timezone.now()
+        return now > self.enrollment_start and now < self.enrollment_end
 
 
 class Profile(ValidatingModel):
