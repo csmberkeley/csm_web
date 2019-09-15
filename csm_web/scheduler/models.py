@@ -71,16 +71,11 @@ class Course(ValidatingModel):
         super().clean()
         if self.enrollment_end <= self.enrollment_start:
             raise ValidationError("enrollment_end must be after enrollment_start")
-        if type(self.enrollment_end) == datetime.datetime:
-            enrollment_end = self.enrollment_end.date()
-        else:
-            enrollment_end = self.enrollment_end
-        if self.valid_until < enrollment_end:
+        if self.valid_until < self.enrollment_end.date():
             raise ValidationError("valid_until must be after enrollment_end")
 
     def is_open(self):
-        now = timezone.now()
-        return self.enrollment_start < now < self.enrollment_end
+        return self.enrollment_start < timezone.now() < self.enrollment_end
 
 
 class Profile(ValidatingModel):
@@ -104,7 +99,7 @@ class Student(Profile):
     Represents a given "instance" of a student. Every section in which a student enrolls should
     have a new Mentor profile.
     """
-    section = models.ForeignKey("Section", on_delete=models.CASCADE, blank=True, null=True, related_name="students")
+    section = models.ForeignKey("Section", on_delete=models.CASCADE, related_name="students")
     active = models.BooleanField(default=True, help_text="An inactive student is a dropped student.")
 
     class Meta:
@@ -124,6 +119,11 @@ class Coordinator(Profile):
     This profile is used to allow coordinators to acess the admin page.
     """
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        self.user.is_staff = True
+        self.user.save()
+        super().save(*args, **kwargs)
 
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.course.name})"
@@ -151,6 +151,12 @@ class Section(ValidatingModel):
         return self.students.filter(active=True).count()
 
     current_student_count.fget.short_description = "Number of students enrolled"
+
+    def delete(self, *args, **kwargs):
+        if self.current_student_count and not kwargs.get('force'):
+            raise models.ProtectedError("Cannot delete section with enrolled students", self)
+        kwargs.pop('force', None)
+        super().delete(*args, **kwargs)
 
     def __str__(self):
         return "{course} section ({enrolled}/{cap}, {mentor}, {spacetime})".format(
@@ -229,11 +235,10 @@ class Spacetime(ValidatingModel):
             return self.override.spacetime.day_of_week
         return self._day_of_week
 
-    def get_day_of_week_display(self):
-        return dict(Spacetime.DAY_OF_WEEK_CHOICES).get(self.day_of_week, "Invalid day of week")
-
     @property
     def end_time(self):
+        # Time does not support addition/subtraction,
+        # so we have to create a datetime wrapper over start_time to add it to duration
         return (datetime.datetime(year=1, day=1, month=1,
                                   hour=self.start_time.hour,
                                   minute=self.start_time.minute,

@@ -54,7 +54,7 @@ class SectionSerializer(serializers.ModelSerializer):
     course = serializers.CharField(source='course.name')
 
     def get_time(self, obj):
-        return f"{obj.spacetime.get_day_of_week_display()} {obj.spacetime.start_time.strftime('%-I:%M')}-{obj.spacetime.end_time.strftime('%-I:%M %p')}"
+        return f"{obj.spacetime.get__day_of_week_display()} {obj.spacetime.start_time.strftime('%-I:%M')}-{obj.spacetime.end_time.strftime('%-I:%M %p')}"
 
     class Meta:
         model = Section
