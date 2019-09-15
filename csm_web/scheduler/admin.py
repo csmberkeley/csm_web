@@ -5,6 +5,7 @@ from django.utils.html import format_html
 from django.urls import reverse
 from django.db import transaction
 from django.contrib import messages
+from django import forms
 
 from scheduler.models import (
     User,
@@ -235,13 +236,94 @@ class MentorAdmin(CoordAdmin):
     get_students.short_description = "Students"
 
 
+class SectionForm(forms.ModelForm):
+
+    def __init__(self, *args, **kwargs):
+        user = kwargs.pop("user", None)
+        super().__init__(*args, **kwargs)
+        queryset = Section.objects.all() if user.is_superuser else Section.objects.filter(
+            course__in=get_visible_courses(user)
+        )
+        self.queryset = (
+            queryset
+            .select_related("mentor", "mentor__user")
+            .prefetch_related("students")
+        )
+        fields = self.fields
+        if self.instance.pk is not None:
+            spacetime = self.instance.spacetime
+            has_mentor = self.instance.mentor is not None
+            fields["mentor_name"].initial = self.instance.mentor.name if has_mentor else "-"
+            fields["mentor_email"].initial = self.instance.mentor.user.email if has_mentor else "-"
+            fields["mentor_profile_id"].initial = self.instance.mentor.pk if has_mentor else "-"
+            fields["location"].initial = spacetime._location
+            fields["start_time"].initial = spacetime._start_time
+            fields["duration"].initial = spacetime._duration
+            fields["day_of_week"].initial = spacetime._day_of_week
+            fields["students"].initial = "\n".join(str(o) for o in self.instance.students.all())
+        else:
+            fields["mentor_name"].widget = forms.HiddenInput()
+            fields["mentor_email"].widget = forms.HiddenInput()
+            fields["mentor_profile_id"].widget = forms.HiddenInput()
+            fields["students"].widget = forms.HiddenInput()
+
+    mentor_name = forms.CharField(required=False, disabled=True)
+    mentor_email = forms.CharField(required=False, disabled=True)
+    mentor_profile_id = forms.CharField(required=False, disabled=True)
+    spacetime = forms.ModelChoiceField(required=False, queryset=Spacetime.objects.all(), widget=forms.HiddenInput())
+    location = forms.CharField(max_length=100)
+    start_time = forms.TimeField()
+    duration = forms.DurationField(
+        help_text="Enter a value of the form 'hh:mm:ss', e.g. '01:30:00' for a 1.5 hour section."
+    )
+    day_of_week = forms.ChoiceField(choices=Spacetime.DAY_OF_WEEK_CHOICES)
+    students = forms.CharField(required=False, disabled=True, widget=forms.Textarea,
+                               help_text="This field isn't actually editable. To add a student, enroll them through the Students admin page.")
+
+    def clean(self):
+        d = super().clean()
+        del d["mentor_name"]
+        del d["mentor_email"]
+        del d["mentor_profile_id"]
+        del d["students"]
+        spacetime_field_names = ("location", "start_time", "duration", "day_of_week")
+        for field in spacetime_field_names:
+            # Bail out and let form handle missing field validation
+            if field not in d:
+                return d
+        location = d["location"]
+        start_time = d["start_time"]
+        duration = d["duration"]
+        day_of_week = d["day_of_week"]
+        for field in spacetime_field_names:
+            del d[field]
+        d["spacetime"] = Spacetime.objects.create(
+            _location=location,
+            _start_time=start_time,
+            _duration=duration,
+            _day_of_week=day_of_week
+        )
+        return d
+
+    class Meta:
+        model = Section
+        fields = (
+            "course",
+            "mentor",
+            "description",
+            "spacetime",
+            "capacity"
+        )
+
+
 @admin.register(Section)
 class SectionAdmin(CoordAdmin):
     actions = ("swap_mentors",)
+    form = SectionForm
     fieldsets = (
         (
             "Mentor Information",
-            {"fields": ("get_mentor_name", "get_mentor_email", "get_mentor_id")},
+            {"fields": ("mentor_name", "mentor_email", "mentor_profile_id")},
         ),
         (
             "Section Information",
@@ -250,28 +332,22 @@ class SectionAdmin(CoordAdmin):
                     "course",
                     "mentor",
                     "description",
-                    "get_spacetime",
                     "capacity",
-                    "current_student_count",
-                    "get_students",
+                    "location",
+                    "start_time",
+                    "duration",
+                    "day_of_week",
+                    "students"
                 )
             },
         ),
     )
-    readonly_fields = (
-        "get_mentor_name",
-        "get_mentor_email",
-        "get_mentor_id",
-        "get_spacetime",
-        "current_student_count",
-        "get_students",
-    )
-    list_filter = ("course", "spacetime___day_of_week")  # Note the 3x underscore!
+    list_filter = ("course", "spacetime___day_of_week")
     list_display = (
         "mentor",
         "course",
         "description",
-        "get_spacetime",
+        "spacetime",
         "current_student_count",
         "capacity",
     )
@@ -283,84 +359,16 @@ class SectionAdmin(CoordAdmin):
         "spacetime___location",
     )
 
-    def formfield_for_foreignkey(self, db_field, request, **kwargs):
-        if not request.user.is_superuser:
-            if db_field.name == "course":
-                kwargs["queryset"] = get_visible_courses(request.user)
-            elif db_field.name == "spacetime":
-                # Used to prevent people from changing wrongly the pointer to a Spacetime
-                # but also to allow modification of the existing spacetime
-                # TODO make this actually work
-                kwargs["queryset"] = Spacetime.objects.none()
-        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+    def get_form(self, request, obj=None, **kwargs):
+        # Needed to pass user to SectionForm
+        # https://stackoverflow.com/a/54151253
+        form_class = super().get_form(request, obj, **kwargs)
 
-    def get_queryset(self, request):
-        queryset = (
-            super()
-            .get_queryset(request)
-            .select_related("mentor", "spacetime", "mentor__user")
-            .prefetch_related("students")
-        )
-        if request.user.is_superuser:
-            return queryset
-        return queryset.filter(course__in=get_visible_courses(request.user))
-
-    # TODO add signifier that clicking this link allows inline editing
-    def get_spacetime(self, obj):
-        if obj.id is not None:
-            admin_url = reverse("admin:scheduler_spacetime_change", args=(obj.spacetime.id,))
-            return format_html(
-                '<div class="related-widget-wrapper"> \
-                <a class="related-widget-wrapper-link change-related"change-related" \
-                id="change_id_spacetime" \
-                href="{}?_to_field=id&_popup=1">{}</a></div>',
-                admin_url,
-                str(obj.spacetime)
-            )
-        else:
-            admin_url = reverse("admin:scheduler_spacetime_add")
-            msg = "Room creation is disabled at the moment. Please ask the resident tech person for help."  # "Create spacetime"
-            return format_html(
-                """
-                <div class="related-widget-wrapper">
-                    <a class="related-widget-wrapper-link change-related"change-related"
-                       id="change_id_spacetime"
-                       href="{}?_to_field=id&_popup=1">
-                       {}
-                    </a>
-                </div>
-                """,
-                admin_url,
-                msg
-            )
-
-    get_spacetime.short_description = "Room/time"
-
-    def get_mentor_email(self, obj):
-        return obj.mentor.user.email
-
-    get_mentor_email.short_description = "Email"
-
-    def get_mentor_id(self, obj):
-        return obj.mentor.id
-
-    get_mentor_id.short_description = "Profile ID"
-
-    def get_mentor_name(self, obj):
-        return obj.mentor.name
-
-    get_mentor_name.short_description = "Name"
-
-    def get_students(self, obj):
-        student_links = sorted(
-            get_admin_link_for(
-                student,
-                "admin:scheduler_student_change",
-            ) for student in obj.students.filter(active=True)
-        )
-        return format_html("".join(student_links))
-
-    get_students.short_description = "Students"
+        class SectionFormWrapper(form_class):
+            def __new__(cls, *args, **kwargs):
+                kwargs["user"] = request.user
+                return form_class(*args, **kwargs)
+        return SectionFormWrapper
 
     def swap_mentors(self, request, queryset):
         if queryset.count() != 2:
