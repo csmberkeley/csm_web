@@ -50,6 +50,7 @@ export default class Section extends React.Component {
             sectionInfo={this.state.sectionInfo}
             isStudent={!this.props.isMentor}
             profileId={this.props.currentProfileId}
+            students={this.state.students}
           />
         )}
         {/* Displays attendances*/}
