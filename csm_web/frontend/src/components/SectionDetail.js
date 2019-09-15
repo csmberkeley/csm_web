@@ -50,11 +50,21 @@ class DropButton extends React.Component {
 }
 
 export default class SectionDetail extends React.Component {
+  constructor(props) {
+    super(props);
+    this.copyStudentEmails = this.copyStudentEmails.bind(this);
+  }
+
   static propTypes = {
     sectionInfo: sectionShape.isRequired,
     isStudent: PropTypes.bool.isRequired,
-    profileId: PropTypes.number.isRequired
+    profileId: PropTypes.number.isRequired,
+    students: PropTypes.arrayOf(PropTypes.object)
   };
+
+  copyStudentEmails() {
+    navigator.clipboard.writeText(this.props.students.map(({ email }) => email).join(" "));
+  }
 
   render() {
     return (
@@ -71,6 +81,21 @@ export default class SectionDetail extends React.Component {
           <p>{this.props.sectionInfo.location}</p>
           {this.props.isStudent && <DropButton sectionInfo={this.props.sectionInfo} profileId={this.props.profileId} />}
         </div>
+        {!this.props.isStudent && (
+          <React.Fragment>
+            <h4 style={{ display: "inline" }}>Roster</h4>
+            <button title="Copy student emails" className="copy-student-emails" onClick={this.copyStudentEmails}>
+              <i className="far fa-copy fa-lg" />
+            </button>
+            <ul>
+              {this.props.students.map(student => (
+                <li key={student.id}>
+                  {student.name} - <a href={`mailto:${student.email}`}>{student.email}</a>
+                </li>
+              ))}
+            </ul>
+          </React.Fragment>
+        )}
       </div>
     );
   }

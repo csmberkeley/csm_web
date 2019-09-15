@@ -143,4 +143,31 @@ nav.course-selection {
   margin: auto;
 }
 
+.copy-student-emails {
+	border: none;
+	cursor: pointer;
+}
+
+.copy-student-emails:hover {
+	color: blue;
+}
+
+.copy-student-emails:focus {
+	outline: none;
+}
+
+.copy-student-emails::after {
+	margin-left: 5px;
+	content: "Emails copied";
+	opacity: 1;
+	visibility: hidden;
+}
+
+.copy-student-emails:focus::after {
+	content: "Emails copied";
+	visibility: visible;
+	opacity: 0;
+	transition: opacity 0.5s;
+	transition-delay: 2s;
+}
 
