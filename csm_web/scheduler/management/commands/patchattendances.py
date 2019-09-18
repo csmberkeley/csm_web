@@ -18,14 +18,10 @@ class Command(BaseCommand):
             week_start = today - timedelta(days=today.weekday())
             week_end = today + timedelta(days=7)
             for profile in students:
-                # TODO skip to upcoming monday for jobs
-                current_date = date.today()
                 if Attendance.objects.filter(student=profile, date__range=(week_start, week_end)).count() > 0:
                     continue
-                day_offset = WEEKDAY_OFFSET[profile.section.spacetime._day_of_week]
-                day = week_start + timedelta(days=day_offset)
-                self.stdout.write(f"Updating {profile} for {day}")
+                self.stdout.write(f"Updating {profile} for week of {week_start}")
                 Attendance.objects.create(
                     student=profile,
-                    date=day
+                    date=week_start
                 )
