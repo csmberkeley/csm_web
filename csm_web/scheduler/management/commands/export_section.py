@@ -1,6 +1,6 @@
 import csv
 from django.core.management import BaseCommand
-from scheduler.models import Profile, Section
+from scheduler.models import Mentor, Section
 
 
 class Command(BaseCommand):
@@ -11,14 +11,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for email in options["emails"]:
-            profs = Profile.objects.filter(user__email=email).exclude(
-                role=Profile.STUDENT
-            )
+            profs = Mentor.objects.filter(user__email=email)
             self.stdout.write("====SECTIONS FOR MENTOR {}====".format(email))
             for profile in profs:
                 self.stdout.write(
                     "    - {}; students {}".format(
                         profile.section,
-                        [s.user.email for s in profile.section.active_students],
+                        [s.user.email for s in profile.section.students.filter(active=True)],
                     )
                 )
