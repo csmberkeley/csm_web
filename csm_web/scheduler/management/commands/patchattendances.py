@@ -16,12 +16,12 @@ class Command(BaseCommand):
         with transaction.atomic():
             today = date.today()
             week_start = today - timedelta(days=today.weekday())
-            week_end = today + timedelta(days=7)
-            for profile in students:
-                if Attendance.objects.filter(student=profile, date__range=(week_start, week_end)).count() > 0:
+            week_end = week_start + timedelta(days=7)
+            for student in students:
+                if Attendance.objects.filter(student=student, date__range=(week_start, week_end)).count() > 0:
                     continue
-                self.stdout.write(f"Updating {profile} for week of {week_start}")
+                self.stdout.write(f"Updating {student} for week of {week_start}")
                 Attendance.objects.create(
-                    student=profile,
+                    student=student,
                     date=week_start
                 )

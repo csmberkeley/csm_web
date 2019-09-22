@@ -11,12 +11,12 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         for email in options["emails"]:
-            profs = Mentor.objects.filter(user__email=email)
-            self.stdout.write("====SECTIONS FOR MENTOR {}====".format(email))
-            for profile in profs:
+            mentors = Mentor.objects.filter(user__email=email)
+            self.stdout.write(f"====SECTIONS FOR MENTOR {email}====")
+            for mentor in mentors:
                 self.stdout.write(
                     "    - {}; students {}".format(
-                        profile.section,
-                        [s.user.email for s in profile.section.students.filter(active=True)],
+                        mentor.section,
+                        [s.user.email for s in mentor.section.students.filter(active=True)],
                     )
                 )
