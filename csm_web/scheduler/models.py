@@ -4,6 +4,7 @@ from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from rest_framework.serializers import ValidationError
+import re
 
 
 class User(AbstractUser):
@@ -189,6 +190,7 @@ class Spacetime(ValidatingModel):
         (SUNDAY, "Sunday"),
     )
     DAY_INDEX = tuple(day for day, _ in DAY_OF_WEEK_CHOICES)
+    SPACE_REDUCE_REGEX = re.compile(r'\s+')
 
     _location = models.CharField(max_length=100)
     _start_time = models.TimeField()
@@ -249,6 +251,10 @@ class Spacetime(ValidatingModel):
         formatted_time = self.start_time.strftime("%I:%M %p")
         num_minutes = int(self.duration.total_seconds() // 60)
         return f"{self.location} {self.day_of_week} {formatted_time} for {num_minutes} min"
+
+    def save(self, *args, **kwargs):
+        self._location = re.sub(self.SPACE_REDUCE_REGEX, ' ', self._location).strip().title()
+        super().save(*args, **kwargs)
 
 
 class Override(ValidatingModel):
