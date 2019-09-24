@@ -16,12 +16,13 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         course = Course.objects.get(name=options["course"])
         attendances = Attendance.objects.filter(
-            section__course=course, attendee__active=True
+            student__section__course=course,
+            student__active=True
         ).order_by(
-            "week_start",
-            "section__default_spacetime__day_of_week",
-            "section__default_spacetime__start_time",
-            "attendee__leader",
+            "date",
+            "student__section__spacetime___day_of_week",
+            "student__section__spacetime___start_time",
+            "student__section__mentor",
         )
 
         # write columns
@@ -36,16 +37,16 @@ class Command(BaseCommand):
             "Section Time",
         )
         self._write(cols)
-        for a in attendances:
-            student = a.attendee
-            section = a.section
+        for attendance in attendances:
+            student = attendance.student
+            section = student.section
             mentor = section.mentor
-            spacetime = section.default_spacetime
+            spacetime = section.spacetime
             row = (
                 student.user.get_full_name(),
                 student.user.email,
-                str(a.week_start),
-                a.presence,
+                str(attendance.week_start),
+                attendance.presence,
                 mentor.user.get_full_name(),
                 mentor.user.email,
                 spacetime.day_of_week,
