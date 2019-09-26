@@ -253,7 +253,7 @@ class Spacetime(ValidatingModel):
         return f"{self.location} {self.day_of_week} {formatted_time} for {num_minutes} min"
 
     def save(self, *args, **kwargs):
-        self._location = re.sub(self.SPACE_REDUCE_REGEX, ' ', self._location).strip().title()
+        self._location = re.sub(self.SPACE_REDUCE_REGEX, ' ', self._location).strip()
         super().save(*args, **kwargs)
 
 

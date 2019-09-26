@@ -45,7 +45,7 @@ class SpacetimeTest(TestCase):
         self.assertEqual(self.spacetime.duration, self.spacetime._duration)
 
     def test_location_normalization(self):
-        spacetime = SpacetimeFactory.create(_location=' sODa     372 ', section=self.section)
+        spacetime = SpacetimeFactory.create(_location='  Soda     372 ', section=self.section)
         self.assertEqual(spacetime._location, 'Soda 372')
 
 
