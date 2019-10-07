@@ -377,6 +377,7 @@ class SectionAdmin(CoordAdmin):
             section_1.save()
             section_2.mentor = mentor_1
             section_2.save()
+        self.message_user(request, f'Swapped mentors {mentor_1.name} and {mentor_2.name}')
 
 
 @admin.register(Spacetime)
