@@ -3,6 +3,8 @@ from django.contrib import admin
 from django.core.exceptions import ValidationError
 from django.utils.html import format_html
 from django.urls import reverse
+from django.db import transaction
+from django.contrib import messages
 
 from scheduler.models import (
     User,
@@ -235,6 +237,7 @@ class MentorAdmin(CoordAdmin):
 
 @admin.register(Section)
 class SectionAdmin(CoordAdmin):
+    actions = ("swap_mentors",)
     fieldsets = (
         (
             "Mentor Information",
@@ -358,6 +361,19 @@ class SectionAdmin(CoordAdmin):
         return format_html("".join(student_links))
 
     get_students.short_description = "Students"
+
+    def swap_mentors(self, request, queryset):
+        if queryset.count() != 2:
+            self.message_user(request, 'Please select exactly 2 sections to swap the mentors of', level=messages.ERROR)
+            return
+        with transaction.atomic():
+            section_1, section_2 = queryset
+            mentor_1, mentor_2 = section_1.mentor, section_2.mentor
+            queryset.update(mentor=None)  # set both section_1 and section_2 mentor to None and save
+            section_1.mentor = mentor_2
+            section_1.save()
+            section_2.mentor = mentor_1
+            section_2.save()
 
 
 @admin.register(Spacetime)
