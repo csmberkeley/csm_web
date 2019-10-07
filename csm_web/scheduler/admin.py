@@ -366,8 +366,11 @@ class SectionAdmin(CoordAdmin):
         if queryset.count() != 2:
             self.message_user(request, 'Please select exactly 2 sections to swap the mentors of', level=messages.ERROR)
             return
+        section_1, section_2 = queryset
+        if section_1.course != section_2.course:
+            self.message_user(request, 'You cannot swap mentors from different courses', level=messages.ERROR)
+            return
         with transaction.atomic():
-            section_1, section_2 = queryset
             mentor_1, mentor_2 = section_1.mentor, section_2.mentor
             queryset.update(mentor=None)  # set both section_1 and section_2 mentor to None and save
             section_1.mentor = mentor_2
