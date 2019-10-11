@@ -239,14 +239,12 @@ class MentorAdmin(CoordAdmin):
 class SectionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
-        user = kwargs.pop("user", None)
+        user = kwargs.pop("user")
         super().__init__(*args, **kwargs)
-        queryset = Section.objects.all() if user.is_superuser else Section.objects.filter(
-            course__in=get_visible_courses(user)
-        )
+        queryset = Section.objects.filter(course__in=get_visible_courses(user))
         self.queryset = (
             queryset
-            .select_related("mentor", "mentor__user")
+            .select_related("mentor__user")
             .prefetch_related("students")
         )
         fields = self.fields
@@ -260,12 +258,10 @@ class SectionForm(forms.ModelForm):
             fields["start_time"].initial = spacetime._start_time
             fields["duration"].initial = spacetime._duration
             fields["day_of_week"].initial = spacetime._day_of_week
-            fields["students"].initial = "\n".join(str(o) for o in self.instance.students.all())
+            fields["students"].initial = "\n".join(str(student) for student in self.instance.students.all())
         else:
-            fields["mentor_name"].widget = forms.HiddenInput()
-            fields["mentor_email"].widget = forms.HiddenInput()
-            fields["mentor_profile_id"].widget = forms.HiddenInput()
-            fields["students"].widget = forms.HiddenInput()
+            for field in ("mentor_name", "mentor_email", "mentor_profile_id", "students"):
+                fields[field].widget = forms.HiddenInput()
 
     mentor_name = forms.CharField(required=False, disabled=True)
     mentor_email = forms.CharField(required=False, disabled=True)
@@ -281,29 +277,29 @@ class SectionForm(forms.ModelForm):
                                help_text="This field isn't actually editable. To add a student, enroll them through the Students admin page.")
 
     def clean(self):
-        d = super().clean()
-        del d["mentor_name"]
-        del d["mentor_email"]
-        del d["mentor_profile_id"]
-        del d["students"]
+        cleaned_data = super().clean()
+        del cleaned_data["mentor_name"]
+        del cleaned_data["mentor_email"]
+        del cleaned_data["mentor_profile_id"]
+        del cleaned_data["students"]
         spacetime_field_names = ("location", "start_time", "duration", "day_of_week")
         for field in spacetime_field_names:
             # Bail out and let form handle missing field validation
-            if field not in d:
-                return d
-        location = d["location"]
-        start_time = d["start_time"]
-        duration = d["duration"]
-        day_of_week = d["day_of_week"]
+            if field not in cleaned_data:
+                return cleaned_data
+        location = cleaned_data["location"]
+        start_time = cleaned_data["start_time"]
+        duration = cleaned_data["duration"]
+        day_of_week = cleaned_data["day_of_week"]
         for field in spacetime_field_names:
-            del d[field]
-        d["spacetime"] = Spacetime.objects.create(
+            del cleaned_data[field]
+        cleaned_data["spacetime"] = Spacetime.objects.create(
             _location=location,
             _start_time=start_time,
             _duration=duration,
             _day_of_week=day_of_week
         )
-        return d
+        return cleaned_data
 
     class Meta:
         model = Section
