@@ -170,6 +170,8 @@ class StudentAdmin(CoordAdmin):
 
 @admin.register(Mentor)
 class MentorAdmin(CoordAdmin):
+    fields = ("name", "get_email", "get_course", "user", "get_section", "get_students")
+    readonly_fields = ("get_course", "get_email", "get_section", "name", "get_students")
     list_filter = ("section__course",)
     list_display = ("name", "get_email", "get_course", "get_section")
     search_fields = ("user__email", "user__first_name", "user__last_name")
@@ -177,7 +179,7 @@ class MentorAdmin(CoordAdmin):
     autocomplete_fields = ("user",)
 
     def has_delete_permission(self, request, obj=None):
-        return False  # delete sections + mentor by deleting sections, drop by deactivating
+        return request.user.is_superuser  # delete sections + mentor by deleting sections, drop by deactivating
 
     def get_queryset(self, request):
         queryset = (
@@ -189,17 +191,6 @@ class MentorAdmin(CoordAdmin):
         if request.user.is_superuser:
             return queryset
         return queryset.filter(section__course__in=get_visible_courses(request.user))
-
-    def get_fields(self, request, obj):
-        fields = ["name", "get_email", "get_course", "get_section", "get_students"]
-        fields.insert(4, "user" if request.user.is_superuser else "get_user")
-        return fields
-
-    def get_readonly_fields(self, request, obj):
-        fields = ["get_course", "get_email", "get_section", "name", "get_students"]
-        if not request.user.is_superuser:
-            fields.append("get_user")
-        return fields
 
     # Custom fields
 
