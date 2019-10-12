@@ -299,6 +299,7 @@ class SectionForm(forms.ModelForm):
             _duration=duration,
             _day_of_week=day_of_week
         )
+        self.instance.spacetime = cleaned_data["spacetime"]
         return cleaned_data
 
     class Meta:
