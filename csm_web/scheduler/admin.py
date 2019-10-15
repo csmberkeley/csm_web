@@ -239,6 +239,11 @@ class SectionForm(forms.ModelForm):
             .prefetch_related("students")
         )
         fields = self.fields
+        # Prevent inappropriate foreign key editing
+        fields["course"].widget.can_change_related = False
+        fields["course"].widget.can_add_related = False
+        fields["mentor"].disabled = True
+        fields["mentor"].help_text = "The mentor for this section. To change, please click the adjacent edit or add buttons."
         if self.instance.pk is not None:
             spacetime = self.instance.spacetime
             has_mentor = self.instance.mentor is not None
@@ -259,9 +264,13 @@ class SectionForm(forms.ModelForm):
     mentor_profile_id = forms.CharField(required=False, disabled=True)
     spacetime = forms.ModelChoiceField(required=False, queryset=Spacetime.objects.all(), widget=forms.HiddenInput())
     location = forms.CharField(max_length=100)
-    start_time = forms.TimeField()
+    start_time = forms.TimeField(
+        widget=forms.TimeInput(attrs={'type': 'time'}),
+        help_text="Enter a value of the form 'hh:mm', e.g. '13:00' for a 1PM section."
+    )
     duration = forms.DurationField(
-        help_text="Enter a value of the form 'hh:mm:ss', e.g. '01:30:00' for a 1.5 hour section."
+        widget=forms.TimeInput(attrs={'type': 'time'}),
+        help_text="Enter a value of the form 'hh:mm', e.g. '01:30' for a 1.5 hour section."
     )
     day_of_week = forms.ChoiceField(choices=Spacetime.DAY_OF_WEEK_CHOICES)
     students = forms.CharField(required=False, disabled=True, widget=forms.Textarea,
