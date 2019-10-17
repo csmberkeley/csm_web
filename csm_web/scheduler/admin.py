@@ -264,13 +264,11 @@ class SectionForm(forms.ModelForm):
     mentor_profile_id = forms.CharField(required=False, disabled=True)
     spacetime = forms.ModelChoiceField(required=False, queryset=Spacetime.objects.all(), widget=forms.HiddenInput())
     location = forms.CharField(max_length=100)
-    start_time = forms.TimeField(
-        widget=forms.TimeInput(attrs={'type': 'time'}),
-        help_text="Enter a value of the form 'hh:mm', e.g. '13:00' for a 1PM section."
-    )
+    start_time = forms.TimeField(widget=forms.TimeInput(attrs={'type': 'time'}))
+    # We can't use the same attrs trick here, as we'd get an AM/PM display :(
     duration = forms.DurationField(
-        widget=forms.TimeInput(attrs={'type': 'time'}),
-        help_text="Enter a value of the form 'hh:mm', e.g. '01:30' for a 1.5 hour section."
+        widget=forms.TimeInput(),
+        help_text="Enter a value of the form 'hh:mm:ss', e.g. '01:30:00' for a 1.5 hour section."
     )
     day_of_week = forms.ChoiceField(choices=Spacetime.DAY_OF_WEEK_CHOICES)
     students = forms.CharField(required=False, disabled=True, widget=forms.Textarea,
