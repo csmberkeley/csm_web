@@ -150,7 +150,8 @@ export class AsMentorAttendance extends React.Component {
       // Could do an ordered insert, but I'm lazy
       attendanceList.push({ date: date, attendances: attendancesByDate[date] });
     }
-    attendanceList.sort((a, b) => a.date - b.date);
+    // Display most recent on top
+    attendanceList.sort((a, b) => b.date - a.date);
     let behindOnAttendance = maxDate < lastWeekStart;
     this.state = {
       behindOnAttendance: behindOnAttendance,
