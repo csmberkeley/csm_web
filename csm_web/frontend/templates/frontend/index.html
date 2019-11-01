@@ -22,11 +22,11 @@
 		<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.3/js/uikit-icons.min.js" integrity="sha256-T3+0YjpPZWQR6G5L8KOHWj/T6gGfMj1CPHDYDp0z3eE=" crossorigin="anonymous" defer></script>
 		<!-- React and ReactDOM -->
 		{% if DJANGO_ENV == 'prod' %}
-		<script crossorigin src="https://unpkg.com/react@16/umd/react.production.min.js"></script>
-		<script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.production.min.js"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/react/16.10.2/umd/react.production.min.js" integrity="sha256-kHzwNYrCFiiWZjqmRupBU8LYKWYt1LrpoojN8Kmv84c=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.10.2/umd/react-dom.production.min.js" integrity="sha256-h2FCY1kn1qwXfMbwHXuDN15oigd8pYcz4KUnl4cAdB0=" crossorigin="anonymous"></script>
 		{% else %}
-		<script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
-		<script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>	
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/react/16.10.2/umd/react.development.js" integrity="sha256-Fy0+oh76u+dih9imNzr0Ka1RHbVKV8o4nR+p8s6wTXE=" crossorigin="anonymous"></script>
+		<script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.10.2/umd/react-dom.development.js" integrity="sha256-ZMB3rvxm3yr+lN12NcNAJbw6JQWFah3Qx3s3XH1Z0P8=" crossorigin="anonymous"></script>
 		{% endif %}
   </head>
 
