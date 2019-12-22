@@ -1,20 +1,10 @@
-<!DOCTYPE html>
-<html lang="en-US">
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1">
-		<link href="https://fonts.googleapis.com/css?family=Montserrat:400,600&display=swap" rel="stylesheet">
-		<title>CSM Scheduler</title>
-		{% load static %}
-		<link rel="stylesheet" href="{% static 'frontend/css/style.css' %}"/>
-	</head>
-	<body>
-		<div id="login-container">
-			<div id="login-card" >
-				{% include "./LogoWithText.svg" %}
-				<a id="login-btn" href="{% url 'social:begin' 'google-oauth2' %}">Login</a>
-				<p id="login-subtitle">with your Berkeley email</p>
-			</div>
-	  </div>
-	</body>
-</html>
+{% extends "./base.html" %}
+{% block body %}
+	<div id="login-container">
+		<div id="login-card" >
+			{% include "./LogoWithText.svg" %}
+			<a id="login-btn" href="{% url 'social:begin' 'google-oauth2' %}">Login</a>
+			<p id="login-subtitle">with your Berkeley email</p>
+		</div>
+	</div>
+{% endblock %}
