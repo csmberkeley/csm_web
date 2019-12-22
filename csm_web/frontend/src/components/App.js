@@ -1,5 +1,5 @@
 import React from "react";
-import { MemoryRouter as Router, Route, Redirect } from "react-router-dom";
+import { MemoryRouter as Router, Route, Redirect, NavLink } from "react-router-dom";
 import ReactDOM from "react-dom";
 import Section from "./Section";
 import Courses from "./Courses";
@@ -36,6 +36,7 @@ export default class App extends React.Component {
     return (
       <Router>
         <React.Fragment>
+          <Header />
           <Route
             path="/"
             exact
@@ -61,6 +62,23 @@ export default class App extends React.Component {
       </Router>
     );
   }
+}
+
+function Header() {
+  return (
+    <header>
+      <NavLink to="/">
+        <img id="logo" src="static/frontend/img/logo-min/logo_notext.png" />
+      </NavLink>
+      <h3 id="site-title">Scheduler</h3>
+      <div id="header-menu">
+        <img id="user-profile-pic" height="52" width="52" src="static/frontend/img/demo.jpg" />
+        <a id="logout-btn" href="/logout">
+          Logout
+        </a>
+      </div>
+    </header>
+  );
 }
 
 const wrapper = document.getElementById("app");
