@@ -5,6 +5,7 @@ import Section from "./Section";
 import Courses from "./Courses";
 //import CourseNav from "./CourseNav";
 import { fetchJSON } from "../utils/api";
+import LogoNoText from "./LogoNoText.svg";
 
 export default class App extends React.Component {
   constructor(props) {
@@ -68,7 +69,7 @@ function Header() {
   return (
     <header>
       <NavLink to="/">
-        <img id="logo" src="static/frontend/img/logo-min/logo_notext.png" />
+        <LogoNoText id="logo" />
       </NavLink>
       <h3 id="site-title">Scheduler</h3>
       <div id="header-menu">
