@@ -17,6 +17,29 @@ header {
 	margin: -8px -8px 0 -8px;
 }
 
+.inline-plus-sign {
+	font-weight: 600;
+	font-size: 30px;
+	vertical-align: sub;
+}
+
+#home-courses {
+	display: flex;
+	align-items: center;
+	width: 50%;
+	justify-content: space-between;
+	flex-wrap: wrap;
+	max-width: 300px;
+}
+
+#add-course-btn {
+	background: #9AE0B3;
+	border-radius: 20px;
+	color: white;
+	padding: 3px 10px;
+	text-decoration: none;
+}
+
 #logo {
 	height: 3em;
 	margin-right: 20px;
@@ -207,6 +230,17 @@ nav.course-selection {
   width: 20em;
   max-width: 75%;
   margin: auto;
+}
+
+.page-title {
+	font-style: normal;
+	font-weight: bold;
+	font-size: 24px;
+	color: #646464;
+}
+
+#contents {
+	padding: 3em;
 }
 
 .copy-student-emails {

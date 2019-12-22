@@ -1,5 +1,5 @@
 import React from "react";
-import { MemoryRouter as Router, Route, Redirect, NavLink } from "react-router-dom";
+import { MemoryRouter as Router, Route, Redirect, NavLink, Link } from "react-router-dom";
 import ReactDOM from "react-dom";
 import Section from "./Section";
 import Courses from "./Courses";
@@ -38,27 +38,25 @@ export default class App extends React.Component {
       <Router>
         <React.Fragment>
           <Header />
-          <Route
-            path="/"
-            exact
-            render={() => <Redirect to={currentProfile ? `/sections/${currentProfile.section}` : "/courses"} />}
-          />
-          <Route
-            path="/sections/:id"
-            render={routeProps => (
-              <Section
-                key={routeProps.match.params.id}
-                currentProfileId={
-                  mentorProfiles
-                    .concat(studentProfiles)
-                    .filter(profile => profile.section == routeProps.match.params.id)[0].id
-                }
-                isMentor={mentorProfiles.map(profile => profile.section).includes(Number(routeProps.match.params.id))}
-                {...routeProps}
-              />
-            )}
-          />
-          <Route path="/courses" component={Courses} />
+          <div id="contents">
+            <Route path="/" exact component={Home} />
+            <Route
+              path="/sections/:id"
+              render={routeProps => (
+                <Section
+                  key={routeProps.match.params.id}
+                  currentProfileId={
+                    mentorProfiles
+                      .concat(studentProfiles)
+                      .filter(profile => profile.section == routeProps.match.params.id)[0].id
+                  }
+                  isMentor={mentorProfiles.map(profile => profile.section).includes(Number(routeProps.match.params.id))}
+                  {...routeProps}
+                />
+              )}
+            />
+            <Route path="/courses" component={Courses} />
+          </div>
         </React.Fragment>
       </Router>
     );
@@ -79,6 +77,17 @@ function Header() {
         </a>
       </div>
     </header>
+  );
+}
+
+function Home() {
+  return (
+    <div id="home-courses">
+      <h3 className="page-title">My courses</h3>
+      <Link id="add-course-btn" to="/courses" component={Courses}>
+        <span className="inline-plus-sign">+ </span>Add Course
+      </Link>
+    </div>
   );
 }
 
