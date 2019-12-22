@@ -7,11 +7,12 @@ html, body {
 body {
   max-width: 100%;
 	margin: 8px; /* Usually set by browser stylesheet, but we standardize it here to account for different browsers */
+	overflow-x: hidden;
 }
 
 header {
 	box-shadow: 0px 4px 4px rgba(188, 188, 188, 0.25);
-	padding: 30px 70px;
+	padding: 30px 3em;
 	display: flex;
 	margin: -8px -8px 0 -8px;
 }
