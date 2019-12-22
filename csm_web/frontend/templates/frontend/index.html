@@ -6,7 +6,7 @@
     <title>CSM Scheduler</title>
     {% load static %}
     <link rel="stylesheet" href="{% static 'frontend/css/style.css' %}"/>
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,600,700,900" rel="stylesheet"/>
+		<link href="https://fonts.googleapis.com/css?family=Montserrat:400,600&display=swap" rel="stylesheet">
 		<!-- Fontawesome icons TODO: install these via npm and use tree-shaking so we don't have to download everything -->
 		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.10.2/css/all.min.css" integrity="sha256-zmfNZmXoNWBMemUOo1XUGFfc0ihGGLYdgtJS3KCr/l0=" crossorigin="anonymous"/>
     <!-- UIkit JS -->
@@ -22,6 +22,14 @@
 		{% endif %}
   </head>
   <body>
+		<header>
+			<img id="logo" src="{% static 'frontend/img/logo-min/logo_notext.png' %}"/>
+			<h3 id="site-title">Scheduler</h3>
+			<div id="header-menu">
+				<img id="user-profile-pic" height="52" width="52" src="{% static 'frontend/img/demo.jpg' %}"/>
+				<a id="logout-btn" href="{% url 'logout' %}">Logout</a>
+			</div>
+		</header>
     <div id="app"><!-- React --></div>
   </body>
   <script src="{% static 'frontend/main.js' %}"></script>
