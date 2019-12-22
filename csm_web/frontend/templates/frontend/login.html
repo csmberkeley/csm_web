@@ -11,7 +11,7 @@
 	<body>
 		<div id="login-container">
 			<div id="login-card" >
-				<img id="login-logo" src="{% static 'frontend/img/logo-min/logo.png' %}">
+				{% include "./LogoWithText.svg" %}
 				<a id="login-btn" href="{% url 'social:begin' 'google-oauth2' %}">Login</a>
 				<p id="login-subtitle">with your Berkeley email</p>
 			</div>
