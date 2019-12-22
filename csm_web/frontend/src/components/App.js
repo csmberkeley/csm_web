@@ -72,7 +72,7 @@ function Header() {
       </NavLink>
       <h3 id="site-title">Scheduler</h3>
       <div id="header-menu">
-        <img id="user-profile-pic" height="52" width="52" src="static/frontend/img/demo.jpg" />
+        <img id="user-profile-pic" height="52" width="52" src="https://calcentral.berkeley.edu/api/my/photo" />
         <a id="logout-btn" href="/logout">
           Logout
         </a>
