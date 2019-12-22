@@ -1,26 +1,19 @@
 <!DOCTYPE html>
-<html>
+<html lang="en-US">
 	<head>
-	<meta charset="utf-8">
-	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<title>CSM Scheduler</title>
-	{% load static %}
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.25/css/uikit.min.css" />
-	<link rel="stylesheet" href="{% static 'frontend/css/style.css' %}" type="text/css" media="screen"/>
-
-
-	<!-- UIkit JS -->
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.25/js/uikit.min.js"></script>
-	<script src="https://cdnjs.cloudflare.com/ajax/libs/uikit/3.0.0-rc.25/js/uikit-icons.min.js"></script>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, initial-scale=1">
+		<title>CSM Scheduler</title>
+		{% load static %}
+		<link rel="stylesheet" href="{% static 'frontend/css/style.css' %}"/>
 	</head>
 	<body>
-          <div id="login-container">
-		<div id="login-card" class="uk-card uk-card-default">
-		    <img id="login-logo" src="{% static 'frontend/img/logo-min/logo.png' %}">
-		    <a id="login-btn" class="uk-button uk-button-primary" href="{% url 'social:begin' 'google-oauth2' %}">Login</a>
-                    <p id="login-subtitle">with your Berkeley email</p>
-		</div>
-	   </div>
+		<div id="login-container">
+			<div id="login-card" >
+				<img id="login-logo" src="{% static 'frontend/img/logo-min/logo.png' %}">
+				<a id="login-btn" href="{% url 'social:begin' 'google-oauth2' %}">Login</a>
+				<p id="login-subtitle">with your Berkeley email</p>
+			</div>
+	  </div>
 	</body>
 </html>
-			
