@@ -27,7 +27,7 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("scheduler.urls")),
     path("login/", lambda request: render(request, "frontend/login.html")),
-    path("logout/", logout_then_login, name="logout"),
+    path("logout/", logout_then_login),
     path("", include("social_django.urls", namespace="social")),
     path("", include("frontend.urls")),
 ]
