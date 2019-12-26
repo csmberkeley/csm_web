@@ -3,9 +3,14 @@ import { MemoryRouter as Router, Route, Redirect, NavLink, Link } from "react-ro
 import ReactDOM from "react-dom";
 import Section from "./Section";
 import Courses from "./Courses";
+import CourseMenu from "./CourseMenu";
 //import CourseNav from "./CourseNav";
 import { fetchJSON } from "../utils/api";
 import LogoNoText from "./LogoNoText.svg";
+
+function Course() {
+	return <p>hi</p>;
+}
 
 export default class App extends React.Component {
   constructor(props) {
@@ -55,7 +60,8 @@ export default class App extends React.Component {
                 />
               )}
             />
-            <Route path="/courses" component={Courses} />
+            <Route exact path="/courses" component={CourseMenu} />
+						<Route path="/courses/:id" component={Course} />
           </div>
         </React.Fragment>
       </Router>
@@ -84,7 +90,7 @@ function Home() {
   return (
     <div id="home-courses">
       <h3 className="page-title">My courses</h3>
-      <Link id="add-course-btn" to="/courses" component={Courses}>
+      <Link className="csm-btn" to="/courses" component={Courses}>
         <span className="inline-plus-sign">+ </span>Add Course
       </Link>
     </div>
