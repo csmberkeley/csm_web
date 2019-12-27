@@ -1,10 +1,10 @@
 import datetime
+import re
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.utils import timezone
 from rest_framework.serializers import ValidationError
-import re
 
 
 class User(AbstractUser):
@@ -30,16 +30,13 @@ class ValidatingModel(models.Model):
 
 
 class Attendance(ValidatingModel):
-    PRESENT = "PR"
-    UNEXCUSED_ABSENCE = "UN"
-    EXCUSED_ABSENCE = "EX"
-    PRESENCE_CHOICES = (
-        (PRESENT, "Present"),
-        (UNEXCUSED_ABSENCE, "Unexcused absence"),
-        (EXCUSED_ABSENCE, "Excused absence"),
-    )
+    class Presence(models.TextChoices):
+        PRESENT = "PR", "Present"
+        UNEXCUSED_ABSENCE = "UN", "Unexcused absence"
+        EXCUSED_ABSENCE = "EX", "Excused absence"
+
     date = models.DateField()
-    presence = models.CharField(max_length=2, choices=PRESENCE_CHOICES, blank=True)
+    presence = models.CharField(max_length=2, choices=Presence.choices, blank=True)
     student = models.ForeignKey("Student", on_delete=models.CASCADE)
 
     def __str__(self):
@@ -173,29 +170,22 @@ class Section(ValidatingModel):
 
 
 class Spacetime(ValidatingModel):
-    MONDAY = "Mon"
-    TUESDAY = "Tue"
-    WEDNESDAY = "Wed"
-    THURSDAY = "Thu"
-    FRIDAY = "Fri"
-    SATURDAY = "Sat"
-    SUNDAY = "Sun"
-    DAY_OF_WEEK_CHOICES = (
-        (MONDAY, "Monday"),
-        (TUESDAY, "Tuesday"),
-        (WEDNESDAY, "Wednesday"),
-        (THURSDAY, "Thursday"),
-        (FRIDAY, "Friday"),
-        (SATURDAY, "Saturday"),
-        (SUNDAY, "Sunday"),
-    )
-    DAY_INDEX = tuple(day for day, _ in DAY_OF_WEEK_CHOICES)
+    class DayOfWeek(models.TextChoices):
+        MONDAY = "Mon", "Monday"
+        TUESDAY = "Tue", "Tuesday"
+        WEDNESDAY = "Wed", "Wednesday"
+        THURSDAY = "Thu", "Thursday"
+        FRIDAY = "Fri", "Friday"
+        SATURDAY = "Sat", "Saturday"
+        SUNDAY = "Sun", "Sunday"
+
+    DAY_INDEX = tuple(day for day, _ in DayOfWeek.choices)
     SPACE_REDUCE_REGEX = re.compile(r'\s+')
 
     _location = models.CharField(max_length=100)
     _start_time = models.TimeField()
     _duration = models.DurationField()
-    _day_of_week = models.CharField(max_length=3, choices=DAY_OF_WEEK_CHOICES)
+    _day_of_week = models.CharField(max_length=3, choices=DayOfWeek.choices)
 
     """
     Unfortunately the Django models.Model class doesn't play nice with standard Python metaprogramming

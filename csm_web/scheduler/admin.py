@@ -270,7 +270,7 @@ class SectionForm(forms.ModelForm):
         widget=forms.TimeInput(),
         help_text="Enter a value of the form 'hh:mm:ss', e.g. '01:30:00' for a 1.5 hour section."
     )
-    day_of_week = forms.ChoiceField(choices=Spacetime.DAY_OF_WEEK_CHOICES)
+    day_of_week = forms.ChoiceField(choices=Spacetime.DayOfWeek.choices)
     students = forms.CharField(required=False, disabled=True, widget=forms.Textarea,
                                help_text="This field isn't actually editable. To add a student, enroll them through the Students admin page.")
 
@@ -497,7 +497,7 @@ class DayEndFilter(admin.SimpleListFilter):
 
 @admin.register(Attendance)
 class AttendanceAdmin(CoordAdmin):
-    DAY_DICT = Spacetime.DAY_OF_WEEK_CHOICES
+    DAY_DICT = Spacetime.DayOfWeek.choices
 
     fields = (
         "date",

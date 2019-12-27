@@ -45,7 +45,7 @@ class CourseFactory(factory.DjangoModelFactory):
 
 
 BUILDINGS = ("Cory", "Soda", "Kresge", "Moffitt")
-DAY_OF_WEEK_DB_CHOICES = [db_value for db_value, display_name in Spacetime.DAY_OF_WEEK_CHOICES]
+DAY_OF_WEEK_DB_CHOICES = [db_value for db_value, display_name in Spacetime.DayOfWeek.choices]
 
 
 class SpacetimeFactory(factory.DjangoModelFactory):
@@ -91,7 +91,7 @@ class SectionFactory(factory.DjangoModelFactory):
     mentor = factory.SubFactory(MentorFactory)
 
 
-PRESENCE_DB_VALUES = [db_value for db_value, display_name in Attendance.PRESENCE_CHOICES]
+PRESENCE_DB_VALUES = [db_value for db_value, display_name in Attendance.Presence.choices]
 
 
 class AttendanceFactory(factory.DjangoModelFactory):
@@ -102,7 +102,7 @@ class AttendanceFactory(factory.DjangoModelFactory):
     student = factory.SubFactory(StudentFactory)
 
 
-DAYS = [db_value for db_value, display_name in Spacetime.DAY_OF_WEEK_CHOICES]
+DAYS = [db_value for db_value, display_name in Spacetime.DayOfWeek.choices]
 
 
 class OverrideFactory(factory.DjangoModelFactory):
@@ -121,7 +121,7 @@ class OverrideFactory(factory.DjangoModelFactory):
     spacetime = factory.SubFactory(SpacetimeFactory)
 
 
-WEEKDAY_MAP = {number: pair[0] for number, pair in enumerate(Spacetime.DAY_OF_WEEK_CHOICES)}
+WEEKDAY_MAP = {number: pair[0] for number, pair in enumerate(Spacetime.DayOfWeek.choices)}
 
 
 def create_attendances_for(student):

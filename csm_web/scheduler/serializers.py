@@ -76,7 +76,7 @@ class OverrideSerializer(serializers.Serializer):
         override_datetime = dateparse.parse_datetime(data['datetime'])
         value['location'] = data['location']
         value['overriden_spacetime'] = data.get('overriden_spacetime')
-        value['day_of_week'] = Spacetime.DAY_OF_WEEK_CHOICES[override_datetime.weekday()][0]
+        value['day_of_week'] = Spacetime.DayOfWeek.choices[override_datetime.weekday()][0]
         value['start_time'] = override_datetime.time()
         value['date'] = override_datetime.date()
         return value
