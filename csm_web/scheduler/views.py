@@ -73,10 +73,10 @@ class CourseViewSet(*viewset_with('list')):
     @action(detail=True)
     def sections(self, request, pk=None):
         course = get_object_or_error(self.get_queryset(), pk=pk)
-        if request.query_params.get('grouped'):
-            return Response({day: SectionSerializer(sorted(group, key=lambda section: section.spacetime._start_time), many=True).data for day, group in groupby(
-                course.section_set.all().order_by('spacetime___day_of_week'), lambda section: section.spacetime.get__day_of_week_display())})
-        return Response(SectionSerializer(course.section_set.all(), many=True).data)
+        #TODO: Clean this up
+        return Response(dict(sorted(((day, SectionSerializer(group, many=True).data) for day, group in groupby(
+            course.section_set.all().order_by('spacetime___day_of_week', 'spacetime___start_time'),
+            lambda section: section.spacetime.day_of_week)), key=lambda pair: Spacetime.DAY_INDEX.index(pair[0]))))
 
 
 class SectionViewSet(*viewset_with('retrieve')):
