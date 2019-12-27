@@ -1,5 +1,5 @@
 import React from "react";
-import { Switch, Route, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { fetchJSON } from "../utils/api";
 
 export default class CourseMenu extends React.Component {
@@ -22,7 +22,9 @@ export default class CourseMenu extends React.Component {
       <div>Loading...</div>
     ) : (
       <React.Fragment>
-        <h3 className="page-title" style={{textAlign: 'center'}}>Which course would you like to enroll in?</h3>
+        <h3 className="page-title" style={{ textAlign: "center" }}>
+          Which course would you like to enroll in?
+        </h3>
         <div id="course-menu">
           {Object.entries(courses).map(([id, { name }]) => (
             <Link className="csm-btn" to={`${path}/${id}`} key={id}>
@@ -33,8 +35,4 @@ export default class CourseMenu extends React.Component {
       </React.Fragment>
     );
   }
-}
-
-function Course(props) {
-  return <p>Hi</p>;
 }

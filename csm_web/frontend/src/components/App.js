@@ -1,16 +1,11 @@
 import React from "react";
-import { MemoryRouter as Router, Route, Redirect, NavLink, Link } from "react-router-dom";
+import { MemoryRouter as Router, Route, Switch, Link } from "react-router-dom";
 import ReactDOM from "react-dom";
 import Section from "./Section";
-import Courses from "./Courses";
 import CourseMenu from "./CourseMenu";
-//import CourseNav from "./CourseNav";
+import Course from "./Course";
 import { fetchJSON } from "../utils/api";
 import LogoNoText from "./LogoNoText.svg";
-
-function Course() {
-	return <p>hi</p>;
-}
 
 export default class App extends React.Component {
   constructor(props) {
@@ -43,26 +38,30 @@ export default class App extends React.Component {
       <Router>
         <React.Fragment>
           <Header />
-          <div id="contents">
-            <Route path="/" exact component={Home} />
-            <Route
-              path="/sections/:id"
-              render={routeProps => (
-                <Section
-                  key={routeProps.match.params.id}
-                  currentProfileId={
-                    mentorProfiles
-                      .concat(studentProfiles)
-                      .filter(profile => profile.section == routeProps.match.params.id)[0].id
-                  }
-                  isMentor={mentorProfiles.map(profile => profile.section).includes(Number(routeProps.match.params.id))}
-                  {...routeProps}
-                />
-              )}
-            />
-            <Route exact path="/courses" component={CourseMenu} />
-						<Route path="/courses/:id" component={Course} />
-          </div>
+          <main>
+            <Switch>
+              <Route exact path="/" component={Home} />
+              <Route
+                path="/sections/:id"
+                render={routeProps => (
+                  <Section
+                    key={routeProps.match.params.id}
+                    currentProfileId={
+                      mentorProfiles
+                        .concat(studentProfiles)
+                        .filter(profile => profile.section == routeProps.match.params.id)[0].id
+                    }
+                    isMentor={mentorProfiles
+                      .map(profile => profile.section)
+                      .includes(Number(routeProps.match.params.id))}
+                    {...routeProps}
+                  />
+                )}
+              />
+              <Route path="/courses/:id" component={Course} />
+              <Route path="/courses" component={CourseMenu} />
+            </Switch>
+          </main>
         </React.Fragment>
       </Router>
     );
@@ -72,9 +71,9 @@ export default class App extends React.Component {
 function Header() {
   return (
     <header>
-      <NavLink to="/">
+      <Link to="/">
         <LogoNoText id="logo" />
-      </NavLink>
+      </Link>
       <h3 id="site-title">Scheduler</h3>
       <div id="header-menu">
         <img id="user-profile-pic" height="52" width="52" src="https://calcentral.berkeley.edu/api/my/photo" />
@@ -90,7 +89,7 @@ function Home() {
   return (
     <div id="home-courses">
       <h3 className="page-title">My courses</h3>
-      <Link className="csm-btn" to="/courses" component={Courses}>
+      <Link className="csm-btn" to="/courses">
         <span className="inline-plus-sign">+ </span>Add Course
       </Link>
     </div>

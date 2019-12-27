@@ -98,6 +98,36 @@ header {
 	font-size: 2em;
 }
 
+/* Section enrollment */
+
+.section-card {
+	width: 300px;
+	overflow-x: hidden;
+	box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.15);
+	border-radius: 20px;
+}
+
+.section-card-contents {
+	padding: 10px 20px 0;
+}
+
+.section-card-contents p {
+	color: #727272;
+}
+
+.section-card-contents svg {
+	vertical-align: bottom;
+	margin-right: 5px;
+}
+
+.section-card-footer {
+	font-size: 1.3em;
+	border-radius: 0px;
+	text-align: center;
+	cursor: pointer;
+	text-transform: uppercase;
+}
+
 nav.course-selection {
   display: flex;
   justify-content: space-evenly;
@@ -265,7 +295,7 @@ nav.course-selection {
 	color: #646464;
 }
 
-#contents {
+main {
 	padding: 3em;
 }
 
