@@ -58,7 +58,6 @@ export default class App extends React.Component {
                   />
                 )}
               />
-              <Route path="/courses/:id" component={Course} />
               <Route path="/courses" component={CourseMenu} />
             </Switch>
           </main>
