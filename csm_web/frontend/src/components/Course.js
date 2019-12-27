@@ -5,22 +5,49 @@ import UserIcon from "../../static/frontend/img/user.svg";
 import GroupIcon from "../../static/frontend/img/group.svg";
 import ClockIcon from "../../static/frontend/img/clock.svg";
 
+const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
+  Mon: "M",
+  Tue: "Tu",
+  Wed: "W",
+  Thu: "Th",
+  Fri: "F",
+  Sat: "Sa",
+  Sun: "Su"
+});
+
 export default class Course extends React.Component {
-  state = { sections: null, loaded: false }; // Sections are grouped by day
+  state = { sections: null, loaded: false, day: "" }; // Sections are grouped by day
 
   componentDidMount() {
     const { id } = this.props.match.params;
-    fetchJSON(`/courses/${id}/sections`).then(sections => this.setState({ sections, loaded: true }));
+    fetchJSON(`/courses/${id}/sections`).then(sections =>
+      this.setState({ sections, loaded: true, day: Object.keys(sections)[0] })
+    );
   }
 
   render() {
-    return !this.state.loaded ? null : (
-      <div>
-        {Object.values(this.state.sections)
-          .flat()
-          .map(section => (
+    const { loaded, sections, day: currDay } = this.state;
+    return !loaded ? null : (
+      <div id="course-section-selector">
+        <div id="course-section-controls">
+					<h2 className="course-title">{this.props.name}</h2>
+          <div id="day-selector">
+            {Object.keys(sections).map(day => (
+              <button
+                className={`day-btn ${day == currDay ? "active" : ""}`}
+                key={day}
+                onClick={() => this.setState({ day })}
+              >
+                {DAY_OF_WEEK_ABREVIATIONS[day]}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div id="course-section-list">
+          {sections[currDay].map(section => (
             <SectionCard key={section.id} {...section} />
           ))}
+        </div>
       </div>
     );
   }
