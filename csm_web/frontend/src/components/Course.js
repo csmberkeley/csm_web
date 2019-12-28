@@ -19,7 +19,7 @@ const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
 });
 
 export default class Course extends React.Component {
-  state = { sections: null, loaded: false, day: "" }; // Sections are grouped by day
+  state = { sections: null, loaded: false, day: "", showUnavailable: true }; // Sections are grouped by day
 
   componentDidMount() {
     const { id } = this.props.match.params;
@@ -45,11 +45,21 @@ export default class Course extends React.Component {
               </button>
             ))}
           </div>
+          <label id="show-unavailable-toggle">
+            <input
+              type="checkbox"
+              checked={this.state.showUnavailable}
+              onChange={({ target: { checked } }) => this.setState({ showUnavailable: checked })}
+            />
+            Show unavailable
+          </label>
         </div>
         <div id="course-section-list">
-          {sections[currDay].map(section => (
-            <SectionCard key={section.id} {...section} />
-          ))}
+          {sections[currDay]
+            .filter(({ numStudentsEnrolled, capacity }) => this.state.showUnavailable || numStudentsEnrolled < capacity)
+            .map(section => (
+              <SectionCard key={section.id} {...section} />
+            ))}
         </div>
       </div>
     );
