@@ -176,6 +176,10 @@ header {
 	margin: 0 auto 50px;
 }
 
+.section-card.full {
+	background-color: #EAEAEA;
+}
+
 .section-card-contents {
 	padding: 10px 20px 0;
 }
@@ -195,6 +199,13 @@ header {
 	text-align: center;
 	cursor: pointer;
 	text-transform: uppercase;
+}
+
+.section-card.full .section-card-footer {
+	background-color: inherit;
+	color: transparent;
+	user-select: none;
+	cursor: inherit;
 }
 
 #day-selector {
