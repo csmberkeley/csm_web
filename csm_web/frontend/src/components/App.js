@@ -3,7 +3,6 @@ import { MemoryRouter as Router, Route, Switch, Link } from "react-router-dom";
 import ReactDOM from "react-dom";
 import Section from "./Section";
 import CourseMenu from "./CourseMenu";
-import Course from "./Course";
 import { fetchJSON } from "../utils/api";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 
