@@ -125,10 +125,11 @@ class SectionCard extends React.Component {
     const { id, location, time, mentor, numStudentsEnrolled, capacity } = this.props;
     const iconWidth = "1.3em";
     const iconHeight = "1.3em";
+    const isFull = numStudentsEnrolled >= capacity;
     return (
       <React.Fragment>
         {this.state.showModal && <Modal closeModal={this.closeModal}>{this.state.modalContents.props.children}</Modal>}
-        <section className="section-card">
+        <section className={`section-card ${isFull ? "full" : ""}`}>
           <div className="section-card-contents">
             <p title="Location">
               <LocationIcon width={iconWidth} height={iconHeight} /> {location}
@@ -143,7 +144,7 @@ class SectionCard extends React.Component {
               <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}
             </p>
           </div>
-          <div className="csm-btn section-card-footer" onClick={this.enroll}>
+          <div className="csm-btn section-card-footer" onClick={isFull ? Function.prototype : this.enroll}>
             ENROLL
           </div>
         </section>
