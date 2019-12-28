@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import LocationIcon from "../../static/frontend/img/location.svg";
 import UserIcon from "../../static/frontend/img/user.svg";
@@ -20,6 +21,11 @@ const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
 
 export default class Course extends React.Component {
   state = { sections: null, loaded: false, day: "", showUnavailable: true }; // Sections are grouped by day
+
+  static propTypes = {
+    match: PropTypes.shape({ params: PropTypes.shape({ id: PropTypes.string.isRequired }) }).isRequired,
+    name: PropTypes.string.isRequired
+  };
 
   componentDidMount() {
     const { id } = this.props.match.params;
@@ -73,6 +79,15 @@ class SectionCard extends React.Component {
     this.enroll = this.enroll.bind(this);
     this.closeModal = this.closeModal.bind(this);
   }
+
+  static propTypes = {
+    id: PropTypes.number.isRequired,
+    location: PropTypes.string,
+    time: PropTypes.string.isRequired,
+    mentor: PropTypes.shape({ name: PropTypes.string.isRequired }),
+    numStudentsEnrolled: PropTypes.number.isRequired,
+    capacity: PropTypes.number.isRequired
+  };
 
   enroll() {
     const iconWidth = "10em";
@@ -132,7 +147,7 @@ class SectionCard extends React.Component {
   }
 
   render() {
-    const { id, location, time, mentor, numStudentsEnrolled, capacity } = this.props;
+    const { location, time, mentor, numStudentsEnrolled, capacity } = this.props;
     const iconWidth = "1.3em";
     const iconHeight = "1.3em";
     const isFull = numStudentsEnrolled >= capacity;
@@ -154,7 +169,7 @@ class SectionCard extends React.Component {
               <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}
             </p>
           </div>
-          <div className="csm-btn section-card-footer" onClick={isFull ? Function.prototype : this.enroll}>
+          <div className="csm-btn section-card-footer" onClick={isFull ? undefined : this.enroll}>
             ENROLL
           </div>
         </section>

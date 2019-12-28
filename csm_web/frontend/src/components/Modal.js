@@ -1,4 +1,5 @@
 import React from "react";
+import PropTypes from "prop-types";
 
 export default function Modal({ children, closeModal }) {
   if (!(children instanceof Array)) {
@@ -23,3 +24,8 @@ export default function Modal({ children, closeModal }) {
     </React.Fragment>
   );
 }
+
+Modal.propTypes = {
+  children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired,
+  closeModal: PropTypes.func.isRequired
+};
