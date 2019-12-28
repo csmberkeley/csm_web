@@ -5,7 +5,7 @@ import Section from "./Section";
 import CourseMenu from "./CourseMenu";
 import Course from "./Course";
 import { fetchJSON } from "../utils/api";
-import LogoNoText from "./LogoNoText.svg";
+import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 
 export default class App extends React.Component {
   constructor(props) {
