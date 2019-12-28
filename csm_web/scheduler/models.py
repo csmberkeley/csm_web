@@ -171,13 +171,13 @@ class Section(ValidatingModel):
 
 class Spacetime(ValidatingModel):
     class DayOfWeek(models.TextChoices):
-        MONDAY = "Mon", "Monday"
-        TUESDAY = "Tue", "Tuesday"
-        WEDNESDAY = "Wed", "Wednesday"
-        THURSDAY = "Thu", "Thursday"
-        FRIDAY = "Fri", "Friday"
-        SATURDAY = "Sat", "Saturday"
-        SUNDAY = "Sun", "Sunday"
+        MONDAY = "Mon"
+        TUESDAY = "Tue"
+        WEDNESDAY = "Wed"
+        THURSDAY = "Thu"
+        FRIDAY = "Fri"
+        SATURDAY = "Sat"
+        SUNDAY = "Sun"
 
     DAY_INDEX = tuple(day for day, _ in DayOfWeek.choices)
     SPACE_REDUCE_REGEX = re.compile(r'\s+')

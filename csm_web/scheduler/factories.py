@@ -45,7 +45,6 @@ class CourseFactory(factory.DjangoModelFactory):
 
 
 BUILDINGS = ("Cory", "Soda", "Kresge", "Moffitt")
-DAY_OF_WEEK_DB_CHOICES = [db_value for db_value, display_name in Spacetime.DayOfWeek.choices]
 
 
 class SpacetimeFactory(factory.DjangoModelFactory):
@@ -55,7 +54,7 @@ class SpacetimeFactory(factory.DjangoModelFactory):
     _location = factory.LazyFunction(lambda: "%s %d" % (random.choice(BUILDINGS), random.randint(1, 500)))
     _start_time = factory.Faker("time_object")
     _duration = factory.LazyFunction(lambda: timedelta(minutes=random.choice((60, 90))))
-    _day_of_week = factory.fuzzy.FuzzyChoice(DAY_OF_WEEK_DB_CHOICES)
+    _day_of_week = factory.fuzzy.FuzzyChoice(Spacetime.DayOfWeek.values)
 
 
 class UserFactory(factory.DjangoModelFactory):
@@ -91,18 +90,12 @@ class SectionFactory(factory.DjangoModelFactory):
     mentor = factory.SubFactory(MentorFactory)
 
 
-PRESENCE_DB_VALUES = [db_value for db_value, display_name in Attendance.Presence.choices]
-
-
 class AttendanceFactory(factory.DjangoModelFactory):
     class Meta:
         model = Attendance
 
-    presence = factory.fuzzy.FuzzyChoice(PRESENCE_DB_VALUES)
+    presence = factory.fuzzy.FuzzyChoice(Attendance.Presence.values)
     student = factory.SubFactory(StudentFactory)
-
-
-DAYS = [db_value for db_value, display_name in Spacetime.DayOfWeek.choices]
 
 
 class OverrideFactory(factory.DjangoModelFactory):
@@ -116,18 +109,15 @@ class OverrideFactory(factory.DjangoModelFactory):
             date_start=obj.overriden_spacetime.section.course.enrollment_start.date(),
             date_end=obj.overriden_spacetime.section.course.valid_until,
         ).generate({})
-        return date + timedelta(days=(DAYS.index(obj.spacetime.day_of_week) - date.weekday()))
+        return date + timedelta(days=(Spacetime.DayOfWeek.values.index(obj.spacetime.day_of_week) - date.weekday()))
 
     spacetime = factory.SubFactory(SpacetimeFactory)
-
-
-WEEKDAY_MAP = {number: pair[0] for number, pair in enumerate(Spacetime.DayOfWeek.choices)}
 
 
 def create_attendances_for(student):
     today = timezone.datetime.today().date()
     current_date = student.section.course.enrollment_start.date()
-    while WEEKDAY_MAP[current_date.weekday()] != student.section.spacetime.day_of_week:
+    while Spacetime.DayOfWeek.values[current_date.weekday()] != student.section.spacetime.day_of_week:
         current_date += timedelta(days=1)
     while current_date < student.section.course.valid_until:
         if current_date < today:
