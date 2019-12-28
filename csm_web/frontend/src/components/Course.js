@@ -75,9 +75,10 @@ export default class Course extends React.Component {
 class SectionCard extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { showModal: false, modalContents: null };
+    this.state = { showModal: false, enrollmentSuccessful: undefined, errorMessage: "" };
     this.enroll = this.enroll.bind(this);
     this.closeModal = this.closeModal.bind(this);
+    this.modalContents = this.modalContents.bind(this);
   }
 
   static propTypes = {
@@ -90,37 +91,19 @@ class SectionCard extends React.Component {
   };
 
   enroll() {
-    const iconWidth = "10em";
-    const iconHeight = "10em";
     fetchWithMethod(`sections/${this.props.id}/students/`, HTTP_METHODS.PUT)
       .then(response => {
         if (response.ok) {
           this.setState({
             showModal: true,
-            modalContents: (
-              <React.Fragment>
-                <CheckCircle color="green" height={iconHeight} width={iconWidth} />
-                <h3>Successfully enrolled</h3>
-                <button className="modal-btn" modalClose>
-                  OK
-                </button>
-              </React.Fragment>
-            )
+            enrollmentSuccessful: true
           });
         } else {
           response.json().then(({ detail }) =>
             this.setState({
               showModal: true,
-              modalContents: (
-                <React.Fragment>
-                  <XCircle color="red" height={iconHeight} width={iconWidth} />
-                  <h3>Enrollment failed</h3>
-                  <h4>{detail}</h4>
-                  <button className="modal-btn" modalClose>
-                    OK
-                  </button>
-                </React.Fragment>
-              )
+              enrollmentSuccessful: false,
+              errorMessage: detail
             })
           );
         }
@@ -128,22 +111,40 @@ class SectionCard extends React.Component {
       .catch(error =>
         this.setState({
           showModal: true,
-          modalContents: (
-            <React.Fragment>
-              <XCircle color="red" height={iconHeight} width={iconWidth} />
-              <h3>Enrollment failed</h3>
-              <h4>{String(error)}</h4>
-              <button className="modal-btn" modalClose>
-                OK
-              </button>
-            </React.Fragment>
-          )
+          enrollmentSuccessful: false,
+          errorMessage: String(error)
         })
       );
   }
 
   closeModal() {
     this.setState({ showModal: false, modalContents: null });
+  }
+
+  modalContents() {
+    const iconWidth = "10em";
+    const iconHeight = "10em";
+    if (this.state.enrollmentSuccessful) {
+      return (
+        <React.Fragment>
+          <CheckCircle color="green" height={iconHeight} width={iconWidth} />
+          <h3>Successfully enrolled</h3>
+          <button className="modal-btn" modalClose>
+            OK
+          </button>
+        </React.Fragment>
+      );
+    }
+    return (
+      <React.Fragment>
+        <XCircle color="red" height={iconHeight} width={iconWidth} />
+        <h3>Enrollment failed</h3>
+        <h4>{this.state.errorMessage}</h4>
+        <button className="modal-btn" modalClose>
+          OK
+        </button>
+      </React.Fragment>
+    );
   }
 
   render() {
@@ -153,7 +154,7 @@ class SectionCard extends React.Component {
     const isFull = numStudentsEnrolled >= capacity;
     return (
       <React.Fragment>
-        {this.state.showModal && <Modal closeModal={this.closeModal}>{this.state.modalContents.props.children}</Modal>}
+        {this.state.showModal && <Modal closeModal={this.closeModal}>{this.modalContents().props.children}</Modal>}
         <section className={`section-card ${isFull ? "full" : ""}`}>
           <div className="section-card-contents">
             <p title="Location">
