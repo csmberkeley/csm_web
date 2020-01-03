@@ -56,7 +56,8 @@ class Attendance(ValidatingModel):
 
 
 class Course(ValidatingModel):
-    name = models.SlugField(max_length=100, unique_for_month="enrollment_start")
+    name = models.SlugField(max_length=16, unique_for_month="enrollment_start")
+    title = models.CharField(max_length=100)
     valid_until = models.DateField()
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
@@ -95,7 +96,7 @@ class Profile(ValidatingModel):
 class Student(Profile):
     """
     Represents a given "instance" of a student. Every section in which a student enrolls should
-    have a new Mentor profile.
+    have a new Student profile.
     """
     section = models.ForeignKey("Section", on_delete=models.CASCADE, related_name="students")
     active = models.BooleanField(default=True, help_text="An inactive student is a dropped student.")
@@ -258,7 +259,7 @@ class Override(ValidatingModel):
         if self.spacetime == self.overriden_spacetime:
             raise ValidationError("A spacetime cannot override itself")
         if self.spacetime.day_of_week != self.date.strftime("%a")[:3]:
-            raise ValidationError("Day of week of spacetime and day of week of date do not matchf")
+            raise ValidationError("Day of week of spacetime and day of week of date do not match")
 
     def is_expired(self):
         return self.date < timezone.now().date()
