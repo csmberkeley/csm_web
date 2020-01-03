@@ -35,7 +35,11 @@ export default class Course extends React.Component {
   }
 
   render() {
-    const { loaded, sections, day: currDay } = this.state;
+    const { loaded, sections, day: currDay, showUnavailable } = this.state;
+    let currDaySections = sections && sections[currDay];
+    if (currDaySections && !showUnavailable) {
+      currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
+    }
     return !loaded ? null : (
       <div id="course-section-selector">
         <div id="course-section-controls">
@@ -61,11 +65,11 @@ export default class Course extends React.Component {
           </label>
         </div>
         <div id="course-section-list">
-          {sections[currDay]
-            .filter(({ numStudentsEnrolled, capacity }) => this.state.showUnavailable || numStudentsEnrolled < capacity)
-            .map(section => (
-              <SectionCard key={section.id} {...section} />
-            ))}
+          {currDaySections && currDaySections.length > 0 ? (
+            currDaySections.map(section => <SectionCard key={section.id} {...section} />)
+          ) : (
+            <h3 id="course-section-list-empty">No sections available, please select a different day</h3>
+          )}
         </div>
       </div>
     );
