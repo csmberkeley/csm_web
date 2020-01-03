@@ -7,7 +7,7 @@ import GroupIcon from "../../static/frontend/img/group.svg";
 import ClockIcon from "../../static/frontend/img/clock.svg";
 import CheckCircle from "../../static/frontend/img/check_circle.svg";
 import XCircle from "../../static/frontend/img/x_circle.svg";
-import Modal from "./Modal";
+import Modal, { ModalCloser } from "./Modal";
 
 const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
   Mon: "M",
@@ -129,9 +129,9 @@ class SectionCard extends React.Component {
         <React.Fragment>
           <CheckCircle color="green" height={iconHeight} width={iconWidth} />
           <h3>Successfully enrolled</h3>
-          <button className="modal-btn" modalClose>
-            OK
-          </button>
+          <ModalCloser>
+            <button className="modal-btn">OK</button>
+          </ModalCloser>
         </React.Fragment>
       );
     }
@@ -140,9 +140,9 @@ class SectionCard extends React.Component {
         <XCircle color="red" height={iconHeight} width={iconWidth} />
         <h3>Enrollment failed</h3>
         <h4>{this.state.errorMessage}</h4>
-        <button className="modal-btn" modalClose>
-          OK
-        </button>
+        <ModalCloser>
+          <button className="modal-btn">OK</button>
+        </ModalCloser>
       </React.Fragment>
     );
   }
