@@ -16,6 +16,8 @@ from .models import (
     Override,
 )
 
+COMPSCI_WORDS = ('Algorithms', 'Systems', 'Distributed', 'Efficient', 'Tractable', 'Programming', 'Languages')
+
 
 class CourseFactory(factory.DjangoModelFactory):
     class Meta:
@@ -42,6 +44,11 @@ class CourseFactory(factory.DjangoModelFactory):
         )
     )
     permitted_absences = factory.LazyFunction(lambda: random.randint(1, 4))
+
+    @factory.lazy_attribute
+    def title(self):
+        words = random.sample(COMPSCI_WORDS, 3)
+        return f"{words[0]} for {words[1]} {words[2]}"
 
 
 BUILDINGS = ("Cory", "Soda", "Kresge", "Moffitt")

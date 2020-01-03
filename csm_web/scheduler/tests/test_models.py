@@ -1,14 +1,12 @@
 from django.test import TestCase
 from rest_framework.serializers import ValidationError
 from datetime import datetime, timedelta
-from scheduler.models import Override
+from scheduler.models import Override, Spacetime
 from scheduler.factories import (
     SpacetimeFactory,
     OverrideFactory,
     CourseFactory,
     SectionFactory,
-    StudentFactory,
-    DAYS,
 )
 
 
@@ -36,7 +34,7 @@ class SpacetimeTest(TestCase):
         override = OverrideFactory.create(
             overriden_spacetime=self.spacetime,
             date=date,
-            spacetime=SpacetimeFactory.create(_day_of_week=DAYS[date.weekday()])
+            spacetime=SpacetimeFactory.create(_day_of_week=Spacetime.DayOfWeek.values[date.weekday()])
         )
         self.assertTrue(override.is_expired())
         self.assertEqual(self.spacetime.location, self.spacetime._location)
