@@ -271,6 +271,12 @@ header {
 	height: 50vh;
 }
 
+#course-section-list-empty {
+	width: 300px; /* Match width of section card so day selector stays stationary */
+	color: #646464;
+	text-align: center;
+}
+
 #course-section-selector {
 	display: flex;
 	flex-wrap: wrap;
