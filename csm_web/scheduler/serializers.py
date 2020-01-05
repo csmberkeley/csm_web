@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from django.utils import timezone, dateparse
 from datetime import datetime
-from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime
+from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Profile
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -18,6 +18,24 @@ class CourseSerializer(serializers.ModelSerializer):
     class Meta:
         model = Course
         fields = ("id", "name", "enrollment_open", "user_can_enroll")
+
+
+class ProfileSerializer(serializers.Serializer):
+    id = serializers.IntegerField()
+    section_id = serializers.IntegerField(source='section.id')
+    section_spacetime = serializers.SerializerMethodField()
+    course = serializers.CharField(source='section.course.name')
+    course_title = serializers.CharField(source='section.course.title')
+    is_student = serializers.SerializerMethodField()
+
+    def get_is_student(self, obj):
+        return isinstance(obj, Student)
+
+    def get_section_spacetime(self, obj):
+        if not (hasattr(obj, "section") and obj.section):
+            return
+        section = obj.section
+        return f"{Spacetime.DayOfWeek(section.spacetime.day_of_week).label} {section.spacetime.start_time.strftime('%-I:%M')}-{section.spacetime.end_time.strftime('%-I:%M %p')}"
 
 
 class MentorSerializer(serializers.ModelSerializer):

@@ -8,7 +8,7 @@ from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
 from .models import Course, Section, Student, Spacetime, User, Override, Attendance
 from rest_framework import mixins
-from .serializers import CourseSerializer, SectionSerializer, StudentSerializer, AttendanceSerializer, MentorSerializer, OverrideSerializer
+from .serializers import CourseSerializer, SectionSerializer, StudentSerializer, AttendanceSerializer, MentorSerializer, OverrideSerializer, ProfileSerializer
 from django.core.exceptions import ObjectDoesNotExist
 from operator import attrgetter
 from itertools import groupby
@@ -73,7 +73,7 @@ class CourseViewSet(*viewset_with('list')):
     @action(detail=True)
     def sections(self, request, pk=None):
         course = get_object_or_error(self.get_queryset(), pk=pk)
-        #TODO: Clean this up
+        # TODO: Clean this up
         return Response(dict(sorted(((day, SectionSerializer(group, many=True).data) for day, group in groupby(
             course.section_set.all().order_by('spacetime___day_of_week', 'spacetime___start_time'),
             lambda section: section.spacetime.day_of_week)), key=lambda pair: Spacetime.DAY_INDEX.index(pair[0]))))
@@ -170,13 +170,13 @@ class StudentViewSet(viewsets.GenericViewSet):
 
 
 class ProfileViewSet(*viewset_with('list')):
-    queryset = None
     serializer_class = None
 
+    def get_queryset(self):
+        pass
+
     def list(self, request):
-        student_profiles = StudentSerializer(request.user.student_set.filter(active=True), many=True).data
-        mentor_profiles = MentorSerializer(request.user.mentor_set.exclude(section=None), many=True).data
-        return Response({'mentor_profiles': mentor_profiles, 'student_profiles': student_profiles})
+        return Response(ProfileSerializer([*request.user.student_set.filter(active=True), *request.user.mentor_set.exclude(section=None)], many=True).data)
 
 
 class SpacetimeViewSet(viewsets.GenericViewSet):
