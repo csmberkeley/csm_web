@@ -1,7 +1,9 @@
 from rest_framework import serializers
 from django.utils import timezone, dateparse
 from datetime import datetime
-from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Profile
+from .models import (
+    Attendance, Course, Student, Section, Mentor, MentorBioInfo, Override, Spacetime, Profile
+)
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -117,3 +119,9 @@ class OverrideSerializer(serializers.Serializer):
         instance.spacetime.save()
         instance.save()
         return instance
+
+
+class MentorBioInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MentorBioInfo
+        fields = ("user", "first_name", "last_name", "biography", "pfp")

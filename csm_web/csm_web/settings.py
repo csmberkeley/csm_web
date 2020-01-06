@@ -144,6 +144,12 @@ USE_L10N = True
 
 USE_TZ = True
 
+# Media files (https://docs.djangoproject.com/en/3.0/topics/files/)
+# TODO set up S3; will require new environment variables for credentials
+# https://stackoverflow.com/questions/18729026/upload-images-to-amazon-s3-using-django
+MEDIA_ROOT = "/Users/jhshi/Documents/csm/test-photos/"
+MEDIA_URL = "/media/"
+
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
