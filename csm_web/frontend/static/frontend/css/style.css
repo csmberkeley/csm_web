@@ -13,13 +13,15 @@ body {
 :root {
 	--csm-green: #9AE0B3;
 	--csm-green-darkened: #88cea1;
-	--csm-theme-cs61a: #9AE0B3;
+	--csm-theme-cs61a: var(--csm-green);
 	--csm-theme-cs61b: #63C5FF;
 	--csm-theme-cs61c: #797C99;
 	--csm-theme-cs70: #FF7070;
 	--csm-theme-cs88: #E46495;
 	--csm-theme-ee16a: #707EFF;
 	--csm-theme-ee16b: #FFE070;
+	--csm-mentor: var(--csm-green);
+	--csm-student: #FFAB2E;
 }
 
 /* Header */
@@ -146,6 +148,7 @@ header {
 	justify-content: space-between;
 	flex-wrap: wrap;
 	max-width: 300px;
+	margin-bottom: 20px;
 }
 
 .csm-btn {
@@ -161,6 +164,7 @@ header {
 }
 
 .course-card {
+	position: relative;
 	width: 320px;
 	min-width: 320px;
 	border-radius: 16px;
@@ -168,22 +172,33 @@ header {
 	min-height: 180px;
 	border-top: 30px solid;
 	border-top-color: red;
+}
+
+.course-cards-container > .course-card, .course-card-link {
 	margin: 0 75px 50px 0;
 }
 
-
 .course-card-contents {
 	padding: 30px;
+	min-height: 120px;
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: column;
+}
+
+.course-card-contents > *:nth-last-child(2) {
+	/* Ensures there is space between the relation label and whatever precedes it */
+	margin-bottom: 20px;
 }
 
 .course-card-name {
-	margin: auto;
+	margin: 0;
 	font-size: 24px;
 	font-weight: bold;
 }
 
 .course-card-title {
-	margin: auto;
+	margin: 0 0 20px;
 	font-size: 14px;
 	color: #bfbfbf;
 }
@@ -191,6 +206,41 @@ header {
 .course-cards-container {
 	display: flex;
 	flex-wrap: wrap;
+	align-items: flex-start;
+	--csm-link-hover: rgba(196, 196, 196, 0.28);
+}
+
+.relation-label {
+	text-transform: capitalize;
+	width: 70px;
+	padding: 8px 16px;
+	color: white;
+	text-align: center;
+	border-radius: 20px;
+	margin-top: auto;
+}
+
+.course-card-link {
+	color: unset;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.course-card-link:hover > .course-card {
+	background-color: var(--csm-link-hover);
+}
+
+.section-link {
+	color: unset;
+	text-decoration: none;
+	cursor: pointer;
+	padding: 10px;
+	font-size: 14px;
+	border-radius: 9px;
+}
+
+.section-link:hover {
+	background-color: var(--csm-link-hover);
 }
 
 
