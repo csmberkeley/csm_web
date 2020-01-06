@@ -179,13 +179,16 @@ def generate_test_data(preconfirm=False):
     if (not preconfirm) and (not confirm_run()):
         return
     management.call_command("flush", interactive=False)
-    course_names = ("CS70", "CS61A", "CS61B", "CS61C", "EE16A")
+    course_names = ("CS61A", "CS61B", "CS61C", "CS70", "CS88", "EE16A", "EE16B")
+    course_titles = ("Structure and Interpretation of Computer Programs", "Data Structures", "Machine Structures",
+                     "Discrete Mathematics and Probability Theory", "Computational Structures in Data Science", "Designing Information Devices and Systems I",
+                     "Designing Information Devices and Systems II")
     print("Generating test data...")
     enrollment_start = timezone.now() - timedelta(days=14)
     enrollment_end = timezone.now() + timedelta(days=50)
     valid_until = timezone.now() + timedelta(days=100)
-    for course_name in course_names:
-        course = CourseFactory.create(name=course_name, enrollment_start=enrollment_start, enrollment_end=enrollment_end,
+    for course_name, course_title in zip(course_names, course_titles):
+        course = CourseFactory.create(name=course_name, title=course_title, enrollment_start=enrollment_start, enrollment_end=enrollment_end,
                                       valid_until=valid_until)
         print(course_name + "...", end=" ")
         for _ in range(random.randint(5, 10)):

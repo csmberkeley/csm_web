@@ -1,62 +1,35 @@
 import React from "react";
 import { MemoryRouter as Router, Route, Switch, Link } from "react-router-dom";
+import PropTypes from "prop-types";
 import ReactDOM from "react-dom";
-import Section from "./Section";
 import CourseMenu from "./CourseMenu";
 import { fetchJSON } from "../utils/api";
+import { groupBy } from "lodash";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 
 export default class App extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { studentProfiles: null, mentorProfiles: null, currentProfile: null, ready: false };
-    this.fetchProfiles = this.fetchProfiles.bind(this);
-  }
-
-  fetchProfiles() {
-    fetchJSON("profiles/").then(({ studentProfiles, mentorProfiles }) => {
-      this.setState({
-        studentProfiles,
-        mentorProfiles,
-        currentProfile: studentProfiles[0] || mentorProfiles[0],
-        ready: true
-      });
-    });
+    this.state = { profiles: [], profilesLoaded: false };
   }
 
   componentDidMount() {
-    this.fetchProfiles();
+    fetchJSON("/profiles").then(profiles => this.setState({ profiles, profilesLoaded: true }));
   }
 
   render() {
-    if (!this.state.ready) {
-      return <div>Loading...</div>;
-    }
-    const { currentProfile, mentorProfiles, studentProfiles } = this.state;
     return (
       <Router>
         <React.Fragment>
           <Header />
           <main>
             <Switch>
-              <Route exact path="/" component={Home} />
               <Route
-                path="/sections/:id"
-                render={routeProps => (
-                  <Section
-                    key={routeProps.match.params.id}
-                    currentProfileId={
-                      mentorProfiles
-                        .concat(studentProfiles)
-                        .filter(profile => profile.section == routeProps.match.params.id)[0].id
-                    }
-                    isMentor={mentorProfiles
-                      .map(profile => profile.section)
-                      .includes(Number(routeProps.match.params.id))}
-                    {...routeProps}
-                  />
-                )}
+                exact
+                path="/"
+                render={() => <Home profiles={this.state.profiles} profilesLoaded={this.state.profilesLoaded} />}
               />
+              <Route path="/sections/:id" />
               <Route path="/courses" component={CourseMenu} />
             </Switch>
           </main>
@@ -83,16 +56,52 @@ function Header() {
   );
 }
 
-function Home() {
+const profileShape = PropTypes.shape({
+  id: PropTypes.number.isRequired,
+  sectionId: PropTypes.number.isRequired,
+  sectionSpacetime: PropTypes.string.isRequired,
+  course: PropTypes.string.isRequired,
+  courseTitle: PropTypes.string.isRequired,
+  isStudent: PropTypes.bool.isRequired
+});
+
+function Home({ profiles, profilesLoaded }) {
   return (
     <div id="home-courses">
-      <h3 className="page-title">My courses</h3>
-      <Link className="csm-btn" to="/courses">
-        <span className="inline-plus-sign">+ </span>Add Course
-      </Link>
+      <div id="home-courses-heading">
+        <h3 className="page-title">My courses</h3>
+        <Link className="csm-btn" to="/courses">
+          <span className="inline-plus-sign">+ </span>Add Course
+        </Link>
+      </div>
+      {profilesLoaded && (
+        <div className="course-cards-container">
+          {Object.entries(groupBy(profiles, profile => profile.course)).map(([course, courseProfiles]) => (
+            <CourseCard key={course} profiles={courseProfiles} />
+          ))}
+        </div>
+      )}
     </div>
   );
 }
+
+Home.propTypes = { profiles: PropTypes.arrayOf(profileShape).isRequired, profilesLoaded: PropTypes.bool.isRequired };
+
+function CourseCard({ profiles }) {
+  const { course, courseTitle } = profiles[0];
+  return (
+    <div className="course-card" style={{ borderTopColor: `var(--csm-theme-${course.toLowerCase()})` }}>
+      <div className="course-card-contents">
+        <h3 className="course-card-name">{course}</h3>
+        <p className="course-card-title">{courseTitle}</p>
+      </div>
+    </div>
+  );
+}
+
+CourseCard.propTypes = {
+  profiles: PropTypes.arrayOf(profileShape).isRequired
+};
 
 const wrapper = document.getElementById("app");
 wrapper ? ReactDOM.render(<App />, wrapper) : null;
