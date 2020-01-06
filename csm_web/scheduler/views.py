@@ -1,5 +1,6 @@
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.db.models.query import EmptyQuerySet
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
@@ -171,9 +172,7 @@ class StudentViewSet(viewsets.GenericViewSet):
 
 class ProfileViewSet(*viewset_with('list')):
     serializer_class = None
-
-    def get_queryset(self):
-        pass
+    queryset = EmptyQuerySet
 
     def list(self, request):
         return Response(ProfileSerializer([*request.user.student_set.filter(active=True), *request.user.mentor_set.exclude(section=None)], many=True).data)
