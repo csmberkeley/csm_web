@@ -149,13 +149,22 @@ def demoify_user(user, username):
     user.save()
 
 
-def create_demo_accounts():
+def create_demo_account():
     demo_mentor = random.choice(Mentor.objects.all())
-    demoify_user(demo_mentor.user, "demo_mentor")
-    demo_student = random.choice(Student.objects.all())
-    demoify_user(demo_student.user, "demo_student")
-    print("\nDemo accounts have been created with usernames demo_mentor and demo_student")
-    print("The password for these accounts is 'pass', log in at localhost:8000/admin/")
+    second_section = random.choice(Section.objects.filter(
+        course=demo_mentor.section.course).exclude(pk=demo_mentor.section.pk))
+    demo_mentor_2 = second_section.mentor
+    demo_mentor_2.user = demo_mentor.user
+    demo_mentor_2.save()
+    demoify_user(demo_mentor.user, "demo_user")
+    demo_student = random.choice(Student.objects.exclude(section__course=demo_mentor.section.course))
+    demo_student.user = demo_mentor.user
+    demo_student.save()
+    print("""
+    A demo account has been created with username 'demo_mentor' and password 'pass'
+    Log in at localhost:8000/admin/
+    """
+          )
 
 
 def confirm_run():
@@ -199,4 +208,4 @@ def generate_test_data(preconfirm=False):
             section.students.set(students)
             section.save()
         print("Done")
-    create_demo_accounts()
+    create_demo_account()
