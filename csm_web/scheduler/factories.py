@@ -16,7 +16,8 @@ from .models import (
     Override,
 )
 
-COMPSCI_WORDS = ('Algorithms', 'Systems', 'Distributed', 'Efficient', 'Tractable', 'Programming', 'Languages')
+COMPSCI_WORDS = ('Algorithms', 'Systems', 'Distributed', 'Efficient', 'Tractable', 'Programming',
+                 'Languages', 'Machine Learning', 'AI', 'Blockchain', 'Parallel', 'Architecture')
 
 
 class CourseFactory(factory.DjangoModelFactory):
