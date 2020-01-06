@@ -13,6 +13,13 @@ body {
 :root {
 	--csm-green: #9AE0B3;
 	--csm-green-darkened: #88cea1;
+	--csm-theme-cs61a: #9AE0B3;
+	--csm-theme-cs61b: #63C5FF;
+	--csm-theme-cs61c: #797C99;
+	--csm-theme-cs70: #FF7070;
+	--csm-theme-cs88: #E46495;
+	--csm-theme-ee16a: #707EFF;
+	--csm-theme-ee16b: #FFE070;
 }
 
 /* Header */
@@ -132,7 +139,7 @@ header {
 	vertical-align: sub;
 }
 
-#home-courses {
+#home-courses-heading {
 	display: flex;
 	align-items: center;
 	width: 50%;
@@ -152,6 +159,40 @@ header {
 .csm-btn:hover {
 	background-color: var(--csm-green-darkened);
 }
+
+.course-card {
+	width: 320px;
+	min-width: 320px;
+	border-radius: 16px;
+	box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.15);
+	min-height: 180px;
+	border-top: 30px solid;
+	border-top-color: red;
+	margin: 0 75px 50px 0;
+}
+
+
+.course-card-contents {
+	padding: 30px;
+}
+
+.course-card-name {
+	margin: auto;
+	font-size: 24px;
+	font-weight: bold;
+}
+
+.course-card-title {
+	margin: auto;
+	font-size: 14px;
+	color: #bfbfbf;
+}
+
+.course-cards-container {
+	display: flex;
+	flex-wrap: wrap;
+}
+
 
 /* Course menu */
 
