@@ -1,7 +1,19 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator, User
+from datetime import datetime
+from .models import (
+    Attendance,
+    Course,
+    Student,
+    Section,
+    Mentor,
+    MentorBioInfo,
+    Override,
+    Spacetime,
+    Coordinator,
+    User
+)
 
 
 class Role(Enum):
@@ -170,3 +182,9 @@ class OverrideSerializer(serializers.ModelSerializer):
         model = Override
         fields = ("location", "start_time", "date", "overriden_spacetime")
         extra_kwargs = {"overriden_spacetime": {'required': False}}
+
+
+class MentorBioInfoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MentorBioInfo
+        fields = ("user", "first_name", "last_name", "biography", "pfp")
