@@ -34,14 +34,33 @@ export default class Home extends React.Component {
 }
 
 function CourseCard({ profiles }) {
-  const { course, courseTitle } = profiles[0];
-  return (
-    <div className="course-card" style={{ borderTopColor: `var(--csm-theme-${course.toLowerCase()})` }}>
-      <div className="course-card-contents">
-        <h3 className="course-card-name">{course}</h3>
-        <p className="course-card-title">{courseTitle}</p>
+  const { course, courseTitle, isStudent, sectionId } = profiles[0];
+  function Card() {
+    const relation = isStudent ? "student" : "mentor";
+    return (
+      <div className="course-card" style={{ borderTopColor: `var(--csm-theme-${course.toLowerCase()})` }}>
+        <div className="course-card-contents">
+          <h3 className="course-card-name">{course}</h3>
+          <p className="course-card-title">{courseTitle}</p>
+          {profiles.length > 1 &&
+            profiles.map(profile => (
+              <Link key={profiles.sectionId} to={`/sections/${profile.sectionId}`} className="section-link">
+                {profile.sectionSpacetime}
+              </Link>
+            ))}
+          <div className="relation-label" style={{ backgroundColor: `var(--csm-${relation})` }}>
+            {relation}
+          </div>
+        </div>
       </div>
-    </div>
+    );
+  }
+  return profiles.length === 1 ? (
+    <Link to={`/sections/${sectionId}`} className="course-card-link">
+      <Card />
+    </Link>
+  ) : (
+    <Card />
   );
 }
 
