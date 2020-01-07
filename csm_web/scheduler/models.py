@@ -16,7 +16,7 @@ class User(AbstractUser):
 
 
 def bio_image_upload_path(instance, _filename):
-    # Get the appropriate semester abbreivation
+    # Get the appropriate semester abbreviation
     today = timezone.now().date()
     semester = "fa" if today.month > 6 else "sp"
     return semester + today.strftime("%y") + "/" + str(instance.user.pk)
