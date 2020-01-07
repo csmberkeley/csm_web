@@ -44,10 +44,11 @@ then
 elif ! aws sts get-caller-identity | grep "csm-web-s3-user" 1>/dev/null
 then
 	echo "You are not logged into the AWS CLI with the credentials for 'csm-web-s3-user'. You will be unable to view/upload profile pictures for users."
+	echo "If calling 'aws sts get-caller-identity' prints 'Partial credentials found in env', check your environment variables. It may be overriding your credentials in ~/.aws."
 else
 	echo "AWS_STORAGE_BUCKET_NAME=csm-web-media" >> .env
 	echo 'AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)' >> .env
-	echo 'AWS_ACCESS_KEY_ID=$(aws configure get aws_secret_access_key)' >> .env
+	echo 'AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)' >> .env
 fi
 
 pwd > "$VIRTUAL_ENV/.project_dir"
