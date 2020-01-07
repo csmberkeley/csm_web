@@ -37,6 +37,19 @@ else
 	echo "You are not logged into the Heroku CLI. OAUTH keys have not been set, so you will be unable to log in with your email."
 fi
 
+# Pull AWS S3 credentials
+if ! command -v aws 1>/dev/null
+then
+	echo "Did not find AWS CLI installation. You will be unable to view/upload profile pictures for users."
+elif ! aws sts get-caller-identity | grep "csm-web-s3-user" 1>/dev/null
+then
+	echo "You are not logged into the AWS CLI with the credentials for 'csm-web-s3-user'. You will be unable to view/upload profile pictures for users."
+else
+	echo "AWS_STORAGE_BUCKET_NAME=csm-web-media" >> .env
+	echo 'AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)' >> .env
+	echo 'AWS_ACCESS_KEY_ID=$(aws configure get aws_secret_access_key)' >> .env
+fi
+
 pwd > "$VIRTUAL_ENV/.project_dir"
 
 # Add env variables to virutalenv activate script so that not everything needs to be run with 'heroku local'
