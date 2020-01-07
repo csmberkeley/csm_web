@@ -70,14 +70,20 @@ class SectionSerializer(serializers.ModelSerializer):
     num_students_enrolled = serializers.IntegerField(source='current_student_count')
     mentor = MentorSerializer()
     course = serializers.CharField(source='course.name')
+    course_title = serializers.CharField(source='course.title')
+    is_student = serializers.SerializerMethodField()
 
     def get_time(self, obj):
         return f"{obj.spacetime.get_day_of_week_display()} {obj.spacetime.start_time.strftime('%-I:%M')}-{obj.spacetime.end_time.strftime('%-I:%M %p')}"
 
+    def get_is_student(self, obj):
+        user = self.context.get('request') and self.context.get('request').user
+        return None if not user else bool(obj.students.filter(user=user).count())
+
     class Meta:
         model = Section
         fields = ("id", "time", "location", "mentor", "capacity",
-                  "num_students_enrolled", "description", "mentor", "course")
+                  "num_students_enrolled", "description", "mentor", "course", "is_student", "course_title")
 
 
 class OverrideSerializer(serializers.Serializer):

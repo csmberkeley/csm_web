@@ -3,6 +3,7 @@ import { MemoryRouter as Router, Route, Switch, Link } from "react-router-dom";
 import ReactDOM from "react-dom";
 import CourseMenu from "./CourseMenu";
 import Home from "./Home";
+import Section from "./Section";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 
 export default class App extends React.Component {
@@ -14,7 +15,7 @@ export default class App extends React.Component {
           <main>
             <Switch>
               <Route exact path="/" component={Home} />
-              <Route path="/sections/:id" />
+              <Route path="/sections/:id" component={Section} />
               <Route path="/courses" component={CourseMenu} />
             </Switch>
           </main>
