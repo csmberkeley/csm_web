@@ -1,5 +1,7 @@
 asgiref==3.2.3
 astroid==2.2.5
+boto3==1.10.47
+botocore==1.13.47
 Brotli==1.0.7
 certifi==2019.6.16
 chardet==3.0.4
@@ -9,13 +11,16 @@ Django==3.0.3
 django-extensions==2.2.5
 django-filter==2.2.0
 django-heroku==0.3.1
+django-storages==1.8
 djangorestframework==3.11.0
 djangorestframework-camel-case==1.1.2
+docutils==0.15.2
 factory-boy==2.12.0
 Faker==2.0.1
 gunicorn==19.9.0
 idna==2.8
 isort==4.3.21
+jmespath==0.9.4
 lazy-object-proxy==1.4.2
 mccabe==0.6.1
 oauthlib==3.1.0
@@ -33,6 +38,8 @@ PyYAML==5.1.2
 requests==2.22.0
 requests-oauthlib==1.2.0
 sentry-sdk==0.14.1
+s3transfer==0.2.1
+>>>>>>> Connect bio upload to S3 bucket
 six==1.12.0
 social-auth-app-django==3.1.0
 social-auth-core==3.2.0

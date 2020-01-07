@@ -317,12 +317,15 @@ class MentorBioInfoDetail(APIView):
             info = MentorBioInfo.objects.get(user=self.request.user)
         except MentorBioInfo.DoesNotExist:
             info = MentorBioInfo()
-            logger.warn(f"no such bio for user {self.request.user}")
         serializer = MentorBioInfoSerializer(info)
         return Response({'serializer': serializer})
 
     def post(self, request, format=None):
-        serializer = MentorBioInfoSerializer(data=request.data)
+        try:
+            info = MentorBioInfo.objects.get(user=self.request.user)
+            serializer = MentorBioInfoSerializer(info, data=request.data)
+        except MentorBioInfo.DoesNotExist:
+            serializer = MentorBioInfoSerializer(data=request.data)
         if serializer.is_valid():
             serializer.save()
             return Response({'serializer': serializer}, status=status.HTTP_202_ACCEPTED)
