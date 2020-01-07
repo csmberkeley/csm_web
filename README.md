@@ -12,6 +12,8 @@ We don't know what specific minimum version you would need for any of the follow
   * [eslint](https://eslint.org/) (`npm install -g eslint`; `npm install -g eslint-plugin-react`)
 * [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install) (`brew tap heroku/brew && brew install heroku`)
   * Create an account on [Heroku](https://id.heroku.com/login) and [login](https://devcenter.heroku.com/articles/heroku-cli#getting-started)
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) (`brew install awscli`)
+  * We use an S3 bucket to store profile pictures and other media. See [here](https://aws.amazon.com/s3/) to get started.
 
 Other miscellaneous requirements will be installed by the commands below.
 
