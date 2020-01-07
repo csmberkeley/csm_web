@@ -311,7 +311,6 @@ class MentorBioInfoDetail(APIView):
     # TODO:
     # Find some way to restrict user field idiomatically
     # Display photo in the form if it already exists
-    # Hook up to S3
     def get(self, request, format=None):
         try:
             info = MentorBioInfo.objects.get(user=self.request.user)
