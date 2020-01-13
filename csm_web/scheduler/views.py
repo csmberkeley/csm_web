@@ -187,8 +187,8 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
     @action(detail=True, methods=['put'])
     def override(self, request, pk=None):
         spacetime = get_object_or_error(self.get_queryset(), pk=pk)
-        if spacetime.has_override():  # update
-            serializer = OverrideSerializer(spacetime.override, data=request.data)
+        if hasattr(spacetime, "_override"):  # update
+            serializer = OverrideSerializer(spacetime._override, data=request.data)
         else:  # create
             serializer = OverrideSerializer(data={'overriden_spacetime': spacetime, **request.data})
         if serializer.is_valid():
