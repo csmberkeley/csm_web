@@ -72,7 +72,7 @@ class SectionSerializer(serializers.ModelSerializer):
     course = serializers.CharField(source='course.name')
 
     def get_time(self, obj):
-        return f"{obj.spacetime.get__day_of_week_display()} {obj.spacetime.start_time.strftime('%-I:%M')}-{obj.spacetime.end_time.strftime('%-I:%M %p')}"
+        return f"{obj.spacetime.get_day_of_week_display()} {obj.spacetime.start_time.strftime('%-I:%M')}-{obj.spacetime.end_time.strftime('%-I:%M %p')}"
 
     class Meta:
         model = Section
@@ -100,20 +100,20 @@ class OverrideSerializer(serializers.Serializer):
         return value
 
     def create(self, validated_data):
-        spacetime = Spacetime.objects.create(_day_of_week=validated_data['day_of_week'],
-                                             _location=validated_data['location'],
-                                             _start_time=validated_data['start_time'],
-                                             _duration=validated_data['overriden_spacetime'].duration)
+        spacetime = Spacetime.objects.create(day_of_week=validated_data['day_of_week'],
+                                             location=validated_data['location'],
+                                             start_time=validated_data['start_time'],
+                                             duration=validated_data['overriden_spacetime'].duration)
 
         return Override.objects.create(date=validated_data['date'], overriden_spacetime=validated_data['overriden_spacetime'],
                                        spacetime=spacetime)
 
     def update(self, instance, validated_data):
         instance.date = validated_data['date']
-        instance.spacetime._day_of_week = validated_data['day_of_week']
-        instance.spacetime._location = validated_data['location']
-        instance.spacetime._start_time = validated_data['start_time']
-        instance.spacetime._duration = instance.overriden_spacetime.duration
+        instance.spacetime.day_of_week = validated_data['day_of_week']
+        instance.spacetime.location = validated_data['location']
+        instance.spacetime.start_time = validated_data['start_time']
+        instance.spacetime.duration = instance.overriden_spacetime.duration
         instance.spacetime.save()
         instance.save()
         return instance
