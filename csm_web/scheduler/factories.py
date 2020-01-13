@@ -59,10 +59,10 @@ class SpacetimeFactory(factory.DjangoModelFactory):
     class Meta:
         model = Spacetime
 
-    _location = factory.LazyFunction(lambda: "%s %d" % (random.choice(BUILDINGS), random.randint(1, 500)))
-    _start_time = factory.Faker("time_object")
-    _duration = factory.LazyFunction(lambda: timedelta(minutes=random.choice((60, 90))))
-    _day_of_week = factory.fuzzy.FuzzyChoice(Spacetime.DayOfWeek.values)
+    location = factory.LazyFunction(lambda: "%s %d" % (random.choice(BUILDINGS), random.randint(1, 500)))
+    start_time = factory.Faker("time_object")
+    duration = factory.LazyFunction(lambda: timedelta(minutes=random.choice((60, 90))))
+    day_of_week = factory.fuzzy.FuzzyChoice(Spacetime.DayOfWeek.values)
 
 
 class UserFactory(factory.DjangoModelFactory):

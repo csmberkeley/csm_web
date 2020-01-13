@@ -17,34 +17,25 @@ class SpacetimeTest(TestCase):
         self.spacetime = SpacetimeFactory.create(section=self.section)
 
     def test_spacetime_without_override(self):
-        self.assertEqual(self.spacetime.location, self.spacetime._location)
-        self.assertEqual(self.spacetime.day_of_week, self.spacetime._day_of_week)
-        self.assertEqual(self.spacetime.start_time, self.spacetime._start_time)
-        self.assertEqual(self.spacetime.duration, self.spacetime._duration)
+        self.assertIsNone(self.spacetime.override)
 
     def test_spacetime_with_override(self):
         override = OverrideFactory.create(overriden_spacetime=self.spacetime)
-        self.assertEqual(self.spacetime.location, override.spacetime.location)
-        self.assertEqual(self.spacetime.day_of_week, override.spacetime.day_of_week)
-        self.assertEqual(self.spacetime.start_time, override.spacetime.start_time)
-        self.assertEqual(self.spacetime.duration, override.spacetime.duration)
+        self.assertEqual(override, self.spacetime.override)
 
     def test_spacetime_with_expired_override(self):
         date = datetime.now() - timedelta(days=5)
         override = OverrideFactory.create(
             overriden_spacetime=self.spacetime,
             date=date,
-            spacetime=SpacetimeFactory.create(_day_of_week=Spacetime.DayOfWeek.values[date.weekday()])
+            spacetime=SpacetimeFactory.create(day_of_week=Spacetime.DayOfWeek.values[date.weekday()])
         )
         self.assertTrue(override.is_expired())
-        self.assertEqual(self.spacetime.location, self.spacetime._location)
-        self.assertEqual(self.spacetime.day_of_week, self.spacetime._day_of_week)
-        self.assertEqual(self.spacetime.start_time, self.spacetime._start_time)
-        self.assertEqual(self.spacetime.duration, self.spacetime._duration)
+        self.assertIsNone(self.spacetime.override)
 
     def test_location_normalization(self):
-        spacetime = SpacetimeFactory.create(_location='  Soda     372 ', section=self.section)
-        self.assertEqual(spacetime._location, 'Soda 372')
+        spacetime = SpacetimeFactory.create(location='  Soda     372 ', section=self.section)
+        self.assertEqual(spacetime.location, 'Soda 372')
 
 
 class CourseTest(TestCase):
