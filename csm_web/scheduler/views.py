@@ -29,7 +29,7 @@ def log_str(obj):
         if isinstance(obj, Section):
             return log_format('pk', 'course.name', 'spacetime.location', 'spacetime.start_time')
         if isinstance(obj, Spacetime):
-            return log_format('pk', 'section.course.name', '_location', '_start_time')
+            return log_format('pk', 'section.course.name', 'location', 'start_time')
         if isinstance(obj, Override):
             return log_format('pk', 'date', 'spacetime.pk')
         if isinstance(obj, Attendance):
@@ -76,7 +76,7 @@ class CourseViewSet(*viewset_with('list')):
         course = get_object_or_error(self.get_queryset(), pk=pk)
         # TODO: Clean this up
         return Response(dict(sorted(((day, SectionSerializer(group, many=True).data) for day, group in groupby(
-            course.section_set.all().order_by('spacetime___day_of_week', 'spacetime___start_time'),
+            course.section_set.all().order_by('spacetime__day_of_week', 'spacetime__start_time'),
             lambda section: section.spacetime.day_of_week)), key=lambda pair: Spacetime.DAY_INDEX.index(pair[0]))))
 
 
