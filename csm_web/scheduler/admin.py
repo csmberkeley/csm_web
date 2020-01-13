@@ -250,10 +250,10 @@ class SectionForm(forms.ModelForm):
             fields["mentor_name"].initial = self.instance.mentor.name if has_mentor else "-"
             fields["mentor_email"].initial = self.instance.mentor.user.email if has_mentor else "-"
             fields["mentor_profile_id"].initial = self.instance.mentor.pk if has_mentor else "-"
-            fields["location"].initial = spacetime._location
-            fields["start_time"].initial = spacetime._start_time
-            fields["duration"].initial = spacetime._duration
-            fields["day_of_week"].initial = spacetime._day_of_week
+            fields["location"].initial = spacetime.location
+            fields["start_time"].initial = spacetime.start_time
+            fields["duration"].initial = spacetime.duration
+            fields["day_of_week"].initial = spacetime.day_of_week
             fields["students"].initial = "\n".join(str(student) for student in self.instance.students.all())
         else:
             for field in ("mentor_name", "mentor_email", "mentor_profile_id", "students"):
@@ -292,10 +292,10 @@ class SectionForm(forms.ModelForm):
         for field in spacetime_field_names:
             del cleaned_data[field]
         cleaned_data["spacetime"] = Spacetime.objects.create(
-            _location=location,
-            _start_time=start_time,
-            _duration=duration,
-            _day_of_week=day_of_week
+            location=location,
+            start_time=start_time,
+            duration=duration,
+            day_of_week=day_of_week
         )
         self.instance.spacetime = cleaned_data["spacetime"]
         return cleaned_data
@@ -337,7 +337,7 @@ class SectionAdmin(CoordAdmin):
             },
         ),
     )
-    list_filter = ("course", "spacetime___day_of_week")
+    list_filter = ("course", "spacetime__day_of_week")
     list_display = (
         "mentor",
         "course",
@@ -350,8 +350,8 @@ class SectionAdmin(CoordAdmin):
         "course__name",
         "mentor__user__first_name",
         "mentor__user__last_name",
-        "spacetime___day_of_week",
-        "spacetime___location",
+        "spacetime__day_of_week",
+        "spacetime__location",
     )
 
     def get_form(self, request, obj=None, **kwargs):
@@ -385,10 +385,10 @@ class SectionAdmin(CoordAdmin):
 
 @admin.register(Spacetime)
 class SpacetimeAdmin(CoordAdmin):
-    fields = ("_location", "_day_of_week", "_start_time", "_duration")
-    list_display = ("_location", "_day_of_week", "_start_time")
-    list_filter = ("_location", "_day_of_week")
-    search_fields = ("_location", "_day_of_week")
+    fields = ("location", "day_of_week", "start_time", "duration")
+    list_display = ("location", "day_of_week", "start_time")
+    list_filter = ("location", "day_of_week")
+    search_fields = ("location", "day_of_week")
 
     def has_module_permission(self, request, obj=None):
         return request.user.is_superuser  # should only be editable through section
@@ -583,7 +583,7 @@ class OverrideAdmin(admin.ModelAdmin):
     fields = ("date", "spacetime", "overriden_spacetime")
     ordering = ("-date",)
 
-    list_filter = ("spacetime___day_of_week", "spacetime__section__course")
+    list_filter = ("spacetime__day_of_week", "spacetime__section__course")
 
     def has_module_permission(self, request, obj=None):
         return request.user.is_superuser  # TODO remove when implemented as coord view
