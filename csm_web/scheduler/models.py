@@ -183,50 +183,14 @@ class Spacetime(ValidatingModel):
     DAY_INDEX = tuple(day for day, _ in DayOfWeek.choices)
     SPACE_REDUCE_REGEX = re.compile(r'\s+')
 
-    _location = models.CharField(max_length=100)
-    _start_time = models.TimeField()
-    _duration = models.DurationField()
-    _day_of_week = models.CharField(max_length=3, choices=DayOfWeek.choices)
-
-    """
-    Unfortunately the Django models.Model class doesn't play nice with standard Python metaprogramming
-    functionality like __getattribute__, and Django doesn't allow you to shadow fields in a descendant class,
-    so we have to resort to this boilerplate @property solution in order to have Spacetime 'magically' return
-    the overriden value if there is one
-    """
-
-    def has_valid_override(self):
-        return self.has_override() and not self.override.is_expired()
-
-    def has_override(self):
-        return hasattr(self, "override")
-
-    def day_number(self):
-        return self.DAY_INDEX.index(self.day_of_week)
+    location = models.CharField(max_length=100)
+    start_time = models.TimeField()
+    duration = models.DurationField()
+    day_of_week = models.CharField(max_length=3, choices=DayOfWeek.choices)
 
     @property
-    def location(self):
-        if self.has_valid_override():
-            return self.override.spacetime.location
-        return self._location
-
-    @property
-    def start_time(self):
-        if self.has_valid_override():
-            return self.override.spacetime.start_time
-        return self._start_time
-
-    @property
-    def duration(self):
-        if self.has_valid_override():
-            return self.override.spacetime.duration
-        return self._duration
-
-    @property
-    def day_of_week(self):
-        if self.has_valid_override():
-            return self.override.spacetime.day_of_week
-        return self._day_of_week
+    def override(self):
+        return self._override if (hasattr(self, "_override") and not self._override.is_expired()) else None
 
     @property
     def end_time(self):
@@ -238,20 +202,23 @@ class Spacetime(ValidatingModel):
                                   second=self.start_time.second)
                 + self.duration).time()
 
+    def day_number(self):
+        return self.DAY_INDEX.index(self.day_of_week)
+
     def __str__(self):
         formatted_time = self.start_time.strftime("%I:%M %p")
         num_minutes = int(self.duration.total_seconds() // 60)
         return f"{self.location} {self.day_of_week} {formatted_time} for {num_minutes} min"
 
     def save(self, *args, **kwargs):
-        self._location = re.sub(self.SPACE_REDUCE_REGEX, ' ', self._location).strip()
+        self.location = re.sub(self.SPACE_REDUCE_REGEX, ' ', self.location).strip()
         super().save(*args, **kwargs)
 
 
 class Override(ValidatingModel):
     # related_name='+' means Django does not create the reverse relation
     spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE, related_name="+")
-    overriden_spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE)
+    overriden_spacetime = models.OneToOneField(Spacetime, related_name="_override", on_delete=models.CASCADE)
     date = models.DateField()
 
     def clean(self):
