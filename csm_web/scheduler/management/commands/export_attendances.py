@@ -20,8 +20,8 @@ class Command(BaseCommand):
             student__active=True
         ).order_by(
             "date",
-            "student__section__spacetime___day_of_week",
-            "student__section__spacetime___start_time",
+            "student__section__spacetime__day_of_week",
+            "student__section__spacetime__start_time",
             "student__section__mentor",
         )
 

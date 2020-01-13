@@ -65,10 +65,10 @@ def parse_time(timestring, room, course_name):
     day_of_week = DAY_OF_WEEK_DICT[timestring.split(" ")[0]]
     start_time = dt.datetime.strptime(timestring, "%A [%I:%M %p]").time()
     return Spacetime.objects.create(
-        _location=room.replace("-", " "),
-        _start_time=start_time,
-        _duration=DURATIONS[course_name],
-        _day_of_week=day_of_week
+        location=room.replace("-", " "),
+        start_time=start_time,
+        duration=DURATIONS[course_name],
+        day_of_week=day_of_week
     )
 
 

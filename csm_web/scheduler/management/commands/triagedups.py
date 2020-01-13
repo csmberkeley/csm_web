@@ -17,9 +17,9 @@ class Command(BaseCommand):
         profs = Mentor.objects.filter(
             course=course,
             user__email=email,
-            section__spacetime___start_time=time,
-            section__spacetime___location=loc,
-            section__spacetime___day_of_week=day,
+            section__spacetime__start_time=time,
+            section__spacetime__location=loc,
+            section__spacetime__day_of_week=day,
         )
         profs = iter(profs)
         keep = next(profs)
