@@ -162,7 +162,7 @@ def create_demo_account():
     demo_student.user = demo_mentor.user
     demo_student.save()
     print("""
-    A demo account has been created with username 'demo_mentor' and password 'pass'
+    A demo account has been created with username 'demo_user' and password 'pass'
     Log in at localhost:8000/admin/
     """
           )
