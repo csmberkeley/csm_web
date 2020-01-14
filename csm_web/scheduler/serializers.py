@@ -4,6 +4,18 @@ from datetime import datetime
 from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Profile
 
 
+class SpacetimeSerializer(serializers.ModelSerializer):
+    time = serializers.SerializerMethodField()
+
+    def get_time(self, obj):
+        return f"{obj.get_day_of_week_display()} {obj.start_time.strftime('%-I:%M')}-{obj.end_time.strftime('%-I:%M %p')}"
+
+    class Meta:
+        model = Spacetime
+        fields = ("time", "location")
+        read_only_fields = ("time", "location")
+
+
 class CourseSerializer(serializers.ModelSerializer):
     enrollment_open = serializers.SerializerMethodField()
     user_can_enroll = serializers.SerializerMethodField()
@@ -23,19 +35,13 @@ class CourseSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     section_id = serializers.IntegerField(source='section.id')
-    section_spacetime = serializers.SerializerMethodField()
+    section_spacetime = SpacetimeSerializer(source='section.spacetime')
     course = serializers.CharField(source='section.course.name')
     course_title = serializers.CharField(source='section.course.title')
     is_student = serializers.SerializerMethodField()
 
     def get_is_student(self, obj):
         return isinstance(obj, Student)
-
-    def get_section_spacetime(self, obj):
-        if not (hasattr(obj, "section") and obj.section):
-            return
-        section = obj.section
-        return f"{Spacetime.DayOfWeek(section.spacetime.day_of_week).label} {section.spacetime.start_time.strftime('%-I:%M')}-{section.spacetime.end_time.strftime('%-I:%M %p')}"
 
 
 class MentorSerializer(serializers.ModelSerializer):
@@ -64,17 +70,24 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "email", "attendances", "section")
 
 
+class OverrideReadOnlySerializer(serializers.ModelSerializer):
+    spacetime = SpacetimeSerializer()
+    date = serializers.DateField(format="%b. %-d")
+
+    class Meta:
+        model = Override
+        fields = ("spacetime", "date")
+        read_only_fields = ("spacetime", "date")
+
+
 class SectionSerializer(serializers.ModelSerializer):
-    time = serializers.SerializerMethodField()
-    location = serializers.CharField(source='spacetime.location')
+    spacetime = SpacetimeSerializer()
     num_students_enrolled = serializers.IntegerField(source='current_student_count')
     mentor = MentorSerializer()
     course = serializers.CharField(source='course.name')
     course_title = serializers.CharField(source='course.title')
     is_student = serializers.SerializerMethodField()
-
-    def get_time(self, obj):
-        return f"{obj.spacetime.get_day_of_week_display()} {obj.spacetime.start_time.strftime('%-I:%M')}-{obj.spacetime.end_time.strftime('%-I:%M %p')}"
+    override = OverrideReadOnlySerializer(source='spacetime.override')
 
     def get_is_student(self, obj):
         user = self.context.get('request') and self.context.get('request').user
@@ -82,7 +95,7 @@ class SectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Section
-        fields = ("id", "time", "location", "mentor", "capacity",
+        fields = ("id", "spacetime", "mentor", "capacity", "override",
                   "num_students_enrolled", "description", "mentor", "course", "is_student", "course_title")
 
 

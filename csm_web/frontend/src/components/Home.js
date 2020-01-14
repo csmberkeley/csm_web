@@ -45,7 +45,7 @@ function CourseCard({ profiles }) {
           {profiles.length > 1 &&
             profiles.map(profile => (
               <Link key={profiles.sectionId} to={`/sections/${profile.sectionId}`} className="section-link">
-                {profile.sectionSpacetime}
+                {profile.sectionSpacetime.time}
               </Link>
             ))}
           <div className="relation-label" style={{ backgroundColor: `var(--csm-${relation})` }}>
@@ -67,7 +67,7 @@ function CourseCard({ profiles }) {
 const profileShape = PropTypes.shape({
   id: PropTypes.number.isRequired,
   sectionId: PropTypes.number.isRequired,
-  sectionSpacetime: PropTypes.string.isRequired,
+  sectionSpacetime: PropTypes.shape({ time: PropTypes.string.isRequired, location: PropTypes.string }).isRequired,
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
   isStudent: PropTypes.bool.isRequired

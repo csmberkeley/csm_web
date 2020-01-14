@@ -28,7 +28,7 @@ body {
 
 header {
 	box-shadow: 0px 4px 4px rgba(188, 188, 188, 0.25);
-	padding: 30px 3em;
+	padding: 30px 2rem;
 	display: flex;
 	margin: -8px -8px 0 -8px;
 }
@@ -460,7 +460,97 @@ header {
 }
 
 main {
-	padding: 3em;
+	padding: 2rem;
+}
+
+/* Section details */
+
+.section-detail-header .relation-label {
+	border-radius: 4px;
+	padding: 5px 14px;
+	width: 60px;
+	font-size: 14px;
+	margin-bottom: 70px;
+}
+
+.section-detail-header-title {
+	display: flex;
+	flex-wrap: wrap;
+	margin-bottom: 20px;
+}
+
+.section-detail-header-title > h3 {
+	font-size: 30px;
+	margin: 0 20px 0 0;
+	line-height: 30px;
+}
+
+.section-detail-header-title > h4 {
+	color: #bfbfbf;
+	font-size: 25px;
+	font-weight: normal;
+	margin: 0;
+}
+
+.section-detail-page-title {
+	color: #646464;
+	font-size: 30px;
+	font-weight: bold;
+	margin: 0 0 45px;
+}
+
+.section-info-cards-container {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.section-detail-info-card {
+	margin: 0 50px 50px 0;
+}
+
+.section-detail-info-card > h4 {
+	color: #646464;
+	font-size: 25px;
+	font-weight: bold;
+	margin: 0 0 20px;
+}
+
+.section-detail-info-card-contents .divider {
+	margin: auto -40px;
+	border-top: inherit;
+}
+
+.override-label {
+	background-color: #FFD874;
+	color: white;
+	font-size: 15px;
+	width: fit-content;
+	padding: 3px 5px;
+	border-radius: 4px;
+	margin: 10px 0;
+}
+
+.section-detail-info-card-contents {
+	border: 2px solid #E7E7E7;
+	box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
+	border-radius: 20px;
+	padding: 40px;
+	box-sizing: border-box;
+}
+
+.section-detail-info-card-contents h5 {
+	font-size: 25px;
+	color: #727070;
+	margin: 0 auto 0.5em auto;
+}
+
+.section-detail-info-card-contents.mentor {
+	text-align: center;
+}
+
+
+.section-detail-info-card-contents a {
+	word-wrap: break-word;
 }
 
 .copy-student-emails {
