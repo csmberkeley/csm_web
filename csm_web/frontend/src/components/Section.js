@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
 
@@ -54,7 +54,15 @@ InfoCard.propTypes = {
   children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired
 };
 
-function StudentSection({ course, courseTitle, mentor, spacetime: { location, time }, override }) {
+// Values are [label, css class suffix]
+const ATTENDANCE_LABELS = Object.freeze({
+  UN: ["Unexcused Absence", "unexcused"],
+  EX: ["Excused Absence", "excused"],
+  PR: ["Present", "present"],
+  "": ["", ""]
+});
+
+function StudentSection({ course, courseTitle, mentor, spacetime: { location, time }, override, associatedProfileId }) {
   function StudentSectionInfo() {
     return (
       <React.Fragment>
@@ -82,10 +90,43 @@ function StudentSection({ course, courseTitle, mentor, spacetime: { location, ti
       </React.Fragment>
     );
   }
+  function StudentSectionAttendance() {
+    const [state, setState] = useState({ attendances: null, loaded: false });
+    useEffect(() => {
+      fetchJSON(`/students/${associatedProfileId}/attendances`).then(attendances =>
+        setState({ attendances, loaded: true })
+      );
+    }, [associatedProfileId]);
+    const { attendances, loaded } = state;
+    return !loaded ? null : (
+      <table id="attendance-table">
+        <thead>
+          <tr>
+            <th>Week</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {attendances.map(({ presence, weekStart }) => {
+            const [label, cssSuffix] = ATTENDANCE_LABELS[presence];
+            return (
+              <tr key={weekStart}>
+                <td>{weekStart}</td>
+                <td className="status">
+                  <div style={{ backgroundColor: `var(--csm-attendance-${cssSuffix})` }}>{label}</div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    );
+  }
   return (
     <section>
       <SectionHeader course={course} courseTitle={courseTitle} isStudent={true} />
       <StudentSectionInfo />
+      <StudentSectionAttendance />
     </section>
   );
 }
@@ -97,7 +138,8 @@ StudentSection.propTypes = {
   courseTitle: PropTypes.string.isRequired,
   mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
   spacetime: SPACETIME_SHAPE.isRequired,
-  override: PropTypes.shape({ spacetime: SPACETIME_SHAPE.isRequired, date: PropTypes.string.isRequired })
+  override: PropTypes.shape({ spacetime: SPACETIME_SHAPE.isRequired, date: PropTypes.string.isRequired }),
+  associatedProfileId: PropTypes.number.isRequired
 };
 
 function MentorSection() {

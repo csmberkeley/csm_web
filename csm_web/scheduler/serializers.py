@@ -53,6 +53,8 @@ class MentorSerializer(serializers.ModelSerializer):
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
+    week_start = serializers.DateField(format="%b. %-d, %Y")
+
     class Meta:
         model = Attendance
         fields = ("id", "presence", "week_start", "date", "student")
@@ -88,14 +90,25 @@ class SectionSerializer(serializers.ModelSerializer):
     course_title = serializers.CharField(source='course.title')
     is_student = serializers.SerializerMethodField()
     override = OverrideReadOnlySerializer(source='spacetime.override')
+    associated_profile_id = serializers.SerializerMethodField()
 
     def get_is_student(self, obj):
         user = self.context.get('request') and self.context.get('request').user
         return None if not user else bool(obj.students.filter(user=user).count())
 
+    def get_associated_profile_id(self, obj):
+        user = self.context.get('request') and self.context.get('request').user
+        if not user:
+            return
+        try:
+            return obj.students.get(user=user).pk
+        except Student.DoesNotExist:
+            assert obj.mentor and obj.mentor.user == user
+            return obj.mentor.pk
+
     class Meta:
         model = Section
-        fields = ("id", "spacetime", "mentor", "capacity", "override",
+        fields = ("id", "spacetime", "mentor", "capacity", "override", "associated_profile_id",
                   "num_students_enrolled", "description", "mentor", "course", "is_student", "course_title")
 
 

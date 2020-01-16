@@ -22,6 +22,9 @@ body {
 	--csm-theme-ee16b: #FFE070;
 	--csm-mentor: var(--csm-green);
 	--csm-student: #FFAB2E;
+	--csm-attendance-present: var(--csm-green);
+	--csm-attendance-excused: #797979;
+	--csm-attendance-unexcused: #FF7272;
 }
 
 /* Header */
@@ -516,7 +519,7 @@ main {
 }
 
 .section-detail-info-card-contents .divider {
-	margin: auto -40px;
+	margin: 40px -40px;
 	border-top: inherit;
 }
 
@@ -530,12 +533,11 @@ main {
 	margin: 10px 0;
 }
 
-.section-detail-info-card-contents {
+.section-detail-info-card-contents, #attendance-table {
 	border: 2px solid #E7E7E7;
 	box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
 	border-radius: 20px;
 	padding: 40px;
-	box-sizing: border-box;
 }
 
 .section-detail-info-card-contents h5 {
@@ -551,6 +553,40 @@ main {
 
 .section-detail-info-card-contents a {
 	word-wrap: break-word;
+}
+
+#attendance-table {
+	width: 700px;
+	max-width: 90vw;
+	padding: 20px;
+	border-spacing: 0;
+}
+
+#attendance-table thead {
+	text-align: left;
+}
+
+#attendance-table th {
+	color: #AEAEAE;
+	font-size: 20px;
+	padding: 0 30px;
+}
+
+#attendance-table tbody tr > td {
+	border-bottom: 1px solid #E7E7E7;
+	padding: 30px;
+}
+
+#attendance-table tbody tr:last-child > td {
+	border-bottom: none;
+}
+
+#attendance-table td.status > div {
+	text-align: center;
+	color: white;
+	padding: 5px;
+	max-width: 200px;
+	border-radius: 6px
 }
 
 .copy-student-emails {
