@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
+import { Switch, Route, NavLink } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
 
 export default class Section extends React.Component {
   static propTypes = {
-    match: PropTypes.shape({ params: PropTypes.shape({ id: PropTypes.string.isRequired }).isRequired }).isRequired
+    match: PropTypes.shape({
+      params: PropTypes.shape({ id: PropTypes.string.isRequired }).isRequired,
+      url: PropTypes.string.isRequired
+    }).isRequired
   };
 
   state = { section: null, loaded: false };
@@ -15,7 +19,12 @@ export default class Section extends React.Component {
 
   render() {
     const { section, loaded } = this.state;
-    return !loaded ? null : section.isStudent ? <StudentSection {...section} /> : <MentorSection {...section} />;
+    const { url } = this.props.match;
+    return !loaded ? null : section.isStudent ? (
+      <StudentSection url={url} {...section} />
+    ) : (
+      <MentorSection {...section} />
+    );
   }
 }
 
@@ -40,6 +49,20 @@ SectionHeader.propTypes = {
   isStudent: PropTypes.bool.isRequired
 };
 
+function SectionSidebar({ links }) {
+  return (
+    <nav id="section-detail-sidebar">
+      {links.map(([label, href]) => (
+        <NavLink exact to={href} key={href}>
+          {label}
+        </NavLink>
+      ))}
+    </nav>
+  );
+}
+
+SectionSidebar.propTypes = { links: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)).isRequired };
+
 function InfoCard({ title, children }) {
   return (
     <div className="section-detail-info-card">
@@ -62,7 +85,15 @@ const ATTENDANCE_LABELS = Object.freeze({
   "": ["", ""]
 });
 
-function StudentSection({ course, courseTitle, mentor, spacetime: { location, time }, override, associatedProfileId }) {
+function StudentSection({
+  course,
+  courseTitle,
+  mentor,
+  spacetime: { location, time },
+  override,
+  associatedProfileId,
+  url
+}) {
   function StudentSectionInfo() {
     return (
       <React.Fragment>
@@ -90,6 +121,7 @@ function StudentSection({ course, courseTitle, mentor, spacetime: { location, ti
       </React.Fragment>
     );
   }
+
   function StudentSectionAttendance() {
     const [state, setState] = useState({ attendances: null, loaded: false });
     useEffect(() => {
@@ -122,11 +154,24 @@ function StudentSection({ course, courseTitle, mentor, spacetime: { location, ti
       </table>
     );
   }
+
   return (
     <section>
       <SectionHeader course={course} courseTitle={courseTitle} isStudent={true} />
-      <StudentSectionInfo />
-      <StudentSectionAttendance />
+      <div id="section-detail-body">
+        <SectionSidebar
+          links={[
+            ["Section", url],
+            ["Attendance", `${url}/attendance`]
+          ]}
+        />
+        <div id="section-detail-main">
+          <Switch>
+            <Route path={`${url}/attendance`} component={StudentSectionAttendance} />
+            <Route path={url} component={StudentSectionInfo} />
+          </Switch>
+        </div>
+      </div>
     </section>
   );
 }
@@ -139,7 +184,8 @@ StudentSection.propTypes = {
   mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
   spacetime: SPACETIME_SHAPE.isRequired,
   override: PropTypes.shape({ spacetime: SPACETIME_SHAPE.isRequired, date: PropTypes.string.isRequired }),
-  associatedProfileId: PropTypes.number.isRequired
+  associatedProfileId: PropTypes.number.isRequired,
+  url: PropTypes.string.isRequired
 };
 
 function MentorSection() {

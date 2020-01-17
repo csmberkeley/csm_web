@@ -22,9 +22,6 @@ body {
 	--csm-theme-ee16b: #FFE070;
 	--csm-mentor: var(--csm-green);
 	--csm-student: #FFAB2E;
-	--csm-attendance-present: var(--csm-green);
-	--csm-attendance-excused: #797979;
-	--csm-attendance-unexcused: #FF7272;
 }
 
 /* Header */
@@ -464,6 +461,7 @@ header {
 
 main {
 	padding: 2rem;
+	margin-left: -8px;
 }
 
 /* Section details */
@@ -473,7 +471,7 @@ main {
 	padding: 5px 14px;
 	width: 60px;
 	font-size: 14px;
-	margin-bottom: 70px;
+	margin-bottom: 40px;
 }
 
 .section-detail-header-title {
@@ -587,6 +585,40 @@ main {
 	padding: 5px;
 	max-width: 200px;
 	border-radius: 6px
+}
+
+#section-detail-sidebar {
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: column;
+	width: fit-content;
+}
+
+#section-detail-sidebar a {
+	font-size: 18px;
+	color: #4B4B4B;
+	margin: 0 100px 20px 0;
+	text-decoration: none;
+}
+
+#section-detail-sidebar a.active {
+	color: var(--csm-green);
+}
+
+#section-detail-body * {
+	max-width: 90vw;
+}
+
+
+#section-detail-body {
+	display: flex;
+	flex-wrap: wrap;
+	--csm-attendance-present: var(--csm-green);
+	--csm-attendance-excused: #797979;
+	--csm-attendance-unexcused: #FF7272;
+}
+
+#section-detail-main {
 }
 
 .copy-student-emails {
