@@ -87,8 +87,10 @@ class SectionCard extends React.Component {
 
   static propTypes = {
     id: PropTypes.number.isRequired,
-    location: PropTypes.string,
-    time: PropTypes.string.isRequired,
+    spacetime: PropTypes.shape({
+      location: PropTypes.string,
+      time: PropTypes.string.isRequired
+    }).isRequired,
     mentor: PropTypes.shape({ name: PropTypes.string.isRequired }),
     numStudentsEnrolled: PropTypes.number.isRequired,
     capacity: PropTypes.number.isRequired
@@ -152,7 +154,12 @@ class SectionCard extends React.Component {
   }
 
   render() {
-    const { location, time, mentor, numStudentsEnrolled, capacity } = this.props;
+    const {
+      spacetime: { location, time },
+      mentor,
+      numStudentsEnrolled,
+      capacity
+    } = this.props;
     const iconWidth = "1.3em";
     const iconHeight = "1.3em";
     const isFull = numStudentsEnrolled >= capacity;
