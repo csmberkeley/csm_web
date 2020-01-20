@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { Switch, Route, NavLink } from "react-router-dom";
+import { Switch, Route, NavLink, Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
+import Modal from "./Modal";
 
 export default class Section extends React.Component {
   static propTypes = {
@@ -63,18 +64,20 @@ function SectionSidebar({ links }) {
 
 SectionSidebar.propTypes = { links: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)).isRequired };
 
-function InfoCard({ title, children }) {
+function InfoCard({ title, children, showTitle = true }) {
+  const cssClass = title.toLowerCase().replace(/ /g, "-");
   return (
-    <div className="section-detail-info-card">
-      <h4>{title}</h4>
-      <div className={`section-detail-info-card-contents ${title.toLowerCase().replace(/ /g, "-")}`}>{children}</div>
+    <div className={`section-detail-info-card ${cssClass}`}>
+      {showTitle && <h4>{title}</h4>}
+      <div className={`section-detail-info-card-contents ${cssClass}`}>{children}</div>
     </div>
   );
 }
 
 InfoCard.propTypes = {
   title: PropTypes.string.isRequired,
-  children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired
+  children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired,
+  showTitle: PropTypes.bool
 };
 
 // Values are [label, css class suffix]
@@ -84,6 +87,36 @@ const ATTENDANCE_LABELS = Object.freeze({
   PR: ["Present", "present"],
   "": ["", ""]
 });
+
+class DropSection extends React.Component {
+  static STAGES = Object.freeze({ INITIAL: "INITIAL", CONFIRM: "CONFIRM", DROPPED: "DROPPED" });
+  state = { stage: DropSection.STAGES.INITIAL };
+  render() {
+    switch (this.state.stage) {
+      case DropSection.STAGES.INITIAL:
+        return (
+          <InfoCard title="Drop Section" showTitle={false}>
+            <h4>Drop Section</h4>
+            <button className="danger-btn" onClick={() => this.setState({ stage: DropSection.STAGES.CONFIRM })}>
+              <span className="inline-plus-sign">+</span>Drop
+            </button>
+          </InfoCard>
+        );
+      case DropSection.STAGES.CONFIRM:
+        return (
+          <Modal className="drop-confirmation" closeModal={() => this.setState({ stage: DropSection.STAGES.INITIAL })}>
+            <h5>Are you sure you want to drop?</h5>
+            <p>You are not guaranteed an available spot in another section!</p>
+            <button className="danger-btn" onClick={() => this.setState({ stage: DropSection.STAGES.DROPPED })}>
+              Confirm
+            </button>
+          </Modal>
+        );
+      case DropSection.STAGES.DROPPED:
+        return <Redirect to="/" />;
+    }
+  }
+}
 
 function StudentSection({
   course,
@@ -117,6 +150,7 @@ function StudentSection({
               </React.Fragment>
             )}
           </InfoCard>
+          <DropSection />
         </div>
       </React.Fragment>
     );

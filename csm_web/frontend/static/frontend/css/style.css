@@ -76,6 +76,7 @@ header {
 	max-height: 90vh;
 	z-index: 1000;
 	background-color: white;
+	border-radius: 20px;
 }
 
 .modal-overlay {
@@ -84,6 +85,7 @@ header {
 	left: 0;
 	width: 100%;
 	height: 100%;
+	max-width: unset !important;
 	z-index: 999;
 	background: rgba(0, 0, 0, 0.6);
 }
@@ -115,6 +117,24 @@ header {
 
 .modal-close {
 	all: unset;
+}
+
+.modal-close-x {
+	display: flex;
+	margin-top: -10px;
+}
+
+.modal-close-x > button {
+	background: none;
+	border: none;
+	cursor: pointer;
+	margin-left: auto;
+}
+
+.modal-close-x > button > span {
+	display: inline-block;
+	transform: rotate(45deg);
+	color: #575757;
 }
 
 .modal-btn {
@@ -509,17 +529,47 @@ main {
 	margin: 0 50px 50px 0;
 }
 
-.section-detail-info-card > h4 {
+.section-detail-info-card h4 {
 	color: #646464;
 	font-size: 25px;
 	font-weight: bold;
 	margin: 0 0 20px;
 }
 
+.section-detail-info-card.drop-section {
+	flex-basis: 100%;
+	display: flex;
+}
+
 .section-detail-info-card-contents .divider {
 	margin: 40px -40px;
 	border-top: inherit;
 }
+
+.section-detail-info-card-contents.drop-section {
+	border-color: #FFADAD;
+}
+
+.danger-btn {
+	display: block;
+	margin: auto;
+	cursor: pointer;
+	background-color: #FF7272;
+	border-radius: 6px;
+	color: white;
+	font-size: 14px;
+	padding: 0 25px 3px;
+}
+
+.danger-btn .inline-plus-sign{
+	display: inline-block;
+	transform: rotate(45deg);
+}
+
+.danger-btn:hover {
+	background-color: #eb6060;
+}
+
 
 .override-label {
 	background-color: #FFD874;
@@ -608,6 +658,30 @@ main {
 #section-detail-body * {
 	max-width: 90vw;
 }
+
+.modal.drop-confirmation {
+	width: 500px;
+	height: 270px;
+	text-align: center;
+}
+
+.modal.drop-confirmation h5 {
+	font-size: 25px;
+	color: #727070;
+	margin: 30px auto 0.5rem;
+}
+
+.modal.drop-confirmation p {
+	font-size: 14px;
+	color: #bfbfbf;
+	margin-top: 0;
+}
+
+.modal.drop-confirmation .danger-btn {
+	padding: 10px 27px;
+}
+
+
 
 
 #section-detail-body {
