@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Switch, Route, NavLink, Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
-import { fetchJSON } from "../utils/api";
+import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import Modal from "./Modal";
 
 export default class Section extends React.Component {
@@ -90,13 +90,26 @@ const ATTENDANCE_LABELS = Object.freeze({
 
 class DropSection extends React.Component {
   static STAGES = Object.freeze({ INITIAL: "INITIAL", CONFIRM: "CONFIRM", DROPPED: "DROPPED" });
-  state = { stage: DropSection.STAGES.INITIAL };
+  static propTypes = { profileId: PropTypes.number.isRequired };
+
+  constructor(props) {
+    super(props);
+    this.state = { stage: DropSection.STAGES.INITIAL };
+    this.performDrop = this.performDrop.bind(this);
+  }
+
+  performDrop() {
+    //TODO: Handle API failure
+    fetchWithMethod(`students/${this.props.profileId}/drop`, HTTP_METHODS.PATCH);
+    this.setState({ stage: DropSection.STAGES.DROPPED });
+  }
+
   render() {
     switch (this.state.stage) {
       case DropSection.STAGES.INITIAL:
         return (
           <InfoCard title="Drop Section" showTitle={false}>
-            <h4>Drop Section</h4>
+            <h5>Drop Section</h5>
             <button className="danger-btn" onClick={() => this.setState({ stage: DropSection.STAGES.CONFIRM })}>
               <span className="inline-plus-sign">+</span>Drop
             </button>
@@ -107,7 +120,7 @@ class DropSection extends React.Component {
           <Modal className="drop-confirmation" closeModal={() => this.setState({ stage: DropSection.STAGES.INITIAL })}>
             <h5>Are you sure you want to drop?</h5>
             <p>You are not guaranteed an available spot in another section!</p>
-            <button className="danger-btn" onClick={() => this.setState({ stage: DropSection.STAGES.DROPPED })}>
+            <button className="danger-btn" onClick={this.performDrop}>
               Confirm
             </button>
           </Modal>
@@ -150,7 +163,7 @@ function StudentSection({
               </React.Fragment>
             )}
           </InfoCard>
-          <DropSection />
+          <DropSection profileId={associatedProfileId} />
         </div>
       </React.Fragment>
     );
