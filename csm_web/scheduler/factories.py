@@ -183,7 +183,7 @@ def confirm_run():
 
 
 def generate_test_data(preconfirm=False):
-    if not settings.DEBUG:
+    if settings.DJANGO_ENV == settings.PRODUCTION:
         print("This cannot be run in production! Aborting.")
         return
     if (not preconfirm) and (not confirm_run()):

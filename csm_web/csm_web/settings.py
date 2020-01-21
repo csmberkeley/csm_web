@@ -10,17 +10,17 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
+import os
 from factory import DjangoModelFactory
 from rest_framework.serializers import ModelSerializer, Serializer
-import os
 
-# Analogous to RAILS_ENV, is one of {prod, dev}. Defaults to dev. This default can be
-# dangerous, but is worth it to avoid the hassle for developers setting the local ENV
-# var
+# Analogous to RAILS_ENV, is one of {prod, staging, dev}. Defaults to dev. This default can
+# be dangerous, but is worth it to avoid the hassle for developers setting the local ENV var
 DEVELOPMENT = "dev"
 PRODUCTION = "prod"
+STAGING = "staging"
 DJANGO_ENV = os.environ.get("DJANGO_ENV", DEVELOPMENT)
-assert DJANGO_ENV in (DEVELOPMENT, PRODUCTION)
+assert DJANGO_ENV in (DEVELOPMENT, STAGING, PRODUCTION)
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
