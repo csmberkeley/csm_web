@@ -150,7 +150,7 @@ USE_TZ = True
 
 STATIC_URL = "/static/"
 
-if DJANGO_ENV == PRODUCTION:
+if DJANGO_ENV in (PRODUCTION, STAGING):
     # Enables compression and caching
     STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
     WHITENOISE_MAX_AGE = 31536000  # one year
@@ -228,7 +228,7 @@ LOGGING = {
     },
 }
 
-if DJANGO_ENV == PRODUCTION:
+if DJANGO_ENV in (PRODUCTION, STAGING):
     # Security/HTTPS headers
     # https://docs.djangoproject.com/en/2.1/ref/middleware/#module-django.middleware.security
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
