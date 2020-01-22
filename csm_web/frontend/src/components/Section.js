@@ -223,7 +223,10 @@ function StudentSection({
   );
 }
 
-const SPACETIME_SHAPE = PropTypes.shape({ location: PropTypes.string.isRequired, time: PropTypes.string.isRequired });
+export const SPACETIME_SHAPE = PropTypes.shape({
+  location: PropTypes.string.isRequired,
+  time: PropTypes.string.isRequired
+});
 
 StudentSection.propTypes = {
   course: PropTypes.string.isRequired,

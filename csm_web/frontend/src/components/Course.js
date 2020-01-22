@@ -8,6 +8,7 @@ import ClockIcon from "../../static/frontend/img/clock.svg";
 import CheckCircle from "../../static/frontend/img/check_circle.svg";
 import XCircle from "../../static/frontend/img/x_circle.svg";
 import Modal, { ModalCloser } from "./Modal";
+import SPACETIME_SHAPE from "./Section";
 
 const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
   Mon: "M",
@@ -87,10 +88,7 @@ class SectionCard extends React.Component {
 
   static propTypes = {
     id: PropTypes.number.isRequired,
-    spacetime: PropTypes.shape({
-      location: PropTypes.string,
-      time: PropTypes.string.isRequired
-    }).isRequired,
+    spacetime: SPACETIME_SHAPE.isRequired,
     mentor: PropTypes.shape({ name: PropTypes.string.isRequired }),
     numStudentsEnrolled: PropTypes.number.isRequired,
     capacity: PropTypes.number.isRequired
