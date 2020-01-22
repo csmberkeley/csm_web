@@ -4,6 +4,8 @@ import { fetchJSON } from "../utils/api";
 import { SectionDetail, InfoCard, SectionSpacetime } from "./Section";
 import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
+import CopyIcon from "../../static/frontend/img/copy.svg";
+import CheckCircle from "../../static/frontend/img/check_circle.svg";
 export default function MentorSection({ id, url, course, courseTitle, spacetime, override }) {
   const [{ students, studentsLoaded }, setState] = useState({ students: [], studentsLoaded: false });
   useEffect(() => {
@@ -128,6 +130,13 @@ MentorSectionInfo.propTypes = {
 };
 
 function MentorSectionRoster({ students, studentsLoaded }) {
+  const [emailsCopied, setEmailsCopied] = useState(false);
+  const handleCopyEmails = () => {
+    navigator.clipboard.writeText(students.map(({ email }) => email).join(" ")).then(() => {
+      setEmailsCopied(true);
+      setTimeout(() => setEmailsCopied(false), 1500);
+    });
+  };
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">Roster</h3>
@@ -137,6 +146,12 @@ function MentorSectionRoster({ students, studentsLoaded }) {
             <tr>
               <th>Name</th>
               <th>Email</th>
+              <th>
+                <CopyIcon id="copy-student-emails" height="1em" width="1em" onClick={handleCopyEmails} />
+                {emailsCopied && (
+                  <CheckCircle id="copy-student-emails-success" color="green" height="1em" width="1em" />
+                )}
+              </th>
             </tr>
           </thead>
           <tbody>
