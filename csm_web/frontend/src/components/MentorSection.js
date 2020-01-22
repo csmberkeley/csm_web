@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
-import { InfoCard, SectionHeader, SectionSpacetime, SectionSidebar } from "./Section";
+import { SectionDetail, InfoCard, SectionHeader, SectionSpacetime } from "./Section";
 import { Switch, Route } from "react-router-dom";
 export default function MentorSection(props) {
   const { id, url, course, courseTitle } = props;
@@ -12,23 +12,20 @@ export default function MentorSection(props) {
 
   const mentorSectionInfoProps = { ...props, students, studentsLoaded };
   return (
-    <section>
-      <SectionHeader course={course} courseTitle={courseTitle} isStudent={false} />
-      <div id="section-detail-body">
-        <SectionSidebar
-          links={[
-            ["Section", url],
-            ["Attendance", `${url}/attendance`]
-          ]}
-        />
-        <div id="section-detail-main">
-          <Switch>
-            <Route path={`${url}/attendance`} component={MentorSectionAttendance} />
-            <Route path={url} render={() => <MentorSectionInfo {...mentorSectionInfoProps} />} />
-          </Switch>
-        </div>
-      </div>
-    </section>
+    <SectionDetail
+      course={course}
+      courseTitle={courseTitle}
+      isStudent={false}
+      links={[
+        ["Section", url],
+        ["Attendance", `${url}/attendance`]
+      ]}
+    >
+      <Switch>
+        <Route path={`${url}/attendance`} component={MentorSectionAttendance} />
+        <Route path={url} render={() => <MentorSectionInfo {...mentorSectionInfoProps} />} />
+      </Switch>
+    </SectionDetail>
   );
 }
 
@@ -39,7 +36,6 @@ function MentorSectionAttendance() {
 function MentorSectionInfo({ course, courseTitle, students, studentsLoaded, spacetime, override }) {
   return (
     <React.Fragment>
-      <SectionHeader course={course} courseTitle={courseTitle} isStudent={false} />
       <h3 className="section-detail-page-title">My Section</h3>
       <div className="section-info-cards-container">
         <InfoCard title="Students">

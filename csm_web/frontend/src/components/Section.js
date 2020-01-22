@@ -98,6 +98,22 @@ export function InfoCard({ title, children, showTitle = true }) {
   );
 }
 
+export function SectionDetail({course, courseTitle, isStudent, links, children}) {
+	return (
+    <section>
+      <SectionHeader course={course} courseTitle={courseTitle} isStudent={isStudent} />
+      <div id="section-detail-body">
+        <SectionSidebar
+          links={links}
+        />
+        <div id="section-detail-main">
+					{children}
+        </div>
+      </div>
+    </section>
+	);
+}
+
 InfoCard.propTypes = {
   title: PropTypes.string.isRequired,
   children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired,
