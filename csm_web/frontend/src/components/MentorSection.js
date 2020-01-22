@@ -1,16 +1,15 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
-import { SectionDetail, InfoCard, SectionHeader, SectionSpacetime } from "./Section";
+import { SectionDetail, InfoCard, SectionSpacetime } from "./Section";
 import { Switch, Route } from "react-router-dom";
-export default function MentorSection(props) {
-  const { id, url, course, courseTitle } = props;
-  const [{ students, studentsLoaded }, setState] = useState({ students: null, studentsLoaded: false });
+export default function MentorSection({ id, url, course, courseTitle, spacetime, override }) {
+  const [{ students, studentsLoaded }, setState] = useState({ students: [], studentsLoaded: false });
   useEffect(() => {
+    setState({ students: [], studentsLoaded: false });
     fetchJSON(`/sections/${id}/students/`).then(students => setState({ students, studentsLoaded: true }));
   }, [id]);
 
-  const mentorSectionInfoProps = { ...props, students, studentsLoaded };
   return (
     <SectionDetail
       course={course}
@@ -23,17 +22,36 @@ export default function MentorSection(props) {
     >
       <Switch>
         <Route path={`${url}/attendance`} component={MentorSectionAttendance} />
-        <Route path={url} render={() => <MentorSectionInfo {...mentorSectionInfoProps} />} />
+        <Route
+          path={url}
+          render={() => (
+            <MentorSectionInfo
+              students={students}
+              studentsLoaded={studentsLoaded}
+              spacetime={spacetime}
+              override={override}
+            />
+          )}
+        />
       </Switch>
     </SectionDetail>
   );
 }
 
+MentorSection.propTypes = {
+  id: PropTypes.number.isRequired,
+  course: PropTypes.string.isRequired,
+  courseTitle: PropTypes.string.isRequired,
+  spacetime: PropTypes.object.isRequired,
+  override: PropTypes.object,
+  url: PropTypes.string.isRequired
+};
+
 function MentorSectionAttendance() {
   return <div>TODO</div>;
 }
 
-function MentorSectionInfo({ course, courseTitle, students, studentsLoaded, spacetime, override }) {
+function MentorSectionInfo({ students, studentsLoaded, spacetime, override }) {
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">My Section</h3>
@@ -64,14 +82,11 @@ function MentorSectionInfo({ course, courseTitle, students, studentsLoaded, spac
     </React.Fragment>
   );
 }
-
-MentorSection.propTypes = {
-  id: PropTypes.number.isRequired,
-  course: PropTypes.string.isRequired,
-  courseTitle: PropTypes.string.isRequired,
-  mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
+MentorSectionInfo.propTypes = {
+  students: PropTypes.arrayOf(
+    PropTypes.shape({ name: PropTypes.string.isRequired, email: PropTypes.string.isRequired })
+  ).isRequired,
+  studentsLoaded: PropTypes.bool.isRequired,
   spacetime: PropTypes.object.isRequired,
-  override: PropTypes.object,
-  associatedProfileId: PropTypes.number.isRequired,
-  url: PropTypes.string.isRequired
+  override: PropTypes.object
 };
