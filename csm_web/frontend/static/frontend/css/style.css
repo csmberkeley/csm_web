@@ -693,30 +693,14 @@ table tbody tr:last-child > td {
 	padding: 20px 30px;
 }
 
-.copy-student-emails {
-	border: none;
+#copy-student-emails {
 	cursor: pointer;
 }
 
-.copy-student-emails:hover {
-	color: blue;
+#copy-student-emails:hover {
+	color: #9c9c9c;
 }
 
-.copy-student-emails:focus {
-	outline: none;
-}
-
-.copy-student-emails::after {
-	margin-left: 5px;
-	content: "Emails copied";
-	opacity: 1;
-	visibility: hidden;
-}
-
-.copy-student-emails:focus::after {
-	content: "Emails copied";
-	visibility: visible;
-	opacity: 0;
-	transition: opacity 0.5s;
-	transition-delay: 2s;
+#copy-student-emails-success {
+	position: absolute;
 }
