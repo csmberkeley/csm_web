@@ -33,7 +33,7 @@ export default function StudentSection({ course, courseTitle, mentor, spacetime,
     }, [associatedProfileId]);
     const { attendances, loaded } = state;
     return !loaded ? null : (
-      <table id="attendance-table">
+      <table id="attendance-table" className="standalone-table">
         <thead>
           <tr>
             <th>Week</th>

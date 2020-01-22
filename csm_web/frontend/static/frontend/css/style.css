@@ -581,7 +581,7 @@ main {
 	margin: 10px 0;
 }
 
-.section-detail-info-card-contents, #attendance-table {
+.section-detail-info-card-contents, .standalone-table {
 	border: 2px solid #E7E7E7;
 	box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
 	border-radius: 20px;
@@ -603,7 +603,7 @@ main {
 	word-wrap: break-word;
 }
 
-#attendance-table {
+.standalone-table {
 	width: 700px;
 	max-width: 90vw;
 	padding: 20px;
@@ -681,18 +681,12 @@ table tbody tr:last-child > td {
 	padding: 10px 27px;
 }
 
-
-
-
 #section-detail-body {
 	display: flex;
 	flex-wrap: wrap;
 	--csm-attendance-present: var(--csm-green);
 	--csm-attendance-excused: #797979;
 	--csm-attendance-unexcused: #FF7272;
-}
-
-#section-detail-main {
 }
 
 #students-table tbody td {

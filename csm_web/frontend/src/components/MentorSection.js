@@ -18,13 +18,18 @@ export default function MentorSection({ id, url, course, courseTitle, spacetime,
       isStudent={false}
       links={[
         ["Section", url],
-        ["Attendance", `${url}/attendance`]
+        ["Attendance", `${url}/attendance`],
+        ["Roster", `${url}/roster`]
       ]}
     >
       <Switch>
         <Route
           path={`${url}/attendance`}
           render={() => <MentorSectionAttendance students={students} studentsLoaded={studentsLoaded} />}
+        />
+        <Route
+          path={`${url}/roster`}
+          render={() => <MentorSectionRoster students={students} studentsLoaded={studentsLoaded} />}
         />
         <Route
           path={url}
@@ -52,12 +57,14 @@ MentorSection.propTypes = {
 };
 
 function MentorSectionAttendance({ studentsLoaded, students }) {
+  /*
   const attendances = groupBy(
     students.flatMap(({ name, id, attendances }) =>
       attendances.map(attendance => ({ ...attendance, student: { name, id } }))
     ),
     attendance => attendance.weekStart
   );
+	*/
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">Attendance</h3>
@@ -89,35 +96,71 @@ function MentorSectionInfo({ students, studentsLoaded, spacetime, override }) {
       <div className="section-info-cards-container">
         <InfoCard title="Students">
           {studentsLoaded && (
-            <table>
+            <table id="students-table">
               <thead>
                 <tr>
                   <th>Name</th>
-                  <th>Email</th>
                 </tr>
               </thead>
               <tbody>
-                {students.map(({ name, email }) => (
-                  <tr key={email}>
+                {students.map(({ name, id }) => (
+                  <tr key={id}>
                     <td>{name}</td>
-                    <td>{email}</td>
                   </tr>
                 ))}
               </tbody>
             </table>
           )}
-          {!studentsLoaded && <h5>Loading student information...</h5>}
+          {!studentsLoaded && <h5>Loading students...</h5>}
         </InfoCard>
         <SectionSpacetime spacetime={spacetime} override={override} />
       </div>
     </React.Fragment>
   );
 }
+
 MentorSectionInfo.propTypes = {
-  students: PropTypes.arrayOf(
-    PropTypes.shape({ name: PropTypes.string.isRequired, email: PropTypes.string.isRequired })
-  ).isRequired,
+  students: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string.isRequired, id: PropTypes.number.isRequired }))
+    .isRequired,
   studentsLoaded: PropTypes.bool.isRequired,
   spacetime: PropTypes.object.isRequired,
   override: PropTypes.object
+};
+
+function MentorSectionRoster({ students, studentsLoaded }) {
+  return (
+    <React.Fragment>
+      <h3 className="section-detail-page-title">Roster</h3>
+      {studentsLoaded && (
+        <table className="standalone-table">
+          <thead>
+            <tr>
+              <th>Name</th>
+              <th>Email</th>
+            </tr>
+          </thead>
+          <tbody>
+            {students.map(({ name, email, id }) => (
+              <tr key={id}>
+                <td>{name}</td>
+                <td>{email}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+      {!studentsLoaded && <h5>Loading roster...</h5>}
+    </React.Fragment>
+  );
+}
+
+MentorSectionRoster.propTypes = {
+  students: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.number.isRequired,
+      name: PropTypes.string.isRequired,
+      email: PropTypes.string.isRequired
+    })
+  ).isRequired,
+  studentsLoaded: PropTypes.bool.isRequired
 };
