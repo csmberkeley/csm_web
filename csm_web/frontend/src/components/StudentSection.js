@@ -3,18 +3,9 @@ import { Switch, Route, Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import Modal from "./Modal";
-import { SPACETIME_SHAPE } from "../utils/types";
-import { InfoCard, SectionHeader, SectionSidebar, ATTENDANCE_LABELS } from "./Section";
+import { InfoCard, SectionHeader, SectionSidebar, ATTENDANCE_LABELS, SectionSpacetime } from "./Section";
 
-export default function StudentSection({
-  course,
-  courseTitle,
-  mentor,
-  spacetime: { location, time },
-  override,
-  associatedProfileId,
-  url
-}) {
+export default function StudentSection({ course, courseTitle, mentor, spacetime, override, associatedProfileId, url }) {
   function StudentSectionInfo() {
     return (
       <React.Fragment>
@@ -26,18 +17,7 @@ export default function StudentSection({
               <a href={`mailto:${mentor.email}`}>{mentor.email}</a>
             </InfoCard>
           )}
-          <InfoCard title="Time and Location">
-            <h5>{location}</h5>
-            <h5>{time}</h5>
-            {override && (
-              <React.Fragment>
-                <div className="divider" />
-                <div className="override-label">Adjusted for {override.date}</div>
-                <h5>{override.spacetime.location}</h5>
-                <h5>{override.spacetime.time}</h5>
-              </React.Fragment>
-            )}
-          </InfoCard>
+          <SectionSpacetime spacetime={spacetime} override={override} />
           <DropSection profileId={associatedProfileId} />
         </div>
       </React.Fragment>
@@ -102,8 +82,8 @@ StudentSection.propTypes = {
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
   mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
-  spacetime: SPACETIME_SHAPE.isRequired,
-  override: PropTypes.shape({ spacetime: SPACETIME_SHAPE.isRequired, date: PropTypes.string.isRequired }),
+  spacetime: PropTypes.object.isRequired,
+  override: PropTypes.object.isRequired,
   associatedProfileId: PropTypes.number.isRequired,
   url: PropTypes.string.isRequired
 };
