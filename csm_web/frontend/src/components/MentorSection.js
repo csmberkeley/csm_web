@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
 import { SectionDetail, InfoCard, SectionSpacetime } from "./Section";
 import { Switch, Route } from "react-router-dom";
+import { groupBy } from "lodash";
 export default function MentorSection({ id, url, course, courseTitle, spacetime, override }) {
   const [{ students, studentsLoaded }, setState] = useState({ students: [], studentsLoaded: false });
   useEffect(() => {
@@ -21,7 +22,10 @@ export default function MentorSection({ id, url, course, courseTitle, spacetime,
       ]}
     >
       <Switch>
-        <Route path={`${url}/attendance`} component={MentorSectionAttendance} />
+        <Route
+          path={`${url}/attendance`}
+          render={() => <MentorSectionAttendance students={students} studentsLoaded={studentsLoaded} />}
+        />
         <Route
           path={url}
           render={() => (
@@ -47,9 +51,36 @@ MentorSection.propTypes = {
   url: PropTypes.string.isRequired
 };
 
-function MentorSectionAttendance() {
-  return <div>TODO</div>;
+function MentorSectionAttendance({ studentsLoaded, students }) {
+  const attendances = groupBy(
+    students.flatMap(({ name, id, attendances }) =>
+      attendances.map(attendance => ({ ...attendance, student: { name, id } }))
+    ),
+    attendance => attendance.weekStart
+  );
+  return (
+    <React.Fragment>
+      <h3 className="section-detail-page-title">Attendance</h3>
+    </React.Fragment>
+  );
 }
+
+MentorSectionAttendance.propTypes = {
+  studentsLoaded: PropTypes.bool.isRequired,
+  students: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      id: PropTypes.number.isRequired,
+      attendances: PropTypes.arrayOf(
+        PropTypes.shape({
+          id: PropTypes.number.isRequired,
+          presence: PropTypes.string.isRequired,
+          weekStart: PropTypes.string.isRequired
+        })
+      ).isRequired
+    })
+  )
+};
 
 function MentorSectionInfo({ students, studentsLoaded, spacetime, override }) {
   return (
