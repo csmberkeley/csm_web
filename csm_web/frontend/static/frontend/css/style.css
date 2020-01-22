@@ -610,22 +610,22 @@ main {
 	border-spacing: 0;
 }
 
-#attendance-table thead {
+table thead {
 	text-align: left;
 }
 
-#attendance-table th {
+table th {
 	color: #AEAEAE;
 	font-size: 20px;
 	padding: 0 30px;
 }
 
-#attendance-table tbody tr > td {
+table tbody tr > td {
 	border-bottom: 1px solid #E7E7E7;
 	padding: 30px;
 }
 
-#attendance-table tbody tr:last-child > td {
+table tbody tr:last-child > td {
 	border-bottom: none;
 }
 
@@ -693,6 +693,10 @@ main {
 }
 
 #section-detail-main {
+}
+
+#students-table tbody td {
+	padding: 20px 30px;
 }
 
 .copy-student-emails {

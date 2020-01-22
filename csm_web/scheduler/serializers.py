@@ -91,6 +91,7 @@ class SectionSerializer(serializers.ModelSerializer):
     is_student = serializers.SerializerMethodField()
     override = OverrideReadOnlySerializer(source='spacetime.override')
     associated_profile_id = serializers.SerializerMethodField()
+    student_names = serializers.SerializerMethodField()
 
     def get_is_student(self, obj):
         user = self.context.get('request') and self.context.get('request').user
@@ -106,10 +107,13 @@ class SectionSerializer(serializers.ModelSerializer):
             assert obj.mentor and obj.mentor.user == user
             return obj.mentor.pk
 
+    def get_student_names(self, obj):
+        return [student.name for student in obj.students.filter(active=True)]
+
     class Meta:
         model = Section
         fields = ("id", "spacetime", "mentor", "capacity", "override", "associated_profile_id",
-                  "num_students_enrolled", "description", "mentor", "course", "is_student", "course_title")
+                  "num_students_enrolled", "description", "mentor", "course", "is_student", "course_title", "student_names")
 
 
 class OverrideSerializer(serializers.Serializer):
