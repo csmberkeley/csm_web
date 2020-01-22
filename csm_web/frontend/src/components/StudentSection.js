@@ -3,7 +3,7 @@ import { Switch, Route, Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import Modal from "./Modal";
-import { InfoCard, SectionHeader, SectionSidebar, ATTENDANCE_LABELS, SectionSpacetime } from "./Section";
+import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime } from "./Section";
 
 export default function StudentSection({ course, courseTitle, mentor, spacetime, override, associatedProfileId, url }) {
   function StudentSectionInfo() {
@@ -58,23 +58,20 @@ export default function StudentSection({ course, courseTitle, mentor, spacetime,
   }
 
   return (
-    <section>
-      <SectionHeader course={course} courseTitle={courseTitle} isStudent={true} />
-      <div id="section-detail-body">
-        <SectionSidebar
-          links={[
-            ["Section", url],
-            ["Attendance", `${url}/attendance`]
-          ]}
-        />
-        <div id="section-detail-main">
-          <Switch>
-            <Route path={`${url}/attendance`} component={StudentSectionAttendance} />
-            <Route path={url} component={StudentSectionInfo} />
-          </Switch>
-        </div>
-      </div>
-    </section>
+    <SectionDetail
+      course={course}
+      courseTitle={courseTitle}
+      isStudent={true}
+      links={[
+        ["Section", url],
+        ["Attendance", `${url}/attendance`]
+      ]}
+    >
+      <Switch>
+        <Route path={`${url}/attendance`} component={StudentSectionAttendance} />
+        <Route path={url} component={StudentSectionInfo} />
+      </Switch>
+    </SectionDetail>
   );
 }
 
@@ -83,7 +80,7 @@ StudentSection.propTypes = {
   courseTitle: PropTypes.string.isRequired,
   mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
   spacetime: PropTypes.object.isRequired,
-  override: PropTypes.object.isRequired,
+  override: PropTypes.object,
   associatedProfileId: PropTypes.number.isRequired,
   url: PropTypes.string.isRequired
 };
