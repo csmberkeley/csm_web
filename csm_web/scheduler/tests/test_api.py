@@ -1,5 +1,7 @@
-from rest_framework.test import APITestCase
 from datetime import timedelta, time
+from rest_framework import status
+from rest_framework.test import APITestCase
+from scheduler.models import Spacetime
 from scheduler.factories import (
     SpacetimeFactory,
     CourseFactory,
@@ -55,3 +57,28 @@ class ProfileListTest(APITestCase):
         StudentFactory.create(user=self.user, section=section, active=False)
         response = self.client.get(self.endpoint)
         self.assertEqual(len(response.data), 0)
+
+
+class SpacetimeModifyTest(APITestCase):
+    def setUp(self):
+        self.user = UserFactory.create()
+        self.client.force_authenticate(user=self.user)
+
+    def test_simple(self):
+        mentor = MentorFactory.create(user=self.user)
+        spacetime = SpacetimeFactory.create(start_time=time(hour=13), day_of_week='Mon', duration=timedelta(hours=1))
+        SectionFactory.create(mentor=mentor, course=CourseFactory.create(
+            name='CS61C', title='Machine Structures'), spacetime=spacetime)
+        new_time = time(hour=12)
+        new_day = 'Tue'
+        new_location = 'New Location!'
+        response = self.client.put(f"/api/spacetimes/{spacetime.pk}/modify/", {
+            "start_time": new_time,
+            "day_of_week": new_day,
+            "location": new_location
+        })
+        self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED, response.data)
+        new_spacetime = Spacetime.objects.get(pk=spacetime.pk)
+        self.assertEqual(new_spacetime.start_time, new_time)
+        self.assertEqual(new_spacetime.location, new_location)
+        self.assertEqual(new_spacetime.day_of_week, new_day)

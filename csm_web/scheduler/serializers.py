@@ -4,7 +4,7 @@ from datetime import datetime
 from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Profile
 
 
-class SpacetimeSerializer(serializers.ModelSerializer):
+class SpacetimeReadOnlySerializer(serializers.ModelSerializer):
     time = serializers.SerializerMethodField()
 
     def get_time(self, obj):
@@ -14,6 +14,12 @@ class SpacetimeSerializer(serializers.ModelSerializer):
         model = Spacetime
         fields = ("time", "location")
         read_only_fields = ("time", "location")
+
+
+class SpacetimeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Spacetime
+        fields = ("day_of_week", "start_time", "location")
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -35,7 +41,7 @@ class CourseSerializer(serializers.ModelSerializer):
 class ProfileSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     section_id = serializers.IntegerField(source='section.id')
-    section_spacetime = SpacetimeSerializer(source='section.spacetime')
+    section_spacetime = SpacetimeReadOnlySerializer(source='section.spacetime')
     course = serializers.CharField(source='section.course.name')
     course_title = serializers.CharField(source='section.course.title')
     is_student = serializers.SerializerMethodField()
@@ -72,7 +78,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
 
 class OverrideReadOnlySerializer(serializers.ModelSerializer):
-    spacetime = SpacetimeSerializer()
+    spacetime = SpacetimeReadOnlySerializer()
     date = serializers.DateField(format="%b. %-d")
 
     class Meta:
@@ -82,7 +88,7 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 
 class SectionSerializer(serializers.ModelSerializer):
-    spacetime = SpacetimeSerializer()
+    spacetime = SpacetimeReadOnlySerializer()
     num_students_enrolled = serializers.IntegerField(source='current_student_count')
     mentor = MentorSerializer()
     course = serializers.CharField(source='course.name')

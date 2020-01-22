@@ -1,19 +1,26 @@
-from django.shortcuts import get_object_or_404
-from django.db import transaction
-from django.db.models.query import EmptyQuerySet
-from django.utils import timezone
-from rest_framework import viewsets
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework import status
-from rest_framework.exceptions import PermissionDenied
-from .models import Course, Section, Student, Spacetime, User, Override, Attendance
-from rest_framework import mixins
-from .serializers import CourseSerializer, SectionSerializer, StudentSerializer, AttendanceSerializer, MentorSerializer, OverrideSerializer, ProfileSerializer
-from django.core.exceptions import ObjectDoesNotExist
-from operator import attrgetter
 from itertools import groupby
 import logging
+from operator import attrgetter
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import transaction
+from django.db.models.query import EmptyQuerySet
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from rest_framework import mixins, status, viewsets
+from rest_framework.decorators import action
+from rest_framework.response import Response
+from rest_framework.exceptions import PermissionDenied
+from .models import Course, Section, Student, Spacetime, User, Override, Attendance
+from .serializers import (
+    CourseSerializer,
+    SectionSerializer,
+    StudentSerializer,
+    AttendanceSerializer,
+    MentorSerializer,
+    OverrideSerializer,
+    ProfileSerializer,
+    SpacetimeSerializer
+)
 
 logger = logging.getLogger(__name__)
 
@@ -185,6 +192,20 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
 
     def get_queryset(self):
         return Spacetime.objects.filter(section__mentor__user=self.request.user)
+
+    @action(detail=True, methods=['put'])
+    def modify(self, request, pk=None):
+        """Permanently modifies a spacetime, ignoring the override field."""
+        spacetime = get_object_or_error(self.get_queryset(), pk=pk)
+        serializer = SpacetimeSerializer(spacetime, data=request.data)
+        if serializer.is_valid():
+            new_spacetime = serializer.save()
+            logger.info(
+                f"<Spacetime:Success> Modified Spacetime {log_str(new_spacetime)} (previously {log_str(spacetime)})")
+            return Response(status=status.HTTP_202_ACCEPTED)
+        logger.error(
+            f"<Spacetime:Failure> Could not modify Spacetime {log_str(spacetime)}, errors: {serializer.errors}")
+        return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     @action(detail=True, methods=['put'])
     def override(self, request, pk=None):
