@@ -4,30 +4,30 @@ import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import Modal from "./Modal";
 
-export default class Section extends React.Component {
-  static propTypes = {
-    match: PropTypes.shape({
-      params: PropTypes.shape({ id: PropTypes.string.isRequired }).isRequired,
-      url: PropTypes.string.isRequired
-    }).isRequired
-  };
-
-  state = { section: null, loaded: false };
-
-  componentDidMount() {
-    fetchJSON(`/sections/${this.props.match.params.id}`).then(section => this.setState({ section, loaded: true }));
+export default function Section({
+  match: {
+    url,
+    params: { id }
   }
+}) {
+  const [{ section, loaded }, setState] = useState({ section: null, loaded: false });
+  useEffect(() => {
+    fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
+  }, [id]);
 
-  render() {
-    const { section, loaded } = this.state;
-    const { url } = this.props.match;
-    return !loaded ? null : section.isStudent ? (
-      <StudentSection url={url} {...section} />
-    ) : (
-      <MentorSection {...section} />
-    );
-  }
+  return !loaded ? null : section.isStudent ? (
+    <StudentSection url={url} {...section} />
+  ) : (
+    <MentorSection {...section} />
+  );
 }
+
+Section.propTypes = {
+  match: PropTypes.shape({
+    params: PropTypes.shape({ id: PropTypes.string.isRequired }).isRequired,
+    url: PropTypes.string.isRequired
+  }).isRequired
+};
 
 function SectionHeader({ course, courseTitle, isStudent }) {
   const relation = isStudent ? "student" : "mentor";
