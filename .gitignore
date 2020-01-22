@@ -1,3 +1,6 @@
+# Media folder for local testing
+csm_web/media/
+
 ### Python ###
 # Byte-compiled / optimized / DLL files
 __pycache__/

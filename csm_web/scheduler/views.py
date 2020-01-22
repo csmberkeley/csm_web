@@ -4,12 +4,18 @@ from django.db.models.query import EmptyQuerySet
 from django.utils import timezone
 from rest_framework import viewsets
 from rest_framework.decorators import action
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
+from rest_framework.renderers import TemplateHTMLRenderer
 from rest_framework import status
 from rest_framework.exceptions import PermissionDenied
-from .models import Course, Section, Student, Spacetime, User, Override, Attendance
+from rest_framework.views import APIView
+from .models import Course, Section, Student, Spacetime, User, Override, Attendance, MentorBioInfo
 from rest_framework import mixins
-from .serializers import CourseSerializer, SectionSerializer, StudentSerializer, AttendanceSerializer, MentorSerializer, OverrideSerializer, ProfileSerializer
+from .serializers import (
+    CourseSerializer, SectionSerializer, StudentSerializer, AttendanceSerializer, MentorSerializer,
+    OverrideSerializer, MentorBioInfoSerializer, ProfileSerializer
+)
 from django.core.exceptions import ObjectDoesNotExist
 from operator import attrgetter
 from itertools import groupby
@@ -198,3 +204,31 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         logger.error(
             f"<Override:Failure> Could not override Spacetime {log_str(spacetime)}, errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+
+class MentorBioInfoDetail(APIView):
+    renderer_classes = [TemplateHTMLRenderer]
+    parser_classes = [MultiPartParser]
+    template_name = 'mentor_bio_form.html'
+
+    # TODO:
+    # Find some way to restrict user field idiomatically
+    # Display photo in the form if it already exists
+    def get(self, request, format=None):
+        try:
+            info = MentorBioInfo.objects.get(user=self.request.user)
+        except MentorBioInfo.DoesNotExist:
+            info = MentorBioInfo()
+        serializer = MentorBioInfoSerializer(info)
+        return Response({'serializer': serializer})
+
+    def post(self, request, format=None):
+        try:
+            info = MentorBioInfo.objects.get(user=self.request.user)
+            serializer = MentorBioInfoSerializer(info, data=request.data)
+        except MentorBioInfo.DoesNotExist:
+            serializer = MentorBioInfoSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            return Response({'serializer': serializer}, status=status.HTTP_202_ACCEPTED)
+        return Response({'serializer': serializer}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)

@@ -15,6 +15,26 @@ class User(AbstractUser):
         )
 
 
+def bio_image_upload_path(instance, _filename):
+    # Get the appropriate semester abbreviation
+    today = timezone.now().date()
+    semester = "fa" if today.month > 6 else "sp"
+    return semester + today.strftime("%y") + "/" + str(instance.user.pk)
+
+
+class MentorBioInfo(models.Model):
+    """
+    Includes biographical information about a mentor. Only one should exist per mentor;
+    edits to the bio should edit the existing instance in the database.
+    """
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    first_name = models.CharField(max_length=100, verbose_name="First Name")
+    last_name = models.CharField(max_length=100, verbose_name="Last Name")
+    biography = models.TextField()
+    pfp = models.ImageField(upload_to=bio_image_upload_path, verbose_name="Profile Picture")
+    # TODO allow resume upload as well
+
+
 class ValidatingModel(models.Model):
     """
     By default, Django models do not validate on save!

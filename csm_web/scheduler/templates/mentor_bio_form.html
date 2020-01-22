@@ -1,0 +1,11 @@
+{% load rest_framework %}
+<html>
+    <body>
+        <h1>CSM Mentor Information</h1>
+        <form action="/api/mentor-info" method="POST" enctype="multipart/form-data">
+            {% csrf_token %}
+            {% render_form serializer %}
+            <input type="submit" value="Save">
+        </form>
+    </body>
+</html>
