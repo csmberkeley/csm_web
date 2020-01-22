@@ -20,7 +20,7 @@ export default function Section({
   return !loaded ? null : section.isStudent ? (
     <StudentSection url={url} {...section} />
   ) : (
-    <MentorSection {...section} />
+    <MentorSection url={url} id={Number(id)} {...section} />
   );
 }
 
