@@ -98,26 +98,30 @@ export function InfoCard({ title, children, showTitle = true }) {
   );
 }
 
-export function SectionDetail({course, courseTitle, isStudent, links, children}) {
-	return (
+InfoCard.propTypes = {
+  title: PropTypes.string.isRequired,
+  children: PropTypes.node,
+  showTitle: PropTypes.bool
+};
+
+export function SectionDetail({ course, courseTitle, isStudent, links, children }) {
+  return (
     <section>
       <SectionHeader course={course} courseTitle={courseTitle} isStudent={isStudent} />
       <div id="section-detail-body">
-        <SectionSidebar
-          links={links}
-        />
-        <div id="section-detail-main">
-					{children}
-        </div>
+        <SectionSidebar links={links} />
+        <div id="section-detail-main">{children}</div>
       </div>
     </section>
-	);
+  );
 }
 
-InfoCard.propTypes = {
-  title: PropTypes.string.isRequired,
-  children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired,
-  showTitle: PropTypes.bool
+SectionDetail.propTypes = {
+  course: PropTypes.string.isRequired,
+  courseTitle: PropTypes.string.isRequired,
+  isStudent: PropTypes.bool.isRequired,
+  links: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)).isRequired,
+  children: PropTypes.node.isRequired
 };
 
 // Values are [label, css class suffix]

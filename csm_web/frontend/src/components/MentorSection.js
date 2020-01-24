@@ -93,11 +93,12 @@ class MentorSectionAttendance extends React.Component {
     attendances: PropTypes.object.isRequired
   };
 
-  state = { selectedWeek: null };
+  state = { selectedWeek: null, stagedAttendances: null };
 
   render() {
     const { attendances, loaded } = this.props;
     const selectedWeek = this.state.selectedWeek || (loaded && Object.keys(attendances)[0]);
+    const stagedAttendances = this.state.stagedAttendances || attendances[selectedWeek];
     return (
       <React.Fragment>
         <h3 className="section-detail-page-title">Attendance</h3>
@@ -108,7 +109,7 @@ class MentorSectionAttendance extends React.Component {
                 <div
                   key={weekStart}
                   className={weekStart === selectedWeek ? "active" : ""}
-                  onClick={() => this.setState({ selectedWeek: weekStart })}
+                  onClick={() => this.setState({ selectedWeek: weekStart, stagedAttendances: attendances[weekStart] })}
                 >
                   {parseDate(weekStart)}
                 </div>
@@ -117,7 +118,7 @@ class MentorSectionAttendance extends React.Component {
             <table id="mentor-attendance-table">
               <tbody>
                 {selectedWeek &&
-                  attendances[selectedWeek].map(({ id, student, presence }) => (
+                  stagedAttendances.map(({ id, student, presence }) => (
                     <tr key={id}>
                       <td>{student.name}</td>
                       <td>
