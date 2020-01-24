@@ -25,6 +25,16 @@ export default function MentorSection({ id, url, course, courseTitle, spacetime,
     });
   }, [id]);
 
+  const updateAttendance = (updatedWeek, updatedWeekAttendances) => {
+    const updatedAttendances = Object.fromEntries(
+      Object.entries(attendances).map(([weekStart, weekAttendances]) => [
+        weekStart,
+        weekStart == updatedWeek ? [...updatedWeekAttendances] : weekAttendances
+      ])
+    );
+    setState({ students, loaded, attendances: updatedAttendances });
+  };
+
   return (
     <SectionDetail
       course={course}
@@ -39,7 +49,9 @@ export default function MentorSection({ id, url, course, courseTitle, spacetime,
       <Switch>
         <Route
           path={`${url}/attendance`}
-          render={() => <MentorSectionAttendance attendances={attendances} loaded={loaded} />}
+          render={() => (
+            <MentorSectionAttendance attendances={attendances} loaded={loaded} updateAttendance={updateAttendance} />
+          )}
         />
         <Route path={`${url}/roster`} render={() => <MentorSectionRoster students={students} loaded={loaded} />} />
         <Route
@@ -90,7 +102,8 @@ function formatDate(dateString) {
 class MentorSectionAttendance extends React.Component {
   static propTypes = {
     loaded: PropTypes.bool.isRequired,
-    attendances: PropTypes.object.isRequired
+    attendances: PropTypes.object.isRequired,
+    updateAttendance: PropTypes.func.isRequired
   };
 
   constructor(props) {
@@ -112,14 +125,16 @@ class MentorSectionAttendance extends React.Component {
   }
 
   handleSaveAttendance() {
-    if (!this.state.stagedAttendances) {
+    const { stagedAttendances, selectedWeek } = this.state;
+    if (!stagedAttendances) {
       return;
     }
+    //TODO: Handle API Failure
     Promise.all(
-      this.state.stagedAttendances.map(({ id, presence, student: { id: studentId } }) =>
+      stagedAttendances.map(({ id, presence, student: { id: studentId } }) =>
         fetchWithMethod(`students/${studentId}/attendances/`, HTTP_METHODS.PUT, { id, presence })
       )
-    );
+    ).then(() => this.props.updateAttendance(selectedWeek, stagedAttendances));
   }
 
   render() {
