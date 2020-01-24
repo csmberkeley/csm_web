@@ -44,7 +44,7 @@ function CourseCard({ profiles }) {
           <p className="course-card-title">{courseTitle}</p>
           {profiles.length > 1 &&
             profiles.map(profile => (
-              <Link key={profiles.sectionId} to={`/sections/${profile.sectionId}`} className="section-link">
+              <Link key={profile.id} to={`/sections/${profile.sectionId}`} className="section-link">
                 {profile.sectionSpacetime.time}
               </Link>
             ))}
