@@ -126,6 +126,7 @@ class MentorSectionAttendance extends React.Component {
     };
     this.handleAttendanceChange = this.handleAttendanceChange.bind(this);
     this.handleSaveAttendance = this.handleSaveAttendance.bind(this);
+    this.handleMarkAllPresent = this.handleMarkAllPresent.bind(this);
   }
 
   handleAttendanceChange({ target: { name: id, value } }) {
@@ -155,6 +156,16 @@ class MentorSectionAttendance extends React.Component {
       this.setState({ showAttendanceSaveSuccess: true, showSaveSpinner: false });
       setTimeout(() => this.setState({ showAttendanceSaveSuccess: false }), 1500);
     });
+  }
+
+  handleMarkAllPresent() {
+    if (!this.state.stagedAttendances) {
+      const [selectedWeek, stagedAttendances] = Object.entries(this.props.attendances)[0];
+      this.setState({ selectedWeek, stagedAttendances });
+    }
+    this.setState(prevState => ({
+      stagedAttendances: prevState.stagedAttendances.map(attendance => ({ ...attendance, presence: "PR" }))
+    }));
   }
 
   render() {
@@ -212,6 +223,9 @@ class MentorSectionAttendance extends React.Component {
             <div id="mentor-attendance-controls">
               <button className="csm-btn save-attendance-btn" onClick={this.handleSaveAttendance}>
                 Save
+              </button>
+              <button className="mark-all-present-btn" onClick={this.handleMarkAllPresent}>
+                Mark All As Present
               </button>
               {showSaveSpinner && <LoadingSpinner />}
               {showAttendanceSaveSuccess && <CheckCircle color="green" height="2em" width="2em" />}

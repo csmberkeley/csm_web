@@ -777,6 +777,20 @@ table tbody tr:last-child > td {
 	border: none;
 	border-radius: 6px;
 	padding: 10px 20px;
+	cursor: pointer;
+}
+
+.mark-all-present-btn {
+	border: none;
+	outline: none;
+	color: var(--csm-green);
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.mark-all-present-btn:hover {
+	color: var(--csm-green-darkened);
 }
 
 /* Loading Spinner */
