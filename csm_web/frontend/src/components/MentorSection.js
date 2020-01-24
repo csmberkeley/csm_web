@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { fetchJSON } from "../utils/api";
+import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import { SectionDetail, InfoCard, SectionSpacetime } from "./Section";
 import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
@@ -77,10 +77,10 @@ const MONTH_NUMBERS = Object.freeze({
   Dec: 12
 });
 
-function parseDate(dateString) {
+function formatDate(dateString) {
   /*
    * Example:
-   * parseDate("Jan. 6, 2020") --> "1/6"
+   * formatDate("Jan. 6, 2020") --> "1/6"
    */
   const [month, dayAndYear] = dateString.split(".");
   const day = dayAndYear.split(",")[0].trim();
@@ -93,7 +93,34 @@ class MentorSectionAttendance extends React.Component {
     attendances: PropTypes.object.isRequired
   };
 
-  state = { selectedWeek: null, stagedAttendances: null };
+  constructor(props) {
+    super(props);
+    this.state = { selectedWeek: null, stagedAttendances: null };
+    this.handleAttendanceChange = this.handleAttendanceChange.bind(this);
+    this.handleSaveAttendance = this.handleSaveAttendance.bind(this);
+  }
+
+  handleAttendanceChange({ target: { name: id, value } }) {
+    this.setState((prevState, props) => {
+      const prevStagedAttendances = prevState.stagedAttendances || Object.values(props.attendances)[0];
+      return {
+        stagedAttendances: prevStagedAttendances.map(attendance =>
+          attendance.id == id ? { ...attendance, presence: value } : attendance
+        )
+      };
+    });
+  }
+
+  handleSaveAttendance() {
+    if (!this.state.stagedAttendances) {
+      return;
+    }
+    Promise.all(
+      this.state.stagedAttendances.map(({ id, presence, student: { id: studentId } }) =>
+        fetchWithMethod(`students/${studentId}/attendances/`, HTTP_METHODS.PUT, { id, presence })
+      )
+    );
+  }
 
   render() {
     const { attendances, loaded } = this.props;
@@ -103,44 +130,55 @@ class MentorSectionAttendance extends React.Component {
       <React.Fragment>
         <h3 className="section-detail-page-title">Attendance</h3>
         {loaded && (
-          <div id="mentor-attendance">
-            <div id="attendance-date-tabs-container">
-              {Object.keys(attendances).map(weekStart => (
-                <div
-                  key={weekStart}
-                  className={weekStart === selectedWeek ? "active" : ""}
-                  onClick={() => this.setState({ selectedWeek: weekStart, stagedAttendances: attendances[weekStart] })}
-                >
-                  {parseDate(weekStart)}
-                </div>
-              ))}
+          <React.Fragment>
+            <div id="mentor-attendance">
+              <div id="attendance-date-tabs-container">
+                {Object.keys(attendances).map(weekStart => (
+                  <div
+                    key={weekStart}
+                    className={weekStart === selectedWeek ? "active" : ""}
+                    onClick={() =>
+                      this.setState({ selectedWeek: weekStart, stagedAttendances: attendances[weekStart] })
+                    }
+                  >
+                    {formatDate(weekStart)}
+                  </div>
+                ))}
+              </div>
+              <table id="mentor-attendance-table">
+                <tbody>
+                  {selectedWeek &&
+                    stagedAttendances.map(({ id, student, presence }) => (
+                      <tr key={id}>
+                        <td>{student.name}</td>
+                        <td>
+                          <select
+                            value={presence}
+                            name={id}
+                            className="select-css"
+                            style={{
+                              backgroundColor: `var(--csm-attendance-${ATTENDANCE_LABELS[presence][1]})`
+                            }}
+                            onChange={this.handleAttendanceChange}
+                          >
+                            {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
+                              <option key={value} value={value}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
             </div>
-            <table id="mentor-attendance-table">
-              <tbody>
-                {selectedWeek &&
-                  stagedAttendances.map(({ id, student, presence }) => (
-                    <tr key={id}>
-                      <td>{student.name}</td>
-                      <td>
-                        <select
-                          value={presence}
-                          className="select-css"
-                          style={{
-                            backgroundColor: `var(--csm-attendance-${ATTENDANCE_LABELS[presence][1]})`
-                          }}
-                        >
-                          {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
-                            <option key={value} value={value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
-                  ))}
-              </tbody>
-            </table>
-          </div>
+            <div id="mentor-attendance-controls">
+              <button className="csm-btn save-attendance-btn" onClick={this.handleSaveAttendance}>
+                Save
+              </button>
+            </div>
+          </React.Fragment>
         )}
         {!loaded && <h5> Loading attendances...</h5>}
       </React.Fragment>

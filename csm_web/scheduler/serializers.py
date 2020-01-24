@@ -53,14 +53,13 @@ class MentorSerializer(serializers.ModelSerializer):
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
-    week_start = serializers.DateField(format="%b. %-d, %Y")
+    week_start = serializers.DateField(format="%b. %-d, %Y", read_only=True)
 
     class Meta:
         model = Attendance
-        fields = ("id", "presence", "week_start", "date", "student")
+        fields = ("id", "presence", "week_start", "student")
         read_only_fields = ("week_start",)
-        extra_kwargs = {'student': {'write_only': True},
-                        'date': {'write_only': True}}
+        extra_kwargs = {'student': {'write_only': True}}
 
 
 class StudentSerializer(serializers.ModelSerializer):

@@ -756,3 +756,18 @@ table tbody tr:last-child > td {
 	-webkit-appearance: none;
 	-moz-appearance: none;
 }
+
+#mentor-attendance-controls {
+	margin-top: 35px;
+	max-width: 780px;
+	display: flex;
+}
+
+
+.save-attendance-btn {
+	margin-left: auto;
+	font-size: 14px;
+	border: none;
+	border-radius: 6px;
+	padding: 10px 20px;
+}
