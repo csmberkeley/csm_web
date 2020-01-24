@@ -6,11 +6,23 @@ import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
 import CopyIcon from "../../static/frontend/img/copy.svg";
 import CheckCircle from "../../static/frontend/img/check_circle.svg";
+import { ATTENDANCE_LABELS } from "./Section";
 export default function MentorSection({ id, url, course, courseTitle, spacetime, override }) {
-  const [{ students, studentsLoaded }, setState] = useState({ students: [], studentsLoaded: false });
+  const [{ students, attendances, loaded }, setState] = useState({ students: [], attendances: {}, loaded: false });
   useEffect(() => {
-    setState({ students: [], studentsLoaded: false });
-    fetchJSON(`/sections/${id}/students/`).then(students => setState({ students, studentsLoaded: true }));
+    setState({ students: [], attendances: {}, loaded: false });
+    fetchJSON(`/sections/${id}/students/`).then(data => {
+      const students = data.map(({ name, email, id }) => ({ name, email, id }));
+      const attendances = groupBy(
+        data
+          .flatMap(({ name, id, attendances }) =>
+            attendances.map(attendance => ({ ...attendance, student: { name, id } }))
+          )
+          .reverse(),
+        attendance => attendance.weekStart
+      );
+      setState({ students, attendances, loaded: true });
+    });
   }, [id]);
 
   return (
@@ -27,21 +39,13 @@ export default function MentorSection({ id, url, course, courseTitle, spacetime,
       <Switch>
         <Route
           path={`${url}/attendance`}
-          render={() => <MentorSectionAttendance students={students} studentsLoaded={studentsLoaded} />}
+          render={() => <MentorSectionAttendance attendances={attendances} loaded={loaded} />}
         />
-        <Route
-          path={`${url}/roster`}
-          render={() => <MentorSectionRoster students={students} studentsLoaded={studentsLoaded} />}
-        />
+        <Route path={`${url}/roster`} render={() => <MentorSectionRoster students={students} loaded={loaded} />} />
         <Route
           path={url}
           render={() => (
-            <MentorSectionInfo
-              students={students}
-              studentsLoaded={studentsLoaded}
-              spacetime={spacetime}
-              override={override}
-            />
+            <MentorSectionInfo students={students} loaded={loaded} spacetime={spacetime} override={override} />
           )}
         />
       </Switch>
@@ -58,46 +62,98 @@ MentorSection.propTypes = {
   url: PropTypes.string.isRequired
 };
 
-function MentorSectionAttendance({ studentsLoaded, students }) {
+const MONTH_NUMBERS = Object.freeze({
+  Jan: 1,
+  Feb: 2,
+  Mar: 3,
+  Apr: 4,
+  May: 5,
+  Jun: 6,
+  Jul: 7,
+  Aug: 8,
+  Sep: 9,
+  Oct: 10,
+  Nov: 11,
+  Dec: 12
+});
+
+function parseDate(dateString) {
   /*
-  const attendances = groupBy(
-    students.flatMap(({ name, id, attendances }) =>
-      attendances.map(attendance => ({ ...attendance, student: { name, id } }))
-    ),
-    attendance => attendance.weekStart
-  );
-	*/
-  return (
-    <React.Fragment>
-      <h3 className="section-detail-page-title">Attendance</h3>
-    </React.Fragment>
-  );
+   * Example:
+   * parseDate("Jan. 6, 2020") --> "1/6"
+   */
+  const [month, dayAndYear] = dateString.split(".");
+  const day = dayAndYear.split(",")[0].trim();
+  return `${MONTH_NUMBERS[month]}/${day}`;
 }
 
-MentorSectionAttendance.propTypes = {
-  studentsLoaded: PropTypes.bool.isRequired,
-  students: PropTypes.arrayOf(
-    PropTypes.shape({
-      name: PropTypes.string.isRequired,
-      id: PropTypes.number.isRequired,
-      attendances: PropTypes.arrayOf(
-        PropTypes.shape({
-          id: PropTypes.number.isRequired,
-          presence: PropTypes.string.isRequired,
-          weekStart: PropTypes.string.isRequired
-        })
-      ).isRequired
-    })
-  )
-};
+class MentorSectionAttendance extends React.Component {
+  static propTypes = {
+    loaded: PropTypes.bool.isRequired,
+    attendances: PropTypes.object.isRequired
+  };
 
-function MentorSectionInfo({ students, studentsLoaded, spacetime, override }) {
+  state = { selectedWeek: null };
+
+  render() {
+    const { attendances, loaded } = this.props;
+    const selectedWeek = this.state.selectedWeek || (loaded && Object.keys(attendances)[0]);
+    return (
+      <React.Fragment>
+        <h3 className="section-detail-page-title">Attendance</h3>
+        {loaded && (
+          <div id="mentor-attendance">
+            <div id="attendance-date-tabs-container">
+              {Object.keys(attendances).map(weekStart => (
+                <div
+                  key={weekStart}
+                  className={weekStart === selectedWeek ? "active" : ""}
+                  onClick={() => this.setState({ selectedWeek: weekStart })}
+                >
+                  {parseDate(weekStart)}
+                </div>
+              ))}
+            </div>
+            <table id="mentor-attendance-table">
+              <tbody>
+                {selectedWeek &&
+                  attendances[selectedWeek].map(({ id, student, presence }) => (
+                    <tr key={id}>
+                      <td>{student.name}</td>
+                      <td>
+                        <select
+                          value={presence}
+                          className="select-css"
+                          style={{
+                            backgroundColor: `var(--csm-attendance-${ATTENDANCE_LABELS[presence][1]})`
+                          }}
+                        >
+                          {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
+                            <option key={value} value={value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+        {!loaded && <h5> Loading attendances...</h5>}
+      </React.Fragment>
+    );
+  }
+}
+
+function MentorSectionInfo({ students, loaded, spacetime, override }) {
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">My Section</h3>
       <div className="section-info-cards-container">
         <InfoCard title="Students">
-          {studentsLoaded && (
+          {loaded && (
             <table id="students-table">
               <thead>
                 <tr>
@@ -113,7 +169,7 @@ function MentorSectionInfo({ students, studentsLoaded, spacetime, override }) {
               </tbody>
             </table>
           )}
-          {!studentsLoaded && <h5>Loading students...</h5>}
+          {!loaded && <h5>Loading students...</h5>}
         </InfoCard>
         <SectionSpacetime spacetime={spacetime} override={override} />
       </div>
@@ -124,12 +180,12 @@ function MentorSectionInfo({ students, studentsLoaded, spacetime, override }) {
 MentorSectionInfo.propTypes = {
   students: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string.isRequired, id: PropTypes.number.isRequired }))
     .isRequired,
-  studentsLoaded: PropTypes.bool.isRequired,
+  loaded: PropTypes.bool.isRequired,
   spacetime: PropTypes.object.isRequired,
   override: PropTypes.object
 };
 
-function MentorSectionRoster({ students, studentsLoaded }) {
+function MentorSectionRoster({ students, loaded }) {
   const [emailsCopied, setEmailsCopied] = useState(false);
   const handleCopyEmails = () => {
     navigator.clipboard.writeText(students.map(({ email }) => email).join(" ")).then(() => {
@@ -140,7 +196,7 @@ function MentorSectionRoster({ students, studentsLoaded }) {
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">Roster</h3>
-      {studentsLoaded && (
+      {loaded && (
         <table className="standalone-table">
           <thead>
             <tr>
@@ -164,7 +220,7 @@ function MentorSectionRoster({ students, studentsLoaded }) {
           </tbody>
         </table>
       )}
-      {!studentsLoaded && <h5>Loading roster...</h5>}
+      {!loaded && <h5>Loading roster...</h5>}
     </React.Fragment>
   );
 }
@@ -177,5 +233,5 @@ MentorSectionRoster.propTypes = {
       email: PropTypes.string.isRequired
     })
   ).isRequired,
-  studentsLoaded: PropTypes.bool.isRequired
+  loaded: PropTypes.bool.isRequired
 };
