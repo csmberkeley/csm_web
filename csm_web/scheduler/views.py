@@ -156,10 +156,12 @@ class StudentViewSet(viewsets.GenericViewSet):
         if student.user == self.request.user:
             raise PermissionDenied('You cannot record your own attendance (nice try)')
         try:  # update
-            attendance = student.attendance_set.get(date=request.data['date'])
-            serializer = AttendanceSerializer(attendance, data={'student': student.id, **request.data})
-        except ObjectDoesNotExist:  # create
-            serializer = AttendanceSerializer(data={'student': student.id, **request.data})
+            attendance = student.attendance_set.get(pk=request.data['id'])
+            serializer = AttendanceSerializer(
+                attendance, data={'student': student.id, 'presence': request.data['presence']})
+        except ObjectDoesNotExist:
+            logger.error(
+                f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, used non-existent attendance id {request.data['id']}")
         if serializer.is_valid():
             attendance = serializer.save()
             logger.info(
