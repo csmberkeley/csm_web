@@ -99,6 +99,16 @@ function formatDate(dateString) {
   return `${MONTH_NUMBERS[month]}/${day}`;
 }
 
+function LoadingSpinner() {
+  return (
+    <div className="sk-fading-circle">
+      {[...Array(12)].map((_, i) => (
+        <div key={i} className={`sk-circle${i + 1} sk-circle`} />
+      ))}
+    </div>
+  );
+}
+
 class MentorSectionAttendance extends React.Component {
   static propTypes = {
     loaded: PropTypes.bool.isRequired,
@@ -108,7 +118,12 @@ class MentorSectionAttendance extends React.Component {
 
   constructor(props) {
     super(props);
-    this.state = { selectedWeek: null, stagedAttendances: null };
+    this.state = {
+      selectedWeek: null,
+      stagedAttendances: null,
+      showAttendanceSaveSuccess: false,
+      showSaveSpinner: false
+    };
     this.handleAttendanceChange = this.handleAttendanceChange.bind(this);
     this.handleSaveAttendance = this.handleSaveAttendance.bind(this);
   }
@@ -130,17 +145,23 @@ class MentorSectionAttendance extends React.Component {
       return;
     }
     //TODO: Handle API Failure
+    this.setState({ showSaveSpinner: true });
     Promise.all(
       stagedAttendances.map(({ id, presence, student: { id: studentId } }) =>
         fetchWithMethod(`students/${studentId}/attendances/`, HTTP_METHODS.PUT, { id, presence })
       )
-    ).then(() => this.props.updateAttendance(selectedWeek, stagedAttendances));
+    ).then(() => {
+      this.props.updateAttendance(selectedWeek, stagedAttendances);
+      this.setState({ showAttendanceSaveSuccess: true, showSaveSpinner: false });
+      setTimeout(() => this.setState({ showAttendanceSaveSuccess: false }), 1500);
+    });
   }
 
   render() {
     const { attendances, loaded } = this.props;
     const selectedWeek = this.state.selectedWeek || (loaded && Object.keys(attendances)[0]);
     const stagedAttendances = this.state.stagedAttendances || attendances[selectedWeek];
+    const { showAttendanceSaveSuccess, showSaveSpinner } = this.state;
     return (
       <React.Fragment>
         <h3 className="section-detail-page-title">Attendance</h3>
@@ -192,6 +213,8 @@ class MentorSectionAttendance extends React.Component {
               <button className="csm-btn save-attendance-btn" onClick={this.handleSaveAttendance}>
                 Save
               </button>
+              {showSaveSpinner && <LoadingSpinner />}
+              {showAttendanceSaveSuccess && <CheckCircle color="green" height="2em" width="2em" />}
             </div>
           </React.Fragment>
         )}
