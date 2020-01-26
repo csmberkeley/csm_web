@@ -127,6 +127,13 @@ class MentorSectionAttendance extends React.Component {
     this.handleAttendanceChange = this.handleAttendanceChange.bind(this);
     this.handleSaveAttendance = this.handleSaveAttendance.bind(this);
     this.handleMarkAllPresent = this.handleMarkAllPresent.bind(this);
+    this.attendanceTitle = React.createRef();
+  }
+
+  componentDidMount() {
+    if (this.attendanceTitle.current) {
+      this.attendanceTitle.current.scrollIntoView();
+    }
   }
 
   handleAttendanceChange({ target: { name: id, value } }) {
@@ -175,7 +182,9 @@ class MentorSectionAttendance extends React.Component {
     const { showAttendanceSaveSuccess, showSaveSpinner } = this.state;
     return (
       <React.Fragment>
-        <h3 className="section-detail-page-title">Attendance</h3>
+        <h3 ref={this.attendanceTitle} className="section-detail-page-title">
+          Attendance
+        </h3>
         {loaded && (
           <React.Fragment>
             <div id="mentor-attendance">
