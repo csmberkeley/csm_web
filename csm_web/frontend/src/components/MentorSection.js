@@ -271,25 +271,37 @@ class SpacetimeEditModal extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
+  static propTypes = { closeModal: PropTypes.func.isRequired };
+
   handleChange({ target: { name, value } }) {
     this.setState({ [name]: value });
   }
 
   handleSubmit(event) {
     event.preventDefault();
+    this.props.closeModal();
   }
 
   render() {
-    const { location, day, time, isPermanent, changeDate } = this.state;
+    let { location, day, time, isPermanent, changeDate } = this.state;
+    isPermanent = !!isPermanent;
     const now = new Date();
     const today = `${now.getFullYear()}-${zeroPadTwoDigit(now.getMonth() + 1)}-${zeroPadTwoDigit(now.getDate())}`;
     return (
-      <Modal className="spacetime-edit-modal">
+      <Modal className="spacetime-edit-modal" closeModal={this.props.closeModal}>
         <form id="spacetime-edit-form" onSubmit={this.handleSubmit}>
           <h4>Change Time and Location</h4>
           <label>
             Location
-            <input onChange={this.handleChange} required type="text" name="location" value={location} />
+            <input
+              onChange={this.handleChange}
+              required
+              title="You cannot leave this field blank"
+              pattern=".*[^\s]+.*"
+              type="text"
+              name="location"
+              value={location}
+            />
           </label>
           {/* Would use a fieldset to be semantic, but Chrome has a bug where flexbox doesn't work for fieldset */}
           <div id="day-time-fields">
@@ -337,7 +349,7 @@ class SpacetimeEditModal extends React.Component {
                 type="date"
                 min={today}
                 name="changeDate"
-                disabled={!!isPermanent}
+                disabled={isPermanent}
                 value={isPermanent ? "" : changeDate}
               />
             </label>
@@ -350,6 +362,7 @@ class SpacetimeEditModal extends React.Component {
 }
 
 function MentorSectionInfo({ students, loaded, spacetime, override }) {
+  const [showModal, setShowModal] = useState(false);
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">My Section</h3>
@@ -374,8 +387,8 @@ function MentorSectionInfo({ students, loaded, spacetime, override }) {
           {!loaded && <h5>Loading students...</h5>}
         </InfoCard>
         <SectionSpacetime spacetime={spacetime} override={override}>
-          <SpacetimeEditModal />
-          <button className="spacetime-edit-btn">
+          {showModal && <SpacetimeEditModal closeModal={() => setShowModal(false)} />}
+          <button className="spacetime-edit-btn" onClick={() => setShowModal(true)}>
             <PencilIcon width="1em" height="1em" /> Edit
           </button>
         </SectionSpacetime>
