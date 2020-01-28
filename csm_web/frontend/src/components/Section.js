@@ -66,9 +66,10 @@ export function SectionSidebar({ links }) {
 
 SectionSidebar.propTypes = { links: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)).isRequired };
 
-export function SectionSpacetime({ spacetime: { location, time }, override }) {
+export function SectionSpacetime({ spacetime: { location, time }, override, children }) {
   return (
     <InfoCard title="Time and Location">
+      {children}
       <h5>{location}</h5>
       <h5>{time}</h5>
       {override && (
@@ -85,7 +86,8 @@ export function SectionSpacetime({ spacetime: { location, time }, override }) {
 
 SectionSpacetime.propTypes = {
   spacetime: SPACETIME_SHAPE.isRequired,
-  override: PropTypes.shape({ spacetime: SPACETIME_SHAPE.isRequired, date: PropTypes.string.isRequired })
+  override: PropTypes.shape({ spacetime: SPACETIME_SHAPE.isRequired, date: PropTypes.string.isRequired }),
+  children: PropTypes.node
 };
 
 export function InfoCard({ title, children, showTitle = true }) {
