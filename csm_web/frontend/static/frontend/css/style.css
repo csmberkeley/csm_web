@@ -581,6 +581,10 @@ main {
 	margin: 10px 0;
 }
 
+.section-detail-info-card-contents {
+	position: relative;
+}
+
 .section-detail-info-card-contents, .standalone-table, #mentor-attendance {
 	border: 2px solid #E7E7E7;
 	box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
@@ -703,6 +707,111 @@ table tbody tr:last-child > td {
 
 #copy-student-emails-success {
 	position: absolute;
+}
+
+.spacetime-edit-btn {
+	background-color: inherit;
+	color: #B3B3B3;
+	font-size: 13px;
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	border: none;
+	cursor: pointer;
+}
+
+.spacetime-edit-btn:hover {
+	color: #a1a1a1;
+}
+
+.spacetime-edit-modal {
+	height: 450px;
+}
+
+#spacetime-edit-form {
+	padding-left: 40px;
+}
+
+#spacetime-edit-form h4 {
+	text-align: left;
+}
+
+#spacetime-edit-form input,  #spacetime-edit-form select {
+	background-color: #F5F5F5;
+	padding: 10px 20px;
+	border: none;
+	border-radius: 4px;
+	display: block;
+	margin-top: 7px;
+}
+
+#spacetime-edit-form #date-of-change-fields input {
+	display: inline;
+}
+
+#spacetime-edit-form #date-of-change-fields input[type="radio"] {
+	margin-right: 10px;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	padding: 2px 8px;
+	border: 2px solid var(--csm-green);
+	border-radius: 13px;
+}
+
+#spacetime-edit-form #date-of-change-fields input[type="radio"]:checked {
+	background-color: var(--csm-green);
+}
+
+#spacetime-edit-form > * {
+	margin-bottom: 20px;
+}
+
+#spacetime-edit-form label {
+	display: block;
+	color: #646464;
+	font-weight: 600;
+}
+
+#spacetime-edit-form #day-time-fields {
+	display: flex;
+}
+
+#spacetime-edit-form #day-time-fields > * {
+	margin-right: 10px;
+}
+
+#spacetime-edit-form #day-time-fields > *:last-child {
+	margin-right: 0;
+}
+
+#spacetime-edit-form #date-of-change-fields label:not(:first-child) {
+	color: black;
+	font-weight: normal;
+	font-size: small;
+	margin-top: 7px;
+}
+
+#spacetime-edit-form select {
+	background-image: url('data:image/svg+xml;utf8,<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="gray" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg>');
+	background-repeat: no-repeat, repeat;
+	background-position: right .7em top 50%, 0 0;
+	background-size: 1em auto, 100%;
+	-webkit-appearance: none;
+	-moz-appearance: none;
+	width: 150px;
+	font-size: small;
+}
+
+#spacetime-edit-form input[type="submit"] {
+	margin: auto;
+	background-color: var(--csm-green);
+	color: white;
+	cursor: pointer;
+	padding: 10px 40px;
+}
+
+#spacetime-edit-form input[type="submit"]:hover {
+	background-color: var(--csm-green-darkened);
 }
 
 #mentor-attendance {

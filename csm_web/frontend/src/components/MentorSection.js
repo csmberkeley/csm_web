@@ -6,7 +6,9 @@ import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
 import CopyIcon from "../../static/frontend/img/copy.svg";
 import CheckCircle from "../../static/frontend/img/check_circle.svg";
+import PencilIcon from "../../static/frontend/img/pencil.svg";
 import { ATTENDANCE_LABELS } from "./Section";
+import Modal from "./Modal";
 export default function MentorSection({ id, url, course, courseTitle, spacetime, override }) {
   const [{ students, attendances, loaded }, setState] = useState({ students: [], attendances: {}, loaded: false });
   useEffect(() => {
@@ -87,6 +89,16 @@ const MONTH_NUMBERS = Object.freeze({
   Oct: 10,
   Nov: 11,
   Dec: 12
+});
+
+const DAYS_OF_WEEK = Object.freeze({
+  Mon: "Monday",
+  Tue: "Tuesday",
+  Wed: "Wednesday",
+  Thurs: "Thursday",
+  Fri: "Friday",
+  Sat: "Saturday",
+  Sun: "Sunday"
 });
 
 function formatDate(dateString) {
@@ -247,6 +259,96 @@ class MentorSectionAttendance extends React.Component {
   }
 }
 
+function zeroPadTwoDigit(num) {
+  return num < 10 ? `0${num}` : num;
+}
+
+class SpacetimeEditModal extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { location: "", day: "", time: "", isPermanent: false, changeDate: "" };
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  handleChange({ target: { name, value } }) {
+    this.setState({ [name]: value });
+  }
+
+  handleSubmit(event) {
+    event.preventDefault();
+  }
+
+  render() {
+    const { location, day, time, isPermanent, changeDate } = this.state;
+    const now = new Date();
+    const today = `${now.getFullYear()}-${zeroPadTwoDigit(now.getMonth() + 1)}-${zeroPadTwoDigit(now.getDate())}`;
+    return (
+      <Modal className="spacetime-edit-modal">
+        <form id="spacetime-edit-form" onSubmit={this.handleSubmit}>
+          <h4>Change Time and Location</h4>
+          <label>
+            Location
+            <input onChange={this.handleChange} required type="text" name="location" value={location} />
+          </label>
+          {/* Would use a fieldset to be semantic, but Chrome has a bug where flexbox doesn't work for fieldset */}
+          <div id="day-time-fields">
+            <label>
+              Day
+              <select onChange={this.handleChange} required name="day" value={day}>
+                {Object.entries(DAYS_OF_WEEK).map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <label>
+              Time
+              <input onChange={this.handleChange} required type="time" name="time" value={time} />
+            </label>
+          </div>
+          <div id="date-of-change-fields">
+            <label>Change for</label>
+            <label>
+              <input
+                onChange={this.handleChange}
+                required
+                type="radio"
+                name="isPermanent"
+                checked={isPermanent}
+                value={true}
+              />
+              All sections
+            </label>
+            <label>
+              {/* Need to use empty string as value so that it's falsey because the value is always interpreted as a string, using "false" would actually be a truthy value */}
+              <input
+                onChange={this.handleChange}
+                required
+                type="radio"
+                name="isPermanent"
+                checked={!isPermanent}
+                value=""
+              />
+              <input
+                onChange={this.handleChange}
+                required={!isPermanent}
+                type="date"
+                min={today}
+                name="changeDate"
+                disabled={!!isPermanent}
+                value={isPermanent ? "" : changeDate}
+              />
+            </label>
+          </div>
+          <input type="submit" value="Save" />
+        </form>
+      </Modal>
+    );
+  }
+}
+
 function MentorSectionInfo({ students, loaded, spacetime, override }) {
   return (
     <React.Fragment>
@@ -271,7 +373,12 @@ function MentorSectionInfo({ students, loaded, spacetime, override }) {
           )}
           {!loaded && <h5>Loading students...</h5>}
         </InfoCard>
-        <SectionSpacetime spacetime={spacetime} override={override} />
+        <SectionSpacetime spacetime={spacetime} override={override}>
+          <SpacetimeEditModal />
+          <button className="spacetime-edit-btn">
+            <PencilIcon width="1em" height="1em" /> Edit
+          </button>
+        </SectionSpacetime>
       </div>
     </React.Fragment>
   );
