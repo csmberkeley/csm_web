@@ -307,9 +307,8 @@ class SpacetimeEditModal extends React.Component {
           date: changeDate
         })
     ).then(() => {
-      this.setState({ showSaveSpinner: false });
-      reloadSection();
       closeModal();
+      reloadSection();
     });
   }
 
