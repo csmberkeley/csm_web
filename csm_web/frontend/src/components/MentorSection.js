@@ -282,6 +282,8 @@ class SpacetimeEditModal extends React.Component {
     const { closeModal, spacetimeId } = this.props;
     let { location, day, time, isPermanent, changeDate } = this.state;
     isPermanent = !!isPermanent;
+    //TODO: Handle API failure
+    this.setState({ showSaveSpinner: true });
     (isPermanent
       ? fetchWithMethod(`/spacetimes/${spacetimeId}/modify`, HTTP_METHODS.PUT, {
           day_of_week: day,
@@ -294,11 +296,14 @@ class SpacetimeEditModal extends React.Component {
           start_time: `${time}:00`,
           date: changeDate
         })
-    ).then(() => closeModal());
+    ).then(() => {
+      this.setState({ showSaveSpinner: false });
+      closeModal();
+    });
   }
 
   render() {
-    let { location, day, time, isPermanent, changeDate } = this.state;
+    let { location, day, time, isPermanent, changeDate, showSaveSpinner } = this.state;
     isPermanent = !!isPermanent;
     const now = new Date();
     const today = `${now.getFullYear()}-${zeroPadTwoDigit(now.getMonth() + 1)}-${zeroPadTwoDigit(now.getDate())}`;
@@ -369,7 +374,9 @@ class SpacetimeEditModal extends React.Component {
               />
             </label>
           </div>
-          <input type="submit" value="Save" />
+          <div id="submit-and-status">
+            {showSaveSpinner ? <LoadingSpinner /> : <input type="submit" value="Save" />}
+          </div>
         </form>
       </Modal>
     );
