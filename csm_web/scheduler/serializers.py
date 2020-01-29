@@ -119,20 +119,19 @@ class SectionSerializer(serializers.ModelSerializer):
 
 class OverrideSerializer(serializers.ModelSerializer):
     location = serializers.CharField(source='spacetime.location')
-    day_of_week = serializers.CharField(source='spacetime.day_of_week')
     start_time = serializers.TimeField(source='spacetime.start_time')
     date = serializers.DateField()
 
     def create(self, validated_data):
         spacetime = Spacetime.objects.create(
-            **validated_data['spacetime'], duration=validated_data['overriden_spacetime'].duration)
+            **validated_data['spacetime'], day_of_week=Spacetime.DayOfWeek.values[validated_data['date'].weekday()], duration=validated_data['overriden_spacetime'].duration)
         return Override.objects.create(date=validated_data['date'], overriden_spacetime=validated_data['overriden_spacetime'],
                                        spacetime=spacetime)
 
     def update(self, instance, validated_data):
         instance.date = validated_data['date']
         spacetime_data = validated_data['spacetime']
-        instance.spacetime.day_of_week = spacetime_data['day_of_week']
+        instance.spacetime.day_of_week = Spacetime.DayOfWeek.values[validated_data['date'].weekday()]
         instance.spacetime.location = spacetime_data['location']
         instance.spacetime.start_time = spacetime_data['start_time']
         instance.spacetime.duration = instance.overriden_spacetime.duration
@@ -142,5 +141,5 @@ class OverrideSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Override
-        fields = ("location", "day_of_week", "start_time", "date", "overriden_spacetime")
+        fields = ("location", "start_time", "date", "overriden_spacetime")
         extra_kwargs = {"overriden_spacetime": {'required': False}}
