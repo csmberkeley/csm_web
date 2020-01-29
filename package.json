@@ -5,7 +5,9 @@
   "main": "index.js",
   "scripts": {
     "dev": "webpack --mode development ./csm_web/frontend/src/index.js --output ./csm_web/frontend/static/frontend/main.js",
-    "build": "webpack --mode production ./csm_web/frontend/src/index.js --output ./csm_web/frontend/static/frontend/main.js",
+    "build:js": "webpack --mode production ./csm_web/frontend/src/index.js --output ./csm_web/frontend/static/frontend/main.js",
+    "build:css": "uglifycss ./csm_web/frontend/static/frontend/css/style.css --output ./csm_web/frontend/static/frontend/css/style.min.css",
+    "build": "npm run build:js && npm run build:css",
     "watch": "nodemon --watch ./csm_web/frontend/src/components --exec './.nodemon.sh'"
   },
   "heroku-run-build-script": true,
@@ -38,6 +40,7 @@
     "lodash-webpack-plugin": "^0.11.5",
     "nodemon": "^1.19.4",
     "prettier": "^1.19.1",
+    "uglifycss": "0.0.29",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10"
   },

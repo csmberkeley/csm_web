@@ -8,7 +8,11 @@
 		{% load static %}
 		<link rel="icon" type="image/png" sizes="16x16" href="{% static 'frontend/img/favicon-16x16.png' %}"/>
 		<link rel="icon" type="image/png" sizes="32x32" href="{% static 'frontend/img/favicon-32x32.png' %}"/>
-		<link rel="stylesheet" href="{% static 'frontend/css/style.css' %}"/>
+		{% if DJANGO_ENV == 'prod' %}
+			<link rel="stylesheet" href="{% static 'frontend/css/style.min.css' %}"/>
+		{% else %}
+			<link rel="stylesheet" href="{% static 'frontend/css/style.css' %}"/>
+		{% endif %}
 		{% block extra_head %}
 		{% endblock %}
 	</head>
