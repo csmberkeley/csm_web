@@ -40,5 +40,5 @@ export function fetchWithMethod(endpoint, method, data = {}) {
 }
 
 export function fetchJSON(endpoint) {
-  return fetch(normalizeEndpoint(endpoint)).then(response => response.json());
+  return fetch(normalizeEndpoint(endpoint), { credentials: "same-origin" }).then(response => response.json());
 }
