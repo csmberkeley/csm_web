@@ -1,6 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
+import { Redirect } from "react-router-dom";
 import LocationIcon from "../../static/frontend/img/location.svg";
 import UserIcon from "../../static/frontend/img/user.svg";
 import GroupIcon from "../../static/frontend/img/group.svg";
@@ -161,9 +162,13 @@ class SectionCard extends React.Component {
     const iconWidth = "1.3em";
     const iconHeight = "1.3em";
     const isFull = numStudentsEnrolled >= capacity;
+    const { showModal, enrollmentSuccessful } = this.state;
+    if (!showModal && enrollmentSuccessful) {
+      return <Redirect to="/" />;
+    }
     return (
       <React.Fragment>
-        {this.state.showModal && <Modal closeModal={this.closeModal}>{this.modalContents().props.children}</Modal>}
+        {showModal && <Modal closeModal={this.closeModal}>{this.modalContents().props.children}</Modal>}
         <section className={`section-card ${isFull ? "full" : ""}`}>
           <div className="section-card-contents">
             <p title="Location">
