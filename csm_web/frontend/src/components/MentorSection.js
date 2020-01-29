@@ -237,7 +237,7 @@ class MentorSectionAttendance extends React.Component {
                             onChange={this.handleAttendanceChange}
                           >
                             {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
-                              <option key={value} value={value}>
+                              <option key={value} value={value} disabled={!value}>
                                 {label}
                               </option>
                             ))}
