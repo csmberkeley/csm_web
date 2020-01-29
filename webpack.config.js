@@ -1,7 +1,5 @@
-var webpack = require("webpack");
 var LodashModuleReplacementPlugin = require("lodash-webpack-plugin");
 var plugins = [
-  new webpack.IgnorePlugin(/^\.\/locale$/, /moment$/),
   new LodashModuleReplacementPlugin()
 ];
 
