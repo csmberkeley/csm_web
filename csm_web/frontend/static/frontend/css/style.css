@@ -728,8 +728,14 @@ table tbody tr:last-child > td {
 	height: 450px;
 }
 
+
 #spacetime-edit-form {
 	padding-left: 40px;
+}
+
+#spacetime-edit-form #submit-and-status > * {
+	display: block;
+	margin: auto;
 }
 
 #spacetime-edit-form h4 {
