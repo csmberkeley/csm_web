@@ -19,7 +19,9 @@ body {
 	--csm-theme-cs70: #FF7070;
 	--csm-theme-cs88: #E46495;
 	--csm-theme-ee16a: #707EFF;
+	--csm-theme-eecs16a: var(--csm-theme-ee16a);
 	--csm-theme-ee16b: #FFE070;
+	--csm-theme-eecs16b: var(--csm-theme-ee16b);
 	--csm-mentor: var(--csm-green);
 	--csm-student: #FFAB2E;
 }
@@ -52,17 +54,17 @@ header {
 	box-shadow: 0px 4px 4px rgba(136, 136, 136, 0.25);
 }
 
-#header-menu {
-	margin-left: auto;
-}
-
 #logout-btn {
-	position: absolute;
-	display: none;
+	margin: auto 0 auto auto;
 }
 
-#header-menu:hover #logout-btn {
-	display: block;
+#logout-btn * {
+	fill: #808080;
+	vertical-align: middle;
+}
+
+#logout-btn:hover * {
+	fill: #5e5e5e;
 }
 
 .modal {

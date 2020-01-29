@@ -5,6 +5,7 @@ import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Section from "./Section";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
+import LogOutIcon from "../../static/frontend/img/log_out.svg";
 
 export default class App extends React.Component {
   render() {
@@ -32,12 +33,9 @@ function Header() {
         <LogoNoText id="logo" />
       </Link>
       <h3 id="site-title">Scheduler</h3>
-      <div id="header-menu">
-        <img id="user-profile-pic" height="52" width="52" src="https://calcentral.berkeley.edu/api/my/photo" />
-        <a id="logout-btn" href="/logout">
-          Logout
-        </a>
-      </div>
+      <a id="logout-btn" href="/logout" title="Log out">
+        <LogOutIcon width="1.25em" height="1.25em" />
+      </a>
     </header>
   );
 }
