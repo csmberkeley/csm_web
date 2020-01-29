@@ -8,6 +8,8 @@ class SpacetimeReadOnlySerializer(serializers.ModelSerializer):
     time = serializers.SerializerMethodField()
 
     def get_time(self, obj):
+        if obj.start_time.strftime("%p") != obj.end_time.strftime("%p"):
+            return f"{obj.get_day_of_week_display()} {obj.start_time.strftime('%-I:%M %p')}-{obj.end_time.strftime('%-I:%M %p')}"
         return f"{obj.get_day_of_week_display()} {obj.start_time.strftime('%-I:%M')}-{obj.end_time.strftime('%-I:%M %p')}"
 
     class Meta:
