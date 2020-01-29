@@ -13,6 +13,10 @@ export default function Section({
   }
 }) {
   const [{ section, loaded }, setState] = useState({ section: null, loaded: false });
+  const reloadSection = () => {
+    setState({ section: null, loaded: false });
+    fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
+  };
   useEffect(() => {
     fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
   }, [id]);
@@ -20,7 +24,7 @@ export default function Section({
   return !loaded ? null : section.isStudent ? (
     <StudentSection url={url} {...section} />
   ) : (
-    <MentorSection url={url} id={Number(id)} {...section} />
+    <MentorSection reloadSection={reloadSection} url={url} id={Number(id)} {...section} />
   );
 }
 
