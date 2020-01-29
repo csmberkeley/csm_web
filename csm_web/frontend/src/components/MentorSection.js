@@ -256,7 +256,7 @@ class MentorSectionAttendance extends React.Component {
                 Mark All As Present
               </button>
               {showSaveSpinner && <LoadingSpinner />}
-              {showAttendanceSaveSuccess && <CheckCircle color="green" height="2em" width="2em" />}
+              {showAttendanceSaveSuccess && <CheckCircle height="2em" width="2em" />}
             </div>
           </React.Fragment>
         )}
@@ -471,9 +471,7 @@ function MentorSectionRoster({ students, loaded }) {
               <th>Email</th>
               <th>
                 <CopyIcon id="copy-student-emails" height="1em" width="1em" onClick={handleCopyEmails} />
-                {emailsCopied && (
-                  <CheckCircle id="copy-student-emails-success" color="green" height="1em" width="1em" />
-                )}
+                {emailsCopied && <CheckCircle id="copy-student-emails-success" height="1em" width="1em" />}
               </th>
             </tr>
           </thead>

@@ -113,6 +113,8 @@ header {
 
 .modal-contents h4 {
 	text-align: center;
+	margin: auto;
+	max-width: 75%;
 }
 
 .modal-close {
@@ -138,14 +140,19 @@ header {
 }
 
 .modal-btn {
+	position: absolute;
 	display: block;
 	color: white;
 	margin: auto;
+	width: 80px;
 	font-size: 1.25em;
 	padding: 10px 20px;
 	background-color: #007bff;
 	border-radius: 10px;
 	cursor: pointer;
+	left: 0;
+	right: 0;
+	bottom: 20px;
 }
 
 .modal-btn:hover {
@@ -378,6 +385,7 @@ header {
 	color: white;
 }
 
+
 #course-section-list {
 	height: 50vh;
 }
@@ -393,6 +401,11 @@ header {
 	flex-wrap: wrap;
 	justify-content: center;
 }
+
+#course-section-selector .modal h3 {
+	margin: 0.5em auto;
+}
+
 
 #course-section-selector > div {
 	padding-top: 40px;

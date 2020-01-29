@@ -127,12 +127,12 @@ class SectionCard extends React.Component {
   }
 
   modalContents() {
-    const iconWidth = "10em";
-    const iconHeight = "10em";
+    const iconWidth = "8em";
+    const iconHeight = "8em";
     if (this.state.enrollmentSuccessful) {
       return (
         <React.Fragment>
-          <CheckCircle color="green" height={iconHeight} width={iconWidth} />
+          <CheckCircle height={iconHeight} width={iconWidth} />
           <h3>Successfully enrolled</h3>
           <ModalCloser>
             <button className="modal-btn">OK</button>
@@ -142,7 +142,7 @@ class SectionCard extends React.Component {
     }
     return (
       <React.Fragment>
-        <XCircle color="red" height={iconHeight} width={iconWidth} />
+        <XCircle color="#eb6060" height={iconHeight} width={iconWidth} />
         <h3>Enrollment failed</h3>
         <h4>{this.state.errorMessage}</h4>
         <ModalCloser>
