@@ -95,7 +95,7 @@ const DAYS_OF_WEEK = Object.freeze({
   Mon: "Monday",
   Tue: "Tuesday",
   Wed: "Wednesday",
-  Thurs: "Thursday",
+  Thu: "Thursday",
   Fri: "Friday",
   Sat: "Saturday",
   Sun: "Sunday"
@@ -266,7 +266,7 @@ function zeroPadTwoDigit(num) {
 class SpacetimeEditModal extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { location: "", day: "Mon", time: "", isPermanent: false, changeDate: "", showSaveSpinner: false };
+    this.state = { location: "", day: "", time: "", isPermanent: false, changeDate: "", showSaveSpinner: false };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -291,7 +291,6 @@ class SpacetimeEditModal extends React.Component {
           start_time: `${time}:00`
         })
       : fetchWithMethod(`/spacetimes/${spacetimeId}/override`, HTTP_METHODS.PUT, {
-          day_of_week: day,
           location: location,
           start_time: `${time}:00`,
           date: changeDate
@@ -327,12 +326,20 @@ class SpacetimeEditModal extends React.Component {
           <div id="day-time-fields">
             <label>
               Day
-              <select onChange={this.handleChange} required name="day" value={day}>
-                {Object.entries(DAYS_OF_WEEK).map(([value, label]) => (
-                  <option key={value} value={value}>
-                    {label}
-                  </option>
-                ))}
+              <select
+                onChange={this.handleChange}
+                required={isPermanent}
+                name="day"
+                disabled={!isPermanent}
+                value={isPermanent ? day : ""}
+              >
+                {Object.entries(DAYS_OF_WEEK)
+                  .concat([["", "---"]])
+                  .map(([value, label]) => (
+                    <option key={value} value={value} disabled={!value}>
+                      {label}
+                    </option>
+                  ))}
               </select>
             </label>
             <label>
