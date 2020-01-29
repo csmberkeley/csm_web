@@ -4,7 +4,7 @@ from django.db import transaction
 from scheduler.models import Student, Attendance, Spacetime
 
 WEEKDAY_OFFSET = {
-    pair[0]: number for number, pair in enumerate(Spacetime.DAY_OF_WEEK_CHOICES)
+    pair[0]: number for number, pair in enumerate(Spacetime.DayOfWeek.choices)
 }
 
 
