@@ -416,7 +416,7 @@ function MentorSectionInfo({ students, loaded, spacetime, override, reloadSectio
                 </tr>
               </thead>
               <tbody>
-                {students.map(({ name, id }) => (
+                {(students.length === 0 ? [{ name: "No students enrolled", id: -1 }] : students).map(({ name, id }) => (
                   <tr key={id}>
                     <td>{name}</td>
                   </tr>
