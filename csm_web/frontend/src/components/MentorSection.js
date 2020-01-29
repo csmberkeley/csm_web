@@ -9,7 +9,7 @@ import CheckCircle from "../../static/frontend/img/check_circle.svg";
 import PencilIcon from "../../static/frontend/img/pencil.svg";
 import { ATTENDANCE_LABELS } from "./Section";
 import Modal from "./Modal";
-export default function MentorSection({ id, url, course, courseTitle, spacetime, override }) {
+export default function MentorSection({ id, url, course, courseTitle, spacetime, override, reloadSection }) {
   const [{ students, attendances, loaded }, setState] = useState({ students: [], attendances: {}, loaded: false });
   useEffect(() => {
     setState({ students: [], attendances: {}, loaded: false });
@@ -59,7 +59,13 @@ export default function MentorSection({ id, url, course, courseTitle, spacetime,
         <Route
           path={url}
           render={() => (
-            <MentorSectionInfo students={students} loaded={loaded} spacetime={spacetime} override={override} />
+            <MentorSectionInfo
+              reloadSection={reloadSection}
+              students={students}
+              loaded={loaded}
+              spacetime={spacetime}
+              override={override}
+            />
           )}
         />
       </Switch>
@@ -73,7 +79,8 @@ MentorSection.propTypes = {
   courseTitle: PropTypes.string.isRequired,
   spacetime: PropTypes.object.isRequired,
   override: PropTypes.object,
-  url: PropTypes.string.isRequired
+  url: PropTypes.string.isRequired,
+  reloadSection: PropTypes.func.isRequired
 };
 
 const MONTH_NUMBERS = Object.freeze({
@@ -271,7 +278,11 @@ class SpacetimeEditModal extends React.Component {
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  static propTypes = { closeModal: PropTypes.func.isRequired, spacetimeId: PropTypes.number.isRequired };
+  static propTypes = {
+    closeModal: PropTypes.func.isRequired,
+    spacetimeId: PropTypes.number.isRequired,
+    reloadSection: PropTypes.func.isRequired
+  };
 
   handleChange({ target: { name, value } }) {
     this.setState({ [name]: value });
@@ -279,7 +290,7 @@ class SpacetimeEditModal extends React.Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    const { closeModal, spacetimeId } = this.props;
+    const { closeModal, spacetimeId, reloadSection } = this.props;
     let { location, day, time, isPermanent, changeDate } = this.state;
     isPermanent = !!isPermanent;
     //TODO: Handle API failure
@@ -297,6 +308,7 @@ class SpacetimeEditModal extends React.Component {
         })
     ).then(() => {
       this.setState({ showSaveSpinner: false });
+      reloadSection();
       closeModal();
     });
   }
@@ -390,7 +402,7 @@ class SpacetimeEditModal extends React.Component {
   }
 }
 
-function MentorSectionInfo({ students, loaded, spacetime, override }) {
+function MentorSectionInfo({ students, loaded, spacetime, override, reloadSection }) {
   const [showModal, setShowModal] = useState(false);
   return (
     <React.Fragment>
@@ -416,7 +428,13 @@ function MentorSectionInfo({ students, loaded, spacetime, override }) {
           {!loaded && <h5>Loading students...</h5>}
         </InfoCard>
         <SectionSpacetime spacetime={spacetime} override={override}>
-          {showModal && <SpacetimeEditModal spacetimeId={spacetime.id} closeModal={() => setShowModal(false)} />}
+          {showModal && (
+            <SpacetimeEditModal
+              reloadSection={reloadSection}
+              spacetimeId={spacetime.id}
+              closeModal={() => setShowModal(false)}
+            />
+          )}
           <button className="spacetime-edit-btn" onClick={() => setShowModal(true)}>
             <PencilIcon width="1em" height="1em" /> Edit
           </button>
@@ -431,7 +449,8 @@ MentorSectionInfo.propTypes = {
     .isRequired,
   loaded: PropTypes.bool.isRequired,
   spacetime: PropTypes.object.isRequired,
-  override: PropTypes.object
+  override: PropTypes.object,
+  reloadSection: PropTypes.func.isRequired
 };
 
 function MentorSectionRoster({ students, loaded }) {
