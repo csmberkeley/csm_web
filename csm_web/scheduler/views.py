@@ -213,7 +213,7 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         if hasattr(spacetime, "_override"):  # update
             serializer = OverrideSerializer(spacetime._override, data=request.data)
         else:  # create
-            serializer = OverrideSerializer(data={'overriden_spacetime': spacetime, **request.data})
+            serializer = OverrideSerializer(data={'overriden_spacetime': spacetime.pk, **request.data})
         if serializer.is_valid():
             override = serializer.save()
             logger.info(f"<Override:Success> Overrode Spacetime {log_str(spacetime)} with Override {log_str(override)}")

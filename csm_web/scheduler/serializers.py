@@ -12,8 +12,8 @@ class SpacetimeReadOnlySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Spacetime
-        fields = ("time", "location")
-        read_only_fields = ("time", "location")
+        fields = ("time", "location", "id")
+        read_only_fields = ("time", "location", "id")
 
 
 class SpacetimeSerializer(serializers.ModelSerializer):
@@ -117,40 +117,30 @@ class SectionSerializer(serializers.ModelSerializer):
                   "num_students_enrolled", "description", "mentor", "course", "is_student", "course_title")
 
 
-class OverrideSerializer(serializers.Serializer):
-    def to_representation(self, obj):
-        rep = super().to_representation(obj)
-        start_time = obj.spacetime.start_time
-        rep['datetime'] = datetime(year=obj.date.year, month=obj.date.month, day=obj.date.day,
-                                   hour=start_time.hour, minute=start_time.minute, second=start_time.second)
-        rep['location'] = obj.spacetime.location
-        return rep
-
-    def to_internal_value(self, data):
-        value = super().to_internal_value(data)
-        override_datetime = dateparse.parse_datetime(data['datetime'])
-        value['location'] = data['location']
-        value['overriden_spacetime'] = data.get('overriden_spacetime')
-        value['day_of_week'] = Spacetime.DayOfWeek.choices[override_datetime.weekday()][0]
-        value['start_time'] = override_datetime.time()
-        value['date'] = override_datetime.date()
-        return value
+class OverrideSerializer(serializers.ModelSerializer):
+    location = serializers.CharField(source='spacetime.location')
+    day_of_week = serializers.CharField(source='spacetime.day_of_week')
+    start_time = serializers.TimeField(source='spacetime.start_time')
+    date = serializers.DateField()
 
     def create(self, validated_data):
-        spacetime = Spacetime.objects.create(day_of_week=validated_data['day_of_week'],
-                                             location=validated_data['location'],
-                                             start_time=validated_data['start_time'],
-                                             duration=validated_data['overriden_spacetime'].duration)
-
+        spacetime = Spacetime.objects.create(
+            **validated_data['spacetime'], duration=validated_data['overriden_spacetime'].duration)
         return Override.objects.create(date=validated_data['date'], overriden_spacetime=validated_data['overriden_spacetime'],
                                        spacetime=spacetime)
 
     def update(self, instance, validated_data):
         instance.date = validated_data['date']
-        instance.spacetime.day_of_week = validated_data['day_of_week']
-        instance.spacetime.location = validated_data['location']
-        instance.spacetime.start_time = validated_data['start_time']
+        spacetime_data = validated_data['spacetime']
+        instance.spacetime.day_of_week = spacetime_data['day_of_week']
+        instance.spacetime.location = spacetime_data['location']
+        instance.spacetime.start_time = spacetime_data['start_time']
         instance.spacetime.duration = instance.overriden_spacetime.duration
         instance.spacetime.save()
         instance.save()
         return instance
+
+    class Meta:
+        model = Override
+        fields = ("location", "day_of_week", "start_time", "date", "overriden_spacetime")
+        extra_kwargs = {"overriden_spacetime": {'required': False}}
