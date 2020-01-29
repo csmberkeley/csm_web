@@ -212,12 +212,14 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         spacetime = get_object_or_error(self.get_queryset(), pk=pk)
         if hasattr(spacetime, "_override"):  # update
             serializer = OverrideSerializer(spacetime._override, data=request.data)
+            status_code = status.HTTP_202_ACCEPTED
         else:  # create
             serializer = OverrideSerializer(data={'overriden_spacetime': spacetime.pk, **request.data})
+            status_code = status.HTTP_201_CREATED
         if serializer.is_valid():
             override = serializer.save()
             logger.info(f"<Override:Success> Overrode Spacetime {log_str(spacetime)} with Override {log_str(override)}")
-            return Response(status=status.HTTP_202_ACCEPTED)
+            return Response(status=status_code)
         logger.error(
             f"<Override:Failure> Could not override Spacetime {log_str(spacetime)}, errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
