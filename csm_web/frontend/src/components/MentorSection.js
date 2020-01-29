@@ -266,12 +266,12 @@ function zeroPadTwoDigit(num) {
 class SpacetimeEditModal extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { location: "", day: "", time: "", isPermanent: false, changeDate: "" };
+    this.state = { location: "", day: "Mon", time: "", isPermanent: false, changeDate: "", showSaveSpinner: false };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  static propTypes = { closeModal: PropTypes.func.isRequired };
+  static propTypes = { closeModal: PropTypes.func.isRequired, spacetimeId: PropTypes.number.isRequired };
 
   handleChange({ target: { name, value } }) {
     this.setState({ [name]: value });
@@ -279,7 +279,22 @@ class SpacetimeEditModal extends React.Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    this.props.closeModal();
+    const { closeModal, spacetimeId } = this.props;
+    let { location, day, time, isPermanent, changeDate } = this.state;
+    isPermanent = !!isPermanent;
+    (isPermanent
+      ? fetchWithMethod(`/spacetimes/${spacetimeId}/modify`, HTTP_METHODS.PUT, {
+          day_of_week: day,
+          location: location,
+          start_time: `${time}:00`
+        })
+      : fetchWithMethod(`/spacetimes/${spacetimeId}/override`, HTTP_METHODS.PUT, {
+          day_of_week: day,
+          location: location,
+          start_time: `${time}:00`,
+          date: changeDate
+        })
+    ).then(() => closeModal());
   }
 
   render() {
@@ -387,7 +402,7 @@ function MentorSectionInfo({ students, loaded, spacetime, override }) {
           {!loaded && <h5>Loading students...</h5>}
         </InfoCard>
         <SectionSpacetime spacetime={spacetime} override={override}>
-          {showModal && <SpacetimeEditModal closeModal={() => setShowModal(false)} />}
+          {showModal && <SpacetimeEditModal spacetimeId={spacetime.id} closeModal={() => setShowModal(false)} />}
           <button className="spacetime-edit-btn" onClick={() => setShowModal(true)}>
             <PencilIcon width="1em" height="1em" /> Edit
           </button>
