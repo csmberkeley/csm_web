@@ -6,57 +6,6 @@ import Modal from "./Modal";
 import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime } from "./Section";
 
 export default function StudentSection({ course, courseTitle, mentor, spacetime, override, associatedProfileId, url }) {
-  function StudentSectionInfo() {
-    return (
-      <React.Fragment>
-        <h3 className="section-detail-page-title">My Section</h3>
-        <div className="section-info-cards-container">
-          {mentor && (
-            <InfoCard title="Mentor">
-              <h5>{mentor.name}</h5>
-              <a href={`mailto:${mentor.email}`}>{mentor.email}</a>
-            </InfoCard>
-          )}
-          <SectionSpacetime spacetime={spacetime} override={override} />
-          <DropSection profileId={associatedProfileId} />
-        </div>
-      </React.Fragment>
-    );
-  }
-
-  function StudentSectionAttendance() {
-    const [state, setState] = useState({ attendances: null, loaded: false });
-    useEffect(() => {
-      fetchJSON(`/students/${associatedProfileId}/attendances`).then(attendances =>
-        setState({ attendances, loaded: true })
-      );
-    }, [associatedProfileId]);
-    const { attendances, loaded } = state;
-    return !loaded ? null : (
-      <table id="attendance-table" className="standalone-table">
-        <thead>
-          <tr>
-            <th>Week</th>
-            <th>Status</th>
-          </tr>
-        </thead>
-        <tbody>
-          {attendances.map(({ presence, weekStart }) => {
-            const [label, cssSuffix] = ATTENDANCE_LABELS[presence];
-            return (
-              <tr key={weekStart}>
-                <td>{weekStart}</td>
-                <td className="status">
-                  <div style={{ backgroundColor: `var(--csm-attendance-${cssSuffix})` }}>{label}</div>
-                </td>
-              </tr>
-            );
-          })}
-        </tbody>
-      </table>
-    );
-  }
-
   return (
     <SectionDetail
       course={course}
@@ -68,8 +17,21 @@ export default function StudentSection({ course, courseTitle, mentor, spacetime,
       ]}
     >
       <Switch>
-        <Route path={`${url}/attendance`} component={StudentSectionAttendance} />
-        <Route path={url} component={StudentSectionInfo} />
+        <Route
+          path={`${url}/attendance`}
+          render={() => <StudentSectionAttendance associatedProfileId={associatedProfileId} />}
+        />
+        <Route
+          path={url}
+          render={() => (
+            <StudentSectionInfo
+              mentor={mentor}
+              spacetime={spacetime}
+              override={override}
+              associatedProfileId={associatedProfileId}
+            />
+          )}
+        />
       </Switch>
     </SectionDetail>
   );
@@ -85,6 +47,31 @@ StudentSection.propTypes = {
   url: PropTypes.string.isRequired
 };
 
+function StudentSectionInfo({ mentor, spacetime, override, associatedProfileId }) {
+  return (
+    <React.Fragment>
+      <h3 className="section-detail-page-title">My Section</h3>
+      <div className="section-info-cards-container">
+        {mentor && (
+          <InfoCard title="Mentor">
+            <h5>{mentor.name}</h5>
+            <a href={`mailto:${mentor.email}`}>{mentor.email}</a>
+          </InfoCard>
+        )}
+        <SectionSpacetime spacetime={spacetime} override={override} />
+        <DropSection profileId={associatedProfileId} />
+      </div>
+    </React.Fragment>
+  );
+}
+
+StudentSectionInfo.propTypes = {
+  mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
+  spacetime: PropTypes.object.isRequired,
+  override: PropTypes.object,
+  associatedProfileId: PropTypes.number.isRequired
+};
+
 class DropSection extends React.Component {
   static STAGES = Object.freeze({ INITIAL: "INITIAL", CONFIRM: "CONFIRM", DROPPED: "DROPPED" });
   static propTypes = { profileId: PropTypes.number.isRequired };
@@ -97,8 +84,9 @@ class DropSection extends React.Component {
 
   performDrop() {
     //TODO: Handle API failure
-    fetchWithMethod(`students/${this.props.profileId}/drop`, HTTP_METHODS.PATCH);
-    this.setState({ stage: DropSection.STAGES.DROPPED });
+    fetchWithMethod(`students/${this.props.profileId}/drop`, HTTP_METHODS.PATCH).then(() =>
+      this.setState({ stage: DropSection.STAGES.DROPPED })
+    );
   }
 
   render() {
@@ -127,3 +115,38 @@ class DropSection extends React.Component {
     }
   }
 }
+
+function StudentSectionAttendance({ associatedProfileId }) {
+  const [state, setState] = useState({ attendances: null, loaded: false });
+  useEffect(() => {
+    fetchJSON(`/students/${associatedProfileId}/attendances`).then(attendances =>
+      setState({ attendances, loaded: true })
+    );
+  }, [associatedProfileId]);
+  const { attendances, loaded } = state;
+  return !loaded ? null : (
+    <table id="attendance-table" className="standalone-table">
+      <thead>
+        <tr>
+          <th>Week</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {attendances.map(({ presence, weekStart }) => {
+          const [label, cssSuffix] = ATTENDANCE_LABELS[presence];
+          return (
+            <tr key={weekStart}>
+              <td>{weekStart}</td>
+              <td className="status">
+                <div style={{ backgroundColor: `var(--csm-attendance-${cssSuffix})` }}>{label}</div>
+              </td>
+            </tr>
+          );
+        })}
+      </tbody>
+    </table>
+  );
+}
+
+StudentSectionAttendance.propTypes = { associatedProfileId: PropTypes.number.isRequired };
