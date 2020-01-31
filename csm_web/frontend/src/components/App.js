@@ -1,5 +1,5 @@
 import React from "react";
-import { MemoryRouter as Router, Route, Switch, Link } from "react-router-dom";
+import { HashRouter as Router, Route, Switch, Link } from "react-router-dom";
 import ReactDOM from "react-dom";
 import CourseMenu from "./CourseMenu";
 import Home from "./Home";
