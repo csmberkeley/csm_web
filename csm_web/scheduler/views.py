@@ -74,8 +74,7 @@ class CourseViewSet(*viewset_with('list')):
 
     def get_queryset(self):
         queryset = Course.objects.filter(valid_until__gte=timezone.now().date())
-        if self.action == 'sections':
-            queryset = queryset.filter(enrollment_start__lte=timezone.now(), enrollment_end__gt=timezone.now())
+        queryset = queryset.filter(enrollment_start__lte=timezone.now(), enrollment_end__gt=timezone.now())
         return queryset
 
     @action(detail=True)
