@@ -331,6 +331,7 @@ class SpacetimeEditModal extends React.Component {
               type="text"
               name="location"
               value={location}
+              autoFocus
             />
           </label>
           {/* Would use a fieldset to be semantic, but Chrome has a bug where flexbox doesn't work for fieldset */}

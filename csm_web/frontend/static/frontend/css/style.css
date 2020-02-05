@@ -771,12 +771,21 @@ table tbody tr:last-child > td {
 }
 
 #spacetime-edit-form #date-of-change-fields input[type="radio"] {
-	margin-right: 10px;
+	margin: 0 10px 0 0;
 	-webkit-appearance: none;
 	-moz-appearance: none;
-	padding: 2px 8px;
+	padding: 0;
+	width: 16px;
+	height: 16px;
+	display: inline-block;
 	border: 2px solid var(--csm-green);
-	border-radius: 13px;
+	border-radius: 8px;
+	vertical-align: middle;
+}
+
+#spacetime-edit-form #date-of-change-fields input[type="radio"][value="true"] {
+	position: relative;
+	bottom: 1px;
 }
 
 #spacetime-edit-form #date-of-change-fields input[type="radio"]:checked {
@@ -823,7 +832,10 @@ table tbody tr:last-child > td {
 	font-size: small;
 }
 
-
+#spacetime-edit-form select:disabled, #spacetime-edit-form input:disabled {
+	cursor: not-allowed;
+	background-color: #fafafa;
+}
 
 #spacetime-edit-form input[type="submit"] {
 	margin: auto;
