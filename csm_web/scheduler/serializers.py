@@ -1,7 +1,7 @@
 from rest_framework import serializers
-from django.utils import timezone, dateparse
-from datetime import datetime
-from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Profile
+from enum import Enum
+from django.utils import timezone
+from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator
 
 
 class SpacetimeReadOnlySerializer(serializers.ModelSerializer):
@@ -90,33 +90,48 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 
 class SectionSerializer(serializers.ModelSerializer):
+    class Role(Enum):
+        COORDINATOR = "COORDINATOR"
+        STUDENT = "STUDENT"
+        MENTOR = "MENTOR"
+
     spacetime = SpacetimeReadOnlySerializer()
     num_students_enrolled = serializers.IntegerField(source='current_student_count')
     mentor = MentorSerializer()
     course = serializers.CharField(source='course.name')
     course_title = serializers.CharField(source='course.title')
-    is_student = serializers.SerializerMethodField()
+    user_role = serializers.SerializerMethodField()
     override = OverrideReadOnlySerializer(source='spacetime.override')
     associated_profile_id = serializers.SerializerMethodField()
 
-    def get_is_student(self, obj):
-        user = self.context.get('request') and self.context.get('request').user
-        return None if not user else bool(obj.students.filter(user=user).count())
-
-    def get_associated_profile_id(self, obj):
+    def user_associated_profile(self, obj):
         user = self.context.get('request') and self.context.get('request').user
         if not user:
             return
         try:
-            return obj.students.get(user=user).pk
+            return obj.students.get(user=user)
         except Student.DoesNotExist:
-            assert obj.mentor and obj.mentor.user == user
-            return obj.mentor.pk
+            if obj.mentor and obj.mentor.user == user:
+                return obj.mentor
+            coordinator = obj.course.coordinator_set.filter(user=user).first()
+            return coordinator  # If coordinator is None we'd return None anyway at this point
+
+    def get_user_role(self, obj):
+        profile = self.user_associated_profile(obj)
+        if not profile:
+            return
+        for role, klass in zip(self.Role, (Coordinator, Student, Mentor)):
+            if isinstance(profile, klass):
+                return role.value
+
+    def get_associated_profile_id(self, obj):
+        profile = self.user_associated_profile(obj)
+        return profile and profile.pk
 
     class Meta:
         model = Section
         fields = ("id", "spacetime", "mentor", "capacity", "override", "associated_profile_id",
-                  "num_students_enrolled", "description", "mentor", "course", "is_student", "course_title")
+                  "num_students_enrolled", "description", "mentor", "course", "user_role", "course_title")
 
 
 class OverrideSerializer(serializers.ModelSerializer):

@@ -1,7 +1,7 @@
 import React from "react";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
-import { Redirect } from "react-router-dom";
+import { Redirect, Link } from "react-router-dom";
 import LocationIcon from "../../static/frontend/img/location.svg";
 import UserIcon from "../../static/frontend/img/user.svg";
 import GroupIcon from "../../static/frontend/img/group.svg";
@@ -22,7 +22,7 @@ const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
 });
 
 export default class Course extends React.Component {
-  state = { sections: null, loaded: false, day: "", showUnavailable: true }; // Sections are grouped by day
+  state = { sections: null, loaded: false, day: "", showUnavailable: true, userIsCoordinator: false }; // Sections are grouped by day
 
   static propTypes = {
     match: PropTypes.shape({ params: PropTypes.shape({ id: PropTypes.string.isRequired }) }).isRequired,
@@ -31,13 +31,13 @@ export default class Course extends React.Component {
 
   componentDidMount() {
     const { id } = this.props.match.params;
-    fetchJSON(`/courses/${id}/sections`).then(sections =>
-      this.setState({ sections, loaded: true, day: Object.keys(sections)[0] })
+    fetchJSON(`/courses/${id}/sections`).then(({ sections, userIsCoordinator }) =>
+      this.setState({ sections, userIsCoordinator, loaded: true, day: Object.keys(sections)[0] })
     );
   }
 
   render() {
-    const { loaded, sections, day: currDay, showUnavailable } = this.state;
+    const { loaded, sections, day: currDay, showUnavailable, userIsCoordinator } = this.state;
     let currDaySections = sections && sections[currDay];
     if (currDaySections && !showUnavailable) {
       currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
@@ -68,7 +68,9 @@ export default class Course extends React.Component {
         </div>
         <div id="course-section-list">
           {currDaySections && currDaySections.length > 0 ? (
-            currDaySections.map(section => <SectionCard key={section.id} {...section} />)
+            currDaySections.map(section => (
+              <SectionCard key={section.id} userIsCoordinator={userIsCoordinator} {...section} />
+            ))
           ) : (
             <h3 id="course-section-list-empty">No sections available, please select a different day</h3>
           )}
@@ -93,7 +95,8 @@ class SectionCard extends React.Component {
     mentor: PropTypes.shape({ name: PropTypes.string.isRequired }),
     numStudentsEnrolled: PropTypes.number.isRequired,
     capacity: PropTypes.number.isRequired,
-    description: PropTypes.string
+    description: PropTypes.string,
+    userIsCoordinator: PropTypes.bool.isRequired
   };
 
   enroll() {
@@ -159,7 +162,9 @@ class SectionCard extends React.Component {
       mentor,
       numStudentsEnrolled,
       capacity,
-      description
+      description,
+      userIsCoordinator,
+      id
     } = this.props;
     const iconWidth = "1.3em";
     const iconHeight = "1.3em";
@@ -187,9 +192,15 @@ class SectionCard extends React.Component {
               <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}
             </p>
           </div>
-          <div className="csm-btn section-card-footer" onClick={isFull ? undefined : this.enroll}>
-            ENROLL
-          </div>
+          {userIsCoordinator ? (
+            <Link to={`/sections/${id}`} className="csm-btn section-card-footer">
+              MANAGE
+            </Link>
+          ) : (
+            <div className="csm-btn section-card-footer" onClick={isFull ? undefined : this.enroll}>
+              ENROLL
+            </div>
+          )}
         </section>
       </React.Fragment>
     );

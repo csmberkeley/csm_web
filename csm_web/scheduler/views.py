@@ -3,6 +3,7 @@ import logging
 from operator import attrgetter
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
+from django.db.models import Q
 from django.db.models.query import EmptyQuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -16,7 +17,6 @@ from .serializers import (
     SectionSerializer,
     StudentSerializer,
     AttendanceSerializer,
-    MentorSerializer,
     OverrideSerializer,
     ProfileSerializer,
     SpacetimeSerializer
@@ -73,17 +73,17 @@ class CourseViewSet(*viewset_with('list')):
     serializer_class = CourseSerializer
 
     def get_queryset(self):
-        queryset = Course.objects.filter(valid_until__gte=timezone.now().date())
-        queryset = queryset.filter(enrollment_start__lte=timezone.now(), enrollment_end__gt=timezone.now())
-        return queryset
+        now = timezone.now()
+        return (Course.objects.filter(valid_until__gte=now.date(), enrollment_start__lte=now, enrollment_end__gt=now) | Course.objects.filter(coordinator__user=self.request.user))
 
     @action(detail=True)
     def sections(self, request, pk=None):
         course = get_object_or_error(self.get_queryset(), pk=pk)
         # TODO: Clean this up
-        return Response(dict(sorted(((day, SectionSerializer(group, many=True).data) for day, group in groupby(
+        sections_by_day = dict(sorted(((day, SectionSerializer(group, many=True).data) for day, group in groupby(
             course.section_set.all().order_by('spacetime__day_of_week', 'spacetime__start_time'),
-            lambda section: section.spacetime.day_of_week)), key=lambda pair: Spacetime.DAY_INDEX.index(pair[0]))))
+            lambda section: section.spacetime.day_of_week)), key=lambda pair: Spacetime.DAY_INDEX.index(pair[0])))
+        return Response({'userIsCoordinator': bool(course.coordinator_set.filter(user=self.request.user).count()), 'sections': sections_by_day})
 
 
 class SectionViewSet(*viewset_with('retrieve')):
@@ -93,9 +93,7 @@ class SectionViewSet(*viewset_with('retrieve')):
         return get_object_or_error(self.get_queryset(), **self.kwargs)
 
     def get_queryset(self):
-        mentor_sections = Section.objects.filter(mentor__user=self.request.user)
-        student_sections = Section.objects.filter(students__user=self.request.user)
-        return (mentor_sections | student_sections).distinct()
+        return Section.objects.filter(Q(mentor__user=self.request.user) | Q(students__user=self.request.user) | Q(course__coordinator__user=self.request.user)).distinct()
 
     @action(detail=True, methods=['get', 'put'])
     def students(self, request, pk=None):
