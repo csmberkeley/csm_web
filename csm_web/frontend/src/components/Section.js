@@ -6,6 +6,8 @@ import { SPACETIME_SHAPE } from "../utils/types";
 import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";
 
+const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
+
 export default function Section({
   match: {
     url,
@@ -20,12 +22,18 @@ export default function Section({
   useEffect(() => {
     fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
   }, [id]);
-
-  return !loaded ? null : section.isStudent ? (
-    <StudentSection url={url} {...section} />
-  ) : (
-    <MentorSection reloadSection={reloadSection} url={url} id={Number(id)} {...section} />
-  );
+  if (!loaded) {
+    return null;
+  }
+  switch (section.userRole) {
+    case ROLES.COORDINATOR:
+      //TODO: <CoordinatorSection/>
+      break;
+    case ROLES.STUDENT:
+      return <StudentSection url={url} {...section} />;
+    case ROLES.MENTOR:
+      return <MentorSection reloadSection={reloadSection} url={url} id={Number(id)} {...section} />;
+  }
 }
 
 Section.propTypes = {

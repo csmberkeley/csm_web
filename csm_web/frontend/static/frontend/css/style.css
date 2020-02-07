@@ -315,6 +315,7 @@ header {
 }
 
 .section-card-footer {
+	display: block;
 	font-size: 1.3em;
 	border-radius: 0px;
 	text-align: center;
@@ -322,7 +323,8 @@ header {
 	text-transform: uppercase;
 }
 
-.section-card.full .section-card-footer {
+/* Specify div because it's an <a> element for coordinators which links to section management page */
+.section-card.full div.section-card-footer {
 	background-color: inherit;
 	color: transparent;
 	user-select: none;
