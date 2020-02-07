@@ -104,14 +104,25 @@ WSGI_APPLICATION = "csm_web.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
-DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-    }
-}
-
-if not DEBUG:
+if DEBUG:
+    if os.environ.get("DEV_USE_POSTGRES"):
+        DATABASES = {
+            'default': {
+                'ENGINE': 'django.db.backends.postgresql',
+                'NAME': 'csm_web_dev',
+                'USER': 'postgres',
+                'HOST': 'localhost',
+                'PORT': '5432',
+            }
+        }
+    else:
+        DATABASES = {
+            "default": {
+                "ENGINE": "django.db.backends.sqlite3",
+                "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
+            }
+        }
+else:
     DATABASES["pg"] = {
         "ENGINE": "django.db.backends.postgresql_psycopg2",
         "NAME": "csm_web",
