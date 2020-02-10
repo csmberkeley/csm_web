@@ -254,7 +254,10 @@ class SectionForm(forms.ModelForm):
             fields["start_time"].initial = spacetime.start_time
             fields["duration"].initial = spacetime.duration
             fields["day_of_week"].initial = spacetime.day_of_week
-            fields["students"].initial = "\n".join(str(student) for student in self.instance.students.all())
+            active_students = self.instance.students.filter(active=True)
+            dropped_students = self.instance.students.filter(active=False)
+            fields["active_students"].initial = "\n".join(str(student) for student in active_students)
+            fields["dropped_students"].initial = "\n".join(str(student) for student in dropped_students)
         else:
             for field in ("mentor_name", "mentor_email", "mentor_profile_id", "students"):
                 fields[field].widget = forms.HiddenInput()
@@ -271,15 +274,18 @@ class SectionForm(forms.ModelForm):
         help_text="Enter a value of the form 'hh:mm:ss', e.g. '01:30:00' for a 1.5 hour section."
     )
     day_of_week = forms.ChoiceField(choices=Spacetime.DayOfWeek.choices)
-    students = forms.CharField(required=False, disabled=True, widget=forms.Textarea,
-                               help_text="This field isn't actually editable. To add a student, enroll them through the Students admin page.")
+    active_students = forms.CharField(required=False, disabled=True, widget=forms.Textarea,
+                                      help_text="This field isn't actually editable. To add a student, enroll them through the Students admin page.")
+    dropped_students = forms.CharField(required=False, disabled=True, widget=forms.Textarea,
+                                       help_text="These students have dropped and not enrolled in a different section for the same course.")
 
     def clean(self):
         cleaned_data = super().clean()
         del cleaned_data["mentor_name"]
         del cleaned_data["mentor_email"]
         del cleaned_data["mentor_profile_id"]
-        del cleaned_data["students"]
+        del cleaned_data["active_students"]
+        del cleaned_data["dropped_students"]
         spacetime_field_names = ("location", "start_time", "duration", "day_of_week")
         for field in spacetime_field_names:
             # Bail out and let form handle missing field validation
@@ -332,7 +338,8 @@ class SectionAdmin(CoordAdmin):
                     "start_time",
                     "duration",
                     "day_of_week",
-                    "students"
+                    "active_students",
+                    "dropped_students"
                 )
             },
         ),
@@ -401,6 +408,7 @@ class SpacetimeAdmin(CoordAdmin):
 class CourseAdmin(CoordAdmin):
     fields = (
         "name",
+        "title",
         "valid_until",
         "enrollment_start",
         "enrollment_end",
