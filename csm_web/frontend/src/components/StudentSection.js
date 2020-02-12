@@ -3,14 +3,14 @@ import { Switch, Route, Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import Modal from "./Modal";
-import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime } from "./Section";
+import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime, ROLES } from "./Section";
 
 export default function StudentSection({ course, courseTitle, mentor, spacetime, override, associatedProfileId, url }) {
   return (
     <SectionDetail
       course={course}
       courseTitle={courseTitle}
-      isStudent={true}
+      userRole={ROLES.STUDENT}
       links={[
         ["Section", url],
         ["Attendance", `${url}/attendance`]

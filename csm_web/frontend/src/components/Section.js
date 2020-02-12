@@ -6,7 +6,7 @@ import { SPACETIME_SHAPE } from "../utils/types";
 import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";
 
-const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
+export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
 export default function Section({
   match: {
@@ -27,12 +27,10 @@ export default function Section({
   }
   switch (section.userRole) {
     case ROLES.COORDINATOR:
-      //TODO: <CoordinatorSection/>
-      break;
-    case ROLES.STUDENT:
-      return <StudentSection url={url} {...section} />;
     case ROLES.MENTOR:
       return <MentorSection reloadSection={reloadSection} url={url} id={Number(id)} {...section} />;
+    case ROLES.STUDENT:
+      return <StudentSection url={url} {...section} />;
   }
 }
 
@@ -43,8 +41,8 @@ Section.propTypes = {
   }).isRequired
 };
 
-export function SectionHeader({ course, courseTitle, isStudent }) {
-  const relation = isStudent ? "student" : "mentor";
+export function SectionHeader({ course, courseTitle, userRole }) {
+  const relation = userRole.toLowerCase();
   return (
     <div className="section-detail-header">
       <div className="section-detail-header-title">
@@ -61,7 +59,7 @@ export function SectionHeader({ course, courseTitle, isStudent }) {
 SectionHeader.propTypes = {
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
-  isStudent: PropTypes.bool.isRequired
+  userRole: PropTypes.string.isRequired
 };
 
 export function SectionSidebar({ links }) {
@@ -118,10 +116,10 @@ InfoCard.propTypes = {
   showTitle: PropTypes.bool
 };
 
-export function SectionDetail({ course, courseTitle, isStudent, links, children }) {
+export function SectionDetail({ course, courseTitle, userRole, links, children }) {
   return (
     <section>
-      <SectionHeader course={course} courseTitle={courseTitle} isStudent={isStudent} />
+      <SectionHeader course={course} courseTitle={courseTitle} userRole={userRole} />
       <div id="section-detail-body">
         <SectionSidebar links={links} />
         <div id="section-detail-main">{children}</div>
@@ -133,7 +131,7 @@ export function SectionDetail({ course, courseTitle, isStudent, links, children 
 SectionDetail.propTypes = {
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
-  isStudent: PropTypes.bool.isRequired,
+  userRole: PropTypes.string.isRequired,
   links: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)).isRequired,
   children: PropTypes.node.isRequired
 };

@@ -141,11 +141,17 @@ class StudentViewSet(viewsets.GenericViewSet):
     def get_queryset(self):
         own_profiles = Student.objects.filter(user=self.request.user, active=True)
         pupil_profiles = Student.objects.filter(section__mentor__user=self.request.user, active=True)
-        return (own_profiles | pupil_profiles).distinct()
+        coordinator_student_profiles = Student.objects.filter(
+            section__course__coordinator__user=self.request.user, active=True)
+        return (own_profiles | pupil_profiles | coordinator_student_profiles).distinct()
 
     @action(detail=True, methods=['patch'])
     def drop(self, request, pk=None):
         student = get_object_or_error(self.get_queryset(), pk=pk)
+        if student.user != self.request.user and not student.section.course.coordinator_set.filter(user=self.request.user).count():
+            # Students can drop themselves, and Coordinators can drop students from their course
+            # Mentors CANNOT drop their own students, or anyone else for that matter
+            raise PermissionDenied("You do not have permission to drop this student")
         student.active = False
         student.save()
         logger.info(f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)}")
@@ -188,7 +194,7 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
     serializer_class = Spacetime
 
     def get_queryset(self):
-        return Spacetime.objects.filter(section__mentor__user=self.request.user)
+        return Spacetime.objects.filter(Q(section__mentor__user=self.request.user) | Q(section__course__coordinator__user=self.request.user))
 
     @action(detail=True, methods=['put'])
     def modify(self, request, pk=None):
