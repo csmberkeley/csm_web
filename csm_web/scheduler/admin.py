@@ -259,7 +259,7 @@ class SectionForm(forms.ModelForm):
             fields["active_students"].initial = "\n".join(str(student) for student in active_students)
             fields["dropped_students"].initial = "\n".join(str(student) for student in dropped_students)
         else:
-            for field in ("mentor_name", "mentor_email", "mentor_profile_id", "students"):
+            for field in ("mentor_name", "mentor_email", "mentor_profile_id", "active_students", "dropped_students"):
                 fields[field].widget = forms.HiddenInput()
 
     mentor_name = forms.CharField(required=False, disabled=True)
@@ -359,6 +359,7 @@ class SectionAdmin(CoordAdmin):
         "mentor__user__last_name",
         "spacetime__day_of_week",
         "spacetime__location",
+        "description"
     )
 
     def get_form(self, request, obj=None, **kwargs):
