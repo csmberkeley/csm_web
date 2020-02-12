@@ -443,6 +443,26 @@ header {
 	padding-top: 40px;
 }
 
+#create-section-form {
+	display: grid;
+	padding-left: 0;
+	justify-content: space-evenly;
+	grid-template-columns: max-content max-content;
+	grid-template-areas:
+	". ."
+	". ."
+	". ."
+	"submit submit";
+}
+
+#create-section-form input {
+}
+
+#create-section-form input[type="submit"] {
+	grid-area: submit;
+}
+
+
 /* login */
 
 #login-container {
@@ -786,20 +806,20 @@ table tbody tr:last-child > td {
 }
 
 
-.section-edit-form {
+.csm-form {
 	padding-left: 40px;
 }
 
-.section-edit-form #submit-and-status > * {
+.csm-form #submit-and-status > * {
 	display: block;
 	margin: auto;
 }
 
-.section-edit-form h4 {
+.csm-form h4 {
 	text-align: left;
 }
 
-.section-edit-form input,  .section-edit-form select {
+.csm-form input,  .csm-form select {
 	background-color: #F5F5F5;
 	padding: 10px 20px;
 	border: none;
@@ -834,11 +854,11 @@ table tbody tr:last-child > td {
 	background-color: var(--csm-green);
 }
 
-.section-edit-form > * {
+.csm-form > * {
 	margin-bottom: 20px;
 }
 
-.section-edit-form label {
+.csm-form label {
 	display: block;
 	color: #646464;
 	font-weight: 600;
@@ -863,7 +883,7 @@ table tbody tr:last-child > td {
 	margin-top: 7px;
 }
 
-.section-edit-form select {
+.csm-form select {
 	background-image: url('data:image/svg+xml;utf8,<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="gray" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg>');
 	background-repeat: no-repeat, repeat;
 	background-position: right .7em top 50%, 0 0;
@@ -874,12 +894,12 @@ table tbody tr:last-child > td {
 	font-size: small;
 }
 
-.section-edit-form select:disabled, .section-edit-form input:disabled {
+.csm-form select:disabled, .csm-form input:disabled {
 	cursor: not-allowed;
 	background-color: #fafafa;
 }
 
-.section-edit-form input[type="submit"] {
+.csm-form input[type="submit"] {
 	margin: auto;
 	background-color: var(--csm-green);
 	color: white;
@@ -887,7 +907,7 @@ table tbody tr:last-child > td {
 	padding: 10px 40px;
 }
 
-.section-edit-form input[type="submit"]:hover {
+.csm-form input[type="submit"]:hover {
 	background-color: var(--csm-green-darkened);
 }
 
