@@ -10,6 +10,7 @@ import CheckCircle from "../../static/frontend/img/check_circle.svg";
 import XCircle from "../../static/frontend/img/x_circle.svg";
 import Modal, { ModalCloser } from "./Modal";
 import { SPACETIME_SHAPE } from "../utils/types";
+import { DAYS_OF_WEEK } from "./MentorSection";
 
 const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
   Mon: "M",
@@ -22,22 +23,38 @@ const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
 });
 
 export default class Course extends React.Component {
-  state = { sections: null, loaded: false, day: "", showUnavailable: true, userIsCoordinator: false }; // Sections are grouped by day
-
   static propTypes = {
     match: PropTypes.shape({ params: PropTypes.shape({ id: PropTypes.string.isRequired }) }).isRequired,
     name: PropTypes.string.isRequired
   };
 
-  componentDidMount() {
+  constructor(props) {
+    super(props);
+    this.state = {
+      sections: null,
+      loaded: false,
+      day: "",
+      showUnavailable: true,
+      userIsCoordinator: false,
+      showModal: false
+    }; // Sections are grouped by day
+    this.reloadSections = this.reloadSections.bind(this);
+  }
+
+  reloadSections() {
     const { id } = this.props.match.params;
     fetchJSON(`/courses/${id}/sections`).then(({ sections, userIsCoordinator }) =>
       this.setState({ sections, userIsCoordinator, loaded: true, day: Object.keys(sections)[0] })
     );
   }
 
+  componentDidMount() {
+    this.reloadSections();
+  }
+
   render() {
-    const { loaded, sections, day: currDay, showUnavailable, userIsCoordinator } = this.state;
+    const { id } = this.props.match.params;
+    const { loaded, sections, day: currDay, showUnavailable, userIsCoordinator, showModal } = this.state;
     let currDaySections = sections && sections[currDay];
     if (currDaySections && !showUnavailable) {
       currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
@@ -66,7 +83,7 @@ export default class Course extends React.Component {
             Show unavailable
           </label>
           {userIsCoordinator && (
-            <button className="csm-btn create-section-btn">
+            <button className="csm-btn create-section-btn" onClick={() => this.setState({ showModal: true })}>
               <span className="inline-plus-sign">+ </span>Create Section
             </button>
           )}
@@ -80,6 +97,13 @@ export default class Course extends React.Component {
             <h3 id="course-section-list-empty">No sections available, please select a different day</h3>
           )}
         </div>
+        {userIsCoordinator && showModal && (
+          <CreateSectionModal
+            reloadSections={this.reloadSections}
+            closeModal={() => this.setState({ showModal: false })}
+            courseId={Number(id)}
+          />
+        )}
       </div>
     );
   }
@@ -208,6 +232,113 @@ class SectionCard extends React.Component {
           )}
         </section>
       </React.Fragment>
+    );
+  }
+}
+
+class CreateSectionModal extends React.Component {
+  static propTypes = {
+    courseId: PropTypes.number.isRequired,
+    closeModal: PropTypes.func.isRequired,
+    reloadSections: PropTypes.func.isRequired
+  };
+
+  constructor(props) {
+    super(props);
+    this.state = { userEmails: [], mentorEmail: "", day: "", time: "", location: "", description: "", capacity: "" };
+    this.handleChange = this.handleChange.bind(this);
+    this.handleSubmit = this.handleSubmit.bind(this);
+  }
+
+  componentDidMount() {
+    fetchJSON("/users/").then(userEmails => this.setState({ userEmails }));
+  }
+
+  handleChange({ target: { name, value } }) {
+    this.setState({ [name]: value });
+  }
+
+  handleSubmit(event) {
+    event.preventDefault();
+    const { day: dayOfWeek, time: startTime, location, description, capacity, mentorEmail } = this.state;
+    const { courseId, reloadSections, closeModal } = this.props;
+    const data = { spacetime: { dayOfWeek, startTime, location }, description, capacity, mentorEmail, courseId };
+    //TODO: Handle API Failure
+    fetchWithMethod("/sections", HTTP_METHODS.POST, data).then(() => {
+      closeModal();
+      reloadSections();
+    });
+  }
+
+  render() {
+    const { closeModal } = this.props;
+    const { mentorEmail, userEmails, capacity, description, day, time, location } = this.state;
+    return (
+      <Modal closeModal={closeModal}>
+        <form id="create-section-form" className="csm-form" onSubmit={this.handleSubmit}>
+          <label>
+            Mentor Email
+            <input
+              onChange={this.handleChange}
+              type="email"
+              list="user-email-list"
+              required
+              name="mentorEmail"
+              value={mentorEmail}
+              autoFocus
+            />
+            <datalist id="user-email-list">
+              {userEmails.map(email => (
+                <option key={email} value={email} />
+              ))}
+            </datalist>
+          </label>
+          <label>
+            Capacity
+            <input
+              required
+              name="capacity"
+              type="number"
+              min="0"
+              inputMode="numeric"
+              pattern="[0-9]*"
+              value={capacity}
+              onChange={this.handleChange}
+            />
+          </label>
+          <label>
+            Description
+            <input name="description" type="text" value={description} onChange={this.handleChange} />
+          </label>
+          <label>
+            Location
+            <input
+              onChange={this.handleChange}
+              required
+              title="You cannot leave this field blank"
+              pattern=".*[^\s]+.*"
+              type="text"
+              name="location"
+              value={location}
+            />
+          </label>
+          <label>
+            Day
+            <select onChange={this.handleChange} name="day" value={day} required>
+              {[["", "---"]].concat(Object.entries(DAYS_OF_WEEK)).map(([value, label]) => (
+                <option key={value} value={value} disabled={!value}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Time
+            <input onChange={this.handleChange} required type="time" name="time" value={time} />
+          </label>
+          <input type="submit" value="Create Section" />
+        </form>
+      </Modal>
     );
   }
 }

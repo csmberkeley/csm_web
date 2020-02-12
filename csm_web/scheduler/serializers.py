@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator
+from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator, User
 
 
 class Role(Enum):
@@ -16,7 +16,7 @@ def get_profile_role(profile):
             return role.value
 
 
-class SpacetimeReadOnlySerializer(serializers.ModelSerializer):
+class SpacetimeSerializer(serializers.ModelSerializer):
     time = serializers.SerializerMethodField()
 
     def get_time(self, obj):
@@ -26,14 +26,8 @@ class SpacetimeReadOnlySerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Spacetime
-        fields = ("time", "location", "id")
-        read_only_fields = ("time", "location", "id")
-
-
-class SpacetimeSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Spacetime
-        fields = ("day_of_week", "start_time", "location")
+        fields = ("start_time", "day_of_week", "time", "location", "id", "duration")
+        read_only_fields = ("time", "id")
 
 
 class CourseSerializer(serializers.ModelSerializer):
@@ -65,7 +59,7 @@ class ProfileSerializer(serializers.Serializer):
 
     id = serializers.IntegerField()
     section_id = serializers.IntegerField(source='section.id', required=False)
-    section_spacetime = SpacetimeReadOnlySerializer(source='section.spacetime', required=False)
+    section_spacetime = SpacetimeSerializer(source='section.spacetime', required=False)
     course = VariableSourceCourseField(source='*', target='name', required=False)
     course_title = VariableSourceCourseField(source='*', target='title', required=False)
     course_id = VariableSourceCourseField(source='*', target='pk', required=False)
@@ -103,7 +97,7 @@ class StudentSerializer(serializers.ModelSerializer):
 
 
 class OverrideReadOnlySerializer(serializers.ModelSerializer):
-    spacetime = SpacetimeReadOnlySerializer()
+    spacetime = SpacetimeSerializer()
     date = serializers.DateField(format="%b. %-d")
 
     class Meta:
@@ -113,7 +107,7 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 
 class SectionSerializer(serializers.ModelSerializer):
-    spacetime = SpacetimeReadOnlySerializer()
+    spacetime = SpacetimeSerializer()
     num_students_enrolled = serializers.IntegerField(source='current_student_count')
     mentor = MentorSerializer()
     course = serializers.CharField(source='course.name')

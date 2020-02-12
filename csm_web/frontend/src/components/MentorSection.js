@@ -120,7 +120,7 @@ const MONTH_NUMBERS = Object.freeze({
   Dec: 12
 });
 
-const DAYS_OF_WEEK = Object.freeze({
+export const DAYS_OF_WEEK = Object.freeze({
   Mon: "Monday",
   Tue: "Tuesday",
   Wed: "Wednesday",
@@ -341,7 +341,7 @@ class SpacetimeEditModal extends React.Component {
     const today = `${now.getFullYear()}-${zeroPadTwoDigit(now.getMonth() + 1)}-${zeroPadTwoDigit(now.getDate())}`;
     return (
       <Modal className="spacetime-edit-modal" closeModal={this.props.closeModal}>
-        <form className="section-edit-form" id="spacetime-edit-form" onSubmit={this.handleSubmit}>
+        <form className="csm-form" id="spacetime-edit-form" onSubmit={this.handleSubmit}>
           <h4>Change Time and Location</h4>
           <label>
             Location
@@ -439,7 +439,7 @@ function MetaEditModal({ closeModal, sectionId, reloadSection }) {
   }
   return (
     <Modal closeModal={closeModal}>
-      <form className="section-edit-form" onSubmit={handleSubmit}>
+      <form className="csm-form" onSubmit={handleSubmit}>
         <h4>Change Section Metadata</h4>
         <label>
           Capacity

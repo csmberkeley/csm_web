@@ -11,7 +11,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from .models import Course, Section, Student, Spacetime, User, Override, Attendance
+from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor
 from .serializers import (
     CourseSerializer,
     SectionSerializer,
@@ -19,7 +19,7 @@ from .serializers import (
     AttendanceSerializer,
     OverrideSerializer,
     ProfileSerializer,
-    SpacetimeSerializer
+    SpacetimeSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -86,7 +86,7 @@ class CourseViewSet(*viewset_with('list')):
         return Response({'userIsCoordinator': bool(course.coordinator_set.filter(user=self.request.user).count()), 'sections': sections_by_day})
 
 
-class SectionViewSet(*viewset_with('retrieve', 'partial_update')):
+class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
     serializer_class = SectionSerializer
 
     def get_object(self):
@@ -94,6 +94,21 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update')):
 
     def get_queryset(self):
         return Section.objects.filter(Q(mentor__user=self.request.user) | Q(students__user=self.request.user) | Q(course__coordinator__user=self.request.user)).distinct()
+
+    def create(self, request):
+        course = get_object_or_error(Course.objects.all(
+        ), pk=request.data['course_id'], coordinator__user=self.request.user)
+        mentor_user = get_object_or_error(User.objects.all(), email=self.request.data['mentor_email'])
+        spacetime = SpacetimeSerializer(
+            data={**self.request.data['spacetime'], 'duration': str(course.section_set.first().spacetime.duration)})
+        if spacetime.is_valid():
+            spacetime = spacetime.save()
+        else:
+            return Response({'error': f"Spacetime was invalid {spacetime.errors}", status: status.HTTP_422_UNPROCESSABLE_ENTITY})
+        mentor = Mentor.objects.create(user=mentor_user)
+        Section.objects.create(spacetime=spacetime, mentor=mentor,
+                               description=self.request.data['description'], capacity=self.request.data['capacity'], course=course)
+        return Response(status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk=None):
         section = get_object_or_error(self.get_queryset(), pk=pk)
@@ -214,7 +229,7 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
     def modify(self, request, pk=None):
         """Permanently modifies a spacetime, ignoring the override field."""
         spacetime = get_object_or_error(self.get_queryset(), pk=pk)
-        serializer = SpacetimeSerializer(spacetime, data=request.data)
+        serializer = SpacetimeSerializer(spacetime, data=request.data, partial=True)
         if serializer.is_valid():
             new_spacetime = serializer.save()
             logger.info(
@@ -240,3 +255,11 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         logger.error(
             f"<Override:Failure> Could not override Spacetime {log_str(spacetime)}, errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+
+class UserViewSet(*viewset_with('list')):
+    serializer_class = None
+    queryset = User.objects.all()
+
+    def list(self, request):
+        return Response(self.queryset.values_list('email', flat=True))
