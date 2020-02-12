@@ -244,9 +244,10 @@ header {
 
 .relation-label {
 	text-transform: capitalize;
-	width: 70px;
 	padding: 8px 16px;
 	color: white;
+	min-width: 60px;
+	max-width: fit-content;
 	text-align: center;
 	border-radius: 20px;
 	margin-top: auto;
@@ -523,9 +524,6 @@ main {
 .section-detail-header .relation-label {
 	border-radius: 4px;
 	padding: 5px 14px;
-	width: unset;
-	min-width: 60px;
-	max-width: fit-content;
 	font-size: 14px;
 	margin-bottom: 40px;
 }
