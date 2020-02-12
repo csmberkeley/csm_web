@@ -92,7 +92,8 @@ class SectionCard extends React.Component {
     spacetime: SPACETIME_SHAPE.isRequired,
     mentor: PropTypes.shape({ name: PropTypes.string.isRequired }),
     numStudentsEnrolled: PropTypes.number.isRequired,
-    capacity: PropTypes.number.isRequired
+    capacity: PropTypes.number.isRequired,
+    description: PropTypes.string
   };
 
   enroll() {
@@ -157,7 +158,8 @@ class SectionCard extends React.Component {
       spacetime: { location, time },
       mentor,
       numStudentsEnrolled,
-      capacity
+      capacity,
+      description
     } = this.props;
     const iconWidth = "1.3em";
     const iconHeight = "1.3em";
@@ -171,6 +173,7 @@ class SectionCard extends React.Component {
         {showModal && <Modal closeModal={this.closeModal}>{this.modalContents().props.children}</Modal>}
         <section className={`section-card ${isFull ? "full" : ""}`}>
           <div className="section-card-contents">
+            {description && <span className="section-card-description">{description}</span>}
             <p title="Location">
               <LocationIcon width={iconWidth} height={iconHeight} /> {location}
             </p>

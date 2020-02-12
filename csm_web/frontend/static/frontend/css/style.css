@@ -301,6 +301,7 @@ header {
 }
 
 .section-card-contents {
+	position: relative;
 	padding: 10px 20px 0;
 }
 
@@ -326,6 +327,19 @@ header {
 	color: transparent;
 	user-select: none;
 	cursor: inherit;
+}
+
+.section-card-description {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	background-color: var(--csm-student);
+	color: white;
+	border-radius: 8px;
+	min-width: 50px;
+	text-align: center;
+	font-size: 12px;
+	padding: 2px 5px;
 }
 
 #day-selector {
