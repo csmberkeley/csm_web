@@ -10,7 +10,19 @@ import PencilIcon from "../../static/frontend/img/pencil.svg";
 import { ATTENDANCE_LABELS } from "./Section";
 import Modal from "./Modal";
 
-export default function MentorSection({ id, url, course, courseTitle, spacetime, override, reloadSection, userRole }) {
+export default function MentorSection({
+  id,
+  url,
+  course,
+  courseTitle,
+  spacetime,
+  override,
+  capacity,
+  description,
+  reloadSection,
+  userRole,
+  mentor
+}) {
   const [{ students, attendances, loaded }, setState] = useState({ students: [], attendances: {}, loaded: false });
   useEffect(() => {
     setState({ students: [], attendances: {}, loaded: false });
@@ -62,11 +74,15 @@ export default function MentorSection({ id, url, course, courseTitle, spacetime,
           render={() => (
             <MentorSectionInfo
               isCoordinator={userRole === ROLES.COORDINATOR}
+              mentor={mentor}
               reloadSection={reloadSection}
               students={students}
               loaded={loaded}
               spacetime={spacetime}
               override={override}
+              capacity={capacity}
+              description={description}
+              id={id}
             />
           )}
         />
@@ -83,7 +99,10 @@ MentorSection.propTypes = {
   override: PropTypes.object,
   url: PropTypes.string.isRequired,
   reloadSection: PropTypes.func.isRequired,
-  userRole: PropTypes.string.isRequired
+  userRole: PropTypes.string.isRequired,
+  mentor: PropTypes.object.isRequired,
+  capacity: PropTypes.number,
+  description: PropTypes.string
 };
 
 const MONTH_NUMBERS = Object.freeze({
@@ -322,7 +341,7 @@ class SpacetimeEditModal extends React.Component {
     const today = `${now.getFullYear()}-${zeroPadTwoDigit(now.getMonth() + 1)}-${zeroPadTwoDigit(now.getDate())}`;
     return (
       <Modal className="spacetime-edit-modal" closeModal={this.props.closeModal}>
-        <form id="spacetime-edit-form" onSubmit={this.handleSubmit}>
+        <form className="section-edit-form" id="spacetime-edit-form" onSubmit={this.handleSubmit}>
           <h4>Change Time and Location</h4>
           <label>
             Location
@@ -405,11 +424,71 @@ class SpacetimeEditModal extends React.Component {
   }
 }
 
-function MentorSectionInfo({ students, loaded, spacetime, override, reloadSection, isCoordinator }) {
-  const [showModal, setShowModal] = useState(false);
+function MetaEditModal({ closeModal, sectionId, reloadSection }) {
+  const [formState, setFormState] = useState({ capacity: "", description: "" });
+  function handleChange({ target: { name, value } }) {
+    setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
+  }
+  function handleSubmit(event) {
+    event.preventDefault();
+    //TODO: Handle API Failure
+    fetchWithMethod(`/sections/${sectionId}/`, HTTP_METHODS.PATCH, formState).then(() => {
+      closeModal();
+      reloadSection();
+    });
+  }
+  return (
+    <Modal closeModal={closeModal}>
+      <form className="section-edit-form" onSubmit={handleSubmit}>
+        <h4>Change Section Metadata</h4>
+        <label>
+          Capacity
+          <input
+            required
+            name="capacity"
+            type="number"
+            min="0"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={formState.capacity}
+            onChange={handleChange}
+          />
+        </label>
+        <label>
+          Description
+          <input name="description" type="text" value={formState.description} onChange={handleChange} />
+        </label>
+        <input type="submit" value="Save" />
+      </form>
+    </Modal>
+  );
+}
+
+MetaEditModal.propTypes = {
+  sectionId: PropTypes.number.isRequired,
+  closeModal: PropTypes.func.isRequired,
+  reloadSection: PropTypes.func.isRequired
+};
+
+const MODAL_STATES = Object.freeze({ NONE: "NONE", SPACETIME_EDIT: "SPACETIME_EDIT", META_EDIT: "META_EDIT" });
+
+function MentorSectionInfo({
+  students,
+  loaded,
+  spacetime,
+  override,
+  reloadSection,
+  isCoordinator,
+  mentor,
+  capacity,
+  id,
+  description
+}) {
+  const [showModal, setShowModal] = useState(MODAL_STATES.NONE);
+  const closeModal = () => setShowModal(MODAL_STATES.NONE);
   return (
     <React.Fragment>
-      <h3 className="section-detail-page-title">My Section</h3>
+      <h3 className="section-detail-page-title">{`${isCoordinator ? `${mentor.name}'s` : "My"} Section`}</h3>
       <div className="section-info-cards-container">
         <InfoCard title="Students">
           {loaded && (
@@ -444,17 +523,25 @@ function MentorSectionInfo({ students, loaded, spacetime, override, reloadSectio
           {!loaded && <h5>Loading students...</h5>}
         </InfoCard>
         <SectionSpacetime spacetime={spacetime} override={override}>
-          {showModal && (
-            <SpacetimeEditModal
-              reloadSection={reloadSection}
-              spacetimeId={spacetime.id}
-              closeModal={() => setShowModal(false)}
-            />
+          {showModal === MODAL_STATES.SPACETIME_EDIT && (
+            <SpacetimeEditModal reloadSection={reloadSection} spacetimeId={spacetime.id} closeModal={closeModal} />
           )}
-          <button className="spacetime-edit-btn" onClick={() => setShowModal(true)}>
+          <button className="info-card-edit-btn" onClick={() => setShowModal(MODAL_STATES.SPACETIME_EDIT)}>
             <PencilIcon width="1em" height="1em" /> Edit
           </button>
         </SectionSpacetime>
+        {isCoordinator && (
+          <InfoCard title="Meta">
+            <button className="info-card-edit-btn" onClick={() => setShowModal(MODAL_STATES.META_EDIT)}>
+              <PencilIcon width="1em" height="1em" /> Edit
+            </button>
+            {showModal === MODAL_STATES.META_EDIT && (
+              <MetaEditModal sectionId={id} closeModal={closeModal} reloadSection={reloadSection} />
+            )}
+            <p>Capacity: {capacity}</p>
+            <p>Description: {description}</p>
+          </InfoCard>
+        )}
       </div>
     </React.Fragment>
   );
@@ -467,7 +554,11 @@ MentorSectionInfo.propTypes = {
   spacetime: PropTypes.object.isRequired,
   override: PropTypes.object,
   reloadSection: PropTypes.func.isRequired,
-  isCoordinator: PropTypes.bool.isRequired
+  isCoordinator: PropTypes.bool.isRequired,
+  mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
+  capacity: PropTypes.number,
+  description: PropTypes.string,
+  id: PropTypes.number.isRequired
 };
 
 function MentorSectionRoster({ students, loaded }) {
