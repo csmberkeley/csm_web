@@ -189,6 +189,8 @@ header {
 	color: white;
 	padding: 3px 10px;
 	text-decoration: none;
+	/* Need to manually respecify this on <buttons> for some strange reason */
+	font-family: 'Montserrat', sans-serif;
 }
 
 .csm-btn:hover {
@@ -291,6 +293,14 @@ header {
 }
 
 /* Section enrollment */
+
+.create-section-btn {
+	font-size: 16px;
+	border: none;
+	cursor: pointer;
+	margin:  0 auto !important;
+	display: block;
+}
 
 .section-card {
 	width: 300px;

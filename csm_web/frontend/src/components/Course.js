@@ -65,6 +65,11 @@ export default class Course extends React.Component {
             />
             Show unavailable
           </label>
+          {userIsCoordinator && (
+            <button className="csm-btn create-section-btn">
+              <span className="inline-plus-sign">+ </span>Create Section
+            </button>
+          )}
         </div>
         <div id="course-section-list">
           {currDaySections && currDaySections.length > 0 ? (
