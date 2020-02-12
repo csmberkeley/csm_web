@@ -86,7 +86,7 @@ class CourseViewSet(*viewset_with('list')):
         return Response({'userIsCoordinator': bool(course.coordinator_set.filter(user=self.request.user).count()), 'sections': sections_by_day})
 
 
-class SectionViewSet(*viewset_with('retrieve')):
+class SectionViewSet(*viewset_with('retrieve', 'partial_update')):
     serializer_class = SectionSerializer
 
     def get_object(self):
@@ -94,6 +94,20 @@ class SectionViewSet(*viewset_with('retrieve')):
 
     def get_queryset(self):
         return Section.objects.filter(Q(mentor__user=self.request.user) | Q(students__user=self.request.user) | Q(course__coordinator__user=self.request.user)).distinct()
+
+    def partial_update(self, request, pk=None):
+        section = get_object_or_error(self.get_queryset(), pk=pk)
+        if not section.course.coordinator_set.filter(user=self.request.user).count():
+            raise PermissionDenied("Only coordinators can change section metadata")
+        serializer = self.serializer_class(section, data={'capacity': request.data.get(
+            'capacity'), 'description': request.data.get('description')}, partial=True)
+        if serializer.is_valid():
+            section = serializer.save()
+            logger.info(f"<Section:Meta:Success> Updated metadata on section {log_str(section)}")
+            return Response(status=status.HTTP_202_ACCEPTED)
+        else:
+            logger.info(f"<Section:Meta:Failure> Failed to update metadata on section {log_str(section)}")
+            return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     @action(detail=True, methods=['get', 'put'])
     def students(self, request, pk=None):
