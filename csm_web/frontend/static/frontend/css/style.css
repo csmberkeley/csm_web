@@ -23,7 +23,10 @@ body {
 	--csm-theme-ee16b: #FFE070;
 	--csm-theme-eecs16b: var(--csm-theme-ee16b);
 	--csm-mentor: var(--csm-green);
+	--csm-coordinator: #6517B3;
 	--csm-student: #FFAB2E;
+	--csm-danger: #FF7272;
+	--csm-danger-darkened: #EB6060;
 }
 
 /* Header */
@@ -520,7 +523,9 @@ main {
 .section-detail-header .relation-label {
 	border-radius: 4px;
 	padding: 5px 14px;
-	width: 60px;
+	width: unset;
+	min-width: 60px;
+	max-width: fit-content;
 	font-size: 14px;
 	margin-bottom: 40px;
 }
@@ -585,7 +590,7 @@ main {
 	display: block;
 	margin: auto;
 	cursor: pointer;
-	background-color: #FF7272;
+	background-color: var(--csm-danger);
 	border-radius: 6px;
 	color: white;
 	font-size: 14px;
@@ -598,7 +603,7 @@ main {
 }
 
 .danger-btn:hover {
-	background-color: #eb6060;
+	background-color: var(--csm-danger-darkened);
 }
 
 
@@ -721,7 +726,20 @@ table tbody tr:last-child > td {
 	flex-wrap: wrap;
 	--csm-attendance-present: var(--csm-green);
 	--csm-attendance-excused: #797979;
-	--csm-attendance-unexcused: #FF7272;
+	--csm-attendance-unexcused: var(--csm-danger);
+}
+
+#students-table .inline-plus-sign {
+	display: inline-block;
+	transform: rotate(45deg);
+	position: relative;
+	top: 1px;
+	color: var(--csm-danger);
+	cursor: pointer;
+}
+
+#students-table .inline-plus-sign:hover {
+	color: var(--csm-danger-darkened);
 }
 
 #students-table tbody td {

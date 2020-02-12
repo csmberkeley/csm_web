@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
-import { SectionDetail, InfoCard, SectionSpacetime } from "./Section";
+import { SectionDetail, InfoCard, SectionSpacetime, ROLES } from "./Section";
 import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
 import CopyIcon from "../../static/frontend/img/copy.svg";
@@ -9,7 +9,8 @@ import CheckCircle from "../../static/frontend/img/check_circle.svg";
 import PencilIcon from "../../static/frontend/img/pencil.svg";
 import { ATTENDANCE_LABELS } from "./Section";
 import Modal from "./Modal";
-export default function MentorSection({ id, url, course, courseTitle, spacetime, override, reloadSection }) {
+
+export default function MentorSection({ id, url, course, courseTitle, spacetime, override, reloadSection, userRole }) {
   const [{ students, attendances, loaded }, setState] = useState({ students: [], attendances: {}, loaded: false });
   useEffect(() => {
     setState({ students: [], attendances: {}, loaded: false });
@@ -41,7 +42,7 @@ export default function MentorSection({ id, url, course, courseTitle, spacetime,
     <SectionDetail
       course={course}
       courseTitle={courseTitle}
-      isStudent={false}
+      userRole={userRole}
       links={[
         ["Section", url],
         ["Attendance", `${url}/attendance`],
@@ -60,6 +61,7 @@ export default function MentorSection({ id, url, course, courseTitle, spacetime,
           path={url}
           render={() => (
             <MentorSectionInfo
+              isCoordinator={userRole === ROLES.COORDINATOR}
               reloadSection={reloadSection}
               students={students}
               loaded={loaded}
@@ -80,7 +82,8 @@ MentorSection.propTypes = {
   spacetime: PropTypes.object.isRequired,
   override: PropTypes.object,
   url: PropTypes.string.isRequired,
-  reloadSection: PropTypes.func.isRequired
+  reloadSection: PropTypes.func.isRequired,
+  userRole: PropTypes.string.isRequired
 };
 
 const MONTH_NUMBERS = Object.freeze({
@@ -402,7 +405,7 @@ class SpacetimeEditModal extends React.Component {
   }
 }
 
-function MentorSectionInfo({ students, loaded, spacetime, override, reloadSection }) {
+function MentorSectionInfo({ students, loaded, spacetime, override, reloadSection, isCoordinator }) {
   const [showModal, setShowModal] = useState(false);
   return (
     <React.Fragment>
@@ -419,7 +422,20 @@ function MentorSectionInfo({ students, loaded, spacetime, override, reloadSectio
               <tbody>
                 {(students.length === 0 ? [{ name: "No students enrolled", id: -1 }] : students).map(({ name, id }) => (
                   <tr key={id}>
-                    <td>{name}</td>
+                    <td>
+                      {isCoordinator && id !== -1 && (
+                        <span
+                          onClick={() =>
+                            fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH).then(() => reloadSection())
+                          }
+                          title="Drop student from section"
+                          className="inline-plus-sign"
+                        >
+                          +
+                        </span>
+                      )}
+                      {name}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -450,7 +466,8 @@ MentorSectionInfo.propTypes = {
   loaded: PropTypes.bool.isRequired,
   spacetime: PropTypes.object.isRequired,
   override: PropTypes.object,
-  reloadSection: PropTypes.func.isRequired
+  reloadSection: PropTypes.func.isRequired,
+  isCoordinator: PropTypes.bool.isRequired
 };
 
 function MentorSectionRoster({ students, loaded }) {
