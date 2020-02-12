@@ -4,6 +4,18 @@ from django.utils import timezone
 from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator
 
 
+class Role(Enum):
+    COORDINATOR = "COORDINATOR"
+    STUDENT = "STUDENT"
+    MENTOR = "MENTOR"
+
+
+def get_profile_role(profile):
+    for role, klass in zip(Role, (Coordinator, Student, Mentor)):
+        if isinstance(profile, klass):
+            return role.value
+
+
 class SpacetimeReadOnlySerializer(serializers.ModelSerializer):
     time = serializers.SerializerMethodField()
 
@@ -41,15 +53,26 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class ProfileSerializer(serializers.Serializer):
-    id = serializers.IntegerField()
-    section_id = serializers.IntegerField(source='section.id')
-    section_spacetime = SpacetimeReadOnlySerializer(source='section.spacetime')
-    course = serializers.CharField(source='section.course.name')
-    course_title = serializers.CharField(source='section.course.title')
-    is_student = serializers.SerializerMethodField()
+    class VariableSourceCourseField(serializers.Field):
+        def __init__(self, *args, **kwargs):
+            self.target = kwargs.pop('target')
+            super().__init__(self, *args, **kwargs)
 
-    def get_is_student(self, obj):
-        return isinstance(obj, Student)
+        def to_representation(self, value):
+            if isinstance(value, Coordinator):
+                return getattr(value.course, self.target)
+            return getattr(value.section.course, self.target)
+
+    id = serializers.IntegerField()
+    section_id = serializers.IntegerField(source='section.id', required=False)
+    section_spacetime = SpacetimeReadOnlySerializer(source='section.spacetime', required=False)
+    course = VariableSourceCourseField(source='*', target='name', required=False)
+    course_title = VariableSourceCourseField(source='*', target='title', required=False)
+    course_id = VariableSourceCourseField(source='*', target='pk', required=False)
+    role = serializers.SerializerMethodField()
+
+    def get_role(self, obj):
+        return get_profile_role(obj)
 
 
 class MentorSerializer(serializers.ModelSerializer):
@@ -90,11 +113,6 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 
 class SectionSerializer(serializers.ModelSerializer):
-    class Role(Enum):
-        COORDINATOR = "COORDINATOR"
-        STUDENT = "STUDENT"
-        MENTOR = "MENTOR"
-
     spacetime = SpacetimeReadOnlySerializer()
     num_students_enrolled = serializers.IntegerField(source='current_student_count')
     mentor = MentorSerializer()
@@ -120,9 +138,7 @@ class SectionSerializer(serializers.ModelSerializer):
         profile = self.user_associated_profile(obj)
         if not profile:
             return
-        for role, klass in zip(self.Role, (Coordinator, Student, Mentor)):
-            if isinstance(profile, klass):
-                return role.value
+        return get_profile_role(profile)
 
     def get_associated_profile_id(self, obj):
         profile = self.user_associated_profile(obj)

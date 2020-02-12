@@ -201,7 +201,7 @@ class ProfileViewSet(*viewset_with('list')):
     queryset = EmptyQuerySet
 
     def list(self, request):
-        return Response(ProfileSerializer([*request.user.student_set.filter(active=True), *request.user.mentor_set.exclude(section=None)], many=True).data)
+        return Response(ProfileSerializer([*request.user.student_set.filter(active=True), *request.user.mentor_set.exclude(section=None), *request.user.coordinator_set.all()], many=True).data)
 
 
 class SpacetimeViewSet(viewsets.GenericViewSet):

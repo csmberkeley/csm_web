@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import { groupBy } from "lodash";
 import { fetchJSON } from "../utils/api";
+import { ROLES } from "./Section";
 
 export default class Home extends React.Component {
   state = { profiles: [], profilesLoaded: false };
@@ -34,9 +35,9 @@ export default class Home extends React.Component {
 }
 
 function CourseCard({ profiles }) {
-  const { course, courseTitle, isStudent, sectionId } = profiles[0];
+  const { course, courseTitle, role, sectionId, courseId } = profiles[0];
+  const relation = role.toLowerCase();
   function Card() {
-    const relation = isStudent ? "student" : "mentor";
     return (
       <div className="course-card" style={{ borderTopColor: `var(--csm-theme-${course.toLowerCase()})` }}>
         <div className="course-card-contents">
@@ -55,6 +56,13 @@ function CourseCard({ profiles }) {
       </div>
     );
   }
+  if (role === ROLES.COORDINATOR) {
+    return (
+      <Link to={`/courses/${courseId}`} className="course-card-link">
+        <Card />
+      </Link>
+    );
+  }
   return profiles.length === 1 ? (
     <Link to={`/sections/${sectionId}`} className="course-card-link">
       <Card />
@@ -70,6 +78,7 @@ const profileShape = PropTypes.shape({
   sectionSpacetime: PropTypes.shape({ time: PropTypes.string.isRequired, location: PropTypes.string }).isRequired,
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
+  courseId: PropTypes.number.isRequired,
   isStudent: PropTypes.bool.isRequired
 });
 
