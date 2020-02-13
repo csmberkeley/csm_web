@@ -13,6 +13,8 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 import os
 from factory import DjangoModelFactory
 from rest_framework.serializers import ModelSerializer, Serializer
+import sentry_sdk
+from sentry_sdk.integrations.django import DjangoIntegration
 
 # Analogous to RAILS_ENV, is one of {prod, staging, dev}. Defaults to dev. This default can
 # be dangerous, but is worth it to avoid the hassle for developers setting the local ENV var
@@ -35,6 +37,9 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # TODO
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DJANGO_ENV == DEVELOPMENT
+
+if DJANGO_ENV == PRODUCTION:
+    sentry_sdk.init(dsn=os.environ.get('SENTRY_DSN'), integrations=[DjangoIntegration()], send_default_pii=True)
 
 ALLOWED_HOSTS = []
 
