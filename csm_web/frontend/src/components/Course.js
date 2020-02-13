@@ -284,6 +284,8 @@ class CreateSectionModal extends React.Component {
               list="user-email-list"
               required
               name="mentorEmail"
+              pattern=".+@berkeley.edu$"
+              title="Please enter a valid @berkeley.edu email address"
               value={mentorEmail}
               autoFocus
             />
