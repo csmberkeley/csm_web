@@ -511,24 +511,26 @@ function MentorSectionInfo({
                 </tr>
               </thead>
               <tbody>
-                {(students.length === 0 ? [{ name: "No students enrolled", id: -1 }] : students).map(({ name, id }) => (
-                  <tr key={id}>
-                    <td>
-                      {isCoordinator && id !== -1 && (
-                        <span
-                          onClick={() =>
-                            fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH).then(() => reloadSection())
-                          }
-                          title="Drop student from section"
-                          className="inline-plus-sign"
-                        >
-                          +
-                        </span>
-                      )}
-                      {name}
-                    </td>
-                  </tr>
-                ))}
+                {(students.length === 0 ? [{ name: "No students enrolled", id: -1 }] : students).map(
+                  ({ name, email, id }) => (
+                    <tr key={id}>
+                      <td>
+                        {isCoordinator && id !== -1 && (
+                          <span
+                            onClick={() =>
+                              fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH).then(() => reloadSection())
+                            }
+                            title="Drop student from section"
+                            className="inline-plus-sign"
+                          >
+                            +
+                          </span>
+                        )}
+                        {name || email}
+                      </td>
+                    </tr>
+                  )
+                )}
                 {isCoordinator && (
                   <tr>
                     <td>
@@ -598,8 +600,13 @@ Object.defineProperty(MentorSectionInfo, "MODAL_STATES", {
 });
 
 MentorSectionInfo.propTypes = {
-  students: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string.isRequired, id: PropTypes.number.isRequired }))
-    .isRequired,
+  students: PropTypes.arrayOf(
+    PropTypes.shape({
+      name: PropTypes.string.isRequired,
+      id: PropTypes.number.isRequired,
+      email: PropTypes.string.isRequired
+    })
+  ).isRequired,
   loaded: PropTypes.bool.isRequired,
   spacetime: PropTypes.object.isRequired,
   override: PropTypes.object,
