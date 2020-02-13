@@ -51,12 +51,12 @@ ADMINS = [
 # Application definition
 
 INSTALLED_APPS = [
-    "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    "csm_web.apps.AdminConfig",
     "scheduler.apps.SchedulerConfig",
     "rest_framework",
     "social_django",
@@ -83,7 +83,7 @@ ROOT_URLCONF = "csm_web.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [],
+        "DIRS": ["./csm_web/csm_web/templates/csm_web/"],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
