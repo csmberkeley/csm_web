@@ -236,7 +236,7 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
     serializer_class = Spacetime
 
     def get_queryset(self):
-        return Spacetime.objects.filter(Q(section__mentor__user=self.request.user) | Q(section__course__coordinator__user=self.request.user))
+        return Spacetime.objects.filter(Q(section__mentor__user=self.request.user) | Q(section__course__coordinator__user=self.request.user)).distinct()
 
     @action(detail=True, methods=['put'])
     def modify(self, request, pk=None):
