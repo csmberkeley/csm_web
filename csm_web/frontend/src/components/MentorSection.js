@@ -500,7 +500,9 @@ function MentorSectionInfo({
   }
   return (
     <React.Fragment>
-      <h3 className="section-detail-page-title">{`${isCoordinator ? `${mentor.name}'s` : "My"} Section`}</h3>
+      <h3 className="section-detail-page-title">{`${
+        isCoordinator ? `${mentor.name || mentor.email}'s` : "My"
+      } Section`}</h3>
       <div className="section-info-cards-container">
         <InfoCard title="Students">
           {loaded && (
@@ -582,8 +584,12 @@ function MentorSectionInfo({
             {showModal === MentorSectionInfo.MODAL_STATES.META_EDIT && (
               <MetaEditModal sectionId={id} closeModal={closeModal} reloadSection={reloadSection} />
             )}
-            <p>Capacity: {capacity}</p>
-            <p>Description: {description}</p>
+            <p>
+              <span className="meta-field">Capacity:</span> {capacity}
+            </p>
+            <p>
+              <span className="meta-field">Description:</span> {description}
+            </p>
           </InfoCard>
         )}
       </div>
