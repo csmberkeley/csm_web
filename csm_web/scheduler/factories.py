@@ -14,6 +14,7 @@ from .models import (
     User,
     Attendance,
     Override,
+    Coordinator
 )
 
 COMPSCI_WORDS = ('Algorithms', 'Systems', 'Distributed', 'Efficient', 'Tractable', 'Programming',
@@ -161,6 +162,8 @@ def create_demo_account():
     demo_student = random.choice(Student.objects.exclude(section__course=demo_mentor.section.course))
     demo_student.user = demo_mentor.user
     demo_student.save()
+    Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
+        Course.objects.exclude(pk__in=(demo_mentor.section.course.pk, demo_student.section.course.pk))))
     print("""
     A demo account has been created with username 'demo_user' and password 'pass'
     Log in at localhost:8000/admin/
