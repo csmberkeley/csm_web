@@ -647,6 +647,7 @@ main {
 
 .section-detail-info-card-contents {
 	position: relative;
+	min-width: 12em;
 }
 
 .section-detail-info-card-contents, .standalone-table, #mentor-attendance {
@@ -765,7 +766,7 @@ table tbody tr:last-child > td {
 	color: var(--csm-danger);
 	cursor: pointer;
 }
-  
+
 #students-table .csm-form {
 	display: flex;
 	padding-left: 0;
@@ -824,6 +825,11 @@ table tbody tr:last-child > td {
 
 .info-card-edit-btn:hover {
 	color: #a1a1a1;
+}
+
+.meta-field {
+	font-weight: 600;
+	color: #727070;
 }
 
 .spacetime-edit-modal {
