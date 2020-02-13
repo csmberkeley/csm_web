@@ -74,7 +74,7 @@ class CourseViewSet(*viewset_with('list')):
 
     def get_queryset(self):
         now = timezone.now()
-        return (Course.objects.filter(valid_until__gte=now.date(), enrollment_start__lte=now, enrollment_end__gt=now) | Course.objects.filter(coordinator__user=self.request.user))
+        return (Course.objects.filter(valid_until__gte=now.date(), enrollment_start__lte=now, enrollment_end__gt=now) | Course.objects.filter(coordinator__user=self.request.user)).distinct()
 
     @action(detail=True)
     def sections(self, request, pk=None):
@@ -83,7 +83,7 @@ class CourseViewSet(*viewset_with('list')):
         sections_by_day = dict(sorted(((day, SectionSerializer(group, many=True).data) for day, group in groupby(
             course.section_set.all().order_by('spacetime__day_of_week', 'spacetime__start_time'),
             lambda section: section.spacetime.day_of_week)), key=lambda pair: Spacetime.DAY_INDEX.index(pair[0])))
-        return Response({'userIsCoordinator': bool(course.coordinator_set.filter(user=self.request.user).count()), 'sections': sections_by_day})
+        return Response({'userIsCoordinator': bool(course.coordinator_set.filter(user=request.user).count()), 'sections': sections_by_day})
 
 
 class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
