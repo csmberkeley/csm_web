@@ -367,13 +367,11 @@ class SpacetimeEditModal extends React.Component {
                 disabled={!isPermanent}
                 value={isPermanent ? day : ""}
               >
-                {Object.entries(DAYS_OF_WEEK)
-                  .concat([["", "---"]])
-                  .map(([value, label]) => (
-                    <option key={value} value={value} disabled={!value}>
-                      {label}
-                    </option>
-                  ))}
+                {[["", "---"]].concat(Object.entries(DAYS_OF_WEEK)).map(([value, label]) => (
+                  <option key={value} value={value} disabled={!value}>
+                    {label}
+                  </option>
+                ))}
               </select>
             </label>
             <label>
