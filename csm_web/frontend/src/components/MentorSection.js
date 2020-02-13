@@ -452,6 +452,7 @@ function MetaEditModal({ closeModal, sectionId, reloadSection }) {
             pattern="[0-9]*"
             value={formState.capacity}
             onChange={handleChange}
+            autoFocus
           />
         </label>
         <label>
