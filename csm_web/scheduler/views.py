@@ -98,7 +98,8 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
     def create(self, request):
         course = get_object_or_error(Course.objects.all(
         ), pk=request.data['course_id'], coordinator__user=self.request.user)
-        mentor_user = get_object_or_error(User.objects.all(), email=self.request.data['mentor_email'])
+        mentor_user, _ = User.objects.get_or_create(
+            email=self.request.data['mentor_email'], username=self.request.data['mentor_email'].split('@')[0])
         spacetime = SpacetimeSerializer(
             data={**self.request.data['spacetime'], 'duration': str(course.section_set.first().spacetime.duration)})
         if spacetime.is_valid():
@@ -166,8 +167,9 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                 return Response(status=status.HTTP_204_NO_CONTENT)
             except Student.DoesNotExist:  # Student is enrolling in this course for the first time
                 if is_coordinator:
-                    student = Student.objects.create(user=User.objects.get(
-                        email=request.data['email']), section=section)
+                    user, _ = User.objects.get_or_create(
+                        email=request.data['email'], username=request.data['email'].split('@')[0])
+                    student = Student.objects.create(user=user, section=section)
                 else:
                     student = Student.objects.create(user=request.user, section=section)
                 logger.info(
