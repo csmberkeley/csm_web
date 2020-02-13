@@ -138,7 +138,10 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
             """
             section = get_object_or_error(Section.objects, pk=pk)
             section = Section.objects.select_for_update().get(pk=section.pk)
-            if not request.user.can_enroll_in_course(section.course):
+            is_coordinator = bool(section.course.coordinator_set.filter(user=request.user).count())
+            if is_coordinator and not request.data.get('email'):
+                return Response({'error': 'Must specify email of student to enroll'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            if not (request.user.can_enroll_in_course(section.course) or is_coordinator):
                 logger.warn(
                     f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because they are already involved in this course")
                 raise PermissionDenied(
@@ -149,18 +152,26 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                     f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because it was full")
                 raise PermissionDenied("There is no space available in this section", status.HTTP_423_LOCKED)
             try:  # Student dropped a section in this course and is now enrolling in a different one
-                student = request.user.student_set.get(active=False, section__course=section.course)
+                if is_coordinator:
+                    student = Student.objects.get(active=False, section__course=section.course,
+                                                  user__email=request.data['email'])
+                else:
+                    student = request.user.student_set.get(active=False, section__course=section.course)
                 old_section = student.section
                 student.section = section
                 student.active = True
                 student.save()
                 logger.info(
-                    f"<Enrollment:Success> User {log_str(request.user)} swapped into Section {log_str(section)} from Section {log_str(old_section)}")
+                    f"<Enrollment:Success> User {log_str(student.user)} swapped into Section {log_str(section)} from Section {log_str(old_section)}")
                 return Response(status=status.HTTP_204_NO_CONTENT)
             except Student.DoesNotExist:  # Student is enrolling in this course for the first time
-                student = Student.objects.create(user=request.user, section=section)
+                if is_coordinator:
+                    student = Student.objects.create(user=User.objects.get(
+                        email=request.data['email']), section=section)
+                else:
+                    student = Student.objects.create(user=request.user, section=section)
                 logger.info(
-                    f"<Enrollment:Success> User {log_str(request.user)} enrolled in Section {log_str(section)}")
+                    f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}")
                 return Response({'id': student.id}, status=status.HTTP_201_CREATED)
 
 

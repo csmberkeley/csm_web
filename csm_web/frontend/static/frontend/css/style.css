@@ -765,6 +765,31 @@ table tbody tr:last-child > td {
 	color: var(--csm-danger);
 	cursor: pointer;
 }
+  
+#students-table .csm-form {
+	display: flex;
+	padding-left: 0;
+}
+
+#students-table .csm-form input[type="submit"] {
+	color: var(--csm-green);
+	transform: none;
+	margin: auto;
+	background-color: inherit;
+	padding: 0;
+	position: relative;
+	bottom: 3px;
+	top: unset;
+	display: inline-block;
+}
+#students-table .csm-form input[type="submit"]:hover {
+	color: var(--csm-green-darkened);
+}
+
+#students-table .csm-form input {
+	margin: auto;
+}
+
 
 #students-table .inline-plus-sign:hover {
 	color: var(--csm-danger-darkened);

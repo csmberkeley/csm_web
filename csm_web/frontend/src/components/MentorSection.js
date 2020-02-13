@@ -470,8 +470,6 @@ MetaEditModal.propTypes = {
   reloadSection: PropTypes.func.isRequired
 };
 
-const MODAL_STATES = Object.freeze({ NONE: "NONE", SPACETIME_EDIT: "SPACETIME_EDIT", META_EDIT: "META_EDIT" });
-
 function MentorSectionInfo({
   students,
   loaded,
@@ -484,8 +482,21 @@ function MentorSectionInfo({
   id,
   description
 }) {
-  const [showModal, setShowModal] = useState(MODAL_STATES.NONE);
-  const closeModal = () => setShowModal(MODAL_STATES.NONE);
+  const [showModal, setShowModal] = useState(MentorSectionInfo.MODAL_STATES.NONE);
+  const [userEmails, setUserEmails] = useState([]);
+  const [newStudentEmail, setNewStudentEmail] = useState("");
+  useEffect(() => {
+    if (!isCoordinator) {
+      return;
+    }
+    fetchJSON("/users/").then(userEmails => setUserEmails(userEmails));
+  }, [id, isCoordinator]);
+  const closeModal = () => setShowModal(MentorSectionInfo.MODAL_STATES.NONE);
+  function handleAddStudentSubmit() {
+    fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT, { email: newStudentEmail }).then(() =>
+      reloadSection()
+    );
+  }
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">{`${isCoordinator ? `${mentor.name}'s` : "My"} Section`}</h3>
@@ -517,25 +528,55 @@ function MentorSectionInfo({
                     </td>
                   </tr>
                 ))}
+                {isCoordinator && (
+                  <tr>
+                    <td>
+                      <form className="csm-form" onSubmit={handleAddStudentSubmit}>
+                        <input type="submit" className="inline-plus-sign" value="+" />
+                        <input
+                          type="email"
+                          required
+                          pattern=".+@berkeley.edu$"
+                          title="Please enter a valid @berkeley.edu email address"
+                          placeholder="New student's email"
+                          list="user-emails-list"
+                          value={newStudentEmail}
+                          onChange={({ target: { value } }) => setNewStudentEmail(value)}
+                        />
+                        <datalist id="user-emails-list">
+                          {userEmails.map(email => (
+                            <option key={email} value={email} />
+                          ))}
+                        </datalist>
+                      </form>
+                    </td>
+                  </tr>
+                )}
               </tbody>
             </table>
           )}
           {!loaded && <h5>Loading students...</h5>}
         </InfoCard>
         <SectionSpacetime spacetime={spacetime} override={override}>
-          {showModal === MODAL_STATES.SPACETIME_EDIT && (
+          {showModal === MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT && (
             <SpacetimeEditModal reloadSection={reloadSection} spacetimeId={spacetime.id} closeModal={closeModal} />
           )}
-          <button className="info-card-edit-btn" onClick={() => setShowModal(MODAL_STATES.SPACETIME_EDIT)}>
+          <button
+            className="info-card-edit-btn"
+            onClick={() => setShowModal(MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT)}
+          >
             <PencilIcon width="1em" height="1em" /> Edit
           </button>
         </SectionSpacetime>
         {isCoordinator && (
           <InfoCard title="Meta">
-            <button className="info-card-edit-btn" onClick={() => setShowModal(MODAL_STATES.META_EDIT)}>
+            <button
+              className="info-card-edit-btn"
+              onClick={() => setShowModal(MentorSectionInfo.MODAL_STATES.META_EDIT)}
+            >
               <PencilIcon width="1em" height="1em" /> Edit
             </button>
-            {showModal === MODAL_STATES.META_EDIT && (
+            {showModal === MentorSectionInfo.MODAL_STATES.META_EDIT && (
               <MetaEditModal sectionId={id} closeModal={closeModal} reloadSection={reloadSection} />
             )}
             <p>Capacity: {capacity}</p>
@@ -546,6 +587,14 @@ function MentorSectionInfo({
     </React.Fragment>
   );
 }
+
+// Make MODAL_STATES the function-equivalent of a static class attribute on MentorSectionInfo
+Object.defineProperty(MentorSectionInfo, "MODAL_STATES", {
+  enumerable: false,
+  configurable: false,
+  writable: false,
+  value: Object.freeze({ NONE: "NONE", SPACETIME_EDIT: "SPACETIME_EDIT", META_EDIT: "META_EDIT" })
+});
 
 MentorSectionInfo.propTypes = {
   students: PropTypes.arrayOf(PropTypes.shape({ name: PropTypes.string.isRequired, id: PropTypes.number.isRequired }))
