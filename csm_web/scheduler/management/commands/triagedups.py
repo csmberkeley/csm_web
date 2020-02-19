@@ -45,7 +45,7 @@ class Command(BaseCommand):
             seen = set()
             dups = []
             for s in ss:
-                st = s.default_spacetime
+                st = s.spacetime
                 obj = (
                     course,
                     st.start_time,
