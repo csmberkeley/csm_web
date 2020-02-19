@@ -104,8 +104,10 @@ WSGI_APPLICATION = "csm_web.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
+DEV_USE_POSTGRES = os.environ.get("DEV_USE_POSTGRES")
+
 if DEBUG:
-    if os.environ.get("DEV_USE_POSTGRES"):
+    if DEV_USE_POSTGRES:
         DATABASES = {
             'default': {
                 'ENGINE': 'django.db.backends.postgresql',

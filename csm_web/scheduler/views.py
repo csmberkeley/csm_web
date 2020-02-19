@@ -3,7 +3,8 @@ import logging
 from operator import attrgetter
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Q
+from django.conf import settings
+from django.db.models import Q, Case, When, Value, PositiveSmallIntegerField, Count
 from django.db.models.query import EmptyQuerySet
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
@@ -71,19 +72,35 @@ def viewset_with(*permitted_methods):
 
 class CourseViewSet(*viewset_with('list')):
     serializer_class = CourseSerializer
+    SPACETIME_DAY_SORT = Case(*(When(spacetime__day_of_week=day, then=Value(key))
+                                for key, day in enumerate(Spacetime.DayOfWeek.values)), output_field=PositiveSmallIntegerField())
 
     def get_queryset(self):
         now = timezone.now()
         return (Course.objects.filter(valid_until__gte=now.date(), enrollment_start__lte=now, enrollment_end__gt=now) | Course.objects.filter(coordinator__user=self.request.user)).distinct()
 
+    if settings.DJANGO_ENV != settings.DEVELOPMENT or settings.DEV_USE_POSTGRES:
+        def get_sections_by_day(self, course):
+            sections = course.section_set.all().select_related('spacetime', 'spacetime___override',
+                                                               'mentor').prefetch_related('students').annotate(day_key=self.SPACETIME_DAY_SORT)
+            len(sections)  # Force evaluation of the QuerySet so that the below for loop doesn't trigger additional DB queries
+            section_count_by_day = sections.values('spacetime__day_of_week').annotate(num_sections=Count('id'))
+            start, sections_by_day = 0, {}
+            for group in section_count_by_day:
+                sections_by_day[group['spacetime__day_of_week']] = SectionSerializer(
+                    sections[start:start + group['num_sections']], many=True).data
+            return sections_by_day
+    else:
+        def get_sections_by_day(self, course):
+            return dict(sorted(((day, SectionSerializer(group, many=True).data) for day, group in groupby(
+                course.section_set.all().order_by('spacetime__day_of_week', 'spacetime__start_time'),
+                lambda section: section.spacetime.day_of_week)), key=lambda pair: Spacetime.DAY_INDEX.index(pair[0])))
+
     @action(detail=True)
     def sections(self, request, pk=None):
         course = get_object_or_error(self.get_queryset(), pk=pk)
-        # TODO: Clean this up
-        sections_by_day = dict(sorted(((day, SectionSerializer(group, many=True).data) for day, group in groupby(
-            course.section_set.all().order_by('spacetime__day_of_week', 'spacetime__start_time'),
-            lambda section: section.spacetime.day_of_week)), key=lambda pair: Spacetime.DAY_INDEX.index(pair[0])))
-        return Response({'userIsCoordinator': bool(course.coordinator_set.filter(user=request.user).count()), 'sections': sections_by_day})
+        sections_by_day = self.get_sections_by_day(course)
+        return Response({'userIsCoordinator': course.coordinator_set.filter(user=request.user).exists(), 'sections': sections_by_day})
 
 
 class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):

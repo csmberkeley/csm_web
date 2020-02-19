@@ -3,7 +3,7 @@ import re
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
-from django.utils import timezone
+from django.utils import timezone, functional
 from rest_framework.serializers import ValidationError
 
 
@@ -145,11 +145,9 @@ class Section(ValidatingModel):
         '"early start".'
     )
 
-    @property
+    @functional.cached_property
     def current_student_count(self):
         return self.students.filter(active=True).count()
-
-    current_student_count.fget.short_description = "Number of students enrolled"
 
     def delete(self, *args, **kwargs):
         if self.current_student_count and not kwargs.get('force'):
