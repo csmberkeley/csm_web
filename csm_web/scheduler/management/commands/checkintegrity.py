@@ -39,17 +39,12 @@ class Command(BaseCommand):
         mentors = Mentor.objects.select_related("section__spacetime")
         emails = mentors.values_list("user__email", flat=True).distinct()
         for email in emails:
-            spacetimes = Spacetime.objects.filter(
-                pk__in=mentors.filter(user__email=email).values_list("section__spacetime", flat=True)
-            )
+            spacetimes = Spacetime.objects.filter(section__mentor__user__email=email)
             # Naive n^2 algorithm since n is almost certainly < 2
-            n = len(spacetimes)
-            for i in range(n):
-                st = spacetimes[i]
+            for i, st in enumerate(spacetimes):
                 st_start = dt.datetime.combine(dt.date.today(), st.start_time)
                 st_end = st_start + st.duration
-                for j in range(i + 1, n):
-                    st_2 = spacetimes[j]
+                for st_2 in spacetimes[i + 1:]:
                     st_2_start = dt.datetime.combine(dt.date.today(), st_2.start_time)
                     st_2_end = st_2_start + st_2.duration
                     if st_2_start <= st_start < st_2_end or st_2_start < st_end <= st_2_end:
