@@ -9,6 +9,7 @@ import CheckCircle from "../../static/frontend/img/check_circle.svg";
 import PencilIcon from "../../static/frontend/img/pencil.svg";
 import { ATTENDANCE_LABELS } from "./Section";
 import Modal from "./Modal";
+import TimeInput from "./TimeInput";
 
 export default function MentorSection({
   id,
@@ -376,7 +377,7 @@ class SpacetimeEditModal extends React.Component {
             </label>
             <label>
               Time
-              <input onChange={this.handleChange} required type="time" name="time" value={time} />
+              <TimeInput onChange={this.handleChange} required name="time" value={time} />
             </label>
           </div>
           <div id="date-of-change-fields">
