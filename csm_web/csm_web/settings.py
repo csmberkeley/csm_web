@@ -125,13 +125,15 @@ if DEBUG:
             }
         }
 else:
-    DATABASES["pg"] = {
-        "ENGINE": "django.db.backends.postgresql_psycopg2",
-        "NAME": "csm_web",
-        "USER": "csm_web",
-        "PASSWORD": "",
-        "HOST": "localhost",
-        "PORT": "",
+    DATABASES = {
+        "pg": {
+            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "NAME": "csm_web",
+            "USER": "csm_web",
+            "PASSWORD": "",
+            "HOST": "localhost",
+            "PORT": "",
+        }
     }
 
 
