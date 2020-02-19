@@ -1,9 +1,7 @@
-from itertools import groupby
 import logging
 from operator import attrgetter
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.conf import settings
 from django.db.models import Q, Case, When, Value, PositiveSmallIntegerField, Count
 from django.db.models.query import EmptyQuerySet
 from django.shortcuts import get_object_or_404
@@ -72,6 +70,7 @@ def viewset_with(*permitted_methods):
 
 class CourseViewSet(*viewset_with('list')):
     serializer_class = CourseSerializer
+    # Used to sort sections in the order that the days are listed in Spacetime.DayOfWeek (i.e. Monday, Tuesday, ... )
     SPACETIME_DAY_SORT = Case(*(When(spacetime__day_of_week=day, then=Value(key))
                                 for key, day in enumerate(Spacetime.DayOfWeek.values)), output_field=PositiveSmallIntegerField())
 
@@ -79,22 +78,28 @@ class CourseViewSet(*viewset_with('list')):
         now = timezone.now()
         return (Course.objects.filter(valid_until__gte=now.date(), enrollment_start__lte=now, enrollment_end__gt=now) | Course.objects.filter(coordinator__user=self.request.user)).distinct()
 
-    if settings.DJANGO_ENV != settings.DEVELOPMENT or settings.DEV_USE_POSTGRES:
-        def get_sections_by_day(self, course):
-            sections = course.section_set.all().select_related('spacetime', 'spacetime___override',
-                                                               'mentor').prefetch_related('students').annotate(day_key=self.SPACETIME_DAY_SORT)
-            len(sections)  # Force evaluation of the QuerySet so that the below for loop doesn't trigger additional DB queries
-            section_count_by_day = sections.values('spacetime__day_of_week').annotate(num_sections=Count('id'))
-            start, sections_by_day = 0, {}
-            for group in section_count_by_day:
-                sections_by_day[group['spacetime__day_of_week']] = SectionSerializer(
-                    sections[start:start + group['num_sections']], many=True).data
-            return sections_by_day
-    else:
-        def get_sections_by_day(self, course):
-            return dict(sorted(((day, SectionSerializer(group, many=True).data) for day, group in groupby(
-                course.section_set.all().order_by('spacetime__day_of_week', 'spacetime__start_time'),
-                lambda section: section.spacetime.day_of_week)), key=lambda pair: Spacetime.DAY_INDEX.index(pair[0])))
+    def get_sections_by_day(self, course):
+        sections = course.section_set.all().annotate(day_key=self.SPACETIME_DAY_SORT)
+        section_count_by_day = sections.values('spacetime__day_of_week').order_by(
+            'day_key').annotate(num_sections=Count('id'))
+        """
+        Use list to force evaluation of the QuerySet so that the below for loop doesn't trigger a DB query on each iteration
+
+        Further explanation: 
+        Slicing an unevaluated QuerySet returns another unevaluated QuerySet (except when the step parameter is used but that's not relevant here).
+        So if we did *not* call list on the below line, then in the for loop below, each slice of sections (i.e. sections[ ... : ... ]) would be an unevaluated
+        QuerySet, which would then be evaluated (by way of performing a database query) when passed to SectionSerializer. Thus we'd make up to 7 (one for each day of the week)
+        *separate database queries* each time this endpoint was hit. This would be terrible for performance, so instead we call list, which evaluates the entire QuerySet with
+        a single database query, and then the slices in the for loop are just simple native Python list slices.
+        """
+        sections = list(sections.select_related('spacetime', 'spacetime___override',
+                                                'mentor').prefetch_related('students').order_by('day_key', 'spacetime__start_time'))
+        start, sections_by_day = 0, {}
+        for group in section_count_by_day:
+            sections_by_day[group['spacetime__day_of_week']] = SectionSerializer(
+                sections[start:start + group['num_sections']], many=True).data
+            start += group['num_sections']
+        return sections_by_day
 
     @action(detail=True)
     def sections(self, request, pk=None):
