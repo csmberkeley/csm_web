@@ -10,8 +10,8 @@ class Command(BaseCommand):
         today = date.today()
         week_start = today - timedelta(days=today.weekday())
         week_end = week_start + timedelta(weeks=1)
-        students = Student.objects.filter(active=True).only(
-            "id").exclude(attendance__date__range=(week_start, week_end))
+        students = Student.objects.filter(active=True).select_related(
+            "section__course", "user") .exclude(attendance__date__range=(week_start, week_end))
         # Note that bulk_create can only set the primary key in Postgres, so this won't work as expected in development if using Sqlite
         print(f"Updating attendance for week of {week_start}")
         print('\n'.join(map(str, students)))
