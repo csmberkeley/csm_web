@@ -1,27 +1,16 @@
 from datetime import timedelta, date
 from django.core.management import BaseCommand
-from django.db import transaction
-from scheduler.models import Student, Attendance, Spacetime
-
-WEEKDAY_OFFSET = {
-    pair[0]: number for number, pair in enumerate(Spacetime.DayOfWeek.choices)
-}
+from scheduler.models import Student, Attendance
 
 
 class Command(BaseCommand):
     help = "Creates a single attendance for this week for all students who have no attendances for this week."
 
     def handle(self, *args, **options):
-        students = Student.objects.filter(active=True)
-        with transaction.atomic():
-            today = date.today()
-            week_start = today - timedelta(days=today.weekday())
-            week_end = week_start + timedelta(days=7)
-            for student in students:
-                if Attendance.objects.filter(student=student, date__range=(week_start, week_end)).count() > 0:
-                    continue
-                self.stdout.write(f"Updating {student} for week of {week_start}")
-                Attendance.objects.create(
-                    student=student,
-                    date=week_start
-                )
+        today = date.today()
+        week_start = today - timedelta(days=today.weekday())
+        week_end = week_start + timedelta(weeks=1)
+        students = Student.objects.filter(active=True).only(
+            "id").exclude(attendance__date__range=(week_start, week_end))
+        # Note that bulk_create can only set the primary key in Postgres, so this won't work as expected in development if using Sqlite
+        Attendance.objects.bulk_create(Attendance(student=student, date=week_start) for student in students)
