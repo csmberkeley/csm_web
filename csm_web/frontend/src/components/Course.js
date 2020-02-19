@@ -11,6 +11,7 @@ import XCircle from "../../static/frontend/img/x_circle.svg";
 import Modal, { ModalCloser } from "./Modal";
 import { SPACETIME_SHAPE } from "../utils/types";
 import { DAYS_OF_WEEK } from "./MentorSection";
+import TimeInput from "./TimeInput";
 
 const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
   Mon: "M",
@@ -336,7 +337,7 @@ class CreateSectionModal extends React.Component {
           </label>
           <label>
             Time
-            <input onChange={this.handleChange} required type="time" name="time" value={time} />
+            <TimeInput onChange={this.handleChange} required name="time" value={time} />
           </label>
           <input type="submit" value="Create Section" />
         </form>
