@@ -34,8 +34,7 @@ class TestSanity(TestCase):
         mentor = MentorFactory.create(user=self.user)
         SectionFactory.create(course=self.cs61a, mentor=mentor)
         # Create a bunch of random guys for the heck of it
-        for _ in range(10):
-            section = SectionFactory.create(course=self.cs61a)
+        for section in SectionFactory.create_batch(10, course=self.cs61a):
             StudentFactory.create(section=section)
 
     def test_commands(self):
