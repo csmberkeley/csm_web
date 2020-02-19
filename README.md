@@ -1,5 +1,8 @@
 # CSM Web Applications
 This repository contains webapps that help support the infrastructure of CSM. Currently, it only holds Scheduler (our section signup and attendance system), but more are on the way.
+
+If you're unfamiliar with CSM and/or its web applications, check out [this repository's releases](https://github.com/csmberkeley/csm_web/releases) for a peek at what our web applications look like and what we've been working on lately.
+
 ## Installing
 ### Requirements
 We don't know what specific minimum version you would need for any of the following software, but the most recent version of any of the below should work.
