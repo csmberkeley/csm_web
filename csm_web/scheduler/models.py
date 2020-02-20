@@ -59,6 +59,7 @@ class Course(ValidatingModel):
     name = models.SlugField(max_length=16, unique_for_month="enrollment_start")
     title = models.CharField(max_length=100)
     valid_until = models.DateField()
+    section_start = models.DateField()
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
@@ -68,6 +69,8 @@ class Course(ValidatingModel):
 
     def clean(self):
         super().clean()
+        if self.section_start <= self.enrollment_start:
+            raise ValidationError("section_start must be after enrollment_start")
         if self.enrollment_end <= self.enrollment_start:
             raise ValidationError("enrollment_end must be after enrollment_start")
         if self.valid_until < self.enrollment_end.date():
