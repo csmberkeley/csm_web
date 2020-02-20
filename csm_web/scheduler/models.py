@@ -7,6 +7,12 @@ from django.utils import timezone, functional
 from rest_framework.serializers import ValidationError
 
 
+def week_bounds(date):
+    week_start = date - datetime.timedelta(days=date.weekday())
+    week_end = week_start + datetime.timedelta(weeks=1)
+    return week_start, week_end
+
+
 class User(AbstractUser):
     def can_enroll_in_course(self, course):
         return course.is_open() and (
@@ -48,8 +54,7 @@ class Attendance(ValidatingModel):
 
     @property
     def week_start(self):
-        day_of_week = self.date.weekday()
-        return self.date - datetime.timedelta(days=day_of_week)
+        return week_bounds(self.date)[0]
 
     class Meta:
         unique_together = ("date", "student")
@@ -103,6 +108,13 @@ class Student(Profile):
     """
     section = models.ForeignKey("Section", on_delete=models.CASCADE, related_name="students")
     active = models.BooleanField(default=True, help_text="An inactive student is a dropped student.")
+
+    def save(self, *args, **kwargs):
+        instance = super().save(*args, **kwargs)
+        today = timezone.now().date()
+        this_week = week_bounds(today)
+        if instance.active and today >= instance.section.course.section_start and not instance.attendance_set.filter(date__range=this_week).exists():
+            Attendance.objects.create(student=instance, date=today)
 
     class Meta:
         unique_together = ("user", "section")
