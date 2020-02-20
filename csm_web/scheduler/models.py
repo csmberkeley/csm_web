@@ -74,7 +74,7 @@ class Course(ValidatingModel):
 
     def clean(self):
         super().clean()
-        if self.section_start <= self.enrollment_start:
+        if self.section_start <= self.enrollment_start.date():
             raise ValidationError("section_start must be after enrollment_start")
         if self.enrollment_end <= self.enrollment_start:
             raise ValidationError("enrollment_end must be after enrollment_start")
@@ -110,11 +110,20 @@ class Student(Profile):
     active = models.BooleanField(default=True, help_text="An inactive student is a dropped student.")
 
     def save(self, *args, **kwargs):
-        instance = super().save(*args, **kwargs)
-        today = timezone.now().date()
-        this_week = week_bounds(today)
-        if instance.active and today >= instance.section.course.section_start and not instance.attendance_set.filter(date__range=this_week).exists():
-            Attendance.objects.create(student=instance, date=today)
+        super().save(*args, **kwargs)
+        """
+        Create an attendance for this week for the student if their section hasn't already been held this week
+        and no attendance for this week already exists.
+        """
+        now = timezone.now()
+        this_week = week_bounds(now.date())
+        section_day_num = Spacetime.DayOfWeek.values.index(self.section.spacetime.day_of_week)
+        section_already_held = section_day_num < now.weekday() or (
+            section_day_num == now.weekday() and self.section.spacetime.start_time < now.time())
+        course = self.section.course
+        if self.active and course.section_start <= now.date() < course.valid_until\
+                and not section_already_held and not self.attendance_set.filter(date__range=this_week).exists():
+            Attendance.objects.create(student=self, date=now.date())
 
     class Meta:
         unique_together = ("user", "section")
