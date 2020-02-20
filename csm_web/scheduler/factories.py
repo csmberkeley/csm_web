@@ -36,6 +36,15 @@ class CourseFactory(factory.DjangoModelFactory):
             ).generate({})
         )
     )
+    section_start = factory.LazyAttribute(
+        lambda o: timezone.make_aware(
+            factory.Faker(
+                "date_time_between_dates",
+                datetime_start=o.enrollment_start + timedelta(weeks=1),
+                datetime_end=o.enrollment_start + timedelta(weeks=3),
+            ).generate({})
+        )
+    )
     enrollment_end = factory.LazyAttribute(
         lambda o: timezone.make_aware(
             factory.Faker(
