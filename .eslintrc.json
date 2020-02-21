@@ -6,12 +6,7 @@
     }
   },
   "plugins": ["react", "react-hooks"],
-  "extends": [
-    "eslint:recommended",
-    "plugin:react/recommended",
-    "prettier",
-    "prettier/react"
-  ],
+  "extends": ["eslint:recommended", "plugin:react/recommended", "prettier", "prettier/react"],
   "rules": {
     "react/prop-types": [2],
     "react-hooks/rules-of-hooks": "error"
@@ -22,7 +17,7 @@
   },
   "settings": {
     "react": {
-      "version": "16.9"
+      "version": "16.10"
     }
   }
 }
