@@ -48,6 +48,7 @@ echo '
 function run() {
 	start_dir=$(pwd)
 	project_dir=$(cat "$VIRTUAL_ENV/.project_dir")
+	trap "pkill -P $$ heroku npm python; stty sane; cd $startdir; return" SIGINT
 	cd "$project_dir" && npm run dev && python csm_web/manage.py runserver
 	cd "$start_dir"
 }' >> "$VIRTUAL_ENV/bin/activate"
@@ -58,7 +59,6 @@ source .env # need the relevant env variables for django, but can't count on the
 python csm_web/manage.py migrate
 python csm_web/manage.py createtestdata --yes 
 
-# TODO put precommit hooks in git?
 echo "Installing pre-commit hook..."
 ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
 
