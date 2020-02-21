@@ -245,7 +245,11 @@ LOGGING = {
             'level': 'INFO',
             'propogate': True,
         },
-
+        'scheduler.models': {
+            'handlers': ['console'],
+            'level': 'INFO',
+            'propogate': True,
+        }
     },
 }
 
