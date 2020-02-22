@@ -1,7 +1,5 @@
 var LodashModuleReplacementPlugin = require("lodash-webpack-plugin");
-var plugins = [
-  new LodashModuleReplacementPlugin()
-];
+var plugins = [new LodashModuleReplacementPlugin()];
 
 module.exports = {
   module: {
@@ -12,11 +10,17 @@ module.exports = {
         use: {
           loader: "babel-loader"
         }
-			},
-			{
-        test: /\.svg$/,
-        use: ['@svgr/webpack'],
       },
+      {
+        test: /\.svg$/,
+        use: [
+          {
+            loader: "@svgr/webpack",
+            // Always inline styles into svg attributes because <style> tags would violate our CSP
+            options: { svgoConfig: { plugins: [{ inlineStyles: { onlyMatchedOnce: false } }] } }
+          }
+        ]
+      }
     ]
   },
   plugins: plugins,
