@@ -261,6 +261,8 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     SECURE_HSTS_PRELOAD = True
     # ideally would be handled by nginx or something, but needed for heroku
     SECURE_SSL_REDIRECT = True
+    SESSION_COOKIE_SECURE = True
+    CSRF_COOKIE_SECURE = True
 
     # Content Security Policy
     MIDDLEWARE.append("csp.middleware.CSPMiddleware")
@@ -273,7 +275,6 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     CSP_FONT_SRC = ("https://fonts.gstatic.com",)
     CSP_FRAME_ANCESTORS = ("'none'",)
     CSP_BLOCK_ALL_MIXED_CONTENT = True
-
 
     # Heroku setup
     import django_heroku
