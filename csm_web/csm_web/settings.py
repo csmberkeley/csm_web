@@ -257,11 +257,23 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     # Security/HTTPS headers
     # https://docs.djangoproject.com/en/2.1/ref/middleware/#module-django.middleware.security
     SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    # TODO change to 1 year (31536000s) once we're sure this works
-    SECURE_HSTS_SECONDS = 3600
+    SECURE_HSTS_SECONDS = 31536000
     SECURE_HSTS_PRELOAD = True
     # ideally would be handled by nginx or something, but needed for heroku
     SECURE_SSL_REDIRECT = True
+
+    # Content Security Policy
+    MIDDLEWARE.append("csp.middleware.CSPMiddleware")
+    CSP_DEFAULT_SRC = ("'none'", )
+    CSP_SCRIPT_SRC = ("'self'", "https://cdnjs.cloudflare.com/ajax/libs/react/",
+                      "https://cdnjs.cloudflare.com/ajax/libs/react-dom/")
+    CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")
+    CSP_CONNECT_SRC = ("'self'",)
+    CSP_IMG_SRC = ("'self'",)
+    CSP_FONT_SRC = ("https://fonts.gstatic.com",)
+    CSP_FRAME_ANCESTORS = ("'none'",)
+    CSP_BLOCK_ALL_MIXED_CONTENT = True
+
 
     # Heroku setup
     import django_heroku
