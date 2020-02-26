@@ -3,7 +3,7 @@ Makes sure nothing in the system is overly screwed up.
 """
 
 from django.core.management import BaseCommand
-from scheduler.models import Mentor, Section, Spacetime
+from scheduler.models import User, Mentor, Section, Spacetime
 import datetime as dt
 
 
@@ -14,6 +14,7 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         self._check_section_integrities()
+        self._check_profile_integries()
         if self.failed:
             self.stderr.write("Integrity check failed with these errors:")
             for f in self.failed:
@@ -25,6 +26,15 @@ class Command(BaseCommand):
     def _err(self, msg):
         # self.stderr.write(msg)
         self.failed.append(msg)
+
+    def _check_profile_integries(self):
+        """
+        Makes sure no student has two profiles in the same course.
+        """
+        for user in User.objects.all():
+            student_set = user.student_set
+            if student_set.values("section__course").distinct().count() != student_set.count():
+                self._err(f"User {user} had multiple Student profiles in same course: {student_set.all()}")
 
     def _check_section_integrities(self):
         """
