@@ -113,6 +113,8 @@ class Student(Profile):
     """
     section = models.ForeignKey("Section", on_delete=models.CASCADE, related_name="students")
     active = models.BooleanField(default=True, help_text="An inactive student is a dropped student.")
+    banned = models.BooleanField(
+        default=False, help_text="A banned student cannot enroll in another section for the course they are banned from")
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
