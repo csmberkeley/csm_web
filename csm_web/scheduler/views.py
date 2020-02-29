@@ -75,8 +75,10 @@ class CourseViewSet(*viewset_with('list')):
                                 for key, day in enumerate(Spacetime.DayOfWeek.values)), output_field=PositiveSmallIntegerField())
 
     def get_queryset(self):
+        banned_from = self.request.user.student_set.filter(banned=True).values_list('section__course__id', flat=True)
         now = timezone.now()
-        return (Course.objects.filter(valid_until__gte=now.date(), enrollment_start__lte=now, enrollment_end__gt=now) | Course.objects.filter(coordinator__user=self.request.user)).distinct()
+        return Course.objects.exclude(pk__in=banned_from).filter(
+            Q(valid_until__gte=now.date(), enrollment_start__lte=now, enrollment_end__gt=now) | Q(coordinator__user=self.request.user)).distinct()
 
     def get_sections_by_day(self, course):
         sections = course.section_set.all().annotate(day_key=self.SPACETIME_DAY_SORT)
@@ -115,7 +117,9 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
         return get_object_or_error(self.get_queryset(), **self.kwargs)
 
     def get_queryset(self):
-        return Section.objects.filter(Q(mentor__user=self.request.user) | Q(students__user=self.request.user) | Q(course__coordinator__user=self.request.user)).distinct()
+        banned_from = self.request.user.student_set.filter(banned=True).values_list('section__course__id', flat=True)
+        return Section.objects.exclude(course__pk__in=banned_from).filter(
+            Q(mentor__user=self.request.user) | Q(students__user=self.request.user) | Q(course__coordinator__user=self.request.user)).distinct()
 
     def create(self, request):
         course = get_object_or_error(Course.objects.all(
@@ -212,11 +216,14 @@ class StudentViewSet(viewsets.GenericViewSet):
     @action(detail=True, methods=['patch'])
     def drop(self, request, pk=None):
         student = get_object_or_error(self.get_queryset(), pk=pk)
-        if student.user != self.request.user and not student.section.course.coordinator_set.filter(user=self.request.user).count():
+        is_coordinator = student.section.course.coordinator_set.filter(user=request.user).exists()
+        if student.user != request.user and not is_coordinator:
             # Students can drop themselves, and Coordinators can drop students from their course
             # Mentors CANNOT drop their own students, or anyone else for that matter
             raise PermissionDenied("You do not have permission to drop this student")
         student.active = False
+        if is_coordinator:
+            student.banned = request.data.get('banned', False)
         student.save()
         logger.info(f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)}")
         return Response(status=status.HTTP_204_NO_CONTENT)
@@ -251,7 +258,7 @@ class ProfileViewSet(*viewset_with('list')):
     queryset = EmptyQuerySet
 
     def list(self, request):
-        return Response(ProfileSerializer([*request.user.student_set.filter(active=True), *request.user.mentor_set.exclude(section=None), *request.user.coordinator_set.all()], many=True).data)
+        return Response(ProfileSerializer([*request.user.student_set.filter(active=True, banned=False), *request.user.mentor_set.exclude(section=None), *request.user.coordinator_set.all()], many=True).data)
 
 
 class SpacetimeViewSet(viewsets.GenericViewSet):
