@@ -4,14 +4,16 @@
 		<meta charset="utf-8">
 		<meta name="viewport" content="width=device-width, initial-scale=1">
 		<link href="https://fonts.googleapis.com/css?family=Montserrat:400,600&display=swap" rel="stylesheet">
-		<title>CSM Scheduler</title>
 		{% load static %}
-		<link rel="icon" type="image/png" sizes="16x16" href="{% static 'frontend/img/favicon-16x16.png' %}"/>
-		<link rel="icon" type="image/png" sizes="32x32" href="{% static 'frontend/img/favicon-32x32.png' %}"/>
 		{% if DJANGO_ENV == 'prod' %}
+			<title>CSM Scheduler</title>
 			<link rel="stylesheet" href="{% static 'frontend/css/style.min.css' %}"/>
+			<link rel="icon" type="image/png" sizes="32x32" href="{% static 'frontend/img/favicon-32x32.png' %}"/>
+			<link rel="icon" type="image/png" sizes="16x16" href="{% static 'frontend/img/favicon-16x16.png' %}"/>
 		{% else %}
+			<title>Development: CSM Scheduler</title>
 			<link rel="stylesheet" href="{% static 'frontend/css/style.css' %}"/>
+			<link rel="icon" type="image/png" sizes="32x32" href="{% static 'frontend/img/favicon-dev-32x32.png' %}"/>
 		{% endif %}
 		{% block extra_head %}
 		{% endblock %}
