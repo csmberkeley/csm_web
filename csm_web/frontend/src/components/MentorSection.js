@@ -516,17 +516,7 @@ function MentorSectionInfo({
                   ({ name, email, id }) => (
                     <tr key={id}>
                       <td>
-                        {isCoordinator && id !== -1 && (
-                          <span
-                            onClick={() =>
-                              fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH).then(() => reloadSection())
-                            }
-                            title="Drop student from section"
-                            className="inline-plus-sign"
-                          >
-                            +
-                          </span>
-                        )}
+                        {isCoordinator && id !== -1 && <StudentDropper id={id} reloadSection={reloadSection} />}
                         {name || email}
                       </td>
                     </tr>
@@ -622,6 +612,38 @@ MentorSectionInfo.propTypes = {
   description: PropTypes.string,
   id: PropTypes.number.isRequired
 };
+
+function StudentDropper({ id, reloadSection }) {
+  const [isConfirmStage, setIsConfirmStage] = useState(false);
+  function handleClickDrop(banned) {
+    fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH, { banned }).then(() => reloadSection());
+  }
+  return (
+    <span className="student-dropper">
+      <span title="Drop student from section" className="inline-plus-sign" onClick={() => setIsConfirmStage(true)}>
+        +
+      </span>
+      {isConfirmStage && (
+        <div className="should-ban-prompt">
+          <span className="inline-plus-sign ban-cancel" onClick={() => setIsConfirmStage(false)}>
+            +
+          </span>
+          Prevent student from reenrolling?
+          <div className="btn-group">
+            <button className="csm-btn yes" onClick={() => handleClickDrop(true)}>
+              Yes
+            </button>
+            <button className="csm-btn no" onClick={() => handleClickDrop(false)}>
+              No
+            </button>
+          </div>
+        </div>
+      )}
+    </span>
+  );
+}
+
+StudentDropper.propTypes = { id: PropTypes.number.isRequired, reloadSection: PropTypes.func.isRequired };
 
 function MentorSectionRoster({ students, loaded }) {
   const [emailsCopied, setEmailsCopied] = useState(false);
