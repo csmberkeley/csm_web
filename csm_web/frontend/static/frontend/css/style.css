@@ -761,10 +761,82 @@ table tbody tr:last-child > td {
 #students-table .inline-plus-sign {
 	display: inline-block;
 	transform: rotate(45deg);
-	position: relative;
-	top: 1px;
 	color: var(--csm-danger);
 	cursor: pointer;
+	position: relative;
+}
+
+.student-dropper {
+	display: inline-block;
+	position: relative;
+	top: 1px;
+}
+
+.should-ban-prompt {
+	font-size: 0.8em;
+	width: 10em;
+	text-align: center;
+	box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.15);
+	background-color: white;
+	padding: 10px;
+	position: absolute;
+	left: 50%;
+	transform: translateX(-50%);
+	bottom: 2rem;
+	border-radius: 8px;
+}
+
+.should-ban-prompt::before {
+	--arrow-size: 8px;
+	content:'';
+	display:block;
+	width:0;
+	height:0;
+	position:absolute;
+	border-left: var(--arrow-size) solid transparent;
+	border-right: var(--arrow-size) solid transparent;
+	border-top: var(--arrow-size) solid white;
+	left: 0;
+	right: 0;
+	margin: 0 auto;
+	bottom: calc(-1 * var(--arrow-size));
+}
+
+.should-ban-prompt .ban-cancel {
+	transform: rotate(45deg);
+	position: absolute !important;
+	top: -5px;
+	right: 3px;
+	color: #dedede !important;
+	font-size: 1.5rem;
+}
+
+.should-ban-prompt .btn-group {
+	display: flex;
+	justify-content: space-evenly;
+	margin-top: 0.3em;
+}
+
+.should-ban-prompt .btn-group button {
+	border: unset;
+	border-radius: 5px;
+	cursor: pointer;
+}
+
+.should-ban-prompt .btn-group button.yes {
+	background-color: var(--csm-danger);
+}
+
+.should-ban-prompt .btn-group button.yes:hover {
+	background-color: var(--csm-danger-darkened);
+}
+
+.should-ban-prompt .btn-group button.no {
+	background-color: #c0c0c0;
+}
+
+.should-ban-prompt .btn-group button.no:hover {
+	background-color: #aeaeae;
 }
 
 #students-table .csm-form {
