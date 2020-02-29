@@ -128,8 +128,9 @@ class Student(Profile):
         course = self.section.course
         if self.active and course.section_start <= now.date() < course.valid_until\
                 and not section_already_held and not self.attendance_set.filter(date__range=this_week).exists():
-            logger.info(
-                f"<Attendance> Attendance automatically created for student {self.user.email} in course {course.name} for date {now.date()}")
+            if settings.DJANGO_ENV != settings.DEVELOPMENT:
+                logger.info(
+                    f"<Attendance> Attendance automatically created for student {self.user.email} in course {course.name} for date {now.date()}")
             Attendance.objects.create(student=self, date=now.date())
 
     class Meta:
