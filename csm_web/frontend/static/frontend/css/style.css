@@ -772,6 +772,11 @@ table tbody tr:last-child > td {
 	top: 1px;
 }
 
+.student-dropper.ban-prompt-visible + .student-info {
+	color: #cecece;
+	text-decoration: line-through;
+}
+
 .should-ban-prompt {
 	font-size: 0.8em;
 	width: 10em;
