@@ -84,14 +84,14 @@ class UserAdmin(CoordAdmin):
 
 @admin.register(Student)
 class StudentAdmin(CoordAdmin):
-    list_filter = ("active", "section__course")
+    list_filter = ("active", "banned", "section__course")
     list_display = ("name", "get_email", "get_course", "get_mentor", "section")
     search_fields = ("user__email", "user__first_name", "user__last_name")
     actions = ("drop_students", "undrop_students")
     autocomplete_fields = ("section", "user")
 
     def get_fields(self, request, obj):
-        fields = ["name", "get_email", "get_course", "section", "get_attendances", "active"]
+        fields = ["name", "get_email", "get_course", "section", "get_attendances", "active", "banned"]
         # TODO distinguish between edit (which should have it read_only) and add
         fields.insert(4, "user")
         # fields.insert(4, "user" if request.user.is_superuser else "get_user")
