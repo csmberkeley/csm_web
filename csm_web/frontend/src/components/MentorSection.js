@@ -517,7 +517,7 @@ function MentorSectionInfo({
                     <tr key={id}>
                       <td>
                         {isCoordinator && id !== -1 && <StudentDropper id={id} reloadSection={reloadSection} />}
-                        {name || email}
+                        <span className="student-info">{name || email}</span>
                       </td>
                     </tr>
                   )
@@ -614,18 +614,18 @@ MentorSectionInfo.propTypes = {
 };
 
 function StudentDropper({ id, reloadSection }) {
-  const [isConfirmStage, setIsConfirmStage] = useState(false);
+  const [showBanPrompt, setShowBanPrompt] = useState(false);
   function handleClickDrop(banned) {
     fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH, { banned }).then(() => reloadSection());
   }
   return (
-    <span className="student-dropper">
-      <span title="Drop student from section" className="inline-plus-sign" onClick={() => setIsConfirmStage(true)}>
+    <span className={`student-dropper ${showBanPrompt ? "ban-prompt-visible" : ""}`}>
+      <span title="Drop student from section" className="inline-plus-sign" onClick={() => setShowBanPrompt(true)}>
         +
       </span>
-      {isConfirmStage && (
+      {showBanPrompt && (
         <div className="should-ban-prompt">
-          <span className="inline-plus-sign ban-cancel" onClick={() => setIsConfirmStage(false)}>
+          <span className="inline-plus-sign ban-cancel" onClick={() => setShowBanPrompt(false)}>
             +
           </span>
           Prevent student from reenrolling?
