@@ -108,13 +108,16 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 class SectionSerializer(serializers.ModelSerializer):
     spacetime = SpacetimeSerializer()
-    num_students_enrolled = serializers.IntegerField(source='current_student_count')
+    num_students_enrolled = serializers.SerializerMethodField()
     mentor = MentorSerializer()
     course = serializers.CharField(source='course.name')
     course_title = serializers.CharField(source='course.title')
     user_role = serializers.SerializerMethodField()
     override = OverrideReadOnlySerializer(source='spacetime.override')
     associated_profile_id = serializers.SerializerMethodField()
+
+    def get_num_students_enrolled(self, obj):
+        return obj.num_students_annotation if hasattr(obj, 'num_students_annotation') else obj.current_student_count
 
     def user_associated_profile(self, obj):
         user = self.context.get('request') and self.context.get('request').user

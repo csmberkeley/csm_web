@@ -94,8 +94,8 @@ class CourseViewSet(*viewset_with('list')):
         *separate database queries* each time this endpoint was hit. This would be terrible for performance, so instead we call list, which evaluates the entire QuerySet with
         a single database query, and then the slices in the for loop are just simple native Python list slices.
         """
-        sections = list(sections.select_related('spacetime', 'spacetime___override',
-                                                'mentor').prefetch_related('students').order_by('day_key', 'spacetime__start_time'))
+        sections = list(sections.select_related('spacetime', 'spacetime___override', 'mentor', 'mentor__user').annotate(
+            num_students_annotation=Count('students', filter=Q(students__active=True))).order_by('day_key', 'spacetime__start_time'))
         start, sections_by_day = 0, {}
         for group in section_count_by_day:
             sections_by_day[group['spacetime__day_of_week']] = SectionSerializer(
