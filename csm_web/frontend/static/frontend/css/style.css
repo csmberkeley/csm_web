@@ -1,7 +1,8 @@
-html, body {
+html,
+body {
 	height: 100%;
 	width: 100%;
-	font-family: 'Montserrat', sans-serif;
+	font-family: "Montserrat", sans-serif;
 }
 
 body {
@@ -11,22 +12,22 @@ body {
 }
 
 :root {
-	--csm-green: #9AE0B3;
+	--csm-green: #9ae0b3;
 	--csm-green-darkened: #88cea1;
 	--csm-theme-cs61a: var(--csm-green);
-	--csm-theme-cs61b: #63C5FF;
-	--csm-theme-cs61c: #797C99;
-	--csm-theme-cs70: #FF7070;
-	--csm-theme-cs88: #E46495;
-	--csm-theme-ee16a: #707EFF;
+	--csm-theme-cs61b: #63c5ff;
+	--csm-theme-cs61c: #797c99;
+	--csm-theme-cs70: #ff7070;
+	--csm-theme-cs88: #e46495;
+	--csm-theme-ee16a: #707eff;
 	--csm-theme-eecs16a: var(--csm-theme-ee16a);
-	--csm-theme-ee16b: #FFE070;
+	--csm-theme-ee16b: #ffe070;
 	--csm-theme-eecs16b: var(--csm-theme-ee16b);
 	--csm-mentor: var(--csm-green);
-	--csm-coordinator: #6517B3;
-	--csm-student: #FFAB2E;
-	--csm-danger: #FF7272;
-	--csm-danger-darkened: #EB6060;
+	--csm-coordinator: #6517b3;
+	--csm-student: #ffab2e;
+	--csm-danger: #ff7272;
+	--csm-danger-darkened: #eb6060;
 }
 
 /* Header */
@@ -51,7 +52,7 @@ header {
 }
 
 #user-profile-pic {
-	border: 2px solid #FFFFFF;
+	border: 2px solid #ffffff;
 	border-radius: 26px;
 	box-sizing: border-box;
 	box-shadow: 0px 4px 4px rgba(136, 136, 136, 0.25);
@@ -164,7 +165,6 @@ header {
 	background-color: #0069d9;
 }
 
-
 /* Home page */
 
 .inline-plus-sign {
@@ -190,7 +190,7 @@ header {
 	padding: 3px 10px;
 	text-decoration: none;
 	/* Need to manually respecify this on <buttons> for some strange reason */
-	font-family: 'Montserrat', sans-serif;
+	font-family: "Montserrat", sans-serif;
 }
 
 .csm-btn:hover {
@@ -208,7 +208,8 @@ header {
 	border-top-color: red;
 }
 
-.course-cards-container > .course-card, .course-card-link {
+.course-cards-container > .course-card,
+.course-card-link {
 	margin: 0 75px 50px 0;
 }
 
@@ -278,7 +279,6 @@ header {
 	background-color: var(--csm-link-hover);
 }
 
-
 /* Course menu */
 
 #course-menu {
@@ -298,7 +298,7 @@ header {
 	font-size: 16px;
 	border: none;
 	cursor: pointer;
-	margin:  0 auto !important;
+	margin: 0 auto !important;
 	display: block;
 }
 
@@ -311,7 +311,7 @@ header {
 }
 
 .section-card.full {
-	background-color: #EAEAEA;
+	background-color: #eaeaea;
 }
 
 .section-card-contents {
@@ -378,7 +378,7 @@ header {
 }
 
 .course-title {
-	color: #6D6D6D;
+	color: #6d6d6d;
 	font-size: 2.5em;
 	font-weight: 400;
 	text-align: center;
@@ -390,7 +390,7 @@ header {
 	color: #727272;
 }
 
-#show-unavailable-toggle > input{
+#show-unavailable-toggle > input {
 	margin-right: 5px;
 	vertical-align: top;
 }
@@ -417,7 +417,6 @@ header {
 	color: white;
 }
 
-
 #course-section-list {
 	height: 50vh;
 }
@@ -438,7 +437,6 @@ header {
 	margin: 0.5em auto;
 }
 
-
 #course-section-selector > div {
 	padding-top: 40px;
 }
@@ -449,10 +447,10 @@ header {
 	justify-content: space-evenly;
 	grid-template-columns: max-content max-content;
 	grid-template-areas:
-	". ."
-	". ."
-	". ."
-	"submit submit";
+		". ."
+		". ."
+		". ."
+		"submit submit";
 }
 
 #create-section-form input {
@@ -461,7 +459,6 @@ header {
 #create-section-form input[type="submit"] {
 	grid-area: submit;
 }
-
 
 /* login */
 
@@ -479,10 +476,10 @@ header {
 	text-align: center;
 	position: relative;
 	box-sizing: border-box;
-	transition: box-shadow .1s ease-in-out;
+	transition: box-shadow 0.1s ease-in-out;
 	background: #fff;
 	color: #666;
-	box-shadow: 0 5px 15px rgba(0,0,0,.08);
+	box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
 	display: inline-block;
 	width: 80%;
 	max-width: 25em;
@@ -498,13 +495,13 @@ header {
 	box-sizing: border-box;
 	padding: 0 30px;
 	vertical-align: middle;
-	font-size: .875rem;
+	font-size: 0.875rem;
 	line-height: 38px;
 	text-align: center;
 	text-decoration: none;
 	text-transform: uppercase;
-	transition: .1s ease-in-out;
-	transition-property: color,background-color,border-color;
+	transition: 0.1s ease-in-out;
+	transition-property: color, background-color, border-color;
 	background-color: #1e87f0;
 	color: #fff;
 	border: 1px solid transparent;
@@ -611,7 +608,7 @@ main {
 }
 
 .section-detail-info-card-contents.drop-section {
-	border-color: #FFADAD;
+	border-color: #ffadad;
 }
 
 .danger-btn {
@@ -625,7 +622,7 @@ main {
 	padding: 0 25px 3px;
 }
 
-.danger-btn .inline-plus-sign{
+.danger-btn .inline-plus-sign {
 	display: inline-block;
 	transform: rotate(45deg);
 }
@@ -634,9 +631,8 @@ main {
 	background-color: var(--csm-danger-darkened);
 }
 
-
 .override-label {
-	background-color: #FFD874;
+	background-color: #ffd874;
 	color: white;
 	font-size: 15px;
 	width: fit-content;
@@ -650,8 +646,10 @@ main {
 	min-width: 12em;
 }
 
-.section-detail-info-card-contents, .standalone-table, #mentor-attendance {
-	border: 2px solid #E7E7E7;
+.section-detail-info-card-contents,
+.standalone-table,
+#mentor-attendance {
+	border: 2px solid #e7e7e7;
 	box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
 	border-radius: 20px;
 	padding: 40px;
@@ -666,7 +664,6 @@ main {
 .section-detail-info-card-contents.mentor {
 	text-align: center;
 }
-
 
 .section-detail-info-card-contents a {
 	word-wrap: break-word;
@@ -684,13 +681,13 @@ table thead {
 }
 
 table th {
-	color: #AEAEAE;
+	color: #aeaeae;
 	font-size: 20px;
 	padding: 0 30px;
 }
 
 table tbody tr > td {
-	border-bottom: 1px solid #E7E7E7;
+	border-bottom: 1px solid #e7e7e7;
 	padding: 30px;
 }
 
@@ -703,7 +700,7 @@ table tbody tr:last-child > td {
 	color: white;
 	padding: 5px;
 	max-width: 200px;
-	border-radius: 6px
+	border-radius: 6px;
 }
 
 #section-detail-sidebar {
@@ -715,7 +712,7 @@ table tbody tr:last-child > td {
 
 #section-detail-sidebar a {
 	font-size: 18px;
-	color: #4B4B4B;
+	color: #4b4b4b;
 	margin: 0 100px 20px 0;
 	text-decoration: none;
 }
@@ -793,11 +790,11 @@ table tbody tr:last-child > td {
 
 .should-ban-prompt::before {
 	--arrow-size: 8px;
-	content:'';
-	display:block;
-	width:0;
-	height:0;
-	position:absolute;
+	content: "";
+	display: block;
+	width: 0;
+	height: 0;
+	position: absolute;
 	border-left: var(--arrow-size) solid transparent;
 	border-right: var(--arrow-size) solid transparent;
 	border-top: var(--arrow-size) solid white;
@@ -868,7 +865,6 @@ table tbody tr:last-child > td {
 	margin: auto;
 }
 
-
 #students-table .inline-plus-sign:hover {
 	color: var(--csm-danger-darkened);
 }
@@ -891,7 +887,7 @@ table tbody tr:last-child > td {
 
 .info-card-edit-btn {
 	background-color: inherit;
-	color: #B3B3B3;
+	color: #b3b3b3;
 	font-size: 13px;
 	position: absolute;
 	top: 10px;
@@ -913,7 +909,6 @@ table tbody tr:last-child > td {
 	height: 450px;
 }
 
-
 .csm-form {
 	padding-left: 40px;
 }
@@ -927,8 +922,9 @@ table tbody tr:last-child > td {
 	text-align: left;
 }
 
-.csm-form input,  .csm-form select {
-	background-color: #F5F5F5;
+.csm-form input,
+.csm-form select {
+	background-color: #f5f5f5;
 	padding: 10px 20px;
 	border: none;
 	border-radius: 4px;
@@ -994,7 +990,7 @@ table tbody tr:last-child > td {
 .csm-form select {
 	background-image: url('data:image/svg+xml;utf8,<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="gray" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg>');
 	background-repeat: no-repeat, repeat;
-	background-position: right .7em top 50%, 0 0;
+	background-position: right 0.7em top 50%, 0 0;
 	background-size: 1em auto, 100%;
 	-webkit-appearance: none;
 	-moz-appearance: none;
@@ -1002,7 +998,8 @@ table tbody tr:last-child > td {
 	font-size: small;
 }
 
-.csm-form select:disabled, .csm-form input:disabled {
+.csm-form select:disabled,
+.csm-form input:disabled {
 	cursor: not-allowed;
 	background-color: #fafafa;
 }
@@ -1034,8 +1031,8 @@ table tbody tr:last-child > td {
 }
 
 #attendance-date-tabs-container > div {
-	background-color: #F0F0F0;
-	border: 1px solid #E9E9E9;
+	background-color: #f0f0f0;
+	border: 1px solid #e9e9e9;
 	border-radius: 10px 10px 0px 0px;
 	padding: 15px 30px;
 	color: #5e5e5e;
@@ -1066,7 +1063,7 @@ table tbody tr:last-child > td {
 	border: none;
 	background-image: url('data:image/svg+xml;utf8,<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="white" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg>');
 	background-repeat: no-repeat, repeat;
-	background-position: right .7em top 50%, 0 0;
+	background-position: right 0.7em top 50%, 0 0;
 	background-size: 1em auto, 100%;
 	-webkit-appearance: none;
 	-moz-appearance: none;
@@ -1119,134 +1116,146 @@ table tbody tr:last-child > td {
 .sk-fading-circle {
 	width: 35px;
 	height: 35px;
-  position: relative;
+	position: relative;
 }
 
 .sk-fading-circle .sk-circle {
-  width: 100%;
-  height: 100%;
-  position: absolute;
-  left: 0;
-  top: 0;
+	width: 100%;
+	height: 100%;
+	position: absolute;
+	left: 0;
+	top: 0;
 }
 
 .sk-fading-circle .sk-circle:before {
-  content: '';
-  display: block;
-  margin: 0 auto;
-  width: 15%;
-  height: 15%;
-  background-color: var(--csm-green);
-  border-radius: 100%;
-  -webkit-animation: sk-circleFadeDelay 1.2s infinite ease-in-out both;
-          animation: sk-circleFadeDelay 1.2s infinite ease-in-out both;
+	content: "";
+	display: block;
+	margin: 0 auto;
+	width: 15%;
+	height: 15%;
+	background-color: var(--csm-green);
+	border-radius: 100%;
+	-webkit-animation: sk-circleFadeDelay 1.2s infinite ease-in-out both;
+	animation: sk-circleFadeDelay 1.2s infinite ease-in-out both;
 }
 .sk-fading-circle .sk-circle2 {
-  -webkit-transform: rotate(30deg);
-      -ms-transform: rotate(30deg);
-          transform: rotate(30deg);
+	-webkit-transform: rotate(30deg);
+	-ms-transform: rotate(30deg);
+	transform: rotate(30deg);
 }
 .sk-fading-circle .sk-circle3 {
-  -webkit-transform: rotate(60deg);
-      -ms-transform: rotate(60deg);
-          transform: rotate(60deg);
+	-webkit-transform: rotate(60deg);
+	-ms-transform: rotate(60deg);
+	transform: rotate(60deg);
 }
 .sk-fading-circle .sk-circle4 {
-  -webkit-transform: rotate(90deg);
-      -ms-transform: rotate(90deg);
-          transform: rotate(90deg);
+	-webkit-transform: rotate(90deg);
+	-ms-transform: rotate(90deg);
+	transform: rotate(90deg);
 }
 .sk-fading-circle .sk-circle5 {
-  -webkit-transform: rotate(120deg);
-      -ms-transform: rotate(120deg);
-          transform: rotate(120deg);
+	-webkit-transform: rotate(120deg);
+	-ms-transform: rotate(120deg);
+	transform: rotate(120deg);
 }
 .sk-fading-circle .sk-circle6 {
-  -webkit-transform: rotate(150deg);
-      -ms-transform: rotate(150deg);
-          transform: rotate(150deg);
+	-webkit-transform: rotate(150deg);
+	-ms-transform: rotate(150deg);
+	transform: rotate(150deg);
 }
 .sk-fading-circle .sk-circle7 {
-  -webkit-transform: rotate(180deg);
-      -ms-transform: rotate(180deg);
-          transform: rotate(180deg);
+	-webkit-transform: rotate(180deg);
+	-ms-transform: rotate(180deg);
+	transform: rotate(180deg);
 }
 .sk-fading-circle .sk-circle8 {
-  -webkit-transform: rotate(210deg);
-      -ms-transform: rotate(210deg);
-          transform: rotate(210deg);
+	-webkit-transform: rotate(210deg);
+	-ms-transform: rotate(210deg);
+	transform: rotate(210deg);
 }
 .sk-fading-circle .sk-circle9 {
-  -webkit-transform: rotate(240deg);
-      -ms-transform: rotate(240deg);
-          transform: rotate(240deg);
+	-webkit-transform: rotate(240deg);
+	-ms-transform: rotate(240deg);
+	transform: rotate(240deg);
 }
 .sk-fading-circle .sk-circle10 {
-  -webkit-transform: rotate(270deg);
-      -ms-transform: rotate(270deg);
-          transform: rotate(270deg);
+	-webkit-transform: rotate(270deg);
+	-ms-transform: rotate(270deg);
+	transform: rotate(270deg);
 }
 .sk-fading-circle .sk-circle11 {
-  -webkit-transform: rotate(300deg);
-      -ms-transform: rotate(300deg);
-          transform: rotate(300deg);
+	-webkit-transform: rotate(300deg);
+	-ms-transform: rotate(300deg);
+	transform: rotate(300deg);
 }
 .sk-fading-circle .sk-circle12 {
-  -webkit-transform: rotate(330deg);
-      -ms-transform: rotate(330deg);
-          transform: rotate(330deg);
+	-webkit-transform: rotate(330deg);
+	-ms-transform: rotate(330deg);
+	transform: rotate(330deg);
 }
 .sk-fading-circle .sk-circle2:before {
-  -webkit-animation-delay: -1.1s;
-          animation-delay: -1.1s;
+	-webkit-animation-delay: -1.1s;
+	animation-delay: -1.1s;
 }
 .sk-fading-circle .sk-circle3:before {
-  -webkit-animation-delay: -1s;
-          animation-delay: -1s;
+	-webkit-animation-delay: -1s;
+	animation-delay: -1s;
 }
 .sk-fading-circle .sk-circle4:before {
-  -webkit-animation-delay: -0.9s;
-          animation-delay: -0.9s;
+	-webkit-animation-delay: -0.9s;
+	animation-delay: -0.9s;
 }
 .sk-fading-circle .sk-circle5:before {
-  -webkit-animation-delay: -0.8s;
-          animation-delay: -0.8s;
+	-webkit-animation-delay: -0.8s;
+	animation-delay: -0.8s;
 }
 .sk-fading-circle .sk-circle6:before {
-  -webkit-animation-delay: -0.7s;
-          animation-delay: -0.7s;
+	-webkit-animation-delay: -0.7s;
+	animation-delay: -0.7s;
 }
 .sk-fading-circle .sk-circle7:before {
-  -webkit-animation-delay: -0.6s;
-          animation-delay: -0.6s;
+	-webkit-animation-delay: -0.6s;
+	animation-delay: -0.6s;
 }
 .sk-fading-circle .sk-circle8:before {
-  -webkit-animation-delay: -0.5s;
-          animation-delay: -0.5s;
+	-webkit-animation-delay: -0.5s;
+	animation-delay: -0.5s;
 }
 .sk-fading-circle .sk-circle9:before {
-  -webkit-animation-delay: -0.4s;
-          animation-delay: -0.4s;
+	-webkit-animation-delay: -0.4s;
+	animation-delay: -0.4s;
 }
 .sk-fading-circle .sk-circle10:before {
-  -webkit-animation-delay: -0.3s;
-          animation-delay: -0.3s;
+	-webkit-animation-delay: -0.3s;
+	animation-delay: -0.3s;
 }
 .sk-fading-circle .sk-circle11:before {
-  -webkit-animation-delay: -0.2s;
-          animation-delay: -0.2s;
+	-webkit-animation-delay: -0.2s;
+	animation-delay: -0.2s;
 }
 .sk-fading-circle .sk-circle12:before {
-  -webkit-animation-delay: -0.1s;
-          animation-delay: -0.1s;
+	-webkit-animation-delay: -0.1s;
+	animation-delay: -0.1s;
 }
 
 @-webkit-keyframes sk-circleFadeDelay {
-  0%, 39%, 100% { opacity: 0; }
-  40% { opacity: 1; }
+	0%,
+	39%,
+	100% {
+		opacity: 0;
+	}
+	40% {
+		opacity: 1;
+	}
 }
 
 @keyframes sk-circleFadeDelay {
-  0%, 39%, 100% { opacity: 0; }
-  40% { opacity: 1; }
+	0%,
+	39%,
+	100% {
+		opacity: 0;
+	}
+	40% {
+		opacity: 1;
+	}
 }

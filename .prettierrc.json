@@ -1,4 +1,12 @@
 {
   "endOfLine": "lf",
-  "printWidth": 120
+  "printWidth": 120,
+  "overrides": [
+    {
+      "files": "*.css",
+      "options": {
+        "useTabs": true
+      }
+    }
+  ]
 }
