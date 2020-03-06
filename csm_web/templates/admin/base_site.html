@@ -1,0 +1,10 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+{% block extrahead %}
+		{% if DJANGO_ENV == 'prod' %}
+			<link rel="icon" type="image/png" sizes="32x32" href="{% static 'frontend/img/favicon-32x32.png' %}"/>
+			<link rel="icon" type="image/png" sizes="16x16" href="{% static 'frontend/img/favicon-16x16.png' %}"/>
+		{% else %}
+			<link rel="icon" type="image/png" sizes="32x32" href="{% static 'frontend/img/favicon-dev-32x32.png' %}"/>
+		{% endif %}
+{% endblock %}

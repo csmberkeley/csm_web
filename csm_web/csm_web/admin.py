@@ -5,9 +5,10 @@ from django.shortcuts import redirect
 
 
 class AdminSite(DefaultAdminSite):
-    site_header = "Scheduler Admin"
+    site_header = f"{'Development ' if settings.DJANGO_ENV != settings.PRODUCTION else ''}Scheduler Admin"
     site_title = "CSM Scheduler Admin"
     index_title = ""
+
     @never_cache
     def login(self, request, extra_context=None):
         if settings.DJANGO_ENV != settings.DEVELOPMENT:
@@ -17,3 +18,8 @@ class AdminSite(DefaultAdminSite):
             """
             return redirect('/')
         return super().login(request, extra_context)
+
+    def each_context(self, request):
+        context = super().each_context(request)
+        context['DJANGO_ENV'] = settings.DJANGO_ENV
+        return context
