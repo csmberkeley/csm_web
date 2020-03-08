@@ -22,28 +22,32 @@ export default class CourseMenu extends React.Component {
   render() {
     const { path } = this.props.match;
     const { loaded, courses } = this.state;
-    return !loaded ? (
-      <div>Loading...</div>
-    ) : (
+    return (
       <Switch>
         <Route
           path="/courses/:id"
-          render={routeProps => <Course name={courses[routeProps.match.params.id].name} {...routeProps} />}
+          render={routeProps => (
+            <Course name={loaded && courses[routeProps.match.params.id].name} {...routeProps} />
+          )}
         />
         <Route
           path="/courses"
-          render={() => (
-            <React.Fragment>
-              <h3 className="page-title center-title">Which course would you like to enroll in?</h3>
-              <div id="course-menu">
-                {Object.entries(courses).map(([id, { name }]) => (
-                  <Link className="csm-btn" to={`${path}/${id}`} key={id}>
-                    {name}
-                  </Link>
-                ))}
-              </div>
-            </React.Fragment>
-          )}
+          render={() =>
+            !loaded ? (
+              <div>Loading...</div>
+            ) : (
+              <React.Fragment>
+                <h3 className="page-title center-title">Which course would you like to enroll in?</h3>
+                <div id="course-menu">
+                  {Object.entries(courses).map(([id, { name }]) => (
+                    <Link className="csm-btn" to={`${path}/${id}`} key={id}>
+                      {name}
+                    </Link>
+                  ))}
+                </div>
+              </React.Fragment>
+            )
+          }
         />
       </Switch>
     );

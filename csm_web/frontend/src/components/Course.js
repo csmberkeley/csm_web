@@ -26,14 +26,19 @@ const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
 export default class Course extends React.Component {
   static propTypes = {
     match: PropTypes.shape({ params: PropTypes.shape({ id: PropTypes.string.isRequired }) }).isRequired,
-    name: PropTypes.string.isRequired
+    /*
+     * Name will be false if it hasn't yet been loaded (the relevant request to the API is performed in CourseMenu)
+     * We structure things like this in order to avoid a 'waterfall' where we don't start fetching sections until
+     * CourseMenu is done with its API requests, making the user suffer twice the latency for no reason.
+     */
+    name: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]).isRequired
   };
 
   constructor(props) {
     super(props);
     this.state = {
       sections: null,
-      loaded: false,
+      sectionsLoaded: false,
       day: "",
       showUnavailable: true,
       userIsCoordinator: false,
@@ -45,7 +50,7 @@ export default class Course extends React.Component {
   reloadSections() {
     const { id } = this.props.match.params;
     fetchJSON(`/courses/${id}/sections`).then(({ sections, userIsCoordinator }) =>
-      this.setState({ sections, userIsCoordinator, loaded: true, day: Object.keys(sections)[0] })
+      this.setState({ sections, userIsCoordinator, sectionsLoaded: true, day: Object.keys(sections)[0] })
     );
   }
 
@@ -54,16 +59,21 @@ export default class Course extends React.Component {
   }
 
   render() {
-    const { id } = this.props.match.params;
-    const { loaded, sections, day: currDay, showUnavailable, userIsCoordinator, showModal } = this.state;
+    const {
+      match: {
+        params: { id }
+      },
+      name
+    } = this.props;
+    const { sectionsLoaded, sections, day: currDay, showUnavailable, userIsCoordinator, showModal } = this.state;
     let currDaySections = sections && sections[currDay];
     if (currDaySections && !showUnavailable) {
       currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
     }
-    return !loaded ? null : (
+    return !(name && sectionsLoaded) ? null : (
       <div id="course-section-selector">
         <div id="course-section-controls">
-          <h2 className="course-title">{this.props.name}</h2>
+          <h2 className="course-title">{name}</h2>
           <div id="day-selector">
             {Object.keys(sections).map(day => (
               <button
