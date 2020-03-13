@@ -296,7 +296,15 @@ function zeroPadTwoDigit(num) {
 class SpacetimeEditModal extends React.Component {
   constructor(props) {
     super(props);
-    this.state = { location: "", day: "", time: "", isPermanent: false, changeDate: "", showSaveSpinner: false };
+    this.state = {
+      location: "",
+      day: "",
+      time: "",
+      isPermanent: false,
+      changeDate: "",
+      mode: "inperson",
+      showSaveSpinner: false
+    };
     this.handleChange = this.handleChange.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
@@ -336,7 +344,7 @@ class SpacetimeEditModal extends React.Component {
   }
 
   render() {
-    let { location, day, time, isPermanent, changeDate, showSaveSpinner } = this.state;
+    let { location, day, time, isPermanent, changeDate, mode, showSaveSpinner } = this.state;
     isPermanent = !!isPermanent;
     const now = new Date();
     const today = `${now.getFullYear()}-${zeroPadTwoDigit(now.getMonth() + 1)}-${zeroPadTwoDigit(now.getDate())}`;
@@ -344,14 +352,40 @@ class SpacetimeEditModal extends React.Component {
       <Modal className="spacetime-edit-modal" closeModal={this.props.closeModal}>
         <form className="csm-form" id="spacetime-edit-form" onSubmit={this.handleSubmit}>
           <h4>Change Time and Location</h4>
+          <div className="mode-selection">
+            <label>Section is</label>
+            <div className="mode-selection-options">
+              <label>
+                <input
+                  onChange={this.handleChange}
+                  type="radio"
+                  name="mode"
+                  value="inperson"
+                  checked={mode === "inperson"}
+                />
+                In person
+              </label>
+              <label>
+                <input
+                  onChange={this.handleChange}
+                  type="radio"
+                  name="mode"
+                  value="virtual"
+                  checked={mode === "virtual"}
+                />
+                Virtual
+              </label>
+            </div>
+          </div>
           <label>
-            Location
+            {mode === "inperson" ? "Location" : "Video Call Link"}
             <input
               onChange={this.handleChange}
               required
               title="You cannot leave this field blank"
               pattern=".*[^\s]+.*"
-              type="text"
+              type={mode === "inperson" ? "text" : "url"}
+              maxLength="200"
               name="location"
               value={location}
               autoFocus

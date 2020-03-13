@@ -661,6 +661,11 @@ main {
 	margin: 0 auto 0.5em auto;
 }
 
+.section-detail-info-card-contents .location-link {
+	font-size: 25px;
+	margin: 0 auto 0.5em auto;
+}
+
 .section-detail-info-card-contents.mentor {
 	text-align: center;
 }
@@ -932,11 +937,26 @@ table tbody tr:last-child > td {
 	margin-top: 7px;
 }
 
-#spacetime-edit-form #date-of-change-fields input {
+#spacetime-edit-form .mode-selection .mode-selection-options {
+	display: flex;
+	margin-top: 7px;
+}
+
+#spacetime-edit-form .mode-selection .mode-selection-options label:first-child {
+	margin-right: 1.5em;
+}
+
+#spacetime-edit-form .mode-selection .mode-selection-options label {
+	color: black;
+	font-weight: normal;
+	font-size: small;
+}
+
+#spacetime-edit-form #date-of-change-fields input:not([type="radio"]) {
 	display: inline;
 }
 
-#spacetime-edit-form #date-of-change-fields input[type="radio"] {
+#spacetime-edit-form input[type="radio"] {
 	margin: 0 10px 0 0;
 	-webkit-appearance: none;
 	-moz-appearance: none;
@@ -949,12 +969,12 @@ table tbody tr:last-child > td {
 	vertical-align: middle;
 }
 
-#spacetime-edit-form #date-of-change-fields input[type="radio"][value="true"] {
+#spacetime-edit-form input[type="radio"][value="true"] {
 	position: relative;
 	bottom: 1px;
 }
 
-#spacetime-edit-form #date-of-change-fields input[type="radio"]:checked {
+#spacetime-edit-form input[type="radio"]:checked {
 	background-color: var(--csm-green);
 }
 

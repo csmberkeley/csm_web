@@ -76,17 +76,28 @@ export function SectionSidebar({ links }) {
 
 SectionSidebar.propTypes = { links: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)).isRequired };
 
+const Location = ({ location }) =>
+  location.match(/^https?:\/\//) ? (
+    <a className="location-link" href={location}>
+      Online
+    </a>
+  ) : (
+    <h5>{location}</h5>
+  );
+
+Location.propTypes = { location: PropTypes.string.isRequired };
+
 export function SectionSpacetime({ spacetime: { location, time }, override, children }) {
   return (
     <InfoCard title="Time and Location">
       {children}
-      <h5>{location}</h5>
+      <Location location={location} />
       <h5>{time}</h5>
       {override && (
         <React.Fragment>
           <div className="divider" />
           <div className="override-label">Adjusted for {override.date}</div>
-          <h5>{override.spacetime.location}</h5>
+          <Location location={override.spacetime.location} />
           <h5>{override.spacetime.time}</h5>
         </React.Fragment>
       )}
