@@ -133,7 +133,7 @@ class Student(Profile):
             if settings.DJANGO_ENV != settings.DEVELOPMENT:
                 logger.info(
                     f"<Attendance> Attendance automatically created for student {self.user.email} in course {course.name} for date {now.date()}")
-            Attendance.objects.create(student=self, date=now.date())
+            Attendance.objects.create(student=self, date=this_week[0])
 
     class Meta:
         unique_together = ("user", "section")
