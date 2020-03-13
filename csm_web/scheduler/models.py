@@ -63,6 +63,8 @@ class Attendance(ValidatingModel):
 
     class Meta:
         unique_together = ("date", "student")
+        ordering = ("date",)
+        indexes = (models.Index(fields=("date",)),)
 
 
 class Course(ValidatingModel):
