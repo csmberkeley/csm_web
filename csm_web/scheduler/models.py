@@ -215,7 +215,7 @@ class Spacetime(ValidatingModel):
     DAY_INDEX = tuple(day for day, _ in DayOfWeek.choices)
     SPACE_REDUCE_REGEX = re.compile(r'\s+')
 
-    location = models.CharField(max_length=100)
+    location = models.CharField(max_length=200)
     start_time = models.TimeField()
     duration = models.DurationField()
     day_of_week = models.CharField(max_length=3, choices=DayOfWeek.choices)

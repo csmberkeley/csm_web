@@ -220,7 +220,8 @@ class SectionCard extends React.Component {
           <div className="section-card-contents">
             {description && <span className="section-card-description">{description}</span>}
             <p title="Location">
-              <LocationIcon width={iconWidth} height={iconHeight} /> {location}
+              <LocationIcon width={iconWidth} height={iconHeight} />{" "}
+              {location.match(/^https?:\/\//) ? "Online" : location}
             </p>
             <p title="Time">
               <ClockIcon width={iconWidth} height={iconHeight} /> {time}

@@ -26,9 +26,7 @@ export default class CourseMenu extends React.Component {
       <Switch>
         <Route
           path="/courses/:id"
-          render={routeProps => (
-            <Course name={loaded && courses[routeProps.match.params.id].name} {...routeProps} />
-          )}
+          render={routeProps => <Course name={loaded && courses[routeProps.match.params.id].name} {...routeProps} />}
         />
         <Route
           path="/courses"
