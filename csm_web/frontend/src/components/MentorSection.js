@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
+import { SPACETIME_SHAPE } from "../utils/types";
 import { SectionDetail, InfoCard, SectionSpacetime, ROLES } from "./Section";
 import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
@@ -296,10 +297,12 @@ function zeroPadTwoDigit(num) {
 class SpacetimeEditModal extends React.Component {
   constructor(props) {
     super(props);
+    // Time string comes as HH:MM:ss, TimeInput expects HH:MM
+    let timeString = props.defaultSpacetime.startTime;
     this.state = {
-      location: "",
-      day: "",
-      time: "",
+      location: props.defaultSpacetime.location,
+      day: props.defaultSpacetime.dayOfWeek,
+      time: timeString.slice(0, timeString.lastIndexOf(":")),
       isPermanent: false,
       changeDate: "",
       mode: "inperson",
@@ -312,6 +315,7 @@ class SpacetimeEditModal extends React.Component {
   static propTypes = {
     closeModal: PropTypes.func.isRequired,
     spacetimeId: PropTypes.number.isRequired,
+    defaultSpacetime: SPACETIME_SHAPE.isRequired,
     reloadSection: PropTypes.func.isRequired
   };
 
@@ -587,7 +591,12 @@ function MentorSectionInfo({
         </InfoCard>
         <SectionSpacetime spacetime={spacetime} override={override}>
           {showModal === MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT && (
-            <SpacetimeEditModal reloadSection={reloadSection} spacetimeId={spacetime.id} closeModal={closeModal} />
+            <SpacetimeEditModal
+              reloadSection={reloadSection}
+              spacetimeId={spacetime.id}
+              defaultSpacetime={spacetime}
+              closeModal={closeModal}
+            />
           )}
           <button
             className="info-card-edit-btn"
