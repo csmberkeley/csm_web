@@ -26,11 +26,8 @@ jobs:
         node-version: ${{ matrix.node-version }}
     - run: npm ci
     - run: npm run build --if-present
-    - name: Run linters
-      uses: samuelmeuli/lint-action@v1
-      with:
-        github_token: ${{ secrets.github_token }}
-        # Enable your linters here
-        eslint: true
-        prettier: true
+    - name: Run ESLint
+      run: eslint csm_web/frontend/src/ --ext .js,.jsx,.ts,.tsx
+    - name: Run Prettier
+      run: prettier --list-different csm_web/frontend/src/**
           
