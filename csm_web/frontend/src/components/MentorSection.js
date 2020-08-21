@@ -298,11 +298,14 @@ class SpacetimeEditModal extends React.Component {
   constructor(props) {
     super(props);
     // Time string comes as HH:MM:ss, TimeInput expects HH:MM
-    let timeString = props.defaultSpacetime.startTime;
+    const timeString = props.defaultSpacetime.startTime;
+    // Some extra logic in case the API changes to HH:MM,
+    // in which case split would produce 2 segments instead of 3
+    const sliceIndex = timeString.split(":").length < 3 ? timeString.indexOf(":") : timeString.lastIndexOf(":");
     this.state = {
       location: props.defaultSpacetime.location,
       day: props.defaultSpacetime.dayOfWeek,
-      time: timeString.slice(0, timeString.lastIndexOf(":")),
+      time: timeString.slice(0, sliceIndex),
       isPermanent: false,
       changeDate: "",
       mode: "inperson",
@@ -314,7 +317,6 @@ class SpacetimeEditModal extends React.Component {
 
   static propTypes = {
     closeModal: PropTypes.func.isRequired,
-    spacetimeId: PropTypes.number.isRequired,
     defaultSpacetime: SPACETIME_SHAPE.isRequired,
     reloadSection: PropTypes.func.isRequired
   };
@@ -325,7 +327,8 @@ class SpacetimeEditModal extends React.Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    const { closeModal, spacetimeId, reloadSection } = this.props;
+    const { closeModal, defaultSpacetime, reloadSection } = this.props;
+    const spacetimeId = defaultSpacetime.id;
     let { location, day, time, isPermanent, changeDate } = this.state;
     isPermanent = !!isPermanent;
     //TODO: Handle API failure
@@ -591,12 +594,7 @@ function MentorSectionInfo({
         </InfoCard>
         <SectionSpacetime spacetime={spacetime} override={override}>
           {showModal === MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT && (
-            <SpacetimeEditModal
-              reloadSection={reloadSection}
-              spacetimeId={spacetime.id}
-              defaultSpacetime={spacetime}
-              closeModal={closeModal}
-            />
+            <SpacetimeEditModal reloadSection={reloadSection} defaultSpacetime={spacetime} closeModal={closeModal} />
           )}
           <button
             className="info-card-edit-btn"
