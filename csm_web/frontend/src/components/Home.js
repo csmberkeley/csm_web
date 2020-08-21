@@ -78,7 +78,8 @@ const profileShape = PropTypes.shape({
   sectionSpacetime: PropTypes.shape({ time: PropTypes.string.isRequired, location: PropTypes.string }),
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
-  courseId: PropTypes.number.isRequired
+  courseId: PropTypes.number.isRequired,
+  role: PropTypes.oneOf(Object.values(ROLES)).isRequired
 });
 
 CourseCard.propTypes = { profiles: PropTypes.arrayOf(profileShape).isRequired };
