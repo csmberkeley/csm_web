@@ -41,3 +41,17 @@ Run `npm run watch`, which will automatically rebuild the JS bundle if any chang
 ## Troubleshooting
 * OSX: error on running `pip`
   * Try replacing `pip` with `pip3` instead.
+* The following errors are likely caused by some quirks in our build system - if you set up a new virtual environment through normal commands, you may run into them. The solution for all of these should be to run `setup.sh` (you should be able to do this even after attempting to run pip/npm commands already).
+  * `django.core.exceptions.ImproperlyConfigured: The SECRET_KEY setting must not be empty.`
+  * When installing `psycopg2`, console output displays `ld: library not found for -lpq` or similar
+* How do I access the `/admin` page?
+  * The `./setup.sh` script will create a user with username `demo_user` and password `pass`. You can access it by signing in through the admin page.
+  * If you wish to assign admin permissions to an account that uses OAuth (such as your Berkeley email), run the following commands in the Django shell (accessible by running `python3 csm_web/manage.py shell`):
+```
+from scheduler.models import *
+# replace "my_username" with the prefix of your Berkeley email, as in "my_username@berkeley.edu"
+user = User.objects.get(username="my_username")
+user.is_staff = True
+user.is_superuser = True
+user.save()
+```
