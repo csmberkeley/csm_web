@@ -88,6 +88,7 @@ class EnrollmentTest(utils.APITestCase):
         logging.disable(logging.CRITICAL)
         self.my_course = CourseFactory.create()
         self.other_course = CourseFactory.create()
+        self.assertNotEqual(self.my_course, self.other_course)
         self.user = UserFactory.create()
         self.client = self.get_client_for(self.user)
 

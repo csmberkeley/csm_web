@@ -32,7 +32,7 @@ class CourseFactory(factory.DjangoModelFactory):
             factory.Faker(
                 "date_time_between_dates",
                 datetime_start=timezone.now() - timedelta(weeks=3),
-                datetime_end=timezone.now() + timedelta(weeks=3),
+                datetime_end=timezone.now() - timedelta(weeks=2),
             ).generate({})
         )
     )
