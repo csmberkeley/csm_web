@@ -107,7 +107,7 @@ class StudentFactory(factory.DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     section = factory.SubFactory(SectionFactory)
-    active = False
+    active = True
     banned = False
 
 
