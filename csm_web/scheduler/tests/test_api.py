@@ -124,7 +124,7 @@ class SpacetimeModifyTest(APITestCase):
             "start_time": new_time,
             "day_of_week": new_day,
             "location": new_location,
-        })
+        }, format="json")
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED, response.data)
         new_spacetime = Spacetime.objects.get(pk=spacetime.pk)
         self.assertEqual(new_spacetime.start_time, new_time)
