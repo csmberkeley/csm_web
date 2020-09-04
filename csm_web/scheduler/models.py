@@ -12,6 +12,14 @@ logger = logging.getLogger(__name__)
 logger.info = logger.warn
 
 
+def should_have_two_spacetimes(course_name):
+    """
+    Returns true if the course_name is a course with two spacetimes.
+    Welp.
+    """
+    return course_name in ["CS70"]
+
+
 def week_bounds(date):
     week_start = date - datetime.timedelta(days=date.weekday())
     week_end = week_start + datetime.timedelta(weeks=1)
@@ -166,11 +174,26 @@ class Coordinator(Profile):
 
 class Section(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    spacetime = models.OneToOneField(
+    spacetime = models.ForeignKey(
         "Spacetime",
+        # If spacetime_70 isn't present, this field can be removed
+        related_name="section",
         on_delete=models.CASCADE,
         help_text="The recurring time and location of a section. This can be temporarily overriden "
         "by the mentor, in which case the admin page will display the overriding times."
+    )
+    # This nullable field is ideally a hack to accomodate CS70 having 2 sections per week.
+    # I pray that it may one day be removed in favor of a more sustainable design.
+    # In fact, it may be more accurate to put the FK on the Spacetime model instead...
+    spacetime_70 = models.ForeignKey(
+        "Spacetime",
+        # If spacetime_70 isn't present, this field can be removed
+        related_name="section_70",
+        blank=True,
+        null=True,
+        on_delete=models.CASCADE,
+        help_text="A second recurring time and location for a section. This field is null for "
+        "courses that only have one section per week."
     )
     capacity = models.PositiveSmallIntegerField()
     mentor = models.OneToOneField(Mentor, on_delete=models.CASCADE, blank=True, null=True)

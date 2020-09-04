@@ -10,7 +10,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor
+from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor, should_have_two_spacetimes
 from .serializers import (
     CourseSerializer,
     SectionSerializer,
@@ -128,12 +128,21 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
             email=self.request.data['mentor_email'], username=self.request.data['mentor_email'].split('@')[0])
         spacetime = SpacetimeSerializer(
             data={**self.request.data['spacetime'], 'duration': str(course.section_set.first().spacetime.duration)})
+        if should_have_two_spacetimes(course.name):
+            spacetime_70 = SpacetimeSerializer(
+                data={
+                    **self.request.data['spacetime_70'],
+                    'duration': str(course.section_set.first().spacetime.duration)
+                }
+            )
+        else:
+            spacetime_70 = None
         if spacetime.is_valid():
             spacetime = spacetime.save()
         else:
             return Response({'error': f"Spacetime was invalid {spacetime.errors}", status: status.HTTP_422_UNPROCESSABLE_ENTITY})
         mentor = Mentor.objects.create(user=mentor_user)
-        Section.objects.create(spacetime=spacetime, mentor=mentor,
+        Section.objects.create(spacetime=spacetime, spacetime_70=spacetime_70, mentor=mentor,
                                description=self.request.data['description'], capacity=self.request.data['capacity'], course=course)
         return Response(status=status.HTTP_201_CREATED)
 

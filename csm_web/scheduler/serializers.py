@@ -108,6 +108,7 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 class SectionSerializer(serializers.ModelSerializer):
     spacetime = SpacetimeSerializer()
+    spacetime_70 = SpacetimeSerializer(allow_null=True)  # :grimacing:
     num_students_enrolled = serializers.SerializerMethodField()
     mentor = MentorSerializer()
     course = serializers.CharField(source='course.name')

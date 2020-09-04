@@ -39,9 +39,6 @@ Run `npm run watch`, which will automatically rebuild the JS bundle if any chang
 (Alternatively you can run `npm run dev` manually each time you make changes to the frontend)
 
 ## Troubleshooting
-### OSX: error on running `pip`
-* Try replacing `pip` with `pip3` instead.
-
 ### `setup.sh` Errors
 * The following errors are likely caused by some quirks in our build system - if you set up a new virtual environment through normal commands, you may run into them. The solution for all of these should be to run `setup.sh` (you should be able to do this even after attempting to run pip/npm commands already).
   * `django.core.exceptions.ImproperlyConfigured: The SECRET_KEY setting must not be empty.`
@@ -75,3 +72,15 @@ user.is_staff = True
 user.is_superuser = True
 user.save()
 ```
+
+### Miscellaneous
+#### OSX: error on running `pip`
+* Try replacing `pip` with `pip3` instead.
+
+#### OAuth stuff when trying to sign in locally
+```
+Error 401: invalid_client
+The OAuth client was not found.
+```
+OAuth secrets are sourced from the heroku repository: you'll need to log in to heroku, add the
+appropriate remote, rerun `setup.sh`, and then reactivate your virtualenv.
