@@ -153,6 +153,7 @@ class SectionCard extends React.Component {
   static propTypes = {
     id: PropTypes.number.isRequired,
     spacetime: SPACETIME_SHAPE.isRequired,
+    secondSpacetime: SPACETIME_SHAPE,
     mentor: PropTypes.shape({ name: PropTypes.string.isRequired }),
     numStudentsEnrolled: PropTypes.number.isRequired,
     capacity: PropTypes.number.isRequired,
@@ -220,6 +221,7 @@ class SectionCard extends React.Component {
   render() {
     const {
       spacetime: { location, time },
+      secondSpacetime,
       mentor,
       numStudentsEnrolled,
       capacity,
@@ -245,7 +247,15 @@ class SectionCard extends React.Component {
               {location.match(/^https?:\/\//) ? "Online" : location}
             </p>
             <p title="Time">
-              <ClockIcon width={iconWidth} height={iconHeight} /> {time}
+              <ClockIcon width={iconWidth} height={iconHeight} />
+              {time}
+              {secondSpacetime ? (
+                <React.Fragment>
+                  <br /> {" AND " + secondSpacetime.time}
+                </React.Fragment>
+              ) : (
+                ""
+              )}
             </p>
             <p title="Mentor">
               <UserIcon width={iconWidth} height={iconHeight} /> {mentor.name}

@@ -6,7 +6,16 @@ import { ROLES } from "../utils/types";
 import Modal from "./Modal";
 import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime } from "./Section";
 
-export default function StudentSection({ course, courseTitle, mentor, spacetime, override, associatedProfileId, url }) {
+export default function StudentSection({
+  course,
+  courseTitle,
+  mentor,
+  spacetime,
+  secondSpacetime,
+  override,
+  associatedProfileId,
+  url
+}) {
   return (
     <SectionDetail
       course={course}
@@ -28,6 +37,7 @@ export default function StudentSection({ course, courseTitle, mentor, spacetime,
             <StudentSectionInfo
               mentor={mentor}
               spacetime={spacetime}
+              secondSpacetime={secondSpacetime}
               override={override}
               associatedProfileId={associatedProfileId}
             />
@@ -43,12 +53,13 @@ StudentSection.propTypes = {
   courseTitle: PropTypes.string.isRequired,
   mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
   spacetime: PropTypes.object.isRequired,
+  secondSpacetime: PropTypes.object,
   override: PropTypes.object,
   associatedProfileId: PropTypes.number.isRequired,
   url: PropTypes.string.isRequired
 };
 
-function StudentSectionInfo({ mentor, spacetime, override, associatedProfileId }) {
+function StudentSectionInfo({ mentor, spacetime, secondSpacetime, override, associatedProfileId }) {
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">My Section</h3>
@@ -59,7 +70,7 @@ function StudentSectionInfo({ mentor, spacetime, override, associatedProfileId }
             <a href={`mailto:${mentor.email}`}>{mentor.email}</a>
           </InfoCard>
         )}
-        <SectionSpacetime spacetime={spacetime} override={override} />
+        <SectionSpacetime spacetime={spacetime} secondSpacetime={secondSpacetime} override={override} />
         <DropSection profileId={associatedProfileId} />
       </div>
     </React.Fragment>
@@ -69,6 +80,7 @@ function StudentSectionInfo({ mentor, spacetime, override, associatedProfileId }
 StudentSectionInfo.propTypes = {
   mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
   spacetime: PropTypes.object.isRequired,
+  secondSpacetime: PropTypes.object,
   override: PropTypes.object,
   associatedProfileId: PropTypes.number.isRequired
 };
