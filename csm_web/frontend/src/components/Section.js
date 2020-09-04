@@ -85,12 +85,15 @@ const Location = ({ location }) =>
 
 Location.propTypes = { location: PropTypes.string.isRequired };
 
-export function SectionSpacetime({ spacetime: { location, time }, override, children }) {
+export function SectionSpacetime({ spacetime: { location, time }, secondSpacetime, override, children }) {
   return (
     <InfoCard title="Time and Location">
       {children}
       <Location location={location} />
-      <h5>{time}</h5>
+      <h5>
+        {time}
+        {secondSpacetime && " and " + secondSpacetime.time}
+      </h5>
       {override && (
         <React.Fragment>
           <div className="divider" />
@@ -105,6 +108,7 @@ export function SectionSpacetime({ spacetime: { location, time }, override, chil
 
 SectionSpacetime.propTypes = {
   spacetime: SPACETIME_SHAPE.isRequired,
+  secondSpacetime: SPACETIME_SHAPE,
   override: PropTypes.shape({ spacetime: SPACETIME_SHAPE.isRequired, date: PropTypes.string.isRequired }),
   children: PropTypes.node
 };

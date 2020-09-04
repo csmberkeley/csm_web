@@ -91,7 +91,7 @@ class ProfileListTest(APITestCase):
             course=CourseFactory.create(name='CS70', title='Discrete Mathematics and Probability Theory'),
             spacetime=SpacetimeFactory.create(start_time=time(hour=11), day_of_week='Tue',
                                               duration=timedelta(hours=1.5), location='Cory 7'),
-            spacetime_70=SpacetimeFactory.create(start_time=time(
+            second_spacetime=SpacetimeFactory.create(start_time=time(
                 hour=11), day_of_week='Thu', duration=timedelta(hours=1.5), location='Cory 11')
         )
         response = self.client.get(self.endpoint)
@@ -110,7 +110,7 @@ class ProfileListTest(APITestCase):
                 'time': 'Tuesday 11:00 AM-12:30 PM', 'location': 'Cory 7'
             },
             'section_spacetime_2': {
-                'id': mentor_section.spacetime_70.pk,
+                'id': mentor_section.second_spacetime.pk,
                 'start_time': '11:00:00',
                 'day_of_week': 'Thu',
                 'duration': '01:30:00',

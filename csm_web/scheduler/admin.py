@@ -338,6 +338,7 @@ class SectionAdmin(CoordAdmin):
                     "start_time",
                     "duration",
                     "day_of_week",
+                    "spacetime_70",
                     "active_students",
                     "dropped_students"
                 )

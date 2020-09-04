@@ -18,6 +18,7 @@ export default function MentorSection({
   course,
   courseTitle,
   spacetime,
+  secondSpacetime,
   override,
   capacity,
   description,
@@ -81,6 +82,7 @@ export default function MentorSection({
               students={students}
               loaded={loaded}
               spacetime={spacetime}
+              secondSpacetime={secondSpacetime}
               override={override}
               capacity={capacity}
               description={description}
@@ -98,6 +100,7 @@ MentorSection.propTypes = {
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
   spacetime: PropTypes.object.isRequired,
+  secondSpacetime: PropTypes.object,
   override: PropTypes.object,
   url: PropTypes.string.isRequired,
   reloadSection: PropTypes.func.isRequired,
@@ -515,6 +518,7 @@ function MentorSectionInfo({
   students,
   loaded,
   spacetime,
+  secondSpacetime,
   override,
   reloadSection,
   isCoordinator,
@@ -592,7 +596,7 @@ function MentorSectionInfo({
           )}
           {!loaded && <h5>Loading students...</h5>}
         </InfoCard>
-        <SectionSpacetime spacetime={spacetime} override={override}>
+        <SectionSpacetime spacetime={spacetime} secondSpacetime={secondSpacetime} override={override}>
           {showModal === MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT && (
             <SpacetimeEditModal reloadSection={reloadSection} defaultSpacetime={spacetime} closeModal={closeModal} />
           )}
@@ -645,6 +649,7 @@ MentorSectionInfo.propTypes = {
   ).isRequired,
   loaded: PropTypes.bool.isRequired,
   spacetime: PropTypes.object.isRequired,
+  secondSpacetime: PropTypes.object,
   override: PropTypes.object,
   reloadSection: PropTypes.func.isRequired,
   isCoordinator: PropTypes.bool.isRequired,

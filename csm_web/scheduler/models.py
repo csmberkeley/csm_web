@@ -186,10 +186,9 @@ class Section(ValidatingModel):
     # This nullable field is ideally a hack to accomodate CS70 having 2 sections per week.
     # I pray that it may one day be removed in favor of a more sustainable design.
     # In fact, it may be more accurate to put the FK on the Spacetime model instead...
-    spacetime_70 = models.ForeignKey(
+    second_spacetime = models.ForeignKey(
         "Spacetime",
-        # If spacetime_70 isn't present, this field can be removed
-        related_name="section_70",
+        related_name="second_section",
         blank=True,
         null=True,
         on_delete=models.CASCADE,

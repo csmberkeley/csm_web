@@ -15,6 +15,7 @@ export const PROFILE_SHAPE = PropTypes.shape({
   id: PropTypes.number.isRequired,
   sectionId: PropTypes.number,
   sectionSpacetime: PropTypes.shape({ time: PropTypes.string.isRequired, location: PropTypes.string }),
+  secondSectionSpacetime: PropTypes.shape({ time: PropTypes.string.isRequired, location: PropTypes.string }),
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
   courseId: PropTypes.number.isRequired,

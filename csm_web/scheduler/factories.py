@@ -98,7 +98,7 @@ class SectionFactory(factory.DjangoModelFactory):
         model = Section
 
     spacetime = factory.SubFactory(SpacetimeFactory)
-    spacetime_70 = factory.LazyAttribute(
+    second_spacetime = factory.LazyAttribute(
         lambda o:
             SpacetimeFactory.create(
                 location=o.spacetime.location,

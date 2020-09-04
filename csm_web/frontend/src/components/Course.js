@@ -23,6 +23,27 @@ const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
   Sun: "Su"
 });
 
+// const DAY_ORDER = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+
+/**
+ * Returns an abbreviation for the combination of two days of week.
+ * The days should be passed in with their 3-letter db representations ("Mon", "Tue", etc.)
+ * Assumes that both days are not the same.
+ */
+/*
+function doubleDayOfWeekAbbrev(day1, day2) {
+  if (day1 === day2) {
+    console.error("Invariant violated: a single section had two occurrences both on " + day1);
+  }
+  // Figure out which one comes first
+  const i1 = DAY_ORDER.indexOf(day1);
+  const i2 = DAY_ORDER.indexOf(day2);
+  const firstDay = i1 > i2 ? day1 : day2;
+  const secondDay = i1 > i2 ? day2 : day1;
+  return DAY_OF_WEEK_ABREVIATIONS[firstDay] + "/" + DAY_OF_WEEK_ABREVIATIONS[secondDay];
+}
+*/
+
 export default class Course extends React.Component {
   static propTypes = {
     match: PropTypes.shape({ params: PropTypes.shape({ id: PropTypes.string.isRequired }) }).isRequired,

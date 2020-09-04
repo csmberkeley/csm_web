@@ -60,7 +60,7 @@ class ProfileSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     section_id = serializers.IntegerField(source='section.id', required=False)
     section_spacetime = SpacetimeSerializer(source='section.spacetime', required=False)
-    section_spacetime_2 = SpacetimeSerializer(source='section.spacetime_70', required=False)
+    section_spacetime_2 = SpacetimeSerializer(source='section.second_spacetime', required=False)
     course = VariableSourceCourseField(source='*', target='name', required=False)
     course_title = VariableSourceCourseField(source='*', target='title', required=False)
     course_id = VariableSourceCourseField(source='*', target='pk', required=False)
@@ -109,7 +109,7 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 class SectionSerializer(serializers.ModelSerializer):
     spacetime = SpacetimeSerializer()
-    spacetime_70 = SpacetimeSerializer(allow_null=True)  # :grimacing:
+    second_spacetime = SpacetimeSerializer(allow_null=True)  # :grimacing:
     num_students_enrolled = serializers.SerializerMethodField()
     mentor = MentorSerializer()
     course = serializers.CharField(source='course.name')
@@ -145,7 +145,7 @@ class SectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Section
-        fields = ("id", "spacetime", "spacetime_70", "mentor", "capacity", "override", "associated_profile_id",
+        fields = ("id", "spacetime", "second_spacetime", "mentor", "capacity", "override", "associated_profile_id",
                   "num_students_enrolled", "description", "mentor", "course", "user_role", "course_title")
 
 

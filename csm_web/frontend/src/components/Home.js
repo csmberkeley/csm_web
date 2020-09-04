@@ -34,6 +34,10 @@ export default class Home extends React.Component {
   }
 }
 
+function getSectionTimeString(profile) {
+  return profile.sectionSpacetime.time + (profile.secondSectionSpacetime ? profile.secondSectionSpacetime.time : "");
+}
+
 function CourseCard({ profiles }) {
   const { course, courseTitle, role, sectionId, courseId } = profiles[0];
   const relation = role.toLowerCase();
@@ -46,7 +50,7 @@ function CourseCard({ profiles }) {
           {profiles.length > 1 &&
             profiles.map(profile => (
               <Link key={profile.id} to={`/sections/${profile.sectionId}`} className="section-link">
-                {profile.sectionSpacetime.time}
+                {getSectionTimeString(profile)}
               </Link>
             ))}
           <div className="relation-label" style={{ backgroundColor: `var(--csm-${relation})` }}>

@@ -129,20 +129,20 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
         spacetime = SpacetimeSerializer(
             data={**self.request.data['spacetime'], 'duration': str(course.section_set.first().spacetime.duration)})
         if should_have_two_spacetimes(course.name):
-            spacetime_70 = SpacetimeSerializer(
+            second_spacetime = SpacetimeSerializer(
                 data={
-                    **self.request.data['spacetime_70'],
+                    **self.request.data['second_spacetime'],
                     'duration': str(course.section_set.first().spacetime.duration)
                 }
             )
         else:
-            spacetime_70 = None
+            second_spacetime = None
         if spacetime.is_valid():
             spacetime = spacetime.save()
         else:
             return Response({'error': f"Spacetime was invalid {spacetime.errors}", status: status.HTTP_422_UNPROCESSABLE_ENTITY})
         mentor = Mentor.objects.create(user=mentor_user)
-        Section.objects.create(spacetime=spacetime, spacetime_70=spacetime_70, mentor=mentor,
+        Section.objects.create(spacetime=spacetime, second_spacetime=second_spacetime, mentor=mentor,
                                description=self.request.data['description'], capacity=self.request.data['capacity'], course=course)
         return Response(status=status.HTTP_201_CREATED)
 
