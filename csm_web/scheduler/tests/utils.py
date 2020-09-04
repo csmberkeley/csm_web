@@ -62,14 +62,10 @@ def create_empty_section_for(mentor):
     return SectionFactory.create(course=mentor.course, mentor=mentor)
 
 
-def enroll_user_as_student(user, section, save=True):
+def enroll_user_as_student(user, section):
     """
     Creates a student profile for USER, and assigns them to the given SECTION.
     The student is saved to database.
     Returns the created profile.
     """
-    student = StudentFactory.create(user=user)
-    student.section = section
-    if save:
-        student.save()
-    return student
+    return StudentFactory.create(user=user, section=section)

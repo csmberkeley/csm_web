@@ -85,13 +85,6 @@ class UserFactory(factory.DjangoModelFactory):
     email = factory.LazyAttribute(lambda o: "%s@berkeley.edu" % o.username)
 
 
-class StudentFactory(factory.DjangoModelFactory):
-    class Meta:
-        model = Student
-
-    user = factory.SubFactory(UserFactory)
-
-
 class MentorFactory(factory.DjangoModelFactory):
     class Meta:
         model = Mentor
@@ -106,6 +99,16 @@ class SectionFactory(factory.DjangoModelFactory):
     spacetime = factory.SubFactory(SpacetimeFactory)
     capacity = factory.LazyFunction(lambda: random.randint(3, 6))
     mentor = factory.SubFactory(MentorFactory)
+
+
+class StudentFactory(factory.DjangoModelFactory):
+    class Meta:
+        model = Student
+
+    user = factory.SubFactory(UserFactory)
+    section = factory.SubFactory(SectionFactory)
+    active = False
+    banned = False
 
 
 class AttendanceFactory(factory.DjangoModelFactory):
