@@ -174,10 +174,8 @@ class Coordinator(Profile):
 
 class Section(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    spacetime = models.ForeignKey(
+    spacetime = models.OneToOneField(
         "Spacetime",
-        # If spacetime_70 isn't present, this field can be removed
-        related_name="section",
         on_delete=models.CASCADE,
         help_text="The recurring time and location of a section. This can be temporarily overriden "
         "by the mentor, in which case the admin page will display the overriding times."
