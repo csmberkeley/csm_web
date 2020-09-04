@@ -60,6 +60,7 @@ class ProfileSerializer(serializers.Serializer):
     id = serializers.IntegerField()
     section_id = serializers.IntegerField(source='section.id', required=False)
     section_spacetime = SpacetimeSerializer(source='section.spacetime', required=False)
+    section_spacetime_2 = SpacetimeSerializer(source='section.spacetime_70', required=False)
     course = VariableSourceCourseField(source='*', target='name', required=False)
     course_title = VariableSourceCourseField(source='*', target='title', required=False)
     course_id = VariableSourceCourseField(source='*', target='pk', required=False)

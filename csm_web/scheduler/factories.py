@@ -14,7 +14,8 @@ from .models import (
     User,
     Attendance,
     Override,
-    Coordinator
+    Coordinator,
+    should_have_two_spacetimes
 )
 
 COMPSCI_WORDS = ('Algorithms', 'Systems', 'Distributed', 'Efficient', 'Tractable', 'Programming',
@@ -97,6 +98,17 @@ class SectionFactory(factory.DjangoModelFactory):
         model = Section
 
     spacetime = factory.SubFactory(SpacetimeFactory)
+    spacetime_70 = factory.LazyAttribute(
+        lambda o:
+            SpacetimeFactory.create(
+                location=o.spacetime.location,
+                start_time=o.spacetime.start_time,
+                duration=o.spacetime.duration,
+                day_of_week=Spacetime.DayOfWeek.values[
+                    (o.spacetime.day_number() + 2) % len(Spacetime.DayOfWeek.values)]
+            )
+            if should_have_two_spacetimes(o.course.name) else None
+    )
     capacity = factory.LazyFunction(lambda: random.randint(3, 6))
     mentor = factory.SubFactory(MentorFactory)
 

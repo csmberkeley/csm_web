@@ -2,7 +2,7 @@ from datetime import timedelta, time, datetime
 from rest_framework import status
 from rest_framework.test import APITestCase
 from scheduler.serializers import get_profile_role
-from scheduler.models import Spacetime, Student
+from scheduler.models import Spacetime
 from scheduler.factories import (
     SpacetimeFactory,
     CourseFactory,
@@ -13,45 +13,45 @@ from scheduler.factories import (
     UserFactory
 )
 
-"""
-Tests the /api/profiles endpoint, which lists all the profiles of a user.
-
-Here's the expected fields for each response, since the formatter will make this no fun to read:
-id: <profile pk>
-section_id: <section pk>
-section_spacetime: {
-    start_time: "13:00:00" or other 24-hr string
-    day_of_week: "Mon"
-    time: "Mon 1:00-2:00 PM" or smth
-    duration: "01:00:00"
-    id: <spacetime pk>
-    location: "room number"
-}
-course: "CS61C" or whatever
-course_id: <course pk>
-course_title: "Machine Structures"
-role: "STUDENT" | "MENTOR" | "COORDINATOR"
-"""
-
 
 class ProfileListTest(APITestCase):
+    """
+    Tests the /api/profiles endpoint, which lists all the profiles of a user.
+
+    Here's the expected fields for each response, since the formatter will make this no fun to read:
+    id: <profile pk>
+    section_id: <section pk>
+    section_spacetime: {
+        start_time: "13:00:00" or other 24-hr string
+        day_of_week: "Mon"
+        time: "Mon 1:00-2:00 PM" or smth
+        duration: "01:00:00"
+        id: <spacetime pk>
+        location: "room number"
+    }
+    course: "CS61C" or whatever
+    course_id: <course pk>
+    course_title: "Machine Structures"
+    role: "STUDENT" | "MENTOR" | "COORDINATOR"
+    """
     endpoint = '/api/profiles/'
 
-    """
-    This function is somewhat inflexible but it at least saves us from copy pasting dictionary
-    literals everywhere
-    It's probably not too hard to replace the fields with obj properties, but I have bigger
-    concerns at the moment
-    """
-
     def get_default_response(self, profile, section):
+        """
+        This function is somewhat inflexible but it at least saves us from copy pasting dictionary
+        literals everywhere
+        It's probably not too hard to replace the fields with obj properties, but I have bigger
+        concerns at the moment
+        """
         return {'id': profile.pk,
                 'section_id': section.pk,
                 'section_spacetime': {'id': section.spacetime.pk,
                                       'start_time': '13:00:00',
                                       'day_of_week': 'Mon',
                                       'duration': '01:00:00',
-                                      'time': 'Monday 1:00-2:00 PM', 'location': 'Soda 1337'},
+                                      'time': 'Monday 1:00-2:00 PM',
+                                      'location': 'Soda 1337'},
+                'section_spacetime_2': None,
                 'course': 'CS61C',
                 'course_id': section.course.id,
                 'course_title': 'Machine Structures',
@@ -78,23 +78,43 @@ class ProfileListTest(APITestCase):
         self.assertEqual(response.data[0], self.get_default_response(student, section))
 
     def test_mentor_and_student(self):
+        """
+        Tests that a mentor for one course is able to enroll as a student in another.
+        This also tests behavior for the endpoint for CS70 sections, which have 2 spacetimes.
+        """
         student_section = SectionFactory.create(course=CourseFactory.create(name='CS61C', title='Machine Structures'),
                                                 spacetime=SpacetimeFactory.create(start_time=time(hour=13), day_of_week='Mon', duration=timedelta(hours=1), location='Soda 1337'))
         student = StudentFactory.create(user=self.user, section=student_section)
         mentor = MentorFactory.create(user=self.user)
-        mentor_section = SectionFactory.create(mentor=mentor, course=CourseFactory.create(name='CS70', title='Discrete Mathematics and Probability Theory'),
-                                               spacetime=SpacetimeFactory.create(start_time=time(hour=11), day_of_week='Tue', duration=timedelta(hours=1.5), location='Cory 7'))
+        mentor_section = SectionFactory.create(
+            mentor=mentor,
+            course=CourseFactory.create(name='CS70', title='Discrete Mathematics and Probability Theory'),
+            spacetime=SpacetimeFactory.create(start_time=time(hour=11), day_of_week='Tue',
+                                              duration=timedelta(hours=1.5), location='Cory 7'),
+            spacetime_70=SpacetimeFactory.create(start_time=time(
+                hour=11), day_of_week='Thu', duration=timedelta(hours=1.5), location='Cory 11')
+        )
         response = self.client.get(self.endpoint)
         self.assertEqual(len(response.data), 2)
         self.assertIn(self.get_default_response(student, student_section), response.data)
+        # CS70 is a special case due to the double spacetime
         self.assertIn({
-            'id': mentor.pk, 'section_id': mentor_section.pk, 'section_spacetime': {
+            'id': mentor.pk,
+            'section_id': mentor_section.pk,
+            'section_spacetime': {
                 'id': mentor_section.spacetime.pk,
                 'start_time': '11:00:00',
                 'day_of_week': 'Tue',
                 'duration': '01:30:00',
                 # IMPORTANT: note the AM here to avoid ambiguity
                 'time': 'Tuesday 11:00 AM-12:30 PM', 'location': 'Cory 7'
+            },
+            'section_spacetime_2': {
+                'id': mentor_section.spacetime_70.pk,
+                'start_time': '11:00:00',
+                'day_of_week': 'Thu',
+                'duration': '01:30:00',
+                'time': 'Thursday 11:00 AM-12:30 PM', 'location': 'Cory 11'
             },
             'course': 'CS70',
             'course_id': mentor_section.course.id,
