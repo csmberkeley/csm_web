@@ -49,7 +49,7 @@ class CourseFactory(factory.DjangoModelFactory):
         lambda o: timezone.make_aware(
             factory.Faker(
                 "date_time_between_dates",
-                datetime_start=o.enrollment_start,
+                datetime_start=timezone.now() + timedelta(weeks=1),
                 datetime_end=o.valid_until,
             ).generate({})
         )
