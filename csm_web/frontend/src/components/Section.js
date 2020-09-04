@@ -2,11 +2,9 @@ import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
-import { SPACETIME_SHAPE } from "../utils/types";
+import { ROLES, SPACETIME_SHAPE } from "../utils/types";
 import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";
-
-export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
 export default function Section({
   match: {

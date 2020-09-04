@@ -1,9 +1,9 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
+import { ROLES, PROFILE_SHAPE } from "../utils/types";
 import { groupBy } from "lodash";
 import { fetchJSON } from "../utils/api";
-import { ROLES } from "./Section";
 
 export default class Home extends React.Component {
   state = { profiles: [], profilesLoaded: false };
@@ -72,14 +72,4 @@ function CourseCard({ profiles }) {
   );
 }
 
-const profileShape = PropTypes.shape({
-  id: PropTypes.number.isRequired,
-  sectionId: PropTypes.number,
-  sectionSpacetime: PropTypes.shape({ time: PropTypes.string.isRequired, location: PropTypes.string }),
-  course: PropTypes.string.isRequired,
-  courseTitle: PropTypes.string.isRequired,
-  courseId: PropTypes.number.isRequired,
-  role: PropTypes.oneOf(Object.values(ROLES)).isRequired
-});
-
-CourseCard.propTypes = { profiles: PropTypes.arrayOf(profileShape).isRequired };
+CourseCard.propTypes = { profiles: PropTypes.arrayOf(PROFILE_SHAPE).isRequired };

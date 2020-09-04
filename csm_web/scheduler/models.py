@@ -12,12 +12,15 @@ logger = logging.getLogger(__name__)
 logger.info = logger.warn
 
 
-def should_have_two_spacetimes(course_name):
+def should_have_two_spacetimes(course_name, is_npe=False):
     """
     Returns true if the course_name is a course with two spacetimes.
     Welp.
+
+    * course_name: the name of the course
+    * is_npe: true if the section is a "no prior experience" section
     """
-    return course_name in ["CS70"]
+    return course_name in ["CS70"] or (course_name in ["CS61A"] and is_npe)
 
 
 def week_bounds(date):
@@ -201,6 +204,15 @@ class Section(ValidatingModel):
         help_text='A brief note to add some extra information about the section, e.g. "EOP" or '
         '"early start".'
     )
+
+    @functional.cached_property
+    def is_npe(self):
+        """
+        Returns true if this is a No Prior Experience section.
+
+        Has nothing to do with NullPointerExceptions.
+        """
+        return self.description.lower() == "no prior experience"
 
     @functional.cached_property
     def current_student_count(self):

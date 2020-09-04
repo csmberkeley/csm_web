@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
-import { SPACETIME_SHAPE } from "../utils/types";
-import { SectionDetail, InfoCard, SectionSpacetime, ROLES } from "./Section";
+import { ROLES, SPACETIME_SHAPE } from "../utils/types";
+import { SectionDetail, InfoCard, SectionSpacetime } from "./Section";
 import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
 import CopyIcon from "../../static/frontend/img/copy.svg";

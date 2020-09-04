@@ -145,7 +145,7 @@ class SectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Section
-        fields = ("id", "spacetime", "mentor", "capacity", "override", "associated_profile_id",
+        fields = ("id", "spacetime", "spacetime_70", "mentor", "capacity", "override", "associated_profile_id",
                   "num_students_enrolled", "description", "mentor", "course", "user_role", "course_title")
 
 

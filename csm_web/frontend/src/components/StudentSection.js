@@ -2,8 +2,9 @@ import React, { useEffect, useState } from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
+import { ROLES } from "../utils/types";
 import Modal from "./Modal";
-import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime, ROLES } from "./Section";
+import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime } from "./Section";
 
 export default function StudentSection({ course, courseTitle, mentor, spacetime, override, associatedProfileId, url }) {
   return (
