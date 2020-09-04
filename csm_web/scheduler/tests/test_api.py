@@ -87,17 +87,19 @@ class ProfileListTest(APITestCase):
         response = self.client.get(self.endpoint)
         self.assertEqual(len(response.data), 2)
         self.assertIn(self.get_default_response(student, student_section), response.data)
-        self.assertIn({'id': mentor.pk, 'section_id': mentor_section.pk, 'section_spacetime': {
-            'id': mentor_section.spacetime.pk,
-            'start_time': '11:00:00',
-            'day_of_week': 'Tue',
-            'duration': '01:30:00',
-            # IMPORTANT: note the AM here to avoid ambiguity
-            'time': 'Tuesday 11:00 AM-12:30 PM', 'location': 'Cory 7'
-        },
+        self.assertIn({
+            'id': mentor.pk, 'section_id': mentor_section.pk, 'section_spacetime': {
+                'id': mentor_section.spacetime.pk,
+                'start_time': '11:00:00',
+                'day_of_week': 'Tue',
+                'duration': '01:30:00',
+                # IMPORTANT: note the AM here to avoid ambiguity
+                'time': 'Tuesday 11:00 AM-12:30 PM', 'location': 'Cory 7'
+            },
             'course': 'CS70',
             'course_id': mentor_section.course.id,
-            'course_title': 'Discrete Mathematics and Probability Theory', 'role': "MENTOR"}, response.data)
+            'course_title': 'Discrete Mathematics and Probability Theory', 'role': "MENTOR"
+        }, response.data)
 
     def test_inactive_student(self):
         section = SectionFactory.create(course=CourseFactory.create(name='CS61C', title='Machine Structures'),
@@ -161,8 +163,8 @@ class OverrideTest(APITestCase):
         override_time = time(hour=12)
         override_date = (datetime.now() + timedelta(days=1)).date()
         override_location = 'Soda 1337'
-        data = {"start_time": override_time.strftime(
-            "%H:%M:%S"), "date": override_date.isoformat(), "location": override_location}
+        data = {"start_time": override_time.strftime("%H:%M:%S"), "date": override_date.isoformat(),
+                "location": override_location}
         response = self.client.put(f"/api/spacetimes/{self.spacetime.pk}/override/", data, format='json')
         self.assertEqual(response.status_code, status.HTTP_202_ACCEPTED, response.data)
         self.spacetime.refresh_from_db()
