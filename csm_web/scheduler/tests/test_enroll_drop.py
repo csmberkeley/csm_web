@@ -166,20 +166,18 @@ class EnrollmentTest(utils.APITestCase):
         section = SectionFactory.create(course=self.my_course, capacity=0)
         self.enroll_and_should_fail(section)
 
-    def test_over_capacity(self):
-        """
-        Tests that enrollment should fail when the section is already over capacity (e.g. 6/5).
-        """
-        ...
-
     def test_already_enrolled(self):
         """
         Tests that enrollment should fail if the user is already enrolled in a section in this course.
         """
-        ...
+        section = SectionFactory.create(course=self.my_course)
+        self.enroll_and_should_succeed(section)
+        self.enroll_and_should_fail(section)
 
     def test_is_mentor(self):
         """
         Tests that a mentor should be unable to enroll in a section in their course.
         """
-        ...
+        mentor = MentorFactory.create(user=self.user)
+        section = SectionFactory.create(course=self.other_course, mentor=mentor)
+        self.enroll_and_should_fail(section)
