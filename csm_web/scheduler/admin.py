@@ -88,7 +88,8 @@ class StudentAdmin(CoordAdmin):
     list_display = ("name", "get_email", "get_course", "get_mentor", "section")
     search_fields = ("user__email", "user__first_name", "user__last_name")
     actions = ("drop_students", "undrop_students")
-    autocomplete_fields = ("section", "user")
+    #autocomplete_fields = ("section", "user") TODO: restore this
+    autocomplete_fields = ("user",)
 
     def get_fields(self, request, obj):
         fields = ["name", "get_email", "get_course", "section", "get_attendances", "active", "banned"]
@@ -227,6 +228,7 @@ class MentorAdmin(CoordAdmin):
     get_students.short_description = "Students"
 
 
+"""
 class SectionForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
@@ -389,6 +391,7 @@ class SectionAdmin(CoordAdmin):
             section_2.mentor = mentor_1
             section_2.save()
         self.message_user(request, f'Swapped mentors {mentor_1.name} and {mentor_2.name}')
+"""
 
 
 @admin.register(Spacetime)

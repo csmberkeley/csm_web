@@ -166,12 +166,6 @@ class Coordinator(Profile):
 
 class Section(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-    spacetime = models.OneToOneField(
-        "Spacetime",
-        on_delete=models.CASCADE,
-        help_text="The recurring time and location of a section. This can be temporarily overriden "
-        "by the mentor, in which case the admin page will display the overriding times."
-    )
     capacity = models.PositiveSmallIntegerField()
     mentor = models.OneToOneField(Mentor, on_delete=models.CASCADE, blank=True, null=True)
     description = models.CharField(
@@ -191,17 +185,19 @@ class Section(ValidatingModel):
         kwargs.pop('force', None)
         super().delete(*args, **kwargs)
 
+    def clean(self):
+        super().clean()
+        if not self.spacetimes.exists():
+            raise ValidationError("Section must have at least one Spacetime")
+
     def __str__(self):
-        return "{course} section ({enrolled}/{cap}, {mentor}, {spacetime})".format(
+        return "{course} section ({enrolled}/{cap}, {mentor}, {spacetimes})".format(
             course=self.course.name,
             mentor="(no mentor)" if not self.mentor else self.mentor.name,
             enrolled=self.current_student_count,
             cap=self.capacity,
-            spacetime=str(self.spacetime),
+            spacetimes="|".join(map(str, self.spacetimes.all()))
         )
-
-    class Meta:
-        unique_together = ("course", "spacetime")
 
 
 class Spacetime(ValidatingModel):
@@ -214,13 +210,13 @@ class Spacetime(ValidatingModel):
         SATURDAY = "Sat"
         SUNDAY = "Sun"
 
-    DAY_INDEX = tuple(day for day, _ in DayOfWeek.choices)
     SPACE_REDUCE_REGEX = re.compile(r'\s+')
 
     location = models.CharField(max_length=200)
     start_time = models.TimeField()
     duration = models.DurationField()
     day_of_week = models.CharField(max_length=3, choices=DayOfWeek.choices)
+    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="spacetimes", null=True)
 
     @property
     def override(self):
@@ -237,7 +233,7 @@ class Spacetime(ValidatingModel):
                 + self.duration).time()
 
     def day_number(self):
-        return self.DAY_INDEX.index(self.day_of_week)
+        return self.DayOfWeek.values.index(self.day_of_week)
 
     def __str__(self):
         formatted_time = self.start_time.strftime("%I:%M %p")
