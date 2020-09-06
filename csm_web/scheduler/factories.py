@@ -103,9 +103,17 @@ class SectionFactory(factory.DjangoModelFactory):
     class Meta:
         model = Section
 
-    spacetime = factory.SubFactory(SpacetimeFactory)
     capacity = factory.LazyFunction(lambda: random.randint(3, 6))
     mentor = factory.SubFactory(MentorFactory)
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        spacetimes = kwargs.pop('spacetimes', SpacetimeFactory.create_batch(random.randint(1, 2)))
+        obj = model_class(*args, **kwargs)
+        obj.save(disable_validation=True)
+        obj.spacetimes.set(spacetimes)
+        obj.save()
+        return obj
 
 
 class AttendanceFactory(factory.DjangoModelFactory):
@@ -135,17 +143,18 @@ class OverrideFactory(factory.DjangoModelFactory):
 def create_attendances_for(student):
     today = timezone.datetime.today().date()
     current_date = student.section.course.enrollment_start.date()
-    while Spacetime.DayOfWeek.values[current_date.weekday()] != student.section.spacetime.day_of_week:
-        current_date += timedelta(days=1)
-    existing_attendance_dates = set(Attendance.objects.filter(student=student).values_list('date', flat=True))
-    while current_date < student.section.course.valid_until:
-        if current_date not in existing_attendance_dates:
-            if current_date < today:
-                AttendanceFactory.create(student=student, date=current_date)
-            else:
-                # Students cannot have attended or not attended sections that haven't happened yet
-                AttendanceFactory.create(student=student, date=current_date, presence="")
-        current_date += timedelta(weeks=1)
+    for spacetime in student.section.spacetimes.all():
+        while Spacetime.DayOfWeek.values[current_date.weekday()] != spacetime.day_of_week:
+            current_date += timedelta(days=1)
+        existing_attendance_dates = set(Attendance.objects.filter(student=student).values_list('date', flat=True))
+        while current_date < student.section.course.valid_until:
+            if current_date not in existing_attendance_dates:
+                if current_date < today:
+                    AttendanceFactory.create(student=student, date=current_date)
+                else:
+                    # Students cannot have attended or not attended sections that haven't happened yet
+                    AttendanceFactory.create(student=student, date=current_date, presence="")
+            current_date += timedelta(weeks=1)
 
 
 def demoify_user(user, username):
