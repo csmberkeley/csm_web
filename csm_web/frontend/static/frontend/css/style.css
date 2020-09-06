@@ -232,6 +232,13 @@ header {
 	font-weight: bold;
 }
 
+.course-card-section-time:not(:last-of-type)::after {
+	display: block;
+	font-weight: bold;
+	content: "&";
+	font-size: 1.2em;
+}
+
 .course-card-title {
 	margin: 0 0 20px;
 	font-size: 14px;
