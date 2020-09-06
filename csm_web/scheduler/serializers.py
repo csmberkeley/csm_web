@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator, User
+from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator
 
 
 class Role(Enum):
@@ -59,7 +59,7 @@ class ProfileSerializer(serializers.Serializer):
 
     id = serializers.IntegerField()
     section_id = serializers.IntegerField(source='section.id', required=False)
-    section_spacetime = SpacetimeSerializer(source='section.spacetime', required=False)
+    section_spacetimes = SpacetimeSerializer(source='section.spacetimes', many=True, required=False)
     course = VariableSourceCourseField(source='*', target='name', required=False)
     course_title = VariableSourceCourseField(source='*', target='title', required=False)
     course_id = VariableSourceCourseField(source='*', target='pk', required=False)
@@ -107,7 +107,7 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 
 class SectionSerializer(serializers.ModelSerializer):
-    spacetime = SpacetimeSerializer()
+    spacetimes = SpacetimeSerializer(many=True)
     num_students_enrolled = serializers.SerializerMethodField()
     mentor = MentorSerializer()
     course = serializers.CharField(source='course.name')

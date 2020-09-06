@@ -5,6 +5,7 @@ import factory.fuzzy
 from django.utils import timezone
 from django.core import management
 from django.conf import settings
+from django.db.models import Count
 from .models import (
     Course,
     Section,
@@ -109,6 +110,10 @@ class SectionFactory(factory.DjangoModelFactory):
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
         spacetimes = kwargs.pop('spacetimes', SpacetimeFactory.create_batch(random.randint(1, 2)))
+        # We want to ensure that if there are 2 spacetimes for a section that they are for different days of the week
+        for spacetime, day in zip(spacetimes, random.sample(Spacetime.DayOfWeek.values, len(spacetimes))):
+            spacetime.day_of_week = day
+            spacetime.save()
         obj = model_class(*args, **kwargs)
         obj.save(disable_validation=True)
         obj.spacetimes.set(spacetimes)
@@ -172,7 +177,8 @@ def demoify_user(user, username):
 
 
 def create_demo_account():
-    demo_mentor = random.choice(Mentor.objects.all())
+    demo_mentor = random.choice(Mentor.objects.annotate(
+        Count('section__spacetimes')).filter(section__spacetimes__count=2))
     second_section = random.choice(Section.objects.filter(
         course=demo_mentor.section.course).exclude(pk=demo_mentor.section.pk))
     demo_mentor_2 = second_section.mentor

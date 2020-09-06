@@ -46,7 +46,11 @@ function CourseCard({ profiles }) {
           {profiles.length > 1 &&
             profiles.map(profile => (
               <Link key={profile.id} to={`/sections/${profile.sectionId}`} className="section-link">
-                {profile.sectionSpacetime.time}
+                {profile.sectionSpacetimes.map(spacetime => (
+                  <div key={spacetime.id} className="course-card-section-time">
+                    {spacetime.time}
+                  </div>
+                ))}
               </Link>
             ))}
           <div className="relation-label" style={{ backgroundColor: `var(--csm-${relation})` }}>
