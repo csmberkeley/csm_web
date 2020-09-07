@@ -18,11 +18,15 @@ def get_profile_role(profile):
 
 class SpacetimeSerializer(serializers.ModelSerializer):
     time = serializers.SerializerMethodField()
+    location = serializers.SerializerMethodField()
 
     def get_time(self, obj):
         if obj.start_time.strftime("%p") != obj.end_time.strftime("%p"):
             return f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M %p')}-{obj.end_time.strftime('%-I:%M %p')}"
         return f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M')}-{obj.end_time.strftime('%-I:%M %p')}"
+
+    def get_location(self, obj):
+        return obj.location if not (self.context.get('omit_spacetime_links') and obj.location.startswith('http')) else 'Online'
 
     class Meta:
         model = Spacetime
