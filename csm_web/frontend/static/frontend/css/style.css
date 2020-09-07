@@ -310,7 +310,7 @@ header {
 }
 
 .section-card {
-	width: 300px;
+	width: 320px;
 	overflow-x: hidden;
 	box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.15);
 	border-radius: 20px;
@@ -330,9 +330,14 @@ header {
 	color: #727272;
 }
 
-.section-card-contents svg {
+.section-card-contents svg,
+.section-card-icon-placeholder {
 	vertical-align: bottom;
 	margin-right: 5px;
+}
+
+.section-card-icon-placeholder {
+	display: inline-block;
 }
 
 .section-card-footer {
@@ -366,10 +371,11 @@ header {
 }
 
 #day-selector {
+	--day-btn-size: 70px;
 	display: grid;
-	grid-template-columns: repeat(auto-fit, 60px);
+	grid-template-columns: repeat(auto-fit, var(--day-btn-size));
 	grid-auto-rows: max-content;
-	grid-gap: 5px;
+	grid-gap: 10px;
 	justify-content: center;
 }
 
@@ -403,9 +409,9 @@ header {
 }
 
 .day-btn {
-	height: 60px;
-	width: 60px;
-	border-radius: 30px;
+	height: var(--day-btn-size);
+	width: var(--day-btn-size);
+	border-radius: calc(var(--day-btn-size) / 2);
 	border: 2px solid var(--csm-green);
 	background-color: white;
 	color: #717171;

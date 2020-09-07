@@ -14,13 +14,13 @@ import { DAYS_OF_WEEK } from "./MentorSection";
 import TimeInput from "./TimeInput";
 
 const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
-  Mon: "M",
-  Tue: "Tu",
-  Wed: "W",
-  Thu: "Th",
-  Fri: "F",
-  Sat: "Sa",
-  Sun: "Su"
+  Monday: "M",
+  Tuesday: "Tu",
+  Wednesday: "W",
+  Thursday: "Th",
+  Friday: "F",
+  Saturday: "Sa",
+  Sunday: "Su"
 });
 
 export default class Course extends React.Component {
@@ -39,7 +39,7 @@ export default class Course extends React.Component {
     this.state = {
       sections: null,
       sectionsLoaded: false,
-      day: "",
+      dayGroup: "",
       showUnavailable: true,
       userIsCoordinator: false,
       showModal: false
@@ -50,7 +50,7 @@ export default class Course extends React.Component {
   reloadSections() {
     const { id } = this.props.match.params;
     fetchJSON(`/courses/${id}/sections`).then(({ sections, userIsCoordinator }) =>
-      this.setState({ sections, userIsCoordinator, sectionsLoaded: true, day: Object.keys(sections)[0] })
+      this.setState({ sections, userIsCoordinator, sectionsLoaded: true, dayGroup: Object.keys(sections)[0] })
     );
   }
 
@@ -65,8 +65,15 @@ export default class Course extends React.Component {
       },
       name
     } = this.props;
-    const { sectionsLoaded, sections, day: currDay, showUnavailable, userIsCoordinator, showModal } = this.state;
-    let currDaySections = sections && sections[currDay];
+    const {
+      sectionsLoaded,
+      sections,
+      dayGroup: currDayGroup,
+      showUnavailable,
+      userIsCoordinator,
+      showModal
+    } = this.state;
+    let currDaySections = sections && sections[currDayGroup];
     if (currDaySections && !showUnavailable) {
       currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
     }
@@ -75,13 +82,17 @@ export default class Course extends React.Component {
         <div id="course-section-controls">
           <h2 className="course-title">{name}</h2>
           <div id="day-selector">
-            {Object.keys(sections).map(day => (
+            {Object.keys(sections).map(dayGroup => (
               <button
-                className={`day-btn ${day == currDay ? "active" : ""}`}
-                key={day}
-                onClick={() => this.setState({ day })}
+                className={`day-btn ${dayGroup == currDayGroup ? "active" : ""}`}
+                key={dayGroup}
+                onClick={() => this.setState({ dayGroup })}
               >
-                {DAY_OF_WEEK_ABREVIATIONS[day]}
+                {dayGroup
+                  .slice(1, -1)
+                  .split(",")
+                  .map(day => DAY_OF_WEEK_ABREVIATIONS[day])
+                  .join("/")}
               </button>
             ))}
           </div>
@@ -131,7 +142,7 @@ class SectionCard extends React.Component {
 
   static propTypes = {
     id: PropTypes.number.isRequired,
-    spacetime: SPACETIME_SHAPE.isRequired,
+    spacetimes: PropTypes.arrayOf(SPACETIME_SHAPE.isRequired).isRequired,
     mentor: PropTypes.shape({ name: PropTypes.string.isRequired }),
     numStudentsEnrolled: PropTypes.number.isRequired,
     capacity: PropTypes.number.isRequired,
@@ -197,15 +208,7 @@ class SectionCard extends React.Component {
   }
 
   render() {
-    const {
-      spacetime: { location, time },
-      mentor,
-      numStudentsEnrolled,
-      capacity,
-      description,
-      userIsCoordinator,
-      id
-    } = this.props;
+    const { spacetimes, mentor, numStudentsEnrolled, capacity, description, userIsCoordinator, id } = this.props;
     const iconWidth = "1.3em";
     const iconHeight = "1.3em";
     const isFull = numStudentsEnrolled >= capacity;
@@ -221,10 +224,26 @@ class SectionCard extends React.Component {
             {description && <span className="section-card-description">{description}</span>}
             <p title="Location">
               <LocationIcon width={iconWidth} height={iconHeight} />{" "}
-              {location.match(/^https?:\/\//) ? "Online" : location}
+              {/* #TODO: Adapt this for multiple sections with real locations, 
+										for when school goes back to being in person
+										location.match(/^https?:\/\//) ? "Online" : location*/}
+              Online
             </p>
             <p title="Time">
-              <ClockIcon width={iconWidth} height={iconHeight} /> {time}
+              <ClockIcon width={iconWidth} height={iconHeight} /> {spacetimes[0].time}
+              {spacetimes.length > 1 && (
+                <div>
+                  {spacetimes.slice(1).map(({ time, id }) => (
+                    <React.Fragment key={id}>
+                      <span
+                        className="section-card-icon-placeholder"
+                        style={{ minWidth: iconWidth, minHeight: iconHeight }}
+                      />{" "}
+                      {time}
+                    </React.Fragment>
+                  ))}
+                </div>
+              )}
             </p>
             <p title="Mentor">
               <UserIcon width={iconWidth} height={iconHeight} /> {mentor.name}
