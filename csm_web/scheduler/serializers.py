@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator
+from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField
 
 
 class Role(Enum):
@@ -21,8 +21,8 @@ class SpacetimeSerializer(serializers.ModelSerializer):
 
     def get_time(self, obj):
         if obj.start_time.strftime("%p") != obj.end_time.strftime("%p"):
-            return f"{obj.get_day_of_week_display()} {obj.start_time.strftime('%-I:%M %p')}-{obj.end_time.strftime('%-I:%M %p')}"
-        return f"{obj.get_day_of_week_display()} {obj.start_time.strftime('%-I:%M')}-{obj.end_time.strftime('%-I:%M %p')}"
+            return f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M %p')}-{obj.end_time.strftime('%-I:%M %p')}"
+        return f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M')}-{obj.end_time.strftime('%-I:%M %p')}"
 
     class Meta:
         model = Spacetime
@@ -113,7 +113,7 @@ class SectionSerializer(serializers.ModelSerializer):
     course = serializers.CharField(source='course.name')
     course_title = serializers.CharField(source='course.title')
     user_role = serializers.SerializerMethodField()
-    override = OverrideReadOnlySerializer(source='spacetime.override')
+    #override = OverrideReadOnlySerializer(source='spacetime.override')
     associated_profile_id = serializers.SerializerMethodField()
 
     def get_num_students_enrolled(self, obj):
@@ -143,7 +143,7 @@ class SectionSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Section
-        fields = ("id", "spacetime", "mentor", "capacity", "override", "associated_profile_id",
+        fields = ("id", "spacetimes", "mentor", "capacity", "associated_profile_id",
                   "num_students_enrolled", "description", "mentor", "course", "user_role", "course_title")
 
 
@@ -154,14 +154,14 @@ class OverrideSerializer(serializers.ModelSerializer):
 
     def create(self, validated_data):
         spacetime = Spacetime.objects.create(
-            **validated_data['spacetime'], day_of_week=Spacetime.DayOfWeek.values[validated_data['date'].weekday()], duration=validated_data['overriden_spacetime'].duration)
+            **validated_data['spacetime'], day_of_week=DayOfWeekField.DAYS[validated_data['date'].weekday()], duration=validated_data['overriden_spacetime'].duration)
         return Override.objects.create(date=validated_data['date'], overriden_spacetime=validated_data['overriden_spacetime'],
                                        spacetime=spacetime)
 
     def update(self, instance, validated_data):
         instance.date = validated_data['date']
         spacetime_data = validated_data['spacetime']
-        instance.spacetime.day_of_week = Spacetime.DayOfWeek.values[validated_data['date'].weekday()]
+        instance.spacetime.day_of_week = DayOfWeekField.DAYS[validated_data['date'].weekday()]
         instance.spacetime.location = spacetime_data['location']
         instance.spacetime.start_time = spacetime_data['start_time']
         instance.spacetime.duration = instance.overriden_spacetime.duration

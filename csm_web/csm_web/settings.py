@@ -27,14 +27,9 @@ assert DJANGO_ENV in (DEVELOPMENT, STAGING, PRODUCTION)
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
-
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get("SECRET_KEY")
 
-# TODO
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DJANGO_ENV == DEVELOPMENT
 
@@ -104,23 +99,15 @@ WSGI_APPLICATION = "csm_web.wsgi.application"
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 if DEBUG:
-    if os.environ.get("DEV_USE_POSTGRES"):
-        DATABASES = {
-            'default': {
-                'ENGINE': 'django.db.backends.postgresql',
-                'NAME': 'csm_web_dev',
-                'USER': 'postgres',
-                'HOST': 'localhost',
-                'PORT': '5432',
-            }
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.postgresql',
+            'NAME': 'csm_web_dev',
+            'USER': 'postgres',
+            'HOST': 'localhost',
+            'PORT': '5432',
         }
-    else:
-        DATABASES = {
-            "default": {
-                "ENGINE": "django.db.backends.sqlite3",
-                "NAME": os.path.join(BASE_DIR, "db.sqlite3"),
-            }
-        }
+    }
 else:
     DATABASES = {
         "pg": {

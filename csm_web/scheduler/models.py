@@ -13,11 +13,16 @@ logger.info = logger.warn
 
 
 class DayOfWeekField(models.Field):
+    DAYS = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
 
     description = "Represents a single day of the week, ordered Monday - Sunday, backed by a Postgres enum"
 
     def db_type(self, connection):
         return 'day_of_week'
+
+
+def day_to_number(day_of_week):
+    return DayOfWeekField.DAYS.index(day_of_week)
 
 
 def week_bounds(date):
@@ -136,7 +141,7 @@ class Student(Profile):
         now = timezone.now()
         this_week = week_bounds(now.date())
         for spacetime in self.section.spacetimes.all():
-            section_day_num = Spacetime.DayOfWeek.values.index(spacetime.day_of_week)
+            section_day_num = day_to_number(spacetime.day_of_week)
             section_already_held = section_day_num < now.weekday() or (
                 section_day_num == now.weekday() and spacetime.start_time < now.time())
             course = self.section.course
@@ -243,7 +248,7 @@ class Spacetime(ValidatingModel):
                 + self.duration).time()
 
     def day_number(self):
-        return self.DayOfWeek.values.index(self.day_of_week)
+        return day_number(self.day_of_week)
 
     def __str__(self):
         formatted_time = self.start_time.strftime("%I:%M %p")

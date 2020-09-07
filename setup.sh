@@ -4,6 +4,11 @@
 
 { [ ! -d 'csm_web' ] || [ ! -f 'package.json' ]; } && echo 'You are in the wrong directory!' 1>&2 && exit 1
 [ -z "$VIRTUAL_ENV" ] && echo 'You must activate your virtualenv first!' 1>&2 && exit 1
+if ! ( command -v npm && command -v pip3 && command -v psql ) >/dev/null
+then
+	echo 'You must install npm, python3, pip, and postgres before running this script!' 1>&2
+	exit 1
+fi
 
 echo 'Beginning setup, this may take a minute or so...'
 sleep 1 # Give user time to read above message 
@@ -43,16 +48,11 @@ pwd > "$VIRTUAL_ENV/.project_dir"
 # Add env variables to virutalenv activate script so that not everything needs to be run with 'heroku local'
 sed 's/^/export /' .env >> "$VIRTUAL_ENV/bin/activate"
 
-# Setup postgres DB if possible
-if command -v psql >/dev/null
+# Setup postgres DB if needed
+if ! psql -lt | grep -q '^ *csm_web_dev *'
 then
-	if ! psql -lt | grep -q '^ *csm_web_dev *'
-	then
-		createdb csm_web_dev
-		psql csm_web_dev -c 'CREATE ROLE postgres LOGIN SUPERUSER;'
-	fi
-else
-	echo 'Postgres is not installed. If you wish to use postgres locally (by setting the environment variable DEV_USE_POSTGRES), please install and run postgres, then re-run this script'
+	createdb csm_web_dev
+	psql csm_web_dev -c 'CREATE ROLE postgres LOGIN SUPERUSER;'
 fi
 
 # Utility function for running the dev server

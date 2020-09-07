@@ -15,7 +15,9 @@ from .models import (
     User,
     Attendance,
     Override,
-    Coordinator
+    Coordinator,
+    DayOfWeekField,
+    day_to_number
 )
 
 COMPSCI_WORDS = ('Algorithms', 'Systems', 'Distributed', 'Efficient', 'Tractable', 'Programming',
@@ -73,7 +75,7 @@ class SpacetimeFactory(factory.DjangoModelFactory):
     location = factory.LazyFunction(lambda: "%s %d" % (random.choice(BUILDINGS), random.randint(1, 500)))
     start_time = factory.Faker("time_object")
     duration = factory.LazyFunction(lambda: timedelta(minutes=random.choice((60, 90))))
-    day_of_week = factory.fuzzy.FuzzyChoice(Spacetime.DayOfWeek.values)
+    day_of_week = factory.fuzzy.FuzzyChoice(DayOfWeekField.DAYS)
 
 
 class UserFactory(factory.DjangoModelFactory):
@@ -111,7 +113,7 @@ class SectionFactory(factory.DjangoModelFactory):
     def _create(cls, model_class, *args, **kwargs):
         spacetimes = kwargs.pop('spacetimes', SpacetimeFactory.create_batch(random.randint(1, 2)))
         # We want to ensure that if there are 2 spacetimes for a section that they are for different days of the week
-        for spacetime, day in zip(spacetimes, random.sample(Spacetime.DayOfWeek.values, len(spacetimes))):
+        for spacetime, day in zip(spacetimes, random.sample(DayOfWeekField.DAYS, len(spacetimes))):
             spacetime.day_of_week = day
             spacetime.save()
         obj = model_class(*args, **kwargs)
@@ -140,7 +142,7 @@ class OverrideFactory(factory.DjangoModelFactory):
             date_start=obj.overriden_spacetime.section.course.enrollment_start.date(),
             date_end=obj.overriden_spacetime.section.course.valid_until,
         ).generate({})
-        return date + timedelta(days=(Spacetime.DayOfWeek.values.index(obj.spacetime.day_of_week) - date.weekday()))
+        return date + timedelta(days=(day_to_number(obj.spacetime.day_of_week) - date.weekday()))
 
     spacetime = factory.SubFactory(SpacetimeFactory)
 
@@ -149,7 +151,7 @@ def create_attendances_for(student):
     today = timezone.datetime.today().date()
     current_date = student.section.course.enrollment_start.date()
     for spacetime in student.section.spacetimes.all():
-        while Spacetime.DayOfWeek.values[current_date.weekday()] != spacetime.day_of_week:
+        while DayOfWeekField.DAYS[current_date.weekday()] != spacetime.day_of_week:
             current_date += timedelta(days=1)
         existing_attendance_dates = set(Attendance.objects.filter(student=student).values_list('date', flat=True))
         while current_date < student.section.course.valid_until:
