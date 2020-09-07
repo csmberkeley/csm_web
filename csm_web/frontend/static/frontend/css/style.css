@@ -1292,3 +1292,23 @@ table tbody tr:last-child > td {
 		opacity: 1;
 	}
 }
+
+#fatal-error-page {
+	max-width: 38rem;
+	padding: 2rem;
+	margin: auto;
+}
+
+#fatal-error-page > h1 {
+	text-align: center;
+	color: var(--csm-danger);
+}
+
+#stack-trace {
+	overflow: auto;
+}
+
+#stack-trace > pre {
+	width: fit-content;
+	margin: auto;
+}
