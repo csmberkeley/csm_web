@@ -2,8 +2,9 @@ import logging
 from operator import attrgetter
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
-from django.db.models import Q, Case, When, Value, PositiveSmallIntegerField, Count
+from django.db.models import Q, Count
 from django.db.models.query import EmptyQuerySet
+from django.contrib.postgres.aggregates import ArrayAgg
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from rest_framework import mixins, status, viewsets
@@ -70,9 +71,6 @@ def viewset_with(*permitted_methods):
 
 class CourseViewSet(*viewset_with('list')):
     serializer_class = CourseSerializer
-    # Used to sort sections in the order that the days are listed in Spacetime.DayOfWeek (i.e. Monday, Tuesday, ... )
-    SPACETIME_DAY_SORT = Case(*(When(spacetime__day_of_week=day, then=Value(key))
-                                for key, day in enumerate(Spacetime.DayOfWeek.values)), output_field=PositiveSmallIntegerField())
 
     def get_queryset(self):
         banned_from = self.request.user.student_set.filter(banned=True).values_list('section__course__id', flat=True)
@@ -81,9 +79,10 @@ class CourseViewSet(*viewset_with('list')):
             Q(valid_until__gte=now.date(), enrollment_start__lte=now, enrollment_end__gt=now) | Q(coordinator__user=self.request.user)).distinct()
 
     def get_sections_by_day(self, course):
-        sections = course.section_set.all().annotate(day_key=self.SPACETIME_DAY_SORT)
-        section_count_by_day = sections.values('spacetime__day_of_week').order_by(
-            'day_key').annotate(num_sections=Count('id'))
+        sections = course.section_set.all().annotate(day_key=ArrayAgg('spacetimes__day_of_week', ordering='spacetimes__day_of_week',
+                                                                      distinct=True), time_key=ArrayAgg('spacetimes__start_time', ordering='spacetimes__start_time')).order_by('day_key', 'time_key')
+        section_count_by_day = sections.annotate(day_key=ArrayAgg('spacetimes__day_of_week', ordering='spacetimes__day_of_week', distinct=True)).order_by(
+            'day_key').annotate(num_sections=Count('id', distinct=True)).values('day_key', 'num_sections')
         """
         Use list to force evaluation of the QuerySet so that the below for loop doesn't trigger a DB query on each iteration
 
@@ -94,11 +93,11 @@ class CourseViewSet(*viewset_with('list')):
         *separate database queries* each time this endpoint was hit. This would be terrible for performance, so instead we call list, which evaluates the entire QuerySet with
         a single database query, and then the slices in the for loop are just simple native Python list slices.
         """
-        sections = list(sections.select_related('spacetime', 'spacetime___override', 'mentor', 'mentor__user').annotate(
-            num_students_annotation=Count('students', filter=Q(students__active=True))).order_by('day_key', 'spacetime__start_time'))
+        sections = list(sections.prefetch_related('spacetimes___override').select_related('mentor__user').annotate(
+            num_students_annotation=Count('students', filter=Q(students__active=True))))
         start, sections_by_day = 0, {}
         for group in section_count_by_day:
-            sections_by_day[group['spacetime__day_of_week']] = SectionSerializer(
+            sections_by_day[group['day_key']] = SectionSerializer(
                 sections[start:start + group['num_sections']], many=True).data
             start += group['num_sections']
         return sections_by_day
