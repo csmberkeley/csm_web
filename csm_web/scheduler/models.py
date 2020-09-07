@@ -12,6 +12,14 @@ logger = logging.getLogger(__name__)
 logger.info = logger.warn
 
 
+class DayOfWeekField(models.Field):
+
+    description = "Represents a single day of the week, ordered Monday - Sunday, backed by a Postgres enum"
+
+    def db_type(self, connection):
+        return 'day_of_week'
+
+
 def week_bounds(date):
     week_start = date - datetime.timedelta(days=date.weekday())
     week_end = week_start + datetime.timedelta(weeks=1)
@@ -217,7 +225,7 @@ class Spacetime(ValidatingModel):
     location = models.CharField(max_length=200)
     start_time = models.TimeField()
     duration = models.DurationField()
-    day_of_week = models.CharField(max_length=3, choices=DayOfWeek.choices)
+    day_of_week = DayOfWeekField()
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="spacetimes", null=True, blank=True)
 
     @property
