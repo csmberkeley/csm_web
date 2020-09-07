@@ -43,6 +43,18 @@ pwd > "$VIRTUAL_ENV/.project_dir"
 # Add env variables to virutalenv activate script so that not everything needs to be run with 'heroku local'
 sed 's/^/export /' .env >> "$VIRTUAL_ENV/bin/activate"
 
+# Setup postgres DB if possible
+if command -v psql >/dev/null
+then
+	if ! psql -lt | grep -q '^ *csm_web_dev *'
+	then
+		createdb csm_web_dev
+		psql csm_web_dev -c 'CREATE ROLE postgres LOGIN SUPERUSER;'
+	fi
+else
+	echo 'Postgres is not installed. If you wish to use postgres locally (by setting the environment variable DEV_USE_POSTGRES), please install and run postgres, then re-run this script'
+fi
+
 # Utility function for running the dev server
 echo '
 function run() {
