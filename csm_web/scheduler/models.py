@@ -216,15 +216,6 @@ class Section(ValidatingModel):
 
 
 class Spacetime(ValidatingModel):
-    class DayOfWeek(models.TextChoices):
-        MONDAY = "Mon"
-        TUESDAY = "Tue"
-        WEDNESDAY = "Wed"
-        THURSDAY = "Thu"
-        FRIDAY = "Fri"
-        SATURDAY = "Sat"
-        SUNDAY = "Sun"
-
     SPACE_REDUCE_REGEX = re.compile(r'\s+')
 
     location = models.CharField(max_length=200)

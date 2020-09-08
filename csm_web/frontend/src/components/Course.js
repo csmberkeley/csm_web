@@ -39,7 +39,7 @@ export default class Course extends React.Component {
     this.state = {
       sections: null,
       sectionsLoaded: false,
-      dayGroup: "",
+      currDayGroup: "",
       showUnavailable: true,
       userIsCoordinator: false,
       showModal: false
@@ -50,7 +50,7 @@ export default class Course extends React.Component {
   reloadSections() {
     const { id } = this.props.match.params;
     fetchJSON(`/courses/${id}/sections`).then(({ sections, userIsCoordinator }) =>
-      this.setState({ sections, userIsCoordinator, sectionsLoaded: true, dayGroup: Object.keys(sections)[0] })
+      this.setState({ sections, userIsCoordinator, sectionsLoaded: true, currDayGroup: Object.keys(sections)[0] })
     );
   }
 
@@ -65,14 +65,7 @@ export default class Course extends React.Component {
       },
       name
     } = this.props;
-    const {
-      sectionsLoaded,
-      sections,
-      dayGroup: currDayGroup,
-      showUnavailable,
-      userIsCoordinator,
-      showModal
-    } = this.state;
+    const { sectionsLoaded, sections, currDayGroup, showUnavailable, userIsCoordinator, showModal } = this.state;
     let currDaySections = sections && sections[currDayGroup];
     if (currDaySections && !showUnavailable) {
       currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
@@ -86,7 +79,9 @@ export default class Course extends React.Component {
               <button
                 className={`day-btn ${dayGroup == currDayGroup ? "active" : ""}`}
                 key={dayGroup}
-                onClick={() => this.setState({ dayGroup })}
+                onClick={() => {
+                  this.setState({ currDayGroup: dayGroup });
+                }}
               >
                 {dayGroup
                   .slice(1, -1)
@@ -232,7 +227,7 @@ class SectionCard extends React.Component {
             <p title="Time">
               <ClockIcon width={iconWidth} height={iconHeight} /> {spacetimes[0].time}
               {spacetimes.length > 1 && (
-                <div>
+                <span className="section-card-additional-times">
                   {spacetimes.slice(1).map(({ time, id }) => (
                     <React.Fragment key={id}>
                       <span
@@ -242,7 +237,7 @@ class SectionCard extends React.Component {
                       {time}
                     </React.Fragment>
                   ))}
-                </div>
+                </span>
               )}
             </p>
             <p title="Mentor">

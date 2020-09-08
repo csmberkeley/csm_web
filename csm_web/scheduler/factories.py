@@ -35,7 +35,7 @@ class CourseFactory(factory.DjangoModelFactory):
             factory.Faker(
                 "date_time_between_dates",
                 datetime_start=timezone.now() - timedelta(weeks=3),
-                datetime_end=timezone.now() + timedelta(weeks=3),
+                datetime_end=timezone.now() - timedelta(weeks=2),
             ).generate({})
         )
     )
@@ -52,7 +52,7 @@ class CourseFactory(factory.DjangoModelFactory):
         lambda o: timezone.make_aware(
             factory.Faker(
                 "date_time_between_dates",
-                datetime_start=o.enrollment_start,
+                datetime_start=timezone.now() + timedelta(weeks=2),
                 datetime_end=o.valid_until,
             ).generate({})
         )
@@ -111,11 +111,14 @@ class SectionFactory(factory.DjangoModelFactory):
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
-        spacetimes = kwargs.pop('spacetimes', SpacetimeFactory.create_batch(random.randint(1, 2)))
-        # We want to ensure that if there are 2 spacetimes for a section that they are for different days of the week
-        for spacetime, day in zip(spacetimes, random.sample(DayOfWeekField.DAYS, len(spacetimes))):
-            spacetime.day_of_week = day
-            spacetime.save()
+        if 'spacetimes' not in kwargs:
+            spacetimes = SpacetimeFactory.create_batch(random.randint(1, 2))
+            # We want to ensure that if there are 2 spacetimes for a section that they are for different days of the week
+            for spacetime, day in zip(spacetimes, random.sample(DayOfWeekField.DAYS, len(spacetimes))):
+                spacetime.day_of_week = day
+                spacetime.save()
+        else:
+            spacetimes = kwargs.pop('spacetimes')
         obj = model_class(*args, **kwargs)
         obj.save(disable_validation=True)
         obj.spacetimes.set(spacetimes)

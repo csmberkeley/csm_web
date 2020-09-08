@@ -17,6 +17,7 @@ from scheduler.models import (
     Section,
     Spacetime,
     Override,
+    DayOfWeekField
 )
 
 admin.site.register(Coordinator)
@@ -88,7 +89,7 @@ class StudentAdmin(CoordAdmin):
     list_display = ("name", "get_email", "get_course", "get_mentor", "section")
     search_fields = ("user__email", "user__first_name", "user__last_name")
     actions = ("drop_students", "undrop_students")
-    #autocomplete_fields = ("section", "user") TODO: restore this
+    # autocomplete_fields = ("section", "user") TODO: restore this
     autocomplete_fields = ("user",)
 
     def get_fields(self, request, obj):
@@ -509,7 +510,6 @@ class DayEndFilter(admin.SimpleListFilter):
 
 @admin.register(Attendance)
 class AttendanceAdmin(CoordAdmin):
-    DAY_DICT = Spacetime.DayOfWeek.choices
 
     fields = (
         "date",
