@@ -234,7 +234,6 @@ header {
 
 .course-card-section-time:not(:last-of-type)::after {
 	display: block;
-	font-weight: bold;
 	content: "&";
 	font-size: 1.2em;
 }
@@ -334,6 +333,10 @@ header {
 .section-card-icon-placeholder {
 	vertical-align: bottom;
 	margin-right: 5px;
+}
+
+.section-card-additional-times {
+	display: block;
 }
 
 .section-card-icon-placeholder {

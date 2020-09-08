@@ -2,7 +2,7 @@ from django.test import TestCase
 from django.utils import timezone
 from rest_framework.serializers import ValidationError
 from datetime import datetime, timedelta
-from scheduler.models import Override, Spacetime, Student, Attendance, week_bounds
+from scheduler.models import Override, Spacetime, Student, DayOfWeekField, week_bounds
 from scheduler.factories import (
     SpacetimeFactory,
     OverrideFactory,
@@ -30,7 +30,7 @@ class SpacetimeTest(TestCase):
         override = OverrideFactory.create(
             overriden_spacetime=self.spacetime,
             date=date,
-            spacetime=SpacetimeFactory.create(day_of_week=Spacetime.DayOfWeek.values[date.weekday()])
+            spacetime=SpacetimeFactory.create(day_of_week=DayOfWeekField.DAYS[date.weekday()])
         )
         self.assertTrue(override.is_expired())
         self.assertIsNone(self.spacetime.override)
@@ -88,30 +88,31 @@ class StudentAttendanceTest(TestCase):
         self.user = UserFactory.create()
 
     def test_section_later_in_week(self):
-        section = SectionFactory.create(course=self.course, spacetime=SpacetimeFactory.create(
-            day_of_week=Spacetime.DayOfWeek.values[self.now.weekday() + 1]))
+        section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
+            day_of_week=DayOfWeekField.DAYS[self.now.weekday() + 1])])
         student = Student.objects.create(section=section, user=self.user)
         self.assertEqual(student.attendance_set.count(), 1)
         self.assertEqual(week_bounds(timezone.now().date()), week_bounds(student.attendance_set.first().date))
 
     def test_section_earlier_in_week(self):
-        section = SectionFactory.create(course=self.course, spacetime=SpacetimeFactory.create(
-            day_of_week=Spacetime.DayOfWeek.values[self.now.weekday() - 1]))
+        section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
+            day_of_week=DayOfWeekField.DAYS[self.now.weekday() - 1])])
         student = Student.objects.create(section=section, user=self.user)
         self.assertFalse(student.attendance_set.exists())
 
     def test_attendance_already_exists(self):
-        section = SectionFactory.create(course=self.course, spacetime=SpacetimeFactory.create(
-            day_of_week=Spacetime.DayOfWeek.values[self.now.weekday() + 1]))
+        section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
+            day_of_week=DayOfWeekField.DAYS[self.now.weekday() + 1])])
         student = Student.objects.create(section=section, user=self.user)
         self.assertEqual(student.attendance_set.count(), 1)
-        new_section_later = SectionFactory.create(course=self.course, spacetime=SpacetimeFactory.create(
-            day_of_week=Spacetime.DayOfWeek.values[self.now.weekday() + 2]))
+        new_section_later = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
+            day_of_week=DayOfWeekField.DAYS[self.now.weekday() + 2])])
         student.section = new_section_later
         student.save()
+        student.refresh_from_db()
         self.assertEqual(student.attendance_set.count(), 1)
-        new_section_earlier = SectionFactory.create(course=self.course, spacetime=SpacetimeFactory.create(
-            day_of_week=Spacetime.DayOfWeek.values[self.now.weekday() - 1]))
+        new_section_earlier = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
+            day_of_week=DayOfWeekField.DAYS[self.now.weekday() - 1])])
         student.section = new_section_earlier
         student.save()
         self.assertEqual(student.attendance_set.count(), 1)
@@ -120,7 +121,7 @@ class StudentAttendanceTest(TestCase):
         self.course.enrollment_end = self.now - timedelta(days=2)
         self.course.valid_until = self.now - timedelta(days=1)
         self.course.save()
-        section = SectionFactory.create(course=self.course, spacetime=SpacetimeFactory.create(
-            day_of_week=Spacetime.DayOfWeek.values[self.now.weekday() + 1]))
+        section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
+            day_of_week=DayOfWeekField.DAYS[self.now.weekday() + 1])])
         student = Student.objects.create(section=section, user=self.user)
         self.assertFalse(student.attendance_set.exists())
