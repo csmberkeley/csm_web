@@ -2,10 +2,20 @@ import React, { useEffect, useState } from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
+import { SPACETIME_SHAPE } from "../utils/types";
 import Modal from "./Modal";
+import XIcon from "../../static/frontend/img/x.svg";
 import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime, ROLES } from "./Section";
 
-export default function StudentSection({ course, courseTitle, mentor, spacetime, override, associatedProfileId, url }) {
+export default function StudentSection({
+  course,
+  courseTitle,
+  mentor,
+  spacetimes,
+  override,
+  associatedProfileId,
+  url
+}) {
   return (
     <SectionDetail
       course={course}
@@ -26,7 +36,7 @@ export default function StudentSection({ course, courseTitle, mentor, spacetime,
           render={() => (
             <StudentSectionInfo
               mentor={mentor}
-              spacetime={spacetime}
+              spacetimes={spacetimes}
               override={override}
               associatedProfileId={associatedProfileId}
             />
@@ -41,13 +51,14 @@ StudentSection.propTypes = {
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
   mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
-  spacetime: PropTypes.object.isRequired,
+  spacetimes: PropTypes.arrayOf(SPACETIME_SHAPE).isRequired,
   override: PropTypes.object,
   associatedProfileId: PropTypes.number.isRequired,
   url: PropTypes.string.isRequired
 };
 
-function StudentSectionInfo({ mentor, spacetime, override, associatedProfileId }) {
+// eslint-disable-next-line no-unused-vars
+function StudentSectionInfo({ mentor, spacetimes, override, associatedProfileId }) {
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">My Section</h3>
@@ -58,7 +69,10 @@ function StudentSectionInfo({ mentor, spacetime, override, associatedProfileId }
             <a href={`mailto:${mentor.email}`}>{mentor.email}</a>
           </InfoCard>
         )}
-        <SectionSpacetime spacetime={spacetime} override={override} />
+        {/* TODO: Add back in override to below */}
+        {spacetimes.map(spacetime => (
+          <SectionSpacetime key={spacetime.id} spacetime={spacetime} />
+        ))}
         <DropSection profileId={associatedProfileId} />
       </div>
     </React.Fragment>
@@ -67,7 +81,7 @@ function StudentSectionInfo({ mentor, spacetime, override, associatedProfileId }
 
 StudentSectionInfo.propTypes = {
   mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
-  spacetime: PropTypes.object.isRequired,
+  spacetimes: PropTypes.arrayOf(SPACETIME_SHAPE).isRequired,
   override: PropTypes.object,
   associatedProfileId: PropTypes.number.isRequired
 };
@@ -96,7 +110,8 @@ class DropSection extends React.Component {
           <InfoCard title="Drop Section" showTitle={false}>
             <h5>Drop Section</h5>
             <button className="danger-btn" onClick={() => this.setState({ stage: DropSection.STAGES.CONFIRM })}>
-              <span className="inline-plus-sign">+</span>Drop
+              <XIcon height="1.3em" width="1.3em" />
+              Drop
             </button>
           </InfoCard>
         );
