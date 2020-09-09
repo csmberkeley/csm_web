@@ -21,19 +21,19 @@ class SpacetimeTest(TestCase):
     def test_spacetime_without_override(self):
         self.assertIsNone(self.spacetime.override)
 
-    def test_spacetime_with_override(self):
-        override = OverrideFactory.create(overriden_spacetime=self.spacetime)
-        self.assertEqual(override, self.spacetime.override)
+    # def test_spacetime_with_override(self):
+    #     override = OverrideFactory.create(overriden_spacetime=self.spacetime)
+    #     self.assertEqual(override, self.spacetime.override)
 
-    def test_spacetime_with_expired_override(self):
-        date = datetime.now() - timedelta(days=5)
-        override = OverrideFactory.create(
-            overriden_spacetime=self.spacetime,
-            date=date,
-            spacetime=SpacetimeFactory.create(day_of_week=DayOfWeekField.DAYS[date.weekday()])
-        )
-        self.assertTrue(override.is_expired())
-        self.assertIsNone(self.spacetime.override)
+    # def test_spacetime_with_expired_override(self):
+    #     date = datetime.now() - timedelta(days=5)
+    #     override = OverrideFactory.create(
+    #         overriden_spacetime=self.spacetime,
+    #         date=date,
+    #         spacetime=SpacetimeFactory.create(day_of_week=DayOfWeekField.DAYS[date.weekday()])
+    #     )
+    #     self.assertTrue(override.is_expired())
+    #     self.assertIsNone(self.spacetime.override)
 
     def test_location_normalization(self):
         spacetime = SpacetimeFactory.create(location='  Soda     372 ', section=self.section)
@@ -58,22 +58,22 @@ class CourseTest(TestCase):
             )
 
 
-class OverrideTest(TestCase):
-    def setUp(self):
-        course = CourseFactory.create()
-        self.section = SectionFactory.create(course=course)
-        self.spacetime = SpacetimeFactory.create(section=self.section)
+# class OverrideTest(TestCase):
+#     def setUp(self):
+#         course = CourseFactory.create()
+#         self.section = SectionFactory.create(course=course)
+#         self.spacetime = SpacetimeFactory.create(section=self.section)
 
-    def test_spacetime_override_self_validation(self):
-        with self.assertRaises(ValidationError):
-            Override.objects.create(spacetime=self.spacetime,
-                                    overriden_spacetime=self.spacetime, date=datetime.now().date())
+#     def test_spacetime_override_self_validation(self):
+#         with self.assertRaises(ValidationError):
+#             Override.objects.create(spacetime=self.spacetime,
+#                                     overriden_spacetime=self.spacetime, date=datetime.now().date())
 
-    def test_day_of_week_validation(self):
-        override = OverrideFactory.create(overriden_spacetime=self.spacetime)
-        with self.assertRaises(ValidationError):
-            override.date -= timedelta(days=1)
-            override.save()
+#     def test_day_of_week_validation(self):
+#         override = OverrideFactory.create(overriden_spacetime=self.spacetime)
+#         with self.assertRaises(ValidationError):
+#             override.date -= timedelta(days=1)
+#             override.save()
 
 
 class StudentAttendanceTest(TestCase):
