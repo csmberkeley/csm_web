@@ -13,6 +13,7 @@ We don't know what specific minimum version you would need for any of the follow
 * [npm](https://www.npmjs.com/get-npm)
   * [prettier](https://prettier.io/) (`npm install -g prettier`)
   * [eslint](https://eslint.org/) (`npm install -g eslint`; `npm install -g eslint-plugin-react`)
+* Postgresql (`brew install postgresql && brew services start postgresql`)
 * [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install) (`brew tap heroku/brew && brew install heroku`)
   * Create an account on [Heroku](https://id.heroku.com/login) and [login](https://devcenter.heroku.com/articles/heroku-cli#getting-started)
 
