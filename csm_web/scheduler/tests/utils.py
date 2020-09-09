@@ -68,8 +68,4 @@ def enroll_user_as_student(user, section, save=True):
     The student is saved to database.
     Returns the created profile.
     """
-    student = StudentFactory.create(user=user)
-    student.section = section
-    if save:
-        student.save()
-    return student
+    return StudentFactory.create(user=user, section=section)
