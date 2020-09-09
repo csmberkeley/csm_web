@@ -1313,3 +1313,17 @@ table tbody tr:last-child > td {
 	width: fit-content;
 	margin: auto;
 }
+
+#mentor-under-construction-page {
+	padding: 2rem;
+	max-width: 38rem;
+	margin: auto;
+}
+
+#mentor-under-construction-page #signature {
+	margin-top: 1em;
+}
+
+#mentor-under-construction-page #signature > :last-child {
+	margin-top: 1em;
+}

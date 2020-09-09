@@ -25,6 +25,21 @@ export default function MentorSection({
   userRole,
   mentor
 }) {
+  return (
+    <div id="mentor-under-construction-page">
+      <h2 className="page-title">
+        Hello {mentor.name ? mentor.name.substring(0, mentor.name.lastIndexOf(" ")) : "mentor"},
+      </h2>{" "}
+      We&apos;re presently still working on this part of the site to make sure it&apos;s ready to go for your first
+      section next week. We&apos;ll make an announcement later this week on Slack when it&apos;s ready so you can see
+      who your students are and send them a welcome email. Thank you for your patience.
+      <div id="signature">
+        <div>Sincerely,</div>
+        <div>CSM Tech</div>
+      </div>
+    </div>
+  );
+  /*
   const [{ students, attendances, loaded }, setState] = useState({ students: [], attendances: {}, loaded: false });
   useEffect(() => {
     setState({ students: [], attendances: {}, loaded: false });
@@ -91,6 +106,7 @@ export default function MentorSection({
       </Switch>
     </SectionDetail>
   );
+	*/
 }
 
 MentorSection.propTypes = {
