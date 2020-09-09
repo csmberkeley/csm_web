@@ -3,6 +3,8 @@ from scheduler.models import Course, User, Mentor, Section, Spacetime, DayOfWeek
 from datetime import timedelta, datetime
 import re
 import csv
+import io
+import requests
 
 
 class Command(BaseCommand):
@@ -17,17 +19,19 @@ class Command(BaseCommand):
         'CS88': one_hour,
         'EE16A': one_hour * 1.5,
         'EE16B': one_hour * 1.5,
+        'EECS16A': one_hour * 1.5,
+        'EECS16B': one_hour * 1.5,
     }
 
     def add_arguments(self, parser):
-        parser.add_argument("csv_path", type=str, help="The path to the CSV file to be read")
         parser.add_argument("course_name", type=str, help="The name of the course to make sections for")
+        parser.add_argument("csv_path", type=str, help="The filepath or URL of the CSV file to be read")
         parser.add_argument("--validateonly", action="store_true",
                             help="Do not create sections, just validate that the CSV matches the expected format")
 
     def handle(self, *args, **options):
-        course = Course.objects.get(name=options['course_name'].upper())
-        with open(options['csv_path'], 'r') as csvfile:
+        with self.get_csv_file(options['csv_path']) as csvfile:
+            course = Course.objects.get(name=options['course_name'].upper())
             reader = csv.DictReader(csvfile, fieldnames=self.CSV_FIELDS)
             self.validate(reader)
             if options['validateonly']:
@@ -35,6 +39,14 @@ class Command(BaseCommand):
             csvfile.seek(0)
             reader = csv.DictReader(csvfile, fieldnames=self.CSV_FIELDS)
             self.create_sections(course, reader)
+
+    def get_csv_file(self, csv_path):
+        if re.match(r'https?://', csv_path):
+            response = requests.get(csv_path)
+            response.raise_for_status()
+            return io.StringIO(response.text)
+        else:
+            return open(csv_path, 'r')
 
     def parse_time(self, timestring):
         return datetime.strptime(timestring, self.TIME_FORMAT).time()
