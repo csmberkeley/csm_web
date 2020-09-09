@@ -7,6 +7,7 @@ from django.db.models.query import EmptyQuerySet
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
+from itertools import groupby
 from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -87,14 +88,6 @@ class CourseViewSet(*viewset_with('list')):
             )
             .order_by("day_key", "time_key")
         )
-        section_count_by_day = (
-            sections.annotate(
-                day_key=ArrayAgg("spacetimes__day_of_week", ordering="spacetimes__day_of_week", distinct=True)
-            )
-            .order_by("day_key")
-            .annotate(num_sections=Count("id", distinct=True))
-            .values("day_key", "num_sections")
-        )
         """
         Use list to force evaluation of the QuerySet so that the below for loop doesn't trigger a DB query on each iteration
 
@@ -112,18 +105,17 @@ class CourseViewSet(*viewset_with('list')):
             .select_related("mentor__user")
             .annotate(num_students_annotation=Count("students", filter=Q(students__active=True), distinct=True))
         )
-        start, sections_by_day = 0, {}
-        for group in section_count_by_day:
-            """
-            omit_spacetime_links makes it such that if a section is occuring online and therefore has a link
-            as its location, instead of the link being returned, just the word 'Online' is. The reason we do this here is
-            that we don't want desperate and/or malicious students poking around in their browser devtools to be able to find
-            links for sections they aren't enrolled in and then go and crash them.
-            """
-            sections_by_day[group['day_key']] = SectionSerializer(
-                sections[start:start + group['num_sections']], many=True, context={'omit_spacetime_links': True}).data
-            start += group['num_sections']
-        return sections_by_day
+        """
+        omit_spacetime_links makes it such that if a section is occuring online and therefore has a link
+        as its location, instead of the link being returned, just the word 'Online' is. The reason we do this here is
+        that we don't want desperate and/or malicious students poking around in their browser devtools to be able to find
+        links for sections they aren't enrolled in and then go and crash them.
+
+        Python's groupby assumes things are in sorted order, all it does is essentially find the indices where
+        one group ends and the next begins, the DB is doing all the heavy lifting here.
+        """
+        return {day_key: SectionSerializer(group, many=True, context={'omit_spacetime_links': True}).data
+                for day_key, group in groupby(sections, lambda section: section.day_key)}
 
     @action(detail=True)
     def sections(self, request, pk=None):
