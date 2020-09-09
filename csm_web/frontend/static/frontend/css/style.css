@@ -616,6 +616,7 @@ main {
 .section-detail-info-card.drop-section {
 	flex-basis: 100%;
 	display: flex;
+	text-align: center;
 }
 
 .section-detail-info-card-contents .divider {
@@ -627,20 +628,21 @@ main {
 	border-color: #ffadad;
 }
 
+.section-detail-info-card-contents.drop-section .danger-btn {
+	display: flex;
+	align-items: center;
+}
+
 .danger-btn {
 	display: block;
+	border: none;
 	margin: auto;
 	cursor: pointer;
 	background-color: var(--csm-danger);
 	border-radius: 6px;
 	color: white;
 	font-size: 14px;
-	padding: 0 25px 3px;
-}
-
-.danger-btn .inline-plus-sign {
-	display: inline-block;
-	transform: rotate(45deg);
+	padding: 10px 27px;
 }
 
 .danger-btn:hover {
@@ -762,10 +764,6 @@ table tbody tr:last-child > td {
 	font-size: 14px;
 	color: #bfbfbf;
 	margin-top: 0;
-}
-
-.modal.drop-confirmation .danger-btn {
-	padding: 10px 27px;
 }
 
 #section-detail-body {
