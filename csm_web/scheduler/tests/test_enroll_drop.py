@@ -33,40 +33,61 @@ class DropTest(utils.APITestCase):
         self.user = UserFactory.create()
         self.client = self.get_client_for(self.user)
 
-    def count_student_profiles_in(self, course):
+    def count_student_profiles_in(self, user, course):
         return Student.objects.filter(
-            user=self.user,
+            user=user,
             section__course=course,
             active=True
         ).count()
 
     def drop_and_should_succeed(self, student):
         url = get_drop_url_for(student)
-        self.request(self.client.patch, url)
+        self.request(self.client.patch, url, exp_code=status.HTTP_204_NO_CONTENT)
 
     def test_simple(self):
         """
         Tests that the student should be able to drop a section they just enrolled in.
         """
-        ...
+        student = utils.enroll_user_as_student(self.user, SectionFactory.create(course=self.my_course))
+        self.drop_and_should_succeed(student)
+        self.assertEqual(self.count_student_profiles_in(self.user, self.my_course), 0)
 
     def test_without_enroll(self):
         """
-        Tests that a student should be unable to drop a section they're not enrolled in.
+        Tests that a student should be unable to drop a student that's not themselves.
         """
-        ...
+        other_student = utils.enroll_user_as_student(
+            UserFactory.create(),
+            SectionFactory.create(course=self.my_course)
+        )
+        url = get_drop_url_for(other_student)
+        self.request(self.client.patch, url, exp_code=status.HTTP_403_FORBIDDEN)
+        self.assertEqual(self.count_student_profiles_in(self.user, self.my_course), 0)
+        self.assertEqual(self.count_student_profiles_in(other_student.user, self.my_course), 1)
 
     def test_double_drop(self):
         """
-        Tests that dropping is idempotent.
+        Tests that dropping a section twice should fail the second call and make no DB changes.
         """
-        ...
+        student = utils.enroll_user_as_student(self.user, SectionFactory.create(course=self.my_course))
+        self.drop_and_should_succeed(student)
+        self.assertEqual(self.count_student_profiles_in(self.user, self.my_course), 0)
+        url = get_drop_url_for(student)
+        self.request(self.client.patch, url, exp_code=status.HTTP_403_FORBIDDEN)
+        self.assertEqual(self.count_student_profiles_in(self.user, self.my_course), 0)
 
     def test_with_other_sections(self):
         """
         Tests that a student enrolled in multiple sections only drops the desired one.
         """
-        ...
+        student1 = utils.enroll_user_as_student(self.user, SectionFactory.create(course=self.my_course))
+        student2 = utils.enroll_user_as_student(self.user, SectionFactory.create(course=self.other_course))
+        self.drop_and_should_succeed(student1)
+        self.assertEqual(self.count_student_profiles_in(self.user, self.my_course), 0)
+        self.assertEqual(self.count_student_profiles_in(self.user, self.other_course), 1)
+        self.drop_and_should_succeed(student2)
+        self.assertEqual(self.count_student_profiles_in(self.user, self.my_course), 0)
+        self.assertEqual(self.count_student_profiles_in(self.user, self.other_course), 0)
 
 
 class EnrollmentTest(utils.APITestCase):
@@ -151,13 +172,17 @@ class EnrollmentTest(utils.APITestCase):
         section = SectionFactory.create(course=self.my_course, capacity=1)
         self.enroll_and_should_succeed(section)
 
-    def test_did_drop(self):
+    def test_reenroll(self):
         """
         Tests that a student that previously dropped a section is able to reenroll in this course.
         """
         section = SectionFactory.create(course=self.my_course)
         student = utils.enroll_user_as_student(self.user, section)
         self.drop(student)
+        # New response should return 204 instead of 201
+        url = get_enroll_url_for(section)
+        self.request(self.client.put, url, exp_code=status.HTTP_204_NO_CONTENT)
+        self.assertNotEqual(self.count_student_profiles_in(section.course), 0)
 
     def test_full_section(self):
         """
