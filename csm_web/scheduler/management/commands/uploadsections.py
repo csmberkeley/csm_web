@@ -1,12 +1,12 @@
-from django.core.management import BaseCommand, CommandError
-from django.utils.dateparse import parse_time
+from django.core.management import BaseCommand
 from scheduler.models import Course, User, Mentor, Section, Spacetime, DayOfWeekField
-from datetime import timedelta
+from datetime import timedelta, datetime
 import re
 import csv
 
 
 class Command(BaseCommand):
+    TIME_FORMAT = "%I:%M %p"
     CSV_FIELDS = ('mentor_email', 'day1', 'time1', 'day2', 'time2', 'description', 'capacity')
     one_hour = timedelta(hours=1)
     SECTION_DURATIONS = {
@@ -36,17 +36,20 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile, fieldnames=self.CSV_FIELDS)
             self.create_sections(course, reader)
 
+    def parse_time(self, timestring):
+        return datetime.strptime(timestring, self.TIME_FORMAT).time()
+
     def validate(self, reader):
         next(reader)  # Skip header row
         for row in reader:
             row = {key: value.strip() for key, value in row.items()}
             assert re.fullmatch(r'.+@berkeley\.edu', row['mentor_email'])
             assert row['day1'] in DayOfWeekField.DAYS
-            assert parse_time(row['time1'])
+            assert self.parse_time(row['time1'])
             if row['day2'] or row['time2']:
                 assert row['day2'] and row['time2']
                 assert row['day2'] in DayOfWeekField.DAYS
-                assert parse_time(row['time2'])
+                assert self.parse_time(row['time2'])
             assert len(row['description']) <= Section._meta.get_field('description').max_length
             assert row['capacity'].isdecimal()
 
@@ -56,10 +59,10 @@ class Command(BaseCommand):
             row = {key: value.strip() for key, value in row.items()}
             user, _ = User.objects.get_or_create(email=row['mentor_email'], username=row['mentor_email'].split('@')[0])
             mentor = Mentor.objects.create(user=user)
-            spacetimes = [Spacetime.objects.create(location='Online', day_of_week=row['day1'], start_time=parse_time(
+            spacetimes = [Spacetime.objects.create(location='Online', day_of_week=row['day1'], start_time=self.parse_time(
                 row['time1']), duration=self.SECTION_DURATIONS[course.name], section=None), ]
             if row['day2'] and row['time2']:
-                spacetimes.append(Spacetime.objects.create(location='Online', day_of_week=row['day2'], start_time=parse_time(
+                spacetimes.append(Spacetime.objects.create(location='Online', day_of_week=row['day2'], start_time=self.parse_time(
                     row['time2']), duration=self.SECTION_DURATIONS[course.name], section=None))
             section = Section(course=course, capacity=int(row['capacity']),
                               mentor=mentor, description=row['description'])
