@@ -417,6 +417,7 @@ class CourseAdmin(CoordAdmin):
         "valid_until",
         "enrollment_start",
         "enrollment_end",
+        "section_start",
         "permitted_absences",
         "number_of_sections",
         "number_of_students",
