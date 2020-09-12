@@ -10,6 +10,7 @@ import CheckCircle from "../../static/frontend/img/check_circle.svg";
 import PencilIcon from "../../static/frontend/img/pencil.svg";
 import { ATTENDANCE_LABELS } from "./Section";
 import Modal from "./Modal";
+import LoadingSpinner from "./LoadingSpinner";
 import TimeInput from "./TimeInput";
 
 export default function MentorSection({
@@ -165,16 +166,6 @@ function formatDate(dateString) {
   const [month, dayAndYear] = dateString.split(".");
   const day = dayAndYear.split(",")[0].trim();
   return `${MONTH_NUMBERS[month]}/${day}`;
-}
-
-function LoadingSpinner() {
-  return (
-    <div className="sk-fading-circle">
-      {[...Array(12)].map((_, i) => (
-        <div key={i} className={`sk-circle${i + 1} sk-circle`} />
-      ))}
-    </div>
-  );
 }
 
 class MentorSectionAttendance extends React.Component {

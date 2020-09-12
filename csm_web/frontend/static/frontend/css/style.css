@@ -298,6 +298,12 @@ header {
 	font-size: 2em;
 }
 
+#course-menu-loading-spinner {
+	margin: auto;
+	height: 50px;
+	width: 50px;
+}
+
 /* Section enrollment */
 
 .create-section-btn {

@@ -3,6 +3,7 @@ import PropTypes from "prop-types";
 import { Link, Route, Switch } from "react-router-dom";
 import { fetchJSON } from "../utils/api";
 import Course from "./Course";
+import LoadingSpinner from "./LoadingSpinner";
 
 export default class CourseMenu extends React.Component {
   state = { courses: null, loaded: false };
@@ -30,12 +31,12 @@ export default class CourseMenu extends React.Component {
         />
         <Route
           path="/courses"
-          render={() =>
-            !loaded ? (
-              <div>Loading...</div>
-            ) : (
-              <React.Fragment>
-                <h3 className="page-title center-title">Which course would you like to enroll in?</h3>
+          render={() => (
+            <React.Fragment>
+              <h3 className="page-title center-title">Which course would you like to enroll in?</h3>
+              {!loaded ? (
+                  <LoadingSpinner id="course-menu-loading-spinner" />
+              ) : (
                 <div id="course-menu">
                   {Object.entries(courses).map(([id, { name }]) => (
                     <Link className="csm-btn" to={`${path}/${id}`} key={id}>
@@ -43,9 +44,9 @@ export default class CourseMenu extends React.Component {
                     </Link>
                   ))}
                 </div>
-              </React.Fragment>
-            )
-          }
+              )}
+            </React.Fragment>
+          )}
         />
       </Switch>
     );
