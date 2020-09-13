@@ -24,7 +24,7 @@ COMPSCI_WORDS = ('Algorithms', 'Systems', 'Distributed', 'Efficient', 'Tractable
                  'Languages', 'Machine Learning', 'AI', 'Blockchain', 'Parallel', 'Architecture')
 
 
-class CourseFactory(factory.DjangoModelFactory):
+class CourseFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Course
 
@@ -68,7 +68,7 @@ class CourseFactory(factory.DjangoModelFactory):
 BUILDINGS = ("Cory", "Soda", "Kresge", "Moffitt")
 
 
-class SpacetimeFactory(factory.DjangoModelFactory):
+class SpacetimeFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Spacetime
 
@@ -78,7 +78,7 @@ class SpacetimeFactory(factory.DjangoModelFactory):
     day_of_week = factory.fuzzy.FuzzyChoice(DayOfWeekField.DAYS)
 
 
-class UserFactory(factory.DjangoModelFactory):
+class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
 
@@ -88,21 +88,21 @@ class UserFactory(factory.DjangoModelFactory):
     email = factory.LazyAttribute(lambda o: "%s@berkeley.edu" % o.username)
 
 
-class StudentFactory(factory.DjangoModelFactory):
+class StudentFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Student
 
     user = factory.SubFactory(UserFactory)
 
 
-class MentorFactory(factory.DjangoModelFactory):
+class MentorFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Mentor
 
     user = factory.SubFactory(UserFactory)
 
 
-class SectionFactory(factory.DjangoModelFactory):
+class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Section
 
@@ -126,7 +126,7 @@ class SectionFactory(factory.DjangoModelFactory):
         return obj
 
 
-class AttendanceFactory(factory.DjangoModelFactory):
+class AttendanceFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Attendance
 
@@ -134,7 +134,7 @@ class AttendanceFactory(factory.DjangoModelFactory):
     student = factory.SubFactory(StudentFactory)
 
 
-class OverrideFactory(factory.DjangoModelFactory):
+class OverrideFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Override
 
