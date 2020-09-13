@@ -12,9 +12,11 @@ export default class CourseMenu extends React.Component {
 
   componentDidMount() {
     fetchJSON("/courses").then(courses => {
-      const coursesById = {};
+      // We use a Map here instead of an object because we want the entries() iterator to reflect the order of insertion,
+      // which in turn reflects the sorting order returned by the backend
+      const coursesById = new Map();
       for (const course of courses) {
-        coursesById[course.id] = course;
+        coursesById.set(course.id, course);
       }
       this.setState({ courses: coursesById, loaded: true });
     });
@@ -27,7 +29,9 @@ export default class CourseMenu extends React.Component {
       <Switch>
         <Route
           path="/courses/:id"
-          render={routeProps => <Course name={loaded && courses[routeProps.match.params.id].name} {...routeProps} />}
+          render={routeProps => (
+            <Course name={loaded && courses.get(Number(routeProps.match.params.id)).name} {...routeProps} />
+          )}
         />
         <Route
           path="/courses"
@@ -35,10 +39,10 @@ export default class CourseMenu extends React.Component {
             <React.Fragment>
               <h3 className="page-title center-title">Which course would you like to enroll in?</h3>
               {!loaded ? (
-                  <LoadingSpinner id="course-menu-loading-spinner" />
+                <LoadingSpinner id="course-menu-loading-spinner" />
               ) : (
                 <div id="course-menu">
-                  {Object.entries(courses).map(([id, { name }]) => (
+                  {Array.from(courses.entries()).map(([id, { name }]) => (
                     <Link className="csm-btn" to={`${path}/${id}`} key={id}>
                       {name}
                     </Link>
