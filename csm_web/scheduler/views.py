@@ -76,7 +76,7 @@ class CourseViewSet(*viewset_with('list')):
     def get_queryset(self):
         banned_from = self.request.user.student_set.filter(banned=True).values_list('section__course__id', flat=True)
         now = timezone.now()
-        return Course.objects.exclude(pk__in=banned_from).filter(
+        return Course.objects.exclude(pk__in=banned_from).order_by('name').filter(
             Q(valid_until__gte=now.date(), enrollment_start__lte=now, enrollment_end__gt=now) | Q(coordinator__user=self.request.user)).distinct()
 
     def get_sections_by_day(self, course):
