@@ -1319,25 +1319,3 @@ table tbody tr:last-child > td {
 	width: fit-content;
 	margin: auto;
 }
-
-#mentor-under-construction-page {
-	padding: 2rem;
-	max-width: 38rem;
-	margin: auto;
-}
-
-#mentor-under-construction-page #signature {
-	margin-top: 1em;
-}
-
-#mentor-under-construction-page #signature > :last-child {
-	margin-top: 1em;
-}
-
-#temporary-mentor-under-construction-roster {
-	margin-top: 4em;
-	width: fit-content;
-	max-width: 100%;
-	box-sizing: border-box;
-	display: block;
-}

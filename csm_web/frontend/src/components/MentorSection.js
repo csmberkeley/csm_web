@@ -26,30 +26,6 @@ export default function MentorSection({
   userRole,
   mentor
 }) {
-  const [{ students, loaded }, setState] = useState({ students: [], loaded: false });
-  useEffect(() => {
-    setState({ students: [], loaded: false });
-    fetchJSON(`/sections/${id}/students/`).then(data => {
-      const students = data.map(({ name, email, id }) => ({ name, email, id }));
-      setState({ students, loaded: true });
-    });
-  }, [id]);
-  return (
-    <div id="mentor-under-construction-page">
-      <h2 className="page-title">
-        Hello {mentor.name ? mentor.name.substring(0, mentor.name.lastIndexOf(" ")) : "mentor"},
-      </h2>{" "}
-      We&apos;re presently still working on this part of the site to make sure it&apos;s ready to go for your first
-      section next week. We&apos;ll make an announcement later this week on Slack when it&apos;s 100% complete. For now,
-      here&apos;s a list of the students who have signed up for your section so far. Thank you for your patience.
-      <div id="signature">
-        <div>Sincerely,</div>
-        <div>CSM Tech</div>
-      </div>
-      <MentorSectionRoster students={students} loaded={loaded} />
-    </div>
-  );
-  /*
   const [{ students, attendances, loaded }, setState] = useState({ students: [], attendances: {}, loaded: false });
   useEffect(() => {
     setState({ students: [], attendances: {}, loaded: false });
@@ -116,7 +92,6 @@ export default function MentorSection({
       </Switch>
     </SectionDetail>
   );
-	*/
 }
 
 MentorSection.propTypes = {
@@ -705,16 +680,16 @@ StudentDropper.propTypes = { id: PropTypes.number.isRequired, reloadSection: Pro
 function MentorSectionRoster({ students, loaded }) {
   const [emailsCopied, setEmailsCopied] = useState(false);
   const handleCopyEmails = () => {
-    navigator.clipboard.writeText(students.map(({ email }) => email).join("\n")).then(() => {
+    navigator.clipboard.writeText(students.map(({ email }) => email).join(" ")).then(() => {
       setEmailsCopied(true);
       setTimeout(() => setEmailsCopied(false), 1500);
     });
   };
   return (
     <React.Fragment>
-      {/*<h3 className="section-detail-page-title">Roster</h3>*/}
+      <h3 className="section-detail-page-title">Roster</h3>
       {loaded && (
-        <table id="temporary-mentor-under-construction-roster" className="standalone-table">
+        <table className="standalone-table">
           <thead>
             <tr>
               <th>Name</th>
@@ -735,7 +710,7 @@ function MentorSectionRoster({ students, loaded }) {
           </tbody>
         </table>
       )}
-      {!loaded && <LoadingSpinner />}
+      {!loaded && <h5>Loading roster...</h5>}
     </React.Fragment>
   );
 }
