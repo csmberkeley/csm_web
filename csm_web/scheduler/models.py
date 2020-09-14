@@ -38,6 +38,9 @@ class User(AbstractUser):
                  self.mentor_set.filter(section__course=course).count())
         )
 
+    class Meta:
+        indexes = (models.Index(fields=("email",)),)
+
 
 class ValidatingModel(models.Model):
     """
