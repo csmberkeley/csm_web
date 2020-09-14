@@ -219,9 +219,10 @@ class SectionCard extends React.Component {
             {description && <span className="section-card-description">{description}</span>}
             <p title="Location">
               <LocationIcon width={iconWidth} height={iconHeight} />{" "}
-              {/* Backend returns location as null if it's a video-call link to avoid leaking info to unenrolled students.
-								  See scheduler/views.py for further explanation. The strict (===) equality check is thus very important here. */
-              location === null ? "Online" : location}
+              {/* TODO: For now this is hardcoded, but when sections return in person, this needs to be implemented. 
+									An important note:  Backend returns location as null if it's a video-call link to avoid leaking info to unenrolled students,
+									so a strict (===) equality check is going to be very important here.  See scheduler/views.py for further explanation on 'leaking info'.*/}
+              Online
             </p>
             <p title="Time">
               <ClockIcon width={iconWidth} height={iconHeight} /> {spacetimes[0].time}
