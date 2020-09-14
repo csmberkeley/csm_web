@@ -99,11 +99,12 @@ export default class Course extends React.Component {
             />
             Show unavailable
           </label>
-          {userIsCoordinator && (
+          {/* TODO: Restore this ASAP
+						userIsCoordinator && (
             <button className="csm-btn create-section-btn" onClick={() => this.setState({ showModal: true })}>
               <span className="inline-plus-sign">+ </span>Create Section
             </button>
-          )}
+          )*/}
         </div>
         <div id="course-section-list">
           {currDaySections && currDaySections.length > 0 ? (
@@ -219,7 +220,7 @@ class SectionCard extends React.Component {
             {description && <span className="section-card-description">{description}</span>}
             <p title="Location">
               <LocationIcon width={iconWidth} height={iconHeight} />{" "}
-              {/* TODO: For now this is hardcoded, but when sections return in person, this needs to be implemented. 
+              {/* TODO: For now this is hardcoded, but when sections return in person, this needs to be implemented.
 									An important note:  Backend returns location as null if it's a video-call link to avoid leaking info to unenrolled students,
 									so a strict (===) equality check is going to be very important here.  See scheduler/views.py for further explanation on 'leaking info'.*/}
               Online
