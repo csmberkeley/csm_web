@@ -181,6 +181,9 @@ class Coordinator(Profile):
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.course.name})"
 
+    class Meta:
+        unique_together = ("user", "course")
+
 
 class Section(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
