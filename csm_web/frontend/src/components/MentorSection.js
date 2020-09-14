@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
-import { SPACETIME_SHAPE, OVERRIDE_SHAPE } from "../utils/types";
+import { SPACETIME_SHAPE } from "../utils/types";
 import { SectionDetail, InfoCard, SectionSpacetime, ROLES } from "./Section";
 import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
@@ -97,7 +97,6 @@ MentorSection.propTypes = {
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
   spacetimes: PropTypes.arrayOf(SPACETIME_SHAPE).isRequired,
-  overrides: PropTypes.arrayOf(OVERRIDE_SHAPE).isRequired,
   url: PropTypes.string.isRequired,
   reloadSection: PropTypes.func.isRequired,
   userRole: PropTypes.string.isRequired,

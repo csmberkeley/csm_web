@@ -6,7 +6,7 @@ export const OVERRIDE_SHAPE = PropTypes.shape({
     dayOfWeek: PropTypes.string.isRequired,
     duration: PropTypes.string.isRequired,
     id: PropTypes.number.isRequired,
-    location: PropTypes.string.isRequired,
+    location: PropTypes.string,
     startTime: PropTypes.string.isRequired,
     time: PropTypes.string.isRequired
   })
@@ -16,7 +16,7 @@ export const SPACETIME_SHAPE = PropTypes.shape({
   dayOfWeek: PropTypes.string.isRequired,
   duration: PropTypes.string.isRequired,
   id: PropTypes.number.isRequired,
-  location: PropTypes.string.isRequired,
+  location: PropTypes.string,
   startTime: PropTypes.string.isRequired,
   time: PropTypes.string.isRequired,
   override: OVERRIDE_SHAPE
