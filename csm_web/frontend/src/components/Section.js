@@ -87,9 +87,9 @@ const Location = ({ location }) =>
 
 Location.propTypes = { location: PropTypes.string.isRequired };
 
-export function SectionSpacetime({ spacetime: { location, time }, override, children }) {
+export function SectionSpacetime({ manySpacetimes, index, spacetime: { location, time }, override, children }) {
   return (
-    <InfoCard title="Time and Location">
+    <InfoCard title={`Time and Location${manySpacetimes ? ` ${index + 1}` : ""}`}>
       {children}
       <Location location={location} />
       <h5>{time}</h5>
@@ -108,7 +108,9 @@ export function SectionSpacetime({ spacetime: { location, time }, override, chil
 SectionSpacetime.propTypes = {
   spacetime: SPACETIME_SHAPE.isRequired,
   override: PropTypes.shape({ spacetime: SPACETIME_SHAPE.isRequired, date: PropTypes.string.isRequired }),
-  children: PropTypes.node
+  children: PropTypes.node,
+  manySpacetimes: PropTypes.bool.isRequired,
+  index: PropTypes.number.isRequired
 };
 
 export function InfoCard({ title, children, showTitle = true }) {
