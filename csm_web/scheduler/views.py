@@ -67,7 +67,7 @@ METHOD_MIXINS = {'list': mixins.ListModelMixin, 'create': mixins.CreateModelMixi
 
 def viewset_with(*permitted_methods):
     assert all(method in METHOD_MIXINS for method in permitted_methods), "Unrecognized method for ViewSet"
-    return list(set(mixin_class for method, mixin_class in METHOD_MIXINS.items() if method in permitted_methods)) + [viewsets.GenericViewSet]
+    return list({mixin_class for method, mixin_class in METHOD_MIXINS.items() if method in permitted_methods}) + [viewsets.GenericViewSet]
 
 
 class CourseViewSet(*viewset_with('list')):
@@ -109,12 +109,13 @@ class CourseViewSet(*viewset_with('list')):
         omit_spacetime_links makes it such that if a section is occuring online and therefore has a link
         as its location, instead of the link being returned, just the word 'Online' is. The reason we do this here is
         that we don't want desperate and/or malicious students poking around in their browser devtools to be able to find
-        links for sections they aren't enrolled in and then go and crash them.
+        links for sections they aren't enrolled in and then go and crash them. omit_mentor_emails has a similar purpose.
+        omit_overrides is done for performance reasons, as we avoid the extra join since we don't need actually need overrides here.
 
         Python's groupby assumes things are in sorted order, all it does is essentially find the indices where
         one group ends and the next begins, the DB is doing all the heavy lifting here.
         """
-        return {day_key: SectionSerializer(group, many=True, context={'omit_spacetime_links': True}).data
+        return {day_key: SectionSerializer(group, many=True, context={'omit_spacetime_links': True, 'omit_mentor_emails': True, 'omit_overrides': True}).data
                 for day_key, group in groupby(sections, lambda section: section.day_key)}
 
     @action(detail=True)

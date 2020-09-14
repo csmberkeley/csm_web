@@ -219,10 +219,9 @@ class SectionCard extends React.Component {
             {description && <span className="section-card-description">{description}</span>}
             <p title="Location">
               <LocationIcon width={iconWidth} height={iconHeight} />{" "}
-              {/* #TODO: Adapt this for multiple sections with real locations, 
-										for when school goes back to being in person
-										location.match(/^https?:\/\//) ? "Online" : location*/}
-              Online
+              {/* Backend returns location as null if it's a video-call link to avoid leaking info to unenrolled students.
+								  See scheduler/views.py for further explanation. The strict (===) equality check is thus very important here. */
+              location === null ? "Online" : location}
             </p>
             <p title="Time">
               <ClockIcon width={iconWidth} height={iconHeight} /> {spacetimes[0].time}

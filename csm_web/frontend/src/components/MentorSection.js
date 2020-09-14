@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
-import { SPACETIME_SHAPE } from "../utils/types";
+import { SPACETIME_SHAPE, OVERRIDE_SHAPE } from "../utils/types";
 import { SectionDetail, InfoCard, SectionSpacetime, ROLES } from "./Section";
 import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
@@ -18,8 +18,7 @@ export default function MentorSection({
   url,
   course,
   courseTitle,
-  spacetime,
-  override,
+  spacetimes,
   capacity,
   description,
   reloadSection,
@@ -81,8 +80,7 @@ export default function MentorSection({
               reloadSection={reloadSection}
               students={students}
               loaded={loaded}
-              spacetime={spacetime}
-              override={override}
+              spacetimes={spacetimes}
               capacity={capacity}
               description={description}
               id={id}
@@ -98,8 +96,8 @@ MentorSection.propTypes = {
   id: PropTypes.number.isRequired,
   course: PropTypes.string.isRequired,
   courseTitle: PropTypes.string.isRequired,
-  spacetime: PropTypes.object.isRequired,
-  override: PropTypes.object,
+  spacetimes: PropTypes.arrayOf(SPACETIME_SHAPE).isRequired,
+  overrides: PropTypes.arrayOf(OVERRIDE_SHAPE).isRequired,
   url: PropTypes.string.isRequired,
   reloadSection: PropTypes.func.isRequired,
   userRole: PropTypes.string.isRequired,
@@ -123,15 +121,15 @@ const MONTH_NUMBERS = Object.freeze({
   Dec: 12
 });
 
-export const DAYS_OF_WEEK = Object.freeze({
-  Mon: "Monday",
-  Tue: "Tuesday",
-  Wed: "Wednesday",
-  Thu: "Thursday",
-  Fri: "Friday",
-  Sat: "Saturday",
-  Sun: "Sunday"
-});
+export const DAYS_OF_WEEK = Object.freeze([
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+  "Sunday"
+]);
 
 function formatDate(dateString) {
   /*
@@ -400,9 +398,9 @@ class SpacetimeEditModal extends React.Component {
                 disabled={!isPermanent}
                 value={isPermanent ? day : ""}
               >
-                {[["", "---"]].concat(Object.entries(DAYS_OF_WEEK)).map(([value, label]) => (
+                {[["", "---"]].concat(DAYS_OF_WEEK).map(value => (
                   <option key={value} value={value} disabled={!value}>
-                    {label}
+                    {value}
                   </option>
                 ))}
               </select>
@@ -505,8 +503,7 @@ MetaEditModal.propTypes = {
 function MentorSectionInfo({
   students,
   loaded,
-  spacetime,
-  override,
+  spacetimes,
   reloadSection,
   isCoordinator,
   mentor,
@@ -515,6 +512,7 @@ function MentorSectionInfo({
   description
 }) {
   const [showModal, setShowModal] = useState(MentorSectionInfo.MODAL_STATES.NONE);
+  const [focusedSpacetimeID, setFocusedSpacetimeID] = useState(-1);
   const [userEmails, setUserEmails] = useState([]);
   const [newStudentEmail, setNewStudentEmail] = useState("");
   useEffect(() => {
@@ -581,19 +579,30 @@ function MentorSectionInfo({
               </tbody>
             </table>
           )}
-          {!loaded && <h5>Loading students...</h5>}
+          {!loaded && <LoadingSpinner />}
         </InfoCard>
-        <SectionSpacetime spacetime={spacetime} override={override}>
-          {showModal === MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT && (
-            <SpacetimeEditModal reloadSection={reloadSection} defaultSpacetime={spacetime} closeModal={closeModal} />
-          )}
-          <button
-            className="info-card-edit-btn"
-            onClick={() => setShowModal(MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT)}
-          >
-            <PencilIcon width="1em" height="1em" /> Edit
-          </button>
-        </SectionSpacetime>
+
+        {spacetimes.map(({ override, ...spacetime }) => (
+          <SectionSpacetime key={spacetime.id} spacetime={spacetime} override={override}>
+            {showModal === MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT && focusedSpacetimeID === spacetime.id && (
+              <SpacetimeEditModal
+                key={spacetime.id}
+                reloadSection={reloadSection}
+                defaultSpacetime={spacetime}
+                closeModal={closeModal}
+              />
+            )}
+            <button
+              className="info-card-edit-btn"
+              onClick={() => {
+                setShowModal(MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT);
+                setFocusedSpacetimeID(spacetime.id);
+              }}
+            >
+              <PencilIcon width="1em" height="1em" /> Edit
+            </button>
+          </SectionSpacetime>
+        ))}
         {isCoordinator && (
           <InfoCard title="Meta">
             <button
@@ -635,8 +644,7 @@ MentorSectionInfo.propTypes = {
     })
   ).isRequired,
   loaded: PropTypes.bool.isRequired,
-  spacetime: PropTypes.object.isRequired,
-  override: PropTypes.object,
+  spacetimes: PropTypes.arrayOf(SPACETIME_SHAPE),
   reloadSection: PropTypes.func.isRequired,
   isCoordinator: PropTypes.bool.isRequired,
   mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
@@ -680,7 +688,7 @@ StudentDropper.propTypes = { id: PropTypes.number.isRequired, reloadSection: Pro
 function MentorSectionRoster({ students, loaded }) {
   const [emailsCopied, setEmailsCopied] = useState(false);
   const handleCopyEmails = () => {
-    navigator.clipboard.writeText(students.map(({ email }) => email).join(" ")).then(() => {
+    navigator.clipboard.writeText(students.map(({ email }) => email).join("\n")).then(() => {
       setEmailsCopied(true);
       setTimeout(() => setEmailsCopied(false), 1500);
     });
@@ -710,7 +718,7 @@ function MentorSectionRoster({ students, loaded }) {
           </tbody>
         </table>
       )}
-      {!loaded && <h5>Loading roster...</h5>}
+      {!loaded && <LoadingSpinner />}
     </React.Fragment>
   );
 }

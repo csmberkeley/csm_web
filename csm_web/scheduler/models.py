@@ -239,7 +239,7 @@ class Spacetime(ValidatingModel):
                 + self.duration).time()
 
     def day_number(self):
-        return day_number(self.day_of_week)
+        return day_to_number(self.day_of_week)
 
     def __str__(self):
         formatted_time = self.start_time.strftime("%I:%M %p")
@@ -261,7 +261,7 @@ class Override(ValidatingModel):
         super().clean()
         if self.spacetime == self.overriden_spacetime:
             raise ValidationError("A spacetime cannot override itself")
-        if self.spacetime.day_of_week != self.date.strftime("%a")[:3]:
+        if self.spacetime.day_of_week != self.date.strftime("%A"):
             raise ValidationError("Day of week of spacetime and day of week of date do not match")
 
     def is_expired(self):
