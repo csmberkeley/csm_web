@@ -69,9 +69,14 @@ function StudentSectionInfo({ mentor, spacetimes, override, associatedProfileId 
             <a href={`mailto:${mentor.email}`}>{mentor.email}</a>
           </InfoCard>
         )}
-        {/* TODO: Add back in override to below */}
-        {spacetimes.map(spacetime => (
-          <SectionSpacetime key={spacetime.id} spacetime={spacetime} />
+        {spacetimes.map(({ override, ...spacetime }, index) => (
+          <SectionSpacetime
+            manySpacetimes={spacetimes.length > 1}
+            index={index}
+            key={spacetime.id}
+            spacetime={spacetime}
+            override={override}
+          />
         ))}
         <DropSection profileId={associatedProfileId} />
       </div>

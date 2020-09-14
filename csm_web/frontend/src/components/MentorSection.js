@@ -297,7 +297,7 @@ class SpacetimeEditModal extends React.Component {
       time: timeString.slice(0, sliceIndex),
       isPermanent: false,
       changeDate: "",
-      mode: "inperson",
+      mode: "virtual",
       showSaveSpinner: false
     };
     this.handleChange = this.handleChange.bind(this);
@@ -348,7 +348,8 @@ class SpacetimeEditModal extends React.Component {
       <Modal className="spacetime-edit-modal" closeModal={this.props.closeModal}>
         <form className="csm-form" id="spacetime-edit-form" onSubmit={this.handleSubmit}>
           <h4>Change Time and Location</h4>
-          <div className="mode-selection">
+          {/* TODO: Uncomment this when Berkeley resumes in-person instruction (if I graduate online I'm gonna be real sad)
+						<div className="mode-selection">
             <label>Section is</label>
             <div className="mode-selection-options">
               <label>
@@ -372,7 +373,7 @@ class SpacetimeEditModal extends React.Component {
                 Virtual
               </label>
             </div>
-          </div>
+					</div> */}
           <label>
             {mode === "inperson" ? "Location" : "Video Call Link"}
             <input
@@ -582,8 +583,14 @@ function MentorSectionInfo({
           {!loaded && <LoadingSpinner />}
         </InfoCard>
 
-        {spacetimes.map(({ override, ...spacetime }) => (
-          <SectionSpacetime key={spacetime.id} spacetime={spacetime} override={override}>
+        {spacetimes.map(({ override, ...spacetime }, index) => (
+          <SectionSpacetime
+            manySpacetimes={spacetimes.length > 1}
+            index={index}
+            key={spacetime.id}
+            spacetime={spacetime}
+            override={override}
+          >
             {showModal === MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT && focusedSpacetimeID === spacetime.id && (
               <SpacetimeEditModal
                 key={spacetime.id}
