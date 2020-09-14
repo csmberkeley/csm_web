@@ -87,21 +87,7 @@ class CourseViewSet(*viewset_with('list')):
                 time_key=ArrayAgg("spacetimes__start_time", ordering="spacetimes__start_time", distinct=True),
             )
             .order_by("day_key", "time_key")
-        )
-        """
-        Use list to force evaluation of the QuerySet so that the below for loop doesn't trigger a DB query on each iteration
-
-        Further explanation: 
-        Slicing an unevaluated QuerySet returns another unevaluated QuerySet (except when the step parameter is used but that's not relevant here).
-        So if we did *not* call list on the below line, then in the for loop below, each slice of sections (i.e. sections[ ... : ... ]) would be an unevaluated
-        QuerySet, which would then be evaluated (by way of performing a database query) when passed to SectionSerializer. Thus we'd make up to 7 (one for each day of the week)
-        *separate database queries* each time this endpoint was hit. This would be terrible for performance, so instead we call list, which evaluates the entire QuerySet with
-        a single database query, and then the slices in the for loop are just simple native Python list slices.
-        """
-        sections = list(
-            sections.prefetch_related(
-                Prefetch("spacetimes", queryset=Spacetime.objects.order_by("day_of_week", "start_time"))
-            )
+            .prefetch_related(Prefetch("spacetimes", queryset=Spacetime.objects.order_by("day_of_week", "start_time")))
             .select_related("mentor__user")
             .annotate(num_students_annotation=Count("students", filter=Q(students__active=True), distinct=True))
         )

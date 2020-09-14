@@ -16,19 +16,29 @@ def get_profile_role(profile):
             return role.value
 
 
-def make_omittable(field_class, omit_key, *args, predicate=lambda _: True, **kwargs):
+def make_omittable(field_class, omit_key, *args, predicate=None, **kwargs):
     """
     Behaves exactly as if the field were defined directly by calling `field_class(*args, **kwargs)`,
-    except that if `omit_key` is present in the context when the field is serialized and predicate returns True, 
-    the value is omitted and `None` is returned instead. 
+    except that if `omit_key` is present in the context when the field is serialized and predicate returns True,
+    the value is omitted and `None` is returned instead.
 
     Useful for when you want to leave out one or two fields in one view, while including them in
     another view, without having to go through the trouble of writing two completely separate serializers.
     This is a marked improvement over using a `SerializerMethodField` because this approach still allows
     writing to the field to work without any additional machinery.
     """
+    predicate_provided = predicate is not None
+    predicate = predicate or (lambda _: True)
 
     class OmittableField(field_class):
+        def get_attribute(self, instance):
+            """
+            This is an important performance optimization that prevents us from hitting the DB for an
+            unconditionally omitted field, as by the time to_representation is called, the DB has already been queried
+            (because `value` has to come from *somewhere*).
+            """
+            return None if self.context.get(omit_key) and not predicate_provided else super().get_attribute(instance)
+
         def to_representation(self, value):
             return None if self.context.get(omit_key) and predicate(value) else super().to_representation(value)
 
@@ -56,16 +66,10 @@ class SpacetimeSerializer(serializers.ModelSerializer):
                               predicate=lambda location: location.startswith('http'))
     override = make_omittable(OverrideReadOnlySerializer, 'omit_overrides')
 
-    # def get_override(self, obj):
-    #    return OverrideReadOnlySerializer(obj.override).data if not self.context.get('omit_overrides') and obj.override else None
-
     def get_time(self, obj):
         if obj.start_time.strftime("%p") != obj.end_time.strftime("%p"):
             return f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M %p')}-{obj.end_time.strftime('%-I:%M %p')}"
         return f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M')}-{obj.end_time.strftime('%-I:%M %p')}"
-
-    # def get_location(self, obj):
-    #    return obj.location if not (self.context.get('omit_spacetime_links') and obj.location.startswith('http')) else 'Online'
 
     class Meta:
         model = Spacetime
