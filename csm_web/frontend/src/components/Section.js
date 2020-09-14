@@ -110,7 +110,7 @@ SectionSpacetime.propTypes = {
   override: PropTypes.shape({ spacetime: SPACETIME_SHAPE.isRequired, date: PropTypes.string.isRequired }),
   children: PropTypes.node,
   manySpacetimes: PropTypes.bool.isRequired,
-  index: PropTypes.number.isRequired
+  index: PropTypes.number.isRequired // 0-indexed in code, displayed 1-indexed to user
 };
 
 export function InfoCard({ title, children, showTitle = true }) {
