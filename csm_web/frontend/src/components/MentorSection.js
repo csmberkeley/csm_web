@@ -36,17 +36,17 @@ export default function MentorSection({
             attendances.map(attendance => ({ ...attendance, student: { name, id } }))
           )
           .reverse(),
-        attendance => attendance.weekStart
+        attendance => attendance.date
       );
       setState({ students, attendances, loaded: true });
     });
   }, [id]);
 
-  const updateAttendance = (updatedWeek, updatedWeekAttendances) => {
+  const updateAttendance = (updatedDate, updatedDateAttendances) => {
     const updatedAttendances = Object.fromEntries(
-      Object.entries(attendances).map(([weekStart, weekAttendances]) => [
-        weekStart,
-        weekStart == updatedWeek ? [...updatedWeekAttendances] : weekAttendances
+      Object.entries(attendances).map(([date, dateAttendances]) => [
+        date,
+        date == updatedDate ? [...updatedDateAttendances] : dateAttendances
       ])
     );
     setState({ students, loaded, attendances: updatedAttendances });
@@ -150,7 +150,7 @@ class MentorSectionAttendance extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      selectedWeek: null,
+      selectedDate: null,
       stagedAttendances: null,
       showAttendanceSaveSuccess: false,
       showSaveSpinner: false
@@ -179,7 +179,7 @@ class MentorSectionAttendance extends React.Component {
   }
 
   handleSaveAttendance() {
-    const { stagedAttendances, selectedWeek } = this.state;
+    const { stagedAttendances, selectedDate } = this.state;
     if (!stagedAttendances) {
       return;
     }
@@ -190,7 +190,7 @@ class MentorSectionAttendance extends React.Component {
         fetchWithMethod(`students/${studentId}/attendances/`, HTTP_METHODS.PUT, { id, presence })
       )
     ).then(() => {
-      this.props.updateAttendance(selectedWeek, stagedAttendances);
+      this.props.updateAttendance(selectedDate, stagedAttendances);
       this.setState({ showAttendanceSaveSuccess: true, showSaveSpinner: false });
       setTimeout(() => this.setState({ showAttendanceSaveSuccess: false }), 1500);
     });
@@ -198,8 +198,8 @@ class MentorSectionAttendance extends React.Component {
 
   handleMarkAllPresent() {
     if (!this.state.stagedAttendances) {
-      const [selectedWeek, stagedAttendances] = Object.entries(this.props.attendances)[0];
-      this.setState({ selectedWeek, stagedAttendances });
+      const [selectedDate, stagedAttendances] = Object.entries(this.props.attendances)[0];
+      this.setState({ selectedDate, stagedAttendances });
     }
     this.setState(prevState => ({
       stagedAttendances: prevState.stagedAttendances.map(attendance => ({ ...attendance, presence: "PR" }))
@@ -208,8 +208,8 @@ class MentorSectionAttendance extends React.Component {
 
   render() {
     const { attendances, loaded } = this.props;
-    const selectedWeek = this.state.selectedWeek || (loaded && Object.keys(attendances)[0]);
-    const stagedAttendances = this.state.stagedAttendances || attendances[selectedWeek];
+    const selectedDate = this.state.selectedDate || (loaded && Object.keys(attendances)[0]);
+    const stagedAttendances = this.state.stagedAttendances || attendances[selectedDate];
     const { showAttendanceSaveSuccess, showSaveSpinner } = this.state;
     return (
       <React.Fragment>
@@ -220,21 +220,19 @@ class MentorSectionAttendance extends React.Component {
           <React.Fragment>
             <div id="mentor-attendance">
               <div id="attendance-date-tabs-container">
-                {Object.keys(attendances).map(weekStart => (
+                {Object.keys(attendances).map(date => (
                   <div
-                    key={weekStart}
-                    className={weekStart === selectedWeek ? "active" : ""}
-                    onClick={() =>
-                      this.setState({ selectedWeek: weekStart, stagedAttendances: attendances[weekStart] })
-                    }
+                    key={date}
+                    className={date === selectedDate ? "active" : ""}
+                    onClick={() => this.setState({ selectedDate: date, stagedAttendances: attendances[date] })}
                   >
-                    {formatDate(weekStart)}
+                    {formatDate(date)}
                   </div>
                 ))}
               </div>
               <table id="mentor-attendance-table">
                 <tbody>
-                  {selectedWeek &&
+                  {selectedDate &&
                     stagedAttendances.map(({ id, student, presence }) => (
                       <tr key={id}>
                         <td>{student.name}</td>
