@@ -148,16 +148,16 @@ function StudentSectionAttendance({ associatedProfileId }) {
     <table id="attendance-table" className="standalone-table">
       <thead>
         <tr>
-          <th>Week</th>
+          <th>Date</th>
           <th>Status</th>
         </tr>
       </thead>
       <tbody>
-        {attendances.map(({ presence, weekStart }) => {
+        {attendances.map(({ presence, date }) => {
           const [label, cssSuffix] = ATTENDANCE_LABELS[presence];
           return (
-            <tr key={weekStart}>
-              <td>{weekStart}</td>
+            <tr key={date}>
+              <td>{date}</td>
               <td className="status">
                 <div style={{ backgroundColor: `var(--csm-attendance-${cssSuffix})` }}>{label}</div>
               </td>
