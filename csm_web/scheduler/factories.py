@@ -17,7 +17,8 @@ from .models import (
     Override,
     Coordinator,
     DayOfWeekField,
-    day_to_number
+    day_to_number,
+    week_bounds
 )
 
 COMPSCI_WORDS = ('Algorithms', 'Systems', 'Distributed', 'Efficient', 'Tractable', 'Programming',
@@ -152,19 +153,19 @@ class OverrideFactory(factory.django.DjangoModelFactory):
 
 def create_attendances_for(student):
     today = timezone.datetime.today().date()
-    current_date = student.section.course.enrollment_start.date()
-    for spacetime in student.section.spacetimes.all():
-        while DayOfWeekField.DAYS[current_date.weekday()] != spacetime.day_of_week:
-            current_date += timedelta(days=1)
-        existing_attendance_dates = set(Attendance.objects.filter(student=student).values_list('date', flat=True))
-        while current_date < student.section.course.valid_until:
-            if current_date not in existing_attendance_dates:
+    current_date = week_bounds(student.section.course.section_start)[0]
+    spacetime_days = [day_to_number(day_of_week)
+                      for day_of_week in student.section.spacetimes.values_list("day_of_week", flat=True)]
+    existing_attendance_dates = set(student.attendance_set.values_list("date", flat=True))
+    while current_date < student.section.course.valid_until:
+        for spacetime_day in spacetime_days:
+            if (date := (current_date + timedelta(days=spacetime_day))) not in existing_attendance_dates:
                 if current_date < today:
-                    AttendanceFactory.create(student=student, date=current_date)
+                    AttendanceFactory.create(student=student, date=date)
                 else:
                     # Students cannot have attended or not attended sections that haven't happened yet
-                    AttendanceFactory.create(student=student, date=current_date, presence="")
-            current_date += timedelta(weeks=1)
+                    AttendanceFactory.create(student=student, date=date, presence="")
+        current_date += timedelta(weeks=1)
 
 
 def demoify_user(user, username):
