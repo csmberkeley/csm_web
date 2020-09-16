@@ -142,18 +142,18 @@ class Student(Profile):
         and no attendance for this week already exists.
         """
         now = timezone.now()
-        this_week = week_bounds(now.date())
+        week_start = week_bounds(now.date())[0]
         for spacetime in self.section.spacetimes.all():
             section_day_num = day_to_number(spacetime.day_of_week)
             section_already_held = section_day_num < now.weekday() or (
                 section_day_num == now.weekday() and spacetime.start_time < now.time())
             course = self.section.course
             if self.active and course.section_start <= now.date() < course.valid_until\
-                    and not section_already_held and not self.attendance_set.filter(date__range=this_week).exists():
+                    and not section_already_held and not self.attendance_set.filter(date=week_start+datetime.timedelta(days=section_day_num)).exists():
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
                     logger.info(
                         f"<Attendance> Attendance automatically created for student {self.user.email} in course {course.name} for date {now.date()}")
-                Attendance.objects.create(student=self, date=this_week[0] + datetime.timedelta(days=section_day_num))
+                Attendance.objects.create(student=self, date=week_start + datetime.timedelta(days=section_day_num))
 
     class Meta:
         unique_together = ("user", "section")
