@@ -78,7 +78,7 @@ class CourseTest(TestCase):
 
 class StudentAttendanceTest(TestCase):
     """
-    This test won't work on Sundays
+    This test won't work on Mondays
     """
 
     def setUp(self):
@@ -87,32 +87,42 @@ class StudentAttendanceTest(TestCase):
                                            timedelta(weeks=3), section_start=(self.now - timedelta(days=self.now.weekday())).date())
         self.user = UserFactory.create()
 
+    def offset_by_days(self, k):
+        return DayOfWeekField.DAYS[(self.now.weekday() + k) % 7]
+
     def test_section_later_in_week(self):
         section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
-            day_of_week=DayOfWeekField.DAYS[self.now.weekday() + 1])])
+            day_of_week=self.offset_by_days(1))])
         student = Student.objects.create(section=section, user=self.user)
         self.assertEqual(student.attendance_set.count(), 1)
-        self.assertEqual(week_bounds(timezone.now().date()), week_bounds(student.attendance_set.first().date))
+        self.assertEqual(week_bounds(self.now.date()), week_bounds(student.attendance_set.first().date))
+
+    def test_section_both_later_in_week(self):
+        section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
+            day_of_week=self.offset_by_days(1))])
+        student = Student.objects.create(section=section, user=self.user)
+        self.assertEqual(student.attendance_set.count(), 1)
+        self.assertEqual(week_bounds(self.now.date()), week_bounds(student.attendance_set.first().date))
 
     def test_section_earlier_in_week(self):
         section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
-            day_of_week=DayOfWeekField.DAYS[self.now.weekday() - 1])])
+            day_of_week=self.offset_by_days(-1))])
         student = Student.objects.create(section=section, user=self.user)
         self.assertFalse(student.attendance_set.exists())
 
     def test_attendance_already_exists(self):
         section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
-            day_of_week=DayOfWeekField.DAYS[self.now.weekday() + 1])])
+            day_of_week=self.offset_by_days(1))])
         student = Student.objects.create(section=section, user=self.user)
         self.assertEqual(student.attendance_set.count(), 1)
         new_section_later = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
-            day_of_week=DayOfWeekField.DAYS[self.now.weekday() + 2])])
+            day_of_week=self.offset_by_days(2))])
         student.section = new_section_later
         student.save()
         student.refresh_from_db()
         self.assertEqual(student.attendance_set.count(), 1)
         new_section_earlier = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
-            day_of_week=DayOfWeekField.DAYS[self.now.weekday() - 1])])
+            day_of_week=self.offset_by_days(-1))])
         student.section = new_section_earlier
         student.save()
         self.assertEqual(student.attendance_set.count(), 1)
@@ -122,6 +132,6 @@ class StudentAttendanceTest(TestCase):
         self.course.valid_until = self.now - timedelta(days=1)
         self.course.save()
         section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
-            day_of_week=DayOfWeekField.DAYS[self.now.weekday() + 1])])
+            day_of_week=self.offset_by_days(1))])
         student = Student.objects.create(section=section, user=self.user)
         self.assertFalse(student.attendance_set.exists())
