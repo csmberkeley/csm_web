@@ -99,10 +99,11 @@ class StudentAttendanceTest(TestCase):
 
     def test_section_both_later_in_week(self):
         section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
-            day_of_week=self.offset_by_days(1))])
+            day_of_week=self.offset_by_days(1)), SpacetimeFactory.create(day_of_week=self.offset_by_days(2))])
         student = Student.objects.create(section=section, user=self.user)
-        self.assertEqual(student.attendance_set.count(), 1)
-        self.assertEqual(week_bounds(self.now.date()), week_bounds(student.attendance_set.first().date))
+        self.assertEqual(student.attendance_set.count(), 2)
+        self.assertEqual(student.attendance_set.first().date, (self.now + timedelta(days=1)).date())
+        self.assertEqual(student.attendance_set.last().date, (self.now + timedelta(days=2)).date())
 
     def test_section_earlier_in_week(self):
         section = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
@@ -115,16 +116,11 @@ class StudentAttendanceTest(TestCase):
             day_of_week=self.offset_by_days(1))])
         student = Student.objects.create(section=section, user=self.user)
         self.assertEqual(student.attendance_set.count(), 1)
-        new_section_later = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
-            day_of_week=self.offset_by_days(2))])
-        student.section = new_section_later
+        new_section_same_day = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
+            day_of_week=section.spacetimes.first().day_of_week)])
+        student.section = new_section_same_day
         student.save()
         student.refresh_from_db()
-        self.assertEqual(student.attendance_set.count(), 1)
-        new_section_earlier = SectionFactory.create(course=self.course, spacetimes=[SpacetimeFactory.create(
-            day_of_week=self.offset_by_days(-1))])
-        student.section = new_section_earlier
-        student.save()
         self.assertEqual(student.attendance_set.count(), 1)
 
     def test_course_ended(self):
