@@ -22,11 +22,12 @@ class ProfileListTest(APITestCase):
     section_id: <section pk>
     section_spacetimes: [{
         start_time: "13:00:00" or other 24-hr string
-        day_of_week: "Mon"
-        time: "Mon 1:00-2:00 PM" or smth
+        day_of_week: "Monday"
+        time: "Monday 1:00-2:00 PM" or smth
         duration: "01:00:00"
         id: <spacetime pk>
-        location: "room number"
+        location: "room number",
+        override: null
     }, ...]
     course: "CS61C" or whatever
     course_id: <course pk>
@@ -64,7 +65,8 @@ class ProfileListTest(APITestCase):
                                         'day_of_week': 'Monday',
                                         'duration': '01:00:00',
                                         'time': 'Monday 1:00-2:00 PM',
-                                        'location': 'Soda 1337'}],
+                                        'location': 'Soda 1337',
+                                        'override': None}],
                 'course': 'CS61C',
                 'course_id': section.course.id,
                 'course_title': 'Machine Structures',
@@ -128,7 +130,8 @@ class ProfileListTest(APITestCase):
                     'duration': '01:30:00',
                     # IMPORTANT: note the AM here to avoid ambiguity
                     'time': 'Tuesday 11:00 AM-12:30 PM',
-                    'location': 'Cory 7'
+                    'location': 'Cory 7',
+                    'override': None
                 },
                 {
                     'id': mentor_section.spacetimes.all()[1].pk,
@@ -136,7 +139,8 @@ class ProfileListTest(APITestCase):
                     'day_of_week': 'Thursday',
                     'duration': '01:30:00',
                     'time': 'Thursday 11:00 AM-12:30 PM',
-                    'location': 'Cory 11'
+                    'location': 'Cory 11',
+                    'override': None
                 },
             ],
             'course': 'CS70',
