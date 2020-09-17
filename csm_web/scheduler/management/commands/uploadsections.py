@@ -76,8 +76,7 @@ class Command(BaseCommand):
             if row['day2'] and row['time2']:
                 spacetimes.append(Spacetime.objects.create(location='Online', day_of_week=row['day2'], start_time=self.parse_time(
                     row['time2']), duration=self.SECTION_DURATIONS[course.name], section=None))
-            section = Section(course=course, capacity=int(row['capacity']),
-                              mentor=mentor, description=row['description'])
-            section.save(disable_validation=True)
+            section = Section.objects.create(course=course, capacity=int(row['capacity']),
+                                             mentor=mentor, description=row['description'])
             section.spacetimes.set(spacetimes)
             section.save()

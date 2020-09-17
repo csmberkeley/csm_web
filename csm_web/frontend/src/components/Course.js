@@ -278,7 +278,7 @@ class CreateSectionModal extends React.Component {
   }
 
   makeSpacetime() {
-    return { day: "", time: "", location: "" };
+    return { dayOfWeek: "", startTime: "", location: "" };
   }
 
   componentDidMount() {
@@ -291,9 +291,11 @@ class CreateSectionModal extends React.Component {
   }
 
   handleChange({ target: { name, value } }) {
-    if (name.startsWith("location") || name.startsWith("time") || name.startsWith("day")) {
+    if (name.startsWith("location") || name.startsWith("startTime") || name.startsWith("dayOfWeek")) {
       const { spacetimes } = this.state;
-      let [name, index] = name.split("|");
+      // Funny JavaScript scoping workaround (let [name, index] = name.split("|") doesn't work)
+      let index;
+      [name, index] = name.split("|");
       index = Number(index);
       this.setState({
         spacetimes: [
@@ -309,9 +311,10 @@ class CreateSectionModal extends React.Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    const { day: dayOfWeek, time: startTime, location, description, capacity, mentorEmail } = this.state;
+    // eslint-disable-next-line no-unused-vars
+    const { userEmails: _, ...data } = this.state;
     const { courseId, reloadSections, closeModal } = this.props;
-    const data = { spacetime: { dayOfWeek, startTime, location }, description, capacity, mentorEmail, courseId };
+    data.courseId = courseId;
     //TODO: Handle API Failure
     fetchWithMethod("/sections", HTTP_METHODS.POST, data).then(() => {
       closeModal();
@@ -364,7 +367,7 @@ class CreateSectionModal extends React.Component {
                 <input name="description" type="text" value={description} onChange={this.handleChange} />
               </label>
             </div>
-            {spacetimes.map(({ day, time, location }, index) => (
+            {spacetimes.map(({ dayOfWeek, startTime, location }, index) => (
               <React.Fragment key={index}>
                 <h4 className="spacetime-fields-header">Weekly occurence {index + 1}</h4>
                 <div className="spacetime-fields">
@@ -382,17 +385,17 @@ class CreateSectionModal extends React.Component {
                   </label>
                   <label>
                     Day
-                    <select onChange={this.handleChange} name={`day|${index}`} value={day} required>
-                      {[["", "---"]].concat(Object.entries(DAYS_OF_WEEK)).map(([value, label]) => (
-                        <option key={value} value={value} disabled={!value}>
-                          {label}
+                    <select onChange={this.handleChange} name={`dayOfWeek|${index}`} value={dayOfWeek} required>
+                      {["---"].concat(DAYS_OF_WEEK).map(day => (
+                        <option key={day} value={day === "---" ? "" : day} disabled={day === "---"}>
+                          {day}
                         </option>
                       ))}
                     </select>
                   </label>
                   <label>
                     Time
-                    <TimeInput onChange={this.handleChange} required name={`time|${index}`} value={time} />
+                    <TimeInput onChange={this.handleChange} required name={`startTime|${index}`} value={startTime} />
                   </label>
                   {index === spacetimes.length - 1 && (
                     <button className="csm-btn" id="add-occurence-btn" onClick={this.appendSpacetime}>

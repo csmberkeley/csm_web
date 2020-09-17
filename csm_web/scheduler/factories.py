@@ -120,8 +120,7 @@ class SectionFactory(factory.django.DjangoModelFactory):
                 spacetime.save()
         else:
             spacetimes = kwargs.pop('spacetimes')
-        obj = model_class(*args, **kwargs)
-        obj.save(disable_validation=True)
+        obj = model_class.objects.create(*args, **kwargs)
         obj.spacetimes.set(spacetimes)
         obj.save()
         return obj

@@ -125,17 +125,29 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
     def create(self, request):
         course = get_object_or_error(Course.objects.all(
         ), pk=request.data['course_id'], coordinator__user=self.request.user)
-        mentor_user, _ = User.objects.get_or_create(
-            email=self.request.data['mentor_email'], username=self.request.data['mentor_email'].split('@')[0])
-        spacetime = SpacetimeSerializer(
-            data={**self.request.data['spacetime'], 'duration': str(course.section_set.first().spacetime.duration)})
-        if spacetime.is_valid():
-            spacetime = spacetime.save()
-        else:
-            return Response({'error': f"Spacetime was invalid {spacetime.errors}", status: status.HTTP_422_UNPROCESSABLE_ENTITY})
-        mentor = Mentor.objects.create(user=mentor_user)
-        Section.objects.create(spacetime=spacetime, mentor=mentor,
-                               description=self.request.data['description'], capacity=self.request.data['capacity'], course=course)
+        """
+        We have an atomic block here because several different objects must be created in the course of
+        creating a single Section. If any of these were to fail, whatever objects we had already created would
+        be left 'dangling' so-to-speak, not being attached to other entities in a way consistent with the rest of
+        the application's logic. Therefore the atomic block - if any failures are encountered, any objects created
+        within the atomic block before the point of failure are rolled back.
+        """
+        with transaction.atomic():
+            mentor_user, _ = User.objects.get_or_create(
+                email=self.request.data['mentor_email'], username=self.request.data['mentor_email'].split('@')[0])
+            duration = course.section_set.first().spacetimes.first().duration
+            spacetime_serializers = [SpacetimeSerializer(
+                data={**spacetime, 'duration': str(duration)}) for spacetime in self.request.data['spacetimes']]
+            for spacetime_serializer in spacetime_serializers:
+                # Be extra defensive and validate them all first before saving any
+                if not spacetime_serializer.is_valid():
+                    return Response({'error': f"Spacetime was invalid {spacetime_serializer.errors}"}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            spacetimes = [spacetime_serializer.save() for spacetime_serializer in spacetime_serializers]
+            mentor = Mentor.objects.create(user=mentor_user)
+            section = Section.objects.create(mentor=mentor, description=self.request.data['description'],
+                                             capacity=self.request.data['capacity'], course=course)
+            section.spacetimes.set(spacetimes)
+            section.save()
         return Response(status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk=None):
