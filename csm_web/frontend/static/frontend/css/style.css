@@ -129,7 +129,9 @@ header {
 }
 
 .modal-close-x {
+	position: sticky;
 	display: flex;
+	top: -10px;
 	margin-top: -10px;
 }
 
