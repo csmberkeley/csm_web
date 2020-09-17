@@ -64,7 +64,7 @@ class SpacetimeSerializer(serializers.ModelSerializer):
     time = serializers.SerializerMethodField()
     location = make_omittable(serializers.CharField, 'omit_spacetime_links',
                               predicate=lambda location: location.startswith('http'))
-    override = make_omittable(OverrideReadOnlySerializer, 'omit_overrides')
+    override = make_omittable(OverrideReadOnlySerializer, 'omit_overrides', read_only=True)
 
     def get_time(self, obj):
         if obj.start_time.strftime("%p") != obj.end_time.strftime("%p"):

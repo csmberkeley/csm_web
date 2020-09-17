@@ -49,8 +49,7 @@ class ValidatingModel(models.Model):
     """
 
     def save(self, *args, **kwargs):
-        if not kwargs.pop('disable_validation', False):
-            self.full_clean()
+        self.full_clean()
         super().save(*args, **kwargs)
 
     class Meta:
@@ -208,7 +207,12 @@ class Section(ValidatingModel):
 
     def clean(self):
         super().clean()
-        if not self.spacetimes.exists():
+        """
+        Checking self.pk is checking if this is a creation (as opposed to an update)
+        We can't possibly have spacetimes at creation time (because it's a foreign-key field),
+        so we only validate this on updates
+        """
+        if self.pk and not self.spacetimes.exists():
             raise ValidationError("Section must have at least one Spacetime")
 
     def __str__(self):
