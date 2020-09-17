@@ -7,7 +7,7 @@ If you're unfamiliar with CSM and/or its web applications, check out [this repos
 ### Requirements
 We don't know what specific minimum version you would need for any of the following software, but the most recent version of any of the below should work.
 
-* Python 3.7
+* Python 3.8
   * [virtualenv](https://packaging.python.org/guides/installing-using-pip-and-virtualenv/) (`pip install virtualenv`)
   * [autopep8](https://pypi.org/project/autopep8/) (`pip install autopep8`)
 * [npm](https://www.npmjs.com/get-npm)
@@ -78,7 +78,7 @@ user.save()
 #### OSX: error on running `pip`
 Try replacing `pip` with `pip3` instead.
 
-#### OAuth stuff when trying to sign in locally
+#### OAuth errors when trying to sign in locally
 ```
 Error 401: invalid_client
 The OAuth client was not found.
@@ -95,5 +95,5 @@ could not connect to server: Connection refused
         Is the server running on host "localhost" (127.0.0.1) and accepting                                 
         TCP/IP connections on port 5432?                                                                    
 ```
-Your postgres server is likely not running. On a mac (which is the only platform we've odne local
+Your postgres server is likely not running. On a mac (which is the only platform we've done local
 testing on), run `brew services start postgres` before invoking `runserver` again.
