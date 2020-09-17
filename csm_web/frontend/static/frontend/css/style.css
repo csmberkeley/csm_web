@@ -28,6 +28,7 @@ body {
 	--csm-student: #ffab2e;
 	--csm-danger: #ff7272;
 	--csm-danger-darkened: #eb6060;
+	--csm-neutral: #c0c0c0;
 }
 
 /* Header */
@@ -464,22 +465,52 @@ header {
 }
 
 #create-section-form {
+	padding: unset;
+}
+
+#create-section-form #non-spacetime-fields,
+#create-section-form .spacetime-fields {
 	display: grid;
 	padding-left: 0;
-	justify-content: space-evenly;
 	grid-template-columns: max-content max-content;
 	grid-template-areas:
 		". ."
-		". ."
-		". ."
-		"submit submit";
+		"last last";
+	grid-gap: 20px;
 }
 
-#create-section-form input {
+#create-section-form-contents > .spacetime-fields-header {
+	margin: 0 0 10px 0;
+	color: #646464;
+	min-width: 100%;
+	border-bottom: 2px solid #646464;
+}
+
+#create-section-form-contents {
+	margin: auto;
+	max-width: max-content;
+}
+
+#create-section-form-contents > * {
+	margin-bottom: 20px;
+}
+
+#create-section-form label[name="description"],
+#create-section-form label[name="time"] {
+	grid-area: last;
 }
 
 #create-section-form input[type="submit"] {
 	grid-area: submit;
+}
+
+#create-section-form #add-occurence-btn {
+	border: none;
+	background-color: var(--csm-neutral);
+	cursor: pointer;
+	border-radius: 4px;
+	padding: 11.5px 10px;
+	align-self: end;
 }
 
 /* login */
@@ -859,7 +890,7 @@ table tbody tr:last-child > td {
 }
 
 .should-ban-prompt .btn-group button.no {
-	background-color: #c0c0c0;
+	background-color: var(--csm-neutral);
 }
 
 .should-ban-prompt .btn-group button.no:hover {
