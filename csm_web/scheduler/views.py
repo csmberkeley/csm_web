@@ -12,7 +12,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor
+from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor, Coordinator
 from .serializers import (
     CourseSerializer,
     SectionSerializer,
@@ -305,4 +305,6 @@ class UserViewSet(*viewset_with('list')):
     queryset = User.objects.all()
 
     def list(self, request):
-        return Response(self.queryset.values_list('email', flat=True))
+        if not (request.user.is_superuser or Coordinator.objects.filter(user=request.user).exists()):
+            raise PermissionDenied("Only coordinators and superusers may view the user email list")
+        return Response(self.queryset.order_by('email').values_list('email', flat=True))
