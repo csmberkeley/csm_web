@@ -8,7 +8,7 @@
     "build:js": "webpack --mode production ./csm_web/frontend/src/index.js --output ./csm_web/frontend/static/frontend/main.js",
     "build:css": "uglifycss ./csm_web/frontend/static/frontend/css/style.css --output ./csm_web/frontend/static/frontend/css/style.min.css",
     "build": "npm run build:js && npm run build:css",
-    "watch": "nodemon -w ./csm_web/frontend/src/components -w ./csm_web/frontend/src/utils --exec 'npm run dev'"
+    "watch": "nodemon -d 3 -w ./csm_web/frontend/src/components -w ./csm_web/frontend/src/utils --exec 'npm run dev'"
   },
   "heroku-run-build-script": true,
   "repository": {
