@@ -119,7 +119,7 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
 
     def get_queryset(self):
         banned_from = self.request.user.student_set.filter(banned=True).values_list('section__course__id', flat=True)
-        return Section.objects.exclude(course__pk__in=banned_from).filter(
+        return Section.objects.exclude(course__pk__in=banned_from).prefetch_related(Prefetch("spacetimes", queryset=Spacetime.objects.order_by("day_of_week", "start_time"))).filter(
             Q(mentor__user=self.request.user) | Q(students__user=self.request.user) | Q(course__coordinator__user=self.request.user)).distinct()
 
     def create(self, request):
@@ -168,7 +168,7 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
     def students(self, request, pk=None):
         if request.method == 'GET':
             section = get_object_or_error(self.get_queryset(), pk=pk)
-            return Response(StudentSerializer(section.students.filter(active=True), many=True).data)
+            return Response(StudentSerializer(section.students.select_related("user").prefetch_related(Prefetch("attendance_set", queryset=Attendance.objects.order_by("date"))).filter(active=True), many=True).data)
         # PUT
         with transaction.atomic():
             """
