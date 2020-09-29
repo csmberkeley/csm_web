@@ -31,11 +31,9 @@ export default function MentorSection({
     fetchJSON(`/sections/${id}/students/`).then(data => {
       const students = data.map(({ name, email, id }) => ({ name, email, id }));
       const attendances = groupBy(
-        data
-          .flatMap(({ name, id, attendances }) =>
-            attendances.map(attendance => ({ ...attendance, student: { name, id } }))
-          )
-          .reverse(),
+        data.flatMap(({ name, id, attendances }) =>
+          attendances.map(attendance => ({ ...attendance, student: { name, id } }))
+        ),
         attendance => attendance.date
       );
       setState({ students, attendances, loaded: true });
@@ -140,6 +138,16 @@ function formatDate(dateString) {
   return `${MONTH_NUMBERS[month]}/${day}`;
 }
 
+function dateSort(date1, date2) {
+  const [month1, day1] = formatDate(date1)
+    .split("/")
+    .map(part => Number(part));
+  const [month2, day2] = formatDate(date2)
+    .split("/")
+    .map(part => Number(part));
+  return month2 - month1 || day2 - day1;
+}
+
 class MentorSectionAttendance extends React.Component {
   static propTypes = {
     loaded: PropTypes.bool.isRequired,
@@ -220,15 +228,17 @@ class MentorSectionAttendance extends React.Component {
           <React.Fragment>
             <div id="mentor-attendance">
               <div id="attendance-date-tabs-container">
-                {Object.keys(attendances).map(date => (
-                  <div
-                    key={date}
-                    className={date === selectedDate ? "active" : ""}
-                    onClick={() => this.setState({ selectedDate: date, stagedAttendances: attendances[date] })}
-                  >
-                    {formatDate(date)}
-                  </div>
-                ))}
+                {Object.keys(attendances)
+                  .sort(dateSort)
+                  .map(date => (
+                    <div
+                      key={date}
+                      className={date === selectedDate ? "active" : ""}
+                      onClick={() => this.setState({ selectedDate: date, stagedAttendances: attendances[date] })}
+                    >
+                      {formatDate(date)}
+                    </div>
+                  ))}
               </div>
               <table id="mentor-attendance-table">
                 <tbody>
