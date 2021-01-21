@@ -21,6 +21,11 @@ from .models import (
     week_bounds
 )
 
+
+def evaluate_faker(faker):
+    return faker.evaluate(None, None, {'locale': None})
+
+
 COMPSCI_WORDS = ('Algorithms', 'Systems', 'Distributed', 'Efficient', 'Tractable', 'Programming',
                  'Languages', 'Machine Learning', 'AI', 'Blockchain', 'Parallel', 'Architecture')
 
@@ -33,29 +38,29 @@ class CourseFactory(factory.django.DjangoModelFactory):
     valid_until = factory.Faker("date_between", start_date="+5w", end_date="+18w")
     enrollment_start = factory.LazyAttribute(
         lambda o: timezone.make_aware(
-            factory.Faker(
+            evaluate_faker(factory.Faker(
                 "date_time_between_dates",
                 datetime_start=timezone.now() - timedelta(weeks=3),
                 datetime_end=timezone.now() - timedelta(weeks=2),
-            ).generate({})
+            ))
         )
     )
     section_start = factory.LazyAttribute(
         lambda o: timezone.make_aware(
-            factory.Faker(
+            evaluate_faker(factory.Faker(
                 "date_time_between_dates",
                 datetime_start=o.enrollment_start + timedelta(weeks=1),
                 datetime_end=o.enrollment_start + timedelta(weeks=3),
-            ).generate({})
+            ))
         )
     )
     enrollment_end = factory.LazyAttribute(
         lambda o: timezone.make_aware(
-            factory.Faker(
+            evaluate_faker(factory.Faker(
                 "date_time_between_dates",
                 datetime_start=timezone.now() + timedelta(weeks=2),
                 datetime_end=o.valid_until,
-            ).generate({})
+            ))
         )
     )
     permitted_absences = factory.LazyFunction(lambda: random.randint(1, 4))
@@ -83,8 +88,8 @@ class UserFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = User
 
-    first_name = factory.LazyFunction(lambda: factory.Faker("name").generate({}).split()[0])
-    last_name = factory.LazyFunction(lambda: factory.Faker("name").generate({}).split()[-1])
+    first_name = factory.LazyFunction(lambda: evaluate_faker(factory.Faker("name")).split()[0])
+    last_name = factory.LazyFunction(lambda: evaluate_faker(factory.Faker("name")).split()[-1])
     username = factory.LazyAttributeSequence(lambda o, n: "%s_%s%d" % (o.first_name, o.last_name, n))
     email = factory.LazyAttribute(lambda o: "%s@berkeley.edu" % o.username)
 
@@ -140,11 +145,11 @@ class OverrideFactory(factory.django.DjangoModelFactory):
 
     @factory.lazy_attribute
     def date(obj):
-        date = factory.Faker(
+        date = evaluate_faker(factory.Faker(
             "date_between_dates",
             date_start=obj.overriden_spacetime.section.course.enrollment_start.date(),
             date_end=obj.overriden_spacetime.section.course.valid_until,
-        ).generate({})
+        ))
         return date + timedelta(days=(day_to_number(obj.spacetime.day_of_week) - date.weekday()))
 
     spacetime = factory.SubFactory(SpacetimeFactory)
