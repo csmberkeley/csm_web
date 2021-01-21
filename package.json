@@ -39,7 +39,7 @@
     "eslint-plugin-react-hooks": "^2.5.1",
     "lodash-webpack-plugin": "^0.11.5",
     "nodemon": "^2.0.4",
-    "prettier": "^1.19.1",
+    "prettier": "^2.2.1",
     "uglifycss": "0.0.29",
     "webpack": "^4.44.1",
     "webpack-cli": "^3.3.12"
