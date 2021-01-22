@@ -13,12 +13,17 @@ module.exports = (env, argv) => {
         {
           test: /\.js$/,
           exclude: /node_modules/,
+          include: path.resolve(__dirname, "./csm_web/frontend/src/"),
           use: {
             loader: "babel-loader"
           }
         },
         {
           test: /\.svg$/,
+          include: [
+            path.resolve(__dirname, "./csm_web/frontend/static/frontend/"),
+            path.resolve(__dirname, "./csm_web/frontend/templates/frontend/")
+          ],
           use: [
             {
               loader: "@svgr/webpack",
