@@ -4,11 +4,11 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "dev": "webpack --mode development ./csm_web/frontend/src/index.js --output ./csm_web/frontend/static/frontend/main.js",
-    "build:js": "webpack --mode production ./csm_web/frontend/src/index.js --output ./csm_web/frontend/static/frontend/main.js",
+    "dev": "webpack --mode development",
+    "build:js": "webpack --mode production",
     "build:css": "uglifycss ./csm_web/frontend/static/frontend/css/style.css --output ./csm_web/frontend/static/frontend/css/style.min.css",
     "build": "npm run build:js && npm run build:css",
-    "watch": "nodemon -d 3 -w ./csm_web/frontend/src/components -w ./csm_web/frontend/src/utils --exec 'npm run dev'"
+    "watch": "webpack --mode development --watch"
   },
   "heroku-run-build-script": true,
   "repository": {
@@ -27,22 +27,21 @@
     "@babel/plugin-transform-runtime": "^7.11.0",
     "@babel/preset-env": "^7.11.0",
     "@babel/preset-react": "^7.10.4",
-    "@svgr/webpack": "^4.3.3",
+    "@svgr/webpack": "^5.5.0",
     "babel-eslint": "^10.1.0",
     "babel-loader": "^8.1.0",
     "babel-plugin-lodash": "^3.3.4",
     "babel-plugin-transform-class-properties": "^6.24.1",
-    "babel-polyfill": "^7.0.0-beta.3",
-    "eslint": "^6.8.0",
-    "eslint-config-prettier": "^6.11.0",
+    "babel-polyfill": "^6.26.0",
+    "eslint": "^7.18.0",
+    "eslint-config-prettier": "^7.2.0",
     "eslint-plugin-react": "^7.20.5",
-    "eslint-plugin-react-hooks": "^2.5.1",
-    "lodash-webpack-plugin": "^0.11.5",
-    "nodemon": "^2.0.4",
+    "eslint-plugin-react-hooks": "^4.2.0",
+    "lodash-webpack-plugin": "^0.11.6",
     "prettier": "^2.2.1",
     "uglifycss": "0.0.29",
-    "webpack": "^4.44.1",
-    "webpack-cli": "^3.3.12"
+    "webpack": "^5.16.0",
+    "webpack-cli": "^4.4.0"
   },
   "dependencies": {
     "@babel/runtime": "^7.11.1",
