@@ -1,8 +1,13 @@
-var LodashModuleReplacementPlugin = require("lodash-webpack-plugin");
-var plugins = [new LodashModuleReplacementPlugin()];
+const LodashModuleReplacementPlugin = require("lodash-webpack-plugin");
+const path = require("path");
+const plugins = [new LodashModuleReplacementPlugin()];
 
 module.exports = (env, argv) => {
   const config = {
+    entry: "./csm_web/frontend/src/index.js",
+    output: {
+      path: path.resolve(__dirname, "./csm_web/frontend/static/frontend/")
+    },
     module: {
       rules: [
         {
@@ -23,6 +28,9 @@ module.exports = (env, argv) => {
           ]
         }
       ]
+    },
+    watchOptions: {
+      ignored: /node_modules/
     },
     plugins: plugins,
     externals: { react: "React", "react-dom": "ReactDOM" }
