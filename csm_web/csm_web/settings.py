@@ -33,7 +33,7 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DJANGO_ENV == DEVELOPMENT
 
-if DJANGO_ENV == PRODUCTION:
+if DJANGO_ENV == PRODUCTION or DJANGO_ENV == STAGING:
     sentry_sdk.init(dsn=os.environ.get('SENTRY_DSN'), integrations=[DjangoIntegration()], send_default_pii=True)
 
 ALLOWED_HOSTS = []
