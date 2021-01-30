@@ -441,7 +441,7 @@ header {
 }
 
 #course-section-list {
-	height: 50vh;
+	height: auto;
 	display: flex;
 	flex-wrap: wrap;
 	justify-content: center;
