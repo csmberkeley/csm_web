@@ -7,11 +7,15 @@ body {
 
 body {
 	max-width: 100%;
-	margin: 8px; /* Usually set by browser stylesheet, but we standardize it here to account for different browsers */
+	/* Usually set by browser stylesheet, but we standardize it here to account for different browsers */
+	margin: 8px 0px;
 	overflow-x: hidden;
 }
 
-:root {
+#app {
+	--csm-background: #ffffff;
+	--csm-text: #808080;
+	--csm-text-bold: #000000;
 	--csm-green: #9ae0b3;
 	--csm-green-darkened: #88cea1;
 	--csm-theme-cs61a: var(--csm-green);
@@ -29,6 +33,28 @@ body {
 	--csm-danger: #ff7272;
 	--csm-danger-darkened: #eb6060;
 	--csm-neutral: #c0c0c0;
+	--csm-link-color: #0000ff;
+	--csm-card-background: #ffffff;
+}
+
+#app.dark-mode {
+	--csm-background: #1c1d1e;
+	--csm-text: #ffffff;
+	--csm-text-bold: #ffffff;
+	--csm-link-color: #63c5ff;
+	--csm-card-background: #222222;
+}
+
+/* split out from variables for cleanliness */
+#app {
+	background-color: var(--csm-background);
+	color: var(--csm-text);
+	min-height: 100%;
+	transition: color 0.25s, background-color 0.25s;
+}
+
+#app a {
+	color: var(--csm-link-color);
 }
 
 /* Header */
@@ -49,7 +75,8 @@ header {
 	font-weight: 600;
 	font-size: 23px;
 	line-height: 18px;
-	color: #808080;
+	color: var(--csm-text);
+	transition: color 0.25s;
 }
 
 #user-profile-pic {
@@ -59,13 +86,30 @@ header {
 	box-shadow: 0px 4px 4px rgba(136, 136, 136, 0.25);
 }
 
-#logout-btn {
+#dark-mode {
 	margin: auto 0 auto auto;
+	background-color: var(--csm-card-background);
+	color: var(--csm-text-bold);
+	border: 1px solid var(--csm-text);
+	font-size: 17px;
+	border-radius: 5px;
+	padding: 12px;
+	outline: 0;
+	transition: color 0.25s, background-color 0.25s;
+}
+
+#dark-mode:hover {
+	background-color: rgba(196, 196, 196, 0.28);
+}
+
+#logout-btn {
+	margin: auto 0 auto 10px;
 }
 
 #logout-btn * {
-	fill: #808080;
+	fill: var(--csm-text);
 	vertical-align: middle;
+	transition: fill 0.25s;
 }
 
 #logout-btn:hover * {
@@ -82,8 +126,9 @@ header {
 	height: 400px;
 	max-height: 90vh;
 	z-index: 1000;
-	background-color: white;
+	background-color: var(--csm-card-background);
 	border-radius: 20px;
+	transition: background-color 0.25s;
 }
 
 .modal-overlay {
@@ -114,8 +159,9 @@ header {
 
 .modal-contents h3 {
 	text-align: center;
-	color: #808080;
+	color: var(--csm-text);
 	font-size: 2em;
+	transition: color 0.25s;
 }
 
 .modal-contents h4 {
@@ -189,7 +235,7 @@ header {
 .csm-btn {
 	background-color: var(--csm-green);
 	border-radius: 20px;
-	color: white;
+	color: white !important;
 	padding: 3px 10px;
 	text-decoration: none;
 	/* Need to manually respecify this on <buttons> for some strange reason */
@@ -209,11 +255,15 @@ header {
 	min-height: 180px;
 	border-top: 30px solid;
 	border-top-color: red;
+	background-color: var(--csm-card-background);
+	transition: background-color 0.25s;
 }
 
 .course-cards-container > .course-card,
 .course-card-link {
 	margin: 0 75px 50px 0;
+	color: var(--csm-text-bold);
+	transition: color 0.25s;
 }
 
 .course-card-contents {
@@ -233,6 +283,8 @@ header {
 	margin: 0;
 	font-size: 24px;
 	font-weight: bold;
+	color: var(--csm-text-bold);
+	transform: color 0.25s;
 }
 
 .course-card-section-time:not(:last-of-type)::after {
@@ -244,7 +296,8 @@ header {
 .course-card-title {
 	margin: 0 0 20px;
 	font-size: 14px;
-	color: #bfbfbf;
+	color: var(--csm-text);
+	transition: color 0.25s;
 }
 
 .course-cards-container {
@@ -266,9 +319,10 @@ header {
 }
 
 .course-card-link {
-	color: unset;
+	color: var(--csm-text-bold);
 	text-decoration: none;
 	cursor: pointer;
+	transition: color 0.25s;
 }
 
 .course-card-link:hover > .course-card {
@@ -276,12 +330,13 @@ header {
 }
 
 .section-link {
-	color: unset;
+	color: var(--csm-text-bold);
 	text-decoration: none;
 	cursor: pointer;
 	padding: 10px;
 	font-size: 14px;
 	border-radius: 9px;
+	transition: color 0.25s;
 }
 
 .section-link:hover {
@@ -322,11 +377,18 @@ header {
 	overflow-x: hidden;
 	box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.15);
 	border-radius: 20px;
+	background-color: var(--csm-card-background);
 	margin: 0 auto 50px;
+	transition: background-color 0.25s;
 }
 
 .section-card.full {
 	background-color: #eaeaea;
+}
+
+.dark-mode .section-card.full {
+	background-color: initial;
+	opacity: 35%;
 }
 
 .section-card-contents {
@@ -335,13 +397,19 @@ header {
 }
 
 .section-card-contents p {
-	color: #727272;
+	color: var(--csm-text);
+	transition: color 0.25s;
 }
 
 .section-card-contents svg,
 .section-card-icon-placeholder {
 	vertical-align: bottom;
 	margin-right: 5px;
+	transition: filter 0.25s;
+}
+
+.dark-mode .section-card-contents svg {
+	filter: invert(100%);
 }
 
 .section-card-additional-times {
@@ -403,16 +471,18 @@ header {
 }
 
 .course-title {
-	color: #6d6d6d;
+	color: var(--csm-text);
 	font-size: 2.5em;
 	font-weight: 400;
 	text-align: center;
+	transition: color 0.25s;
 }
 
 #show-unavailable-toggle {
 	display: block;
 	text-align: center;
-	color: #727272;
+	color: var(--csm-text);
+	transition: color 0.25s;
 }
 
 #show-unavailable-toggle > input {
@@ -448,8 +518,9 @@ header {
 
 #course-section-list-empty {
 	width: 300px; /* Match width of section card so day selector stays stationary */
-	color: #646464;
+	color: var(--csm-text);
 	text-align: center;
+	transition: color 0.25s;
 }
 
 #course-section-selector {
@@ -483,9 +554,10 @@ header {
 
 #create-section-form-contents > .spacetime-fields-header {
 	margin: 0 0 10px 0;
-	color: #646464;
+	color: var(--csm-text);
 	min-width: 100%;
 	border-bottom: 2px solid #646464;
+	transition: color 0.25s;
 }
 
 #create-section-form-contents {
@@ -589,7 +661,8 @@ header {
 	font-style: normal;
 	font-weight: bold;
 	font-size: 24px;
-	color: #646464;
+	color: var(--csm-text-bold);
+	transition: color 0.25s;
 }
 
 .center-title {
@@ -617,23 +690,27 @@ main {
 }
 
 .section-detail-header-title > h3 {
+	color: var(--csm-text-bold);
 	font-size: 30px;
 	margin: 0 20px 0 0;
 	line-height: 30px;
+	transition: color 0.25s;
 }
 
 .section-detail-header-title > h4 {
-	color: #bfbfbf;
+	color: var(--csm-text);
 	font-size: 25px;
 	font-weight: normal;
 	margin: 0;
+	transition: color 0.25s;
 }
 
 .section-detail-page-title {
-	color: #646464;
+	color: var(--csm-text);
 	font-size: 30px;
 	font-weight: bold;
 	margin: 0 0 45px;
+	transition: color 0.25s;
 }
 
 .section-info-cards-container {
@@ -646,10 +723,11 @@ main {
 }
 
 .section-detail-info-card h4 {
-	color: #646464;
+	color: var(--csm-text);
 	font-size: 25px;
 	font-weight: bold;
 	margin: 0 0 20px;
+	transition: color 0.25s;
 }
 
 .section-detail-info-card.drop-section {
@@ -714,8 +792,9 @@ main {
 
 .section-detail-info-card-contents h5 {
 	font-size: 25px;
-	color: #727070;
+	color: var(--csm-text-bold);
 	margin: 0 auto 0.5em auto;
+	transform: color 0.25s;
 }
 
 .section-detail-info-card-contents .location-link {
@@ -779,6 +858,10 @@ table tbody tr:last-child > td {
 	text-decoration: none;
 }
 
+.dark-mode #section-detail-sidebar a {
+	color: #818181;
+}
+
 #section-detail-sidebar a.active {
 	color: var(--csm-green);
 }
@@ -795,14 +878,16 @@ table tbody tr:last-child > td {
 
 .modal.drop-confirmation h5 {
 	font-size: 25px;
-	color: #727070;
+	color: var(--csm-text);
 	margin: 30px auto 0.5rem;
+	transition: color 0.25s;
 }
 
 .modal.drop-confirmation p {
 	font-size: 14px;
-	color: #bfbfbf;
+	color: var(--csm-text);
 	margin-top: 0;
+	transition: color 0.25s;
 }
 
 #section-detail-body {
@@ -1000,9 +1085,10 @@ table tbody tr:last-child > td {
 }
 
 #spacetime-edit-form .mode-selection .mode-selection-options label {
-	color: black;
+	color: var(--csm-text);
 	font-weight: normal;
 	font-size: small;
+	transition: color 0.25s;
 }
 
 #spacetime-edit-form #date-of-change-fields input:not([type="radio"]) {

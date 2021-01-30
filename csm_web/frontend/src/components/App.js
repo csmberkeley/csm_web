@@ -40,13 +40,32 @@ export default class App extends React.Component {
   }
 }
 
+const applyDarkMode = isDarkMode => {
+  window.localStorage.setItem("darkMode", isDarkMode);
+  document.getElementById("app").className = isDarkMode ? "dark-mode" : "";
+  document.body.style.backgroundColor = isDarkMode ? "#1c1d1e" : "white";
+};
+
 function Header() {
+  const [isDarkMode, setDarkMode] = React.useState(window.localStorage.getItem("darkMode") == "true");
+  React.useEffect(() => {
+    applyDarkMode(isDarkMode);
+  }, [isDarkMode]);
+
   return (
     <header>
       <Link to="/">
         <LogoNoText id="logo" />
       </Link>
       <h3 id="site-title">Scheduler</h3>
+      <button
+        id="dark-mode"
+        onClick={() => {
+          setDarkMode(!isDarkMode);
+        }}
+      >
+        {isDarkMode ? "Disable Dark Mode" : "Enable Dark Mode"}
+      </button>
       <a id="logout-btn" href="/logout" title="Log out">
         <LogOutIcon width="1.25em" height="1.25em" />
       </a>
@@ -94,4 +113,9 @@ ErrorPage.propTypes = {
 };
 
 const wrapper = document.getElementById("app");
-wrapper ? ReactDOM.render(<App />, wrapper) : null;
+wrapper
+  ? (() => {
+      applyDarkMode(window.localStorage.getItem("darkMode") == "true");
+      ReactDOM.render(<App />, wrapper);
+    })()
+  : null;
