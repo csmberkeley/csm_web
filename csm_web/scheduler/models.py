@@ -14,6 +14,7 @@ logger.info = logger.warn
 
 class DayOfWeekField(models.Field):
     DAYS = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+    NOT_WEEKEND_DAYS = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday')
 
     description = "Represents a single day of the week, ordered Monday - Sunday, backed by a Postgres enum"
 

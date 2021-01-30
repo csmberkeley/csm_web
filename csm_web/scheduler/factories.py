@@ -81,7 +81,7 @@ class SpacetimeFactory(factory.django.DjangoModelFactory):
     location = factory.LazyFunction(lambda: "%s %d" % (random.choice(BUILDINGS), random.randint(1, 500)))
     start_time = factory.Faker("time_object")
     duration = factory.LazyFunction(lambda: timedelta(minutes=random.choice((60, 90))))
-    day_of_week = factory.fuzzy.FuzzyChoice(DayOfWeekField.DAYS)
+    day_of_week = factory.fuzzy.FuzzyChoice(DayOfWeekField.NOT_WEEKEND_DAYS)
 
 
 class UserFactory(factory.django.DjangoModelFactory):
@@ -120,7 +120,7 @@ class SectionFactory(factory.django.DjangoModelFactory):
         if 'spacetimes' not in kwargs:
             spacetimes = SpacetimeFactory.create_batch(random.randint(1, 2))
             # We want to ensure that if there are 2 spacetimes for a section that they are for different days of the week
-            for spacetime, day in zip(spacetimes, random.sample(DayOfWeekField.DAYS, len(spacetimes))):
+            for spacetime, day in zip(spacetimes, random.sample(DayOfWeekField.NOT_WEEKEND_DAYS, len(spacetimes))):
                 spacetime.day_of_week = day
                 spacetime.save()
         else:
@@ -240,7 +240,7 @@ def generate_test_data(preconfirm=False):
         course = CourseFactory.create(name=course_name, title=course_title, enrollment_start=enrollment_start, enrollment_end=enrollment_end,
                                       valid_until=valid_until)
         print(course_name + "...", end=" ")
-        for _ in range(random.randint(5, 10)):
+        for _ in range(random.randint(20, 40)):
             section = SectionFactory.create(course=course)
             students = StudentFactory.create_batch(random.randint(0, section.capacity), section=section)
             for student in students:
