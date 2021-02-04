@@ -9,7 +9,10 @@ import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
 
 export default class App extends React.Component {
-  state = { error: null };
+  state = {
+    error: null,
+    isDarkMode: window.localStorage.getItem("darkMode") == "true"
+  };
 
   static getDerivedStateFromError(error) {
     return { error };
@@ -25,8 +28,14 @@ export default class App extends React.Component {
     }
     return (
       <Router>
-        <React.Fragment>
-          <Header />
+        <div className={`theme-base ${this.state.isDarkMode ? "theme-dark" : "theme-light"}`}>
+          <Header
+            isDarkMode={this.state.isDarkMode}
+            setDarkMode={mode => {
+              window.localStorage.setItem("darkMode", mode);
+              this.setState({ isDarkMode: mode });
+            }}
+          />
           <main>
             <Switch>
               <Route exact path="/" component={Home} />
@@ -34,25 +43,38 @@ export default class App extends React.Component {
               <Route path="/courses" component={CourseMenu} />
             </Switch>
           </main>
-        </React.Fragment>
+        </div>
       </Router>
     );
   }
 }
 
-function Header() {
+function Header({ isDarkMode, setDarkMode }) {
   return (
     <header>
       <Link to="/">
         <LogoNoText id="logo" />
       </Link>
       <h3 id="site-title">Scheduler</h3>
+      <button
+        id="dark-mode"
+        onClick={() => {
+          setDarkMode(!isDarkMode);
+        }}
+      >
+        {isDarkMode ? "Disable Dark Mode" : "Enable Dark Mode"}
+      </button>
       <a id="logout-btn" href="/logout" title="Log out">
         <LogOutIcon width="1.25em" height="1.25em" />
       </a>
     </header>
   );
 }
+
+Header.propTypes = {
+  isDarkMode: PropTypes.bool.isRequired,
+  setDarkMode: PropTypes.func.isRequired
+};
 
 function ErrorPage({ error: { message, stack }, clearError }) {
   useEffect(() => {
