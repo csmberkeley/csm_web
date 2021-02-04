@@ -39,14 +39,16 @@ body {
 	--csm-neutral: #c0c0c0;
 	--csm-link-color: #0000ff;
 	--csm-card-background: #ffffff;
+	--csm-shadow-color: rgba(0, 0, 0, 0.15);
 }
 
 .theme-dark {
-	--csm-background: #1c1d1e;
+	--csm-background: #121314;
 	--csm-text: #ffffff;
 	--csm-text-bold: #ffffff;
 	--csm-link-color: #63c5ff;
 	--csm-card-background: #222222;
+	--csm-shadow-color: rgba(0, 0, 0, 0.3);
 }
 
 /* split out from variables for cleanliness */
@@ -255,7 +257,7 @@ header {
 	width: 320px;
 	min-width: 320px;
 	border-radius: 16px;
-	box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.15);
+	box-shadow: 0px 5px 50px var(--csm-shadow-color);
 	min-height: 180px;
 	border-top: 30px solid;
 	border-top-color: red;
@@ -379,7 +381,7 @@ header {
 .section-card {
 	width: 320px;
 	overflow-x: hidden;
-	box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.15);
+	box-shadow: 0px 5px 50px var(--csm-shadow-color);
 	border-radius: 20px;
 	background-color: var(--csm-card-background);
 	margin: 0 auto 50px;
@@ -391,7 +393,7 @@ header {
 }
 
 .theme-dark .section-card.full {
-	background-color: initial;
+	background-color: var(--csm-card-background);
 	opacity: 35%;
 }
 
@@ -925,7 +927,7 @@ table tbody tr:last-child > td {
 	font-size: 0.8em;
 	width: 10em;
 	text-align: center;
-	box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.15);
+	box-shadow: 0px 2px 10px 0px var(--csm-shadow-color);
 	background-color: white;
 	padding: 10px;
 	position: absolute;
