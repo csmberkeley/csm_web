@@ -9,7 +9,10 @@ import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
 
 export default class App extends React.Component {
-  state = { error: null };
+  state = {
+    error: null,
+    isDarkMode: window.localStorage.getItem("darkMode") == "true"
+  };
 
   static getDerivedStateFromError(error) {
     return { error };
@@ -25,8 +28,14 @@ export default class App extends React.Component {
     }
     return (
       <Router>
-        <React.Fragment>
-          <Header />
+        <div className={`theme-base ${this.state.isDarkMode ? "theme-dark" : "theme-light"}`}>
+          <Header
+            isDarkMode={this.state.isDarkMode}
+            setDarkMode={mode => {
+              window.localStorage.setItem("darkMode", mode);
+              this.setState({ isDarkMode: mode });
+            }}
+          />
           <main>
             <Switch>
               <Route exact path="/" component={Home} />
@@ -34,24 +43,13 @@ export default class App extends React.Component {
               <Route path="/courses" component={CourseMenu} />
             </Switch>
           </main>
-        </React.Fragment>
+        </div>
       </Router>
     );
   }
 }
 
-const applyDarkMode = isDarkMode => {
-  window.localStorage.setItem("darkMode", isDarkMode);
-  document.getElementById("app").className = isDarkMode ? "dark-mode" : "";
-  document.body.style.backgroundColor = isDarkMode ? "#1c1d1e" : "white";
-};
-
-function Header() {
-  const [isDarkMode, setDarkMode] = React.useState(window.localStorage.getItem("darkMode") == "true");
-  React.useEffect(() => {
-    applyDarkMode(isDarkMode);
-  }, [isDarkMode]);
-
+function Header({ isDarkMode, setDarkMode }) {
   return (
     <header>
       <Link to="/">
@@ -72,6 +70,11 @@ function Header() {
     </header>
   );
 }
+
+Header.propTypes = {
+  isDarkMode: PropTypes.bool.isRequired,
+  setDarkMode: PropTypes.func.isRequired
+};
 
 function ErrorPage({ error: { message, stack }, clearError }) {
   useEffect(() => {
@@ -113,9 +116,4 @@ ErrorPage.propTypes = {
 };
 
 const wrapper = document.getElementById("app");
-wrapper
-  ? (() => {
-      applyDarkMode(window.localStorage.getItem("darkMode") == "true");
-      ReactDOM.render(<App />, wrapper);
-    })()
-  : null;
+wrapper ? ReactDOM.render(<App />, wrapper) : null;

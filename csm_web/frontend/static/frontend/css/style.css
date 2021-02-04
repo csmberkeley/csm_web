@@ -13,6 +13,10 @@ body {
 }
 
 #app {
+	height: 100%;
+}
+
+.theme-base {
 	--csm-background: #ffffff;
 	--csm-text: #808080;
 	--csm-text-bold: #000000;
@@ -37,7 +41,7 @@ body {
 	--csm-card-background: #ffffff;
 }
 
-#app.dark-mode {
+.theme-dark {
 	--csm-background: #1c1d1e;
 	--csm-text: #ffffff;
 	--csm-text-bold: #ffffff;
@@ -46,14 +50,14 @@ body {
 }
 
 /* split out from variables for cleanliness */
-#app {
+.theme-base {
 	background-color: var(--csm-background);
 	color: var(--csm-text);
 	min-height: 100%;
 	transition: color 0.25s, background-color 0.25s;
 }
 
-#app a {
+.theme-base a {
 	color: var(--csm-link-color);
 }
 
@@ -386,7 +390,7 @@ header {
 	background-color: #eaeaea;
 }
 
-.dark-mode .section-card.full {
+.theme-dark .section-card.full {
 	background-color: initial;
 	opacity: 35%;
 }
@@ -408,7 +412,7 @@ header {
 	transition: filter 0.25s;
 }
 
-.dark-mode .section-card-contents svg {
+.theme-dark .section-card-contents svg {
 	filter: invert(100%);
 }
 
@@ -858,7 +862,7 @@ table tbody tr:last-child > td {
 	text-decoration: none;
 }
 
-.dark-mode #section-detail-sidebar a {
+.theme-dark #section-detail-sidebar a {
 	color: #818181;
 }
 
