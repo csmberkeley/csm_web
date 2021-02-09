@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     "social_django",
     "frontend",
     "django_extensions",
+    "django.contrib.postgres",
 ]
 
 SHELL_PLUS_SUBCLASSES_IMPORT = [ModelSerializer, Serializer, DjangoModelFactory]
@@ -95,13 +96,15 @@ TEMPLATES = [
 WSGI_APPLICATION = "csm_web.wsgi.application"
 
 
+POSTGRES_EXTRA_AUTO_EXTENSION_SET_UP = False
+POSTGRES_EXTRA_DB_BACKEND_BASE = 'django.db.backends.postgresql' if DEBUG else 'django.db.backends.postgresql_psycopg2'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 if DEBUG:
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
+            'ENGINE': 'psqlextra.backend',
             'NAME': 'csm_web_dev',
             'USER': 'postgres',
             'HOST': 'localhost',
@@ -111,7 +114,7 @@ if DEBUG:
 else:
     DATABASES = {
         "pg": {
-            "ENGINE": "django.db.backends.postgresql_psycopg2",
+            "ENGINE": "psqlextra.backend",
             "NAME": "csm_web",
             "USER": "csm_web",
             "PASSWORD": "",
