@@ -97,7 +97,7 @@ WSGI_APPLICATION = "csm_web.wsgi.application"
 
 
 POSTGRES_EXTRA_AUTO_EXTENSION_SET_UP = False
-POSTGRES_EXTRA_DB_BACKEND_BASE = 'django.db.backends.postgresql' if DEBUG else 'django.db.backends.postgresql_psycopg2'
+POSTGRES_EXTRA_DB_BACKEND_BASE = 'django.db.backends.postgresql'
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
