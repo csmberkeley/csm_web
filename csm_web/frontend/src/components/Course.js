@@ -77,7 +77,9 @@ export default class Course extends React.Component {
           <div id="day-selector">
             {Object.keys(sections).map(dayGroup => (
               <button
-                className={`day-btn ${dayGroup == currDayGroup ? "active" : ""}`}
+                className={`day-btn ${dayGroup == currDayGroup ? "active" : ""} + ${
+                  dayGroup.slice(1, -1).split(",").length >= 3 ? " day-btn-many-days" : ""
+                }`}
                 key={dayGroup}
                 onClick={() => {
                   this.setState({ currDayGroup: dayGroup });
@@ -226,19 +228,16 @@ class SectionCard extends React.Component {
             </p>
             <p title="Time">
               <ClockIcon width={iconWidth} height={iconHeight} /> {spacetimes[0].time}
-              {spacetimes.length > 1 && (
-                <span className="section-card-additional-times">
-                  {spacetimes.slice(1).map(({ time, id }) => (
-                    <React.Fragment key={id}>
-                      <span
-                        className="section-card-icon-placeholder"
-                        style={{ minWidth: iconWidth, minHeight: iconHeight }}
-                      />{" "}
-                      {time}
-                    </React.Fragment>
-                  ))}
-                </span>
-              )}
+              {spacetimes.length > 1 &&
+                spacetimes.slice(1).map(({ time, id }) => (
+                  <span className="section-card-additional-times" key={id}>
+                    <span
+                      className="section-card-icon-placeholder"
+                      style={{ minWidth: iconWidth, minHeight: iconHeight }}
+                    />{" "}
+                    {time}
+                  </span>
+                ))}
             </p>
             <p title="Mentor">
               <UserIcon width={iconWidth} height={iconHeight} /> {mentor.name}

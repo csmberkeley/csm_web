@@ -433,6 +433,14 @@ header {
 	outline: none;
 }
 
+/* Hack for CS70 */
+.day-btn-many-days {
+	font-size: 0.8em;
+	align-items: center;
+	justify-content: center;
+	display: flex;
+}
+
 .day-btn:hover {
 	background-color: #fafafa;
 }
