@@ -391,7 +391,23 @@ header {
 	justify-content: center;
 }
 
+#course-left-col {
+	border: thick solid orange;
+	top: 0;
+	align-self: flex-start;
+}
+
+.export-data-btn {
+	font-size: 18px;
+	border: none;
+	cursor: pointer;
+	margin: 0 auto !important;
+	display: block;
+	padding: 8px;
+}
+
 #course-section-controls {
+	border: thick solid blue;
 	flex-grow: 0.5;
 	min-width: 50%;
 	top: 0;
@@ -443,6 +459,7 @@ header {
 }
 
 #course-section-list {
+	border: thick solid orange;
 	height: 50vh;
 }
 

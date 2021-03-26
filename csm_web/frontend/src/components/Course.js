@@ -72,6 +72,13 @@ export default class Course extends React.Component {
     }
     return !(name && sectionsLoaded) ? null : (
       <div id="course-section-selector">
+        <div id="course-left-col">
+          {userIsCoordinator && (
+            <button className="csm-btn export-data-btn" onClick={() => this.setState({ showModal: true })}>
+              Export Data
+            </button>
+          )}
+        </div>
         <div id="course-section-controls">
           <h2 className="course-title">{name}</h2>
           <div id="day-selector">
