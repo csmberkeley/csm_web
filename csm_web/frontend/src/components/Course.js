@@ -42,7 +42,8 @@ export default class Course extends React.Component {
       currDayGroup: "",
       showUnavailable: true,
       userIsCoordinator: false,
-      showModal: false
+      showModal: false,
+      studentData: false
     }; // Sections are grouped by day
     this.reloadSections = this.reloadSections.bind(this);
   }
@@ -65,16 +66,44 @@ export default class Course extends React.Component {
       },
       name
     } = this.props;
-    const { sectionsLoaded, sections, currDayGroup, showUnavailable, userIsCoordinator, showModal } = this.state;
+    const {
+      sectionsLoaded,
+      sections,
+      currDayGroup,
+      showUnavailable,
+      userIsCoordinator,
+      showModal,
+      studentData
+    } = this.state;
     let currDaySections = sections && sections[currDayGroup];
     if (currDaySections && !showUnavailable) {
       currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
     }
+
+    const renderModal = () => {
+      if (studentData) {
+        return (
+          <Modal closeModal={() => this.setState({ showModal: false })}> still need to create export component </Modal>
+        );
+      } else {
+        return (
+          <CreateSectionModal
+            reloadSections={this.reloadSections}
+            closeModal={() => this.setState({ showModal: false })}
+            courseId={Number(id)}
+          />
+        );
+      }
+    };
+
     return !(name && sectionsLoaded) ? null : (
       <div id="course-section-selector">
         <div id="course-left-col">
           {userIsCoordinator && (
-            <button className="csm-btn export-data-btn" onClick={() => this.setState({ showModal: true })}>
+            <button
+              className="csm-btn export-data-btn"
+              onClick={() => this.setState({ showModal: true, studentData: true })}
+            >
               Export Data
             </button>
           )}
@@ -107,7 +136,10 @@ export default class Course extends React.Component {
             Show unavailable
           </label>
           {userIsCoordinator && (
-            <button className="csm-btn create-section-btn" onClick={() => this.setState({ showModal: true })}>
+            <button
+              className="csm-btn create-section-btn"
+              onClick={() => this.setState({ showModal: true, studentData: false })}
+            >
               <span className="inline-plus-sign">+ </span>Create Section
             </button>
           )}
@@ -121,13 +153,7 @@ export default class Course extends React.Component {
             <h3 id="course-section-list-empty">No sections available, please select a different day</h3>
           )}
         </div>
-        {userIsCoordinator && showModal && (
-          <CreateSectionModal
-            reloadSections={this.reloadSections}
-            closeModal={() => this.setState({ showModal: false })}
-            courseId={Number(id)}
-          />
-        )}
+        {userIsCoordinator && showModal && renderModal()}
       </div>
     );
   }
