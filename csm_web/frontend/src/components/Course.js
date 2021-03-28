@@ -80,11 +80,10 @@ export default class Course extends React.Component {
       currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
     }
 
+    //This is used to distinguish between what type of modal we want
     const renderModal = () => {
       if (studentData) {
-        return (
-          <Modal closeModal={() => this.setState({ showModal: false })}> still need to create export component </Modal>
-        );
+        return <CreateDataExportModal closeModal={() => this.setState({ showModal: false })} />;
       } else {
         return (
           <CreateSectionModal
@@ -441,6 +440,49 @@ class CreateSectionModal extends React.Component {
             <input type="submit" value="Create Section" />
           </div>
         </form>
+      </Modal>
+    );
+  }
+}
+
+//Just some test data for our data export modal
+const testData = [
+  {
+    name: "User 1",
+    class: "61A",
+    email: "user1@berkeley.edu"
+  },
+  {
+    name: "User 2",
+    class: "88",
+    email: "user2@berkeley.edu"
+  }
+];
+
+class CreateDataExportModal extends React.Component {
+  static propTypes = {
+    closeModal: PropTypes.func.isRequired
+  };
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      users: testData
+    };
+  }
+
+  render() {
+    const { closeModal } = this.props;
+    const { users } = this.state;
+    return (
+      <Modal closeModal={closeModal}>
+        <div>
+          {users.map(user => (
+            <div key={user.email}>
+              {user.name} {user.class} {user.email}
+            </div>
+          ))}
+        </div>
       </Modal>
     );
   }
