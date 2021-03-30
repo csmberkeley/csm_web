@@ -437,6 +437,22 @@ header {
 	align-items: center;
 }
 
+.data-export-checkbox-grid {
+	display: grid;
+	width: 100%;
+	height: 80%;
+	grid-template-columns: repeat(3, 1fr);
+	grid-template-rows: repeat(auto-fit, 30px);
+	gap: 1%;
+	background-color: #c2c2cc;
+}
+
+.data-export-checkbox {
+	outline: 1px solid green;
+	justify-content: center;
+	width: 90%;
+}
+
 #course-section-controls {
 	border: thick solid blue;
 	flex-grow: 0.5;

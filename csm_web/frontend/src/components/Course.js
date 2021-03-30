@@ -446,27 +446,83 @@ class CreateSectionModal extends React.Component {
   }
 }
 
+/**
+ * @function DataExportModal
+ * @component
+ * @param {DataExportModal.propTypes} props
+ * @returns Modal that coords use to export a csv of student emails
+ *          in selected courses.
+ */
 function DataExportModal(props) {
-  // potentially need to move to parent if rerequest coursedata everytime everytime
-  const [courseList, setCourseList] = useState(null);
+  // Need to move to parent if rerequest coursedata everytime
+  /**
+   * @state courseMap : map of course ID to course name
+   */
+  const [courseMap, setCourseMap] = useState(null);
+  /**
+   * @state {boolean} courseLoaded : true if course data has been
+   *        loaded
+   */
   const [courseLoaded, setCourseLoaded] = useState(false);
+  /**
+   * @state {boolean} studentsLoaded : true if student data has
+   *        been loaded
+   */
+
+  /**
+   * @state studentList : list of student emails
+   */
+
+  /**
+   * @state courseChecks : map of course id to boolean
+   */
+  const [courseChecks, setCourseChecks] = useState([]);
 
   useEffect(() => {
     fetchJSON("/courses").then(courses => {
       const coursesById = new Map();
+      const courseCheckbyId = new Map();
       for (const course of courses) {
         coursesById.set(course.id, course.name);
+        courseCheckbyId.set(course.id, false);
       }
-      setCourseList(coursesById);
+      setCourseMap(coursesById);
+      setCourseChecks(courseCheckbyId);
       setCourseLoaded(true);
     });
   }, []);
+
+  const updateCourseChecks = (k, v) => {
+    setCourseChecks(new Map(courseChecks.set(k, v)));
+  };
+
+  function renderCheckGrid() {
+    const checks = Array.from(courseMap.keys()).map(i => renderCheck(i));
+    return <div className="data-export-checkbox-grid">{checks}</div>;
+  }
+
+  function renderCheck(i) {
+    return (
+      <label>
+        <div className="data-export-checkbox">
+          <Checkbox
+            checked={courseChecks.get(i)}
+            onChange={() => {
+              updateCourseChecks(i, !courseChecks.get(i));
+            }}
+          />
+          <span>{courseMap.get(i)}</span>
+        </div>
+      </label>
+    );
+  }
+
   return (
     <Modal closeModal={props.closeModal}>
       <div className="data-export-modal">
         <div className="data-export-modal-header">Download csv of student emails in selected courses</div>
         <div className="data-export-modal-selection">
-          {!courseLoaded ? <LoadingSpinner id="course-menu-loading-spinner" /> : courseList.get(1)}
+          {!courseLoaded ? <LoadingSpinner id="course-menu-loading-spinner" /> : renderCheckGrid()}
         </div>
         <div className="data-export-modal-download">download</div>
       </div>
@@ -474,6 +530,13 @@ function DataExportModal(props) {
   );
 }
 
+/**
+ * @interface shape of DataExportModal.props
+ *
+ * @prop {function} closeModal : closes Modal
+ */
 DataExportModal.propTypes = {
   closeModal: PropTypes.func.isRequired
 };
+
+const Checkbox = props => <input type="checkbox" {...props} />;
