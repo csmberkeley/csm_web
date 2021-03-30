@@ -406,6 +406,37 @@ header {
 	padding: 8px;
 }
 
+.data-export-modal {
+	/*outline: 1px solid red;*/
+	height: 90%;
+	display: flex;
+	flex-direction: column;
+}
+
+.data-export-modal-header {
+	/*outline: 1px solid blue;*/
+	display: flex;
+	flex: 0.2 0.2 0;
+	justify-content: center;
+	align-items: center;
+}
+
+.data-export-modal-selection {
+	/*outline: 1px solid yellow;*/
+	flex: 1 1 55%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
+.data-export-modal-download {
+	/*outline: 1px solid green;*/
+	flex: 1 1 30%;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+}
+
 #course-section-controls {
 	border: thick solid blue;
 	flex-grow: 0.5;
