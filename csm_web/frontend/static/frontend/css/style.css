@@ -407,14 +407,12 @@ header {
 }
 
 .data-export-modal {
-	/*outline: 1px solid red;*/
 	height: 90%;
 	display: flex;
 	flex-direction: column;
 }
 
 .data-export-modal-header {
-	/*outline: 1px solid blue;*/
 	display: flex;
 	flex: 0.2 0.2 0;
 	justify-content: center;
@@ -422,7 +420,6 @@ header {
 }
 
 .data-export-modal-selection {
-	/*outline: 1px solid yellow;*/
 	flex: 1 1 55%;
 	display: flex;
 	justify-content: center;
@@ -430,7 +427,6 @@ header {
 }
 
 .data-export-modal-download {
-	/*outline: 1px solid green;*/
 	flex: 1 1 30%;
 	display: flex;
 	justify-content: center;
@@ -440,17 +436,18 @@ header {
 .data-export-checkbox-grid {
 	display: grid;
 	width: 100%;
-	height: 80%;
+	height: 50%;
 	grid-template-columns: repeat(3, 1fr);
 	grid-template-rows: repeat(auto-fit, 30px);
 	gap: 1%;
-	background-color: #c2c2cc;
+	align-items: center;
+	justify-items: center;
 }
 
 .data-export-checkbox {
-	outline: 1px solid green;
 	justify-content: center;
-	width: 90%;
+	width: 40%;
+	align-items: center;
 }
 
 #course-section-controls {
