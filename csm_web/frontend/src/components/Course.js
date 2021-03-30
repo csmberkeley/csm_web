@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import { Redirect, Link } from "react-router-dom";
 import LocationIcon from "../../static/frontend/img/location.svg";
+import LoadingSpinner from "./LoadingSpinner";
 import UserIcon from "../../static/frontend/img/user.svg";
 import GroupIcon from "../../static/frontend/img/group.svg";
 import ClockIcon from "../../static/frontend/img/clock.svg";
@@ -42,8 +43,8 @@ export default class Course extends React.Component {
       currDayGroup: "",
       showUnavailable: true,
       userIsCoordinator: false,
-      showModal: false,
-      studentData: false
+      showModal: true,
+      studentData: true // !!!!!!! SET TO FALSE LATER !!!!!!s
     }; // Sections are grouped by day
     this.reloadSections = this.reloadSections.bind(this);
   }
@@ -83,7 +84,7 @@ export default class Course extends React.Component {
     //This is used to distinguish between what type of modal we want
     const renderModal = () => {
       if (studentData) {
-        return <CreateDataExportModal closeModal={() => this.setState({ showModal: false })} />;
+        return <DataExportModal_2 closeModal={() => this.setState({ showModal: false })} />;
       } else {
         return (
           <CreateSectionModal
@@ -445,7 +446,7 @@ class CreateSectionModal extends React.Component {
   }
 }
 
-//Just some test data for our data export modal
+/* Just some test data for our data export modal
 const testData = [
   {
     name: "User 1",
@@ -459,7 +460,7 @@ const testData = [
   }
 ];
 
-class CreateDataExportModal extends React.Component {
+class DataExportModal extends React.Component {
   static propTypes = {
     closeModal: PropTypes.func.isRequired
   };
@@ -486,4 +487,36 @@ class CreateDataExportModal extends React.Component {
       </Modal>
     );
   }
+}*/
+
+function DataExportModal_2(props) {
+  // potentially need to move to parent if rerequest coursedata everytime everytime
+  const [courseList, setCourseList] = useState(null);
+  const [courseLoaded, setCourseLoaded] = useState(false);
+
+  useEffect(() => {
+    fetchJSON("/courses").then(courses => {
+      const coursesById = new Map();
+      for (const course of courses) {
+        coursesById.set(course.id, course.name);
+      }
+      setCourseList(coursesById);
+      setCourseLoaded(true);
+    });
+  }, []);
+  return (
+    <Modal closeModal={props.closeModal}>
+      <div className="data-export-modal">
+        <div className="data-export-modal-header">Download csv of student emails in selected courses</div>
+        <div className="data-export-modal-selection">
+          {!courseLoaded ? <LoadingSpinner id="course-menu-loading-spinner" /> : courseList.get(1)}
+        </div>
+        <div className="data-export-modal-download">download</div>
+      </div>
+    </Modal>
+  );
 }
+
+DataExportModal_2.propTypes = {
+  closeModal: PropTypes.func.isRequired
+};
