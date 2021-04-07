@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import PropTypes from "prop-types";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
+import { fetchJSON, fetchWithMethod, HTTP_METHODS, normalizeEndpoint } from "../utils/api";
 import { Redirect, Link } from "react-router-dom";
 import LocationIcon from "../../static/frontend/img/location.svg";
 import LoadingSpinner from "./LoadingSpinner";
@@ -497,9 +497,15 @@ function DataExportModal(props) {
     const courses = Array.from(courseChecks.keys())
       .filter(id => courseChecks.get(id))
       .join();
-    console.log(courses);
-
-    fetchJSON(`/courses/students/?ids=${courses}`).then(({ students }) => console.log(students));
+    if (!courses || courses.length === 0) {
+      alert("select something to download");
+      return;
+    }
+    window.open(normalizeEndpoint(`/courses/students/?ids=${courses}`));
+    //fetchJSON(`/courses/students/?ids=${courses}`)
+    //.then(() =>
+    //  console.log("downloaded")
+    //);
   }
 
   const updateCourseChecks = (k, v) => {

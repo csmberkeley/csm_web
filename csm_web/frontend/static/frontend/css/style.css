@@ -396,9 +396,9 @@ header {
 }
 
 #course-left-col {
-	border: thick solid orange;
 	top: 0;
 	align-self: flex-start;
+	margin-top: 5%;
 }
 
 .export-data-btn {
@@ -455,7 +455,6 @@ header {
 }
 
 #course-section-controls {
-	border: thick solid blue;
 	flex-grow: 0.5;
 	min-width: 50%;
 	top: 0;
@@ -507,7 +506,6 @@ header {
 }
 
 #course-section-list {
-	border: thick solid orange;
 	height: 50vh;
 }
 

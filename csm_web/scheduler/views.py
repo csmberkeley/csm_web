@@ -1,10 +1,12 @@
 import logging
 from operator import attrgetter
+import csv
 from django.core.exceptions import ObjectDoesNotExist
 from django.db import transaction
 from django.db.models import Q, Count, Prefetch
 from django.db.models.query import EmptyQuerySet
 from django.contrib.postgres.aggregates import ArrayAgg
+from django.http import HttpResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from itertools import groupby
@@ -109,6 +111,25 @@ class CourseViewSet(*viewset_with('list')):
         course = get_object_or_error(self.get_queryset(), pk=pk)
         sections_by_day = self.get_sections_by_day(course)
         return Response({'userIsCoordinator': course.coordinator_set.filter(user=request.user).exists(), 'sections': sections_by_day})
+
+    # get a list of student information (for a selection of courses) to add to coord interface -- currently only used for download
+    @action(detail=False)
+    def students(self, request):
+        id_str = self.request.query_params.get('ids')
+        if not id_str or id_str == "/":
+            return Response({"students": None})
+        if id_str[-1] == "/":
+            id_str = id_str[:-1]
+        ids = id_str.split(",")
+        studs = Student.objects.select_related("user").filter(active=True, section__course__in=ids)
+
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+        writer = csv.writer(response)
+
+        for s in studs:
+            writer.writerow([s.user.email])
+        return response
 
 
 class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):

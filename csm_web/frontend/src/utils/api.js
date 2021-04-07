@@ -12,7 +12,7 @@ const HTTP_METHODS = Object.freeze({
 });
 export { HTTP_METHODS };
 
-function normalizeEndpoint(endpoint) {
+export function normalizeEndpoint(endpoint) {
   if (endpoint[0] == "/") {
     endpoint = endpoint.slice(1);
   }
