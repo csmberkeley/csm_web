@@ -43,8 +43,8 @@ export default class Course extends React.Component {
       currDayGroup: "",
       showUnavailable: true,
       userIsCoordinator: false,
-      showModal: true,
-      studentData: true // !!!!!!! SET TO FALSE LATER !!!!!!s
+      showModal: false,
+      studentData: false // !!!!!!! SET TO FALSE LATER !!!!!!s
     }; // Sections are grouped by day
     this.reloadSections = this.reloadSections.bind(this);
   }
@@ -492,6 +492,16 @@ function DataExportModal(props) {
     });
   }, []);
 
+  function getStudentEmails() {
+    //const { id } = this.props.match.params;
+    const courses = Array.from(courseChecks.keys())
+      .filter(id => courseChecks.get(id))
+      .join();
+    console.log(courses);
+
+    fetchJSON(`/courses/students/?ids=${courses}`).then(({ students }) => console.log(students));
+  }
+
   const updateCourseChecks = (k, v) => {
     setCourseChecks(new Map(courseChecks.set(k, v)));
   };
@@ -503,8 +513,8 @@ function DataExportModal(props) {
 
   function renderCheck(i) {
     return (
-      <label>
-        <div className="data-export-checkbox">
+      <div className="data-export-checkbox">
+        <label>
           <Checkbox
             checked={courseChecks.get(i)}
             onChange={() => {
@@ -512,8 +522,8 @@ function DataExportModal(props) {
             }}
           />
           <span>{courseMap.get(i)}</span>
-        </div>
-      </label>
+        </label>
+      </div>
     );
   }
 
@@ -524,7 +534,11 @@ function DataExportModal(props) {
         <div className="data-export-modal-selection">
           {!courseLoaded ? <LoadingSpinner id="course-menu-loading-spinner" /> : renderCheckGrid()}
         </div>
-        <div className="data-export-modal-download">download</div>
+        <div className="data-export-modal-download">
+          <button className="csm-btn export-data-btn" onClick={getStudentEmails}>
+            Download
+          </button>
+        </div>
       </div>
     </Modal>
   );
