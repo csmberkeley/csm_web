@@ -200,6 +200,10 @@ header {
 	background-color: var(--csm-green-darkened);
 }
 
+.csm-btn:focus {
+	outline: 0;
+}
+
 .course-card {
 	position: relative;
 	width: 320px;
