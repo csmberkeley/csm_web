@@ -465,16 +465,7 @@ function DataExportModal(props) {
    */
   const [courseLoaded, setCourseLoaded] = useState(false);
   /**
-   * @state {boolean} studentsLoaded : true if student data has
-   *        been loaded
-   */
-
-  /**
-   * @state studentList : list of student emails
-   */
-
-  /**
-   * @state courseChecks : map of course id to boolean
+   * @state courseChecks : map of course id to boolean (if checkmarked)
    */
   const [courseChecks, setCourseChecks] = useState([]);
 
@@ -493,7 +484,6 @@ function DataExportModal(props) {
   }, []);
 
   function getStudentEmails() {
-    //const { id } = this.props.match.params;
     const courses = Array.from(courseChecks.keys())
       .filter(id => courseChecks.get(id))
       .join();
@@ -502,10 +492,6 @@ function DataExportModal(props) {
       return;
     }
     window.open(normalizeEndpoint(`/courses/students/?ids=${courses}`));
-    //fetchJSON(`/courses/students/?ids=${courses}`)
-    //.then(() =>
-    //  console.log("downloaded")
-    //);
   }
 
   const updateCourseChecks = (k, v) => {
