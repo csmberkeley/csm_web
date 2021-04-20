@@ -124,7 +124,7 @@ class CourseViewSet(*viewset_with('list')):
         studs = Student.objects.select_related("user").filter(active=True, section__course__in=ids)
 
         response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = 'attachment; filename="somefilename.csv"'
+        response['Content-Disposition'] = 'attachment; filename="csm-student-emails.csv"'
         writer = csv.writer(response)
 
         for s in studs:
