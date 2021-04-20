@@ -24,6 +24,11 @@ const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
   Sunday: "Su"
 });
 
+const COURSE_MODAL_TYPE = Object.freeze({
+  exportData: "csv",
+  createSection: "mksec"
+});
+
 export default class Course extends React.Component {
   static propTypes = {
     match: PropTypes.shape({ params: PropTypes.shape({ id: PropTypes.string.isRequired }) }).isRequired,
@@ -44,7 +49,7 @@ export default class Course extends React.Component {
       showUnavailable: true,
       userIsCoordinator: false,
       showModal: false,
-      studentData: false // !!!!!!! SET TO FALSE LATER !!!!!!s
+      whichModal: COURSE_MODAL_TYPE.createSection
     }; // Sections are grouped by day
     this.reloadSections = this.reloadSections.bind(this);
   }
@@ -74,7 +79,7 @@ export default class Course extends React.Component {
       showUnavailable,
       userIsCoordinator,
       showModal,
-      studentData
+      whichModal
     } = this.state;
     let currDaySections = sections && sections[currDayGroup];
     if (currDaySections && !showUnavailable) {
@@ -83,7 +88,7 @@ export default class Course extends React.Component {
 
     //This is used to distinguish between what type of modal we want
     const renderModal = () => {
-      if (studentData) {
+      if (whichModal == COURSE_MODAL_TYPE.exportData) {
         return <DataExportModal closeModal={() => this.setState({ showModal: false })} />;
       } else {
         return (
@@ -102,7 +107,7 @@ export default class Course extends React.Component {
           {userIsCoordinator && (
             <button
               className="csm-btn export-data-btn"
-              onClick={() => this.setState({ showModal: true, studentData: true })}
+              onClick={() => this.setState({ showModal: true, whichModal: COURSE_MODAL_TYPE.exportData })}
             >
               Export Data
             </button>
@@ -138,7 +143,7 @@ export default class Course extends React.Component {
           {userIsCoordinator && (
             <button
               className="csm-btn create-section-btn"
-              onClick={() => this.setState({ showModal: true, studentData: false })}
+              onClick={() => this.setState({ showModal: true, whichModal: COURSE_MODAL_TYPE.createSection })}
             >
               <span className="inline-plus-sign">+ </span>Create Section
             </button>
