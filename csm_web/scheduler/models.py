@@ -235,8 +235,8 @@ class Resource(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     week_num = models.PositiveSmallIntegerField()
     date = models.DateField()
-    topics = models.CharField(blank=True)
-    worksheet_name = models.CharField(blank=True)
+    topics = models.CharField(blank=True, max_length=100)
+    worksheet_name = models.CharField(blank=True, max_length=100)
     worksheet_file = models.FileField(upload_to=worksheet_path)
     solution_file = models.FileField(upload_to=worksheet_path)
 
