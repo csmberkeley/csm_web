@@ -225,6 +225,22 @@ class Section(ValidatingModel):
         )
 
 
+def worksheet_path(instance, filename):
+    # file will be uploaded to MEDIA_ROOT/<course_name>/<filename>
+    course_name = str(instance.course.name).replace(" ", "")
+    return f'resources/{course_name}/{filename}'
+
+
+class Resource(ValidatingModel):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    week_num = models.PositiveSmallIntegerField()
+    date = models.DateField()
+    topics = models.CharField(blank=True)
+    worksheet_name = models.CharField(blank=True)
+    worksheet_file = models.FileField(upload_to=worksheet_path)
+    solution_file = models.FileField(upload_to=worksheet_path)
+
+
 class Spacetime(ValidatingModel):
     SPACE_REDUCE_REGEX = re.compile(r'\s+')
 
