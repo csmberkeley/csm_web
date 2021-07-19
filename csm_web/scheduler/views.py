@@ -14,7 +14,7 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor, Coordinator
+from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor, Coordinator, Resource
 from .serializers import (
     CourseSerializer,
     SectionSerializer,
@@ -23,6 +23,7 @@ from .serializers import (
     OverrideSerializer,
     ProfileSerializer,
     SpacetimeSerializer,
+    ResourceSerializer,
 )
 
 logger = logging.getLogger(__name__)
@@ -285,6 +286,45 @@ class StudentViewSet(viewsets.GenericViewSet):
         logger.error(
             f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, errors: {serializer.errors}")
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+
+class ResourceViewSet(viewsets.GenericViewSet):
+    @action(detail=True, methods=['get', 'put'])
+    def resources(self, request, pk=None):
+        """
+        Endpoint: /api/resources/<course_id>
+        Returns all resources for the course, or edits resources for the course
+
+        request data:
+        {
+            "resources": [
+                {
+                    "week_num": ...,
+                    "date": ...,
+                    "topics": ...,
+                    "worksheet_name": ...,
+                    "worksheet_file": ...,  # TODO: what's the actual data here?
+                    "solution_file": ...,
+                }
+            ],
+            ...
+        }
+        """
+        course = Course.objects.filter(pk=pk)
+        resources = Resource.objects.filter(course=pk)
+
+        if request.method == "GET":
+            # return all resources for current course as a response
+            return Response(ResourceSerializer(resources).data)  # TODO: implement resource serializer
+
+        elif request.method == "PUT":
+            is_coordinator = course.coordinator_set.filter(user=request.user).exists()
+            if not is_coordinator:
+                return PermissionDenied("You must be a coordinator to change resources data!")
+            # replace database entry for current course resources
+            for resource in request.data["resources"]:
+                # query by week_num && date, update resource with new info
+                resource_obj = resources.filter(week_num=resource["week_num"], date=resource["date"])
 
 
 class ProfileViewSet(*viewset_with('list')):
