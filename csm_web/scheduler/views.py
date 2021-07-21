@@ -323,26 +323,27 @@ class ResourceViewSet(viewsets.GenericViewSet):
             return Response(ResourceSerializer(resources, many=True).data)
 
         elif request.method == "PUT":
+            # replace database entry for current course resources
+
             is_coordinator = course.coordinator_set.filter(user=request.user).exists()
             if not is_coordinator:
                 return PermissionDenied("You must be a coordinator to change resources data!")
-            # replace database entry for current course resources
-            print(request.data["resources"])
-            for resource in request.data["resources"]:
-                # query by week_num && date, update resource with new info
-                resource_query = resources.filter(
-                    course=course,
-                    week_num=resource["week_num"],
-                    date=resource["date"]
-                )
-                if not resource_query.exists():
-                    pass  # TODO: handle resource creation
-                else:  # get existing resource
-                    resource_obj = resource_query.get()
-                    resource_obj.topics = resource["topics"]
-                    resource_obj.worksheet_name = resource["worksheet_name"]
-                    # TODO: update file fields
-                    resource_obj.save()
+
+            resource = request.data["resource"]
+            # query by week_num && date, update resource with new info
+            resource_query = resources.filter(
+                course=course,
+                week_num=resource["week_num"],
+                date=resource["date"]
+            )
+            if not resource_query.exists():
+                pass  # TODO: handle resource creation
+            else:  # get existing resource
+                resource_obj = resource_query.get()
+                resource_obj.topics = resource["topics"]
+                resource_obj.worksheet_name = resource["worksheet_name"]
+                # TODO: update file fields
+                resource_obj.save()
         return Response(status.HTTP_200_OK)
 
     # temporary method for testing
