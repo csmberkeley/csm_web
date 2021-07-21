@@ -5,6 +5,7 @@ import PropTypes from "prop-types";
 import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Section from "./Section";
+import Resources from "./resource_aggregation/Resources.tsx"
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
 
@@ -32,6 +33,7 @@ export default class App extends React.Component {
               <Route exact path="/" component={Home} />
               <Route path="/sections/:id" component={Section} />
               <Route path="/courses" component={CourseMenu} />
+              <Route path="/resources" component={Resources} />
             </Switch>
           </main>
         </React.Fragment>
