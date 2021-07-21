@@ -19,6 +19,14 @@ module.exports = (env, argv) => {
           }
         },
         {
+          test: /\.tsx$/,
+          exclude: /node_modules/,
+          include: path.resolve(__dirname, "./csm_web/frontend/src/"),
+          use: {
+            loader: "babel-loader"
+          }
+        },
+        {
           test: /\.svg$/,
           include: [
             path.resolve(__dirname, "./csm_web/frontend/static/frontend/"),
