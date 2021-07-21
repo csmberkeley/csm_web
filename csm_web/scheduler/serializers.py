@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField
+from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource
 
 
 class Role(Enum):
@@ -181,6 +181,13 @@ class SectionSerializer(serializers.ModelSerializer):
         model = Section
         fields = ("id", "spacetimes", "mentor", "capacity", "associated_profile_id",
                   "num_students_enrolled", "description", "mentor", "course", "user_role", "course_title")
+
+
+class ResourceSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Resource
+        # TODO: handle file fields
+        fields = ['id', 'course', 'week_num', 'date', 'topics', 'worksheet_name']
 
 
 class OverrideSerializer(serializers.ModelSerializer):

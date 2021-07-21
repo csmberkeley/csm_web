@@ -237,8 +237,11 @@ class Resource(ValidatingModel):
     date = models.DateField()
     topics = models.CharField(blank=True, max_length=100)
     worksheet_name = models.CharField(blank=True, max_length=100)
-    worksheet_file = models.FileField(upload_to=worksheet_path)
-    solution_file = models.FileField(upload_to=worksheet_path)
+    worksheet_file = models.FileField(blank=True, upload_to=worksheet_path)
+    solution_file = models.FileField(blank=True, upload_to=worksheet_path)
+
+    class Meta:
+        ordering = ['week_num']
 
 
 class Spacetime(ValidatingModel):
