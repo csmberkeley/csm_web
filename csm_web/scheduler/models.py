@@ -62,9 +62,9 @@ class Attendance(ValidatingModel):
         UNEXCUSED_ABSENCE = "UN", "Unexcused absence"
         EXCUSED_ABSENCE = "EX", "Excused absence"
 
-    date = models.DateField()
     presence = models.CharField(max_length=2, choices=Presence.choices, blank=True)
     student = models.ForeignKey("Student", on_delete=models.CASCADE)
+    sectionOccurrence = models.ForeignKey("SectionOccurrence", on_delete=models.CASCADE)
 
     def __str__(self):
         return f"{self.date} {self.presence} {self.student.name}"
@@ -81,6 +81,16 @@ class Attendance(ValidatingModel):
         unique_together = ("date", "student")
         ordering = ("date",)
         indexes = (models.Index(fields=("date",)),)
+
+
+class SectionOccurrence(ValidatingModel):
+    """
+    SectionOccurrence represents an occurrence of a section and acts as an
+    intermediate step between Section and Attendance. Now attendances dont
+    have dates but rather are associated with Section Occurrence.
+    """
+    section = models.ForeignKey("Section", on_delete=models.CASCADE)
+    date = models.DateField()
 
 
 class Course(ValidatingModel):
