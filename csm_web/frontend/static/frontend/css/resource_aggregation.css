@@ -5,3 +5,8 @@
 .tab-list li:hover {
 	color: blue;
 }
+
+.resourceWrapperContainer {
+	display: flex;
+	max-width: 1024px;
+}
