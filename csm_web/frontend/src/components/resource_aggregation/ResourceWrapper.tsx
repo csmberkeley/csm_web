@@ -1,3 +1,4 @@
+import { resourceUsage } from "process";
 import React, { useState, useEffect } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { getRoles } from "../../utils/user.tsx";
@@ -14,6 +15,25 @@ const ResourceWrapper = ({ courseID }) => {
       setCanEdit(getRoles()['COORDINATOR'].has(courseID));
     });
   }, [courseID]);
+
+  const mockResources = [
+    {
+      weekNum: 1,
+      date: "8/31/21",
+      topics: ["scheme", "trees"],
+      worksheetNAme: "intro to 61a",
+      worksheetFile: "",
+      worksheetSolutions: ""
+    },
+    {
+      weekNum: 2,
+      date: "10/31/21",
+      topics: ["pandas", "threading"],
+      worksheetNAme: "not an intro to 61a",
+      worksheetFile: "",
+      worksheetSolutions: ""
+    }
+  ]
 
   /**
    * Save and PUT request the updated resource
@@ -37,7 +57,7 @@ const ResourceWrapper = ({ courseID }) => {
   }
 
   return (
-    <div className="resource-wrapper">
+    <div className={styles.resourceWrapperContainer}>
       {
         resources.map((resource, index) =>
           <ResourceRow
