@@ -16,6 +16,13 @@ We don't know what specific minimum version you would need for any of the follow
 * Postgresql (`brew install postgresql && brew services start postgresql`)
 * [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install) (`brew tap heroku/brew && brew install heroku`)
   * Create an account on [Heroku](https://id.heroku.com/login) and [login](https://devcenter.heroku.com/articles/heroku-cli#getting-started)
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) (`brew install awscli`)
+  * We use an S3 bucket to store course resources. See [here](https://aws.amazon.com/s3/) to get started.
+* Log in to AWS CLI (`aws configure `) This will prompt an interactive session to enter login credentials.
+  * AWS Access Key ID: (ask tech chair)
+  * AWS Secret Access Key: (ask tech chair)
+  * Default region name: us-east-1
+  * Default output format: json
 
 Other miscellaneous requirements will be installed by the commands below.
 
