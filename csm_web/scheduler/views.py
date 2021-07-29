@@ -14,6 +14,8 @@ from rest_framework import mixins, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.views import APIView
+from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
 from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor, Coordinator, Resource
 from .serializers import (
     CourseSerializer,
@@ -288,8 +290,9 @@ class StudentViewSet(viewsets.GenericViewSet):
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
 
-class ResourceViewSet(viewsets.GenericViewSet):
-    serializer_class=ResourceSerializer
+class ResourceViewSet(viewsets.GenericViewSet, APIView):
+    serializer_class = ResourceSerializer
+    parser_classes = [JSONParser, FormParser, MultiPartParser]
 
     def get_queryset(self):
         return Resource.objects.all()
@@ -329,20 +332,25 @@ class ResourceViewSet(viewsets.GenericViewSet):
             if not is_coordinator:
                 return PermissionDenied("You must be a coordinator to change resources data!")
 
-            resource = request.data["resource"]
+            resource = request.data
             # query by week_num && date, update resource with new info
             resource_query = resources.filter(
                 course=course,
-                week_num=resource["week_num"],
+                week_num=resource["weekNum"],
                 date=resource["date"]
             )
             if not resource_query.exists():
                 pass  # TODO: handle resource creation
             else:  # get existing resource
                 resource_obj = resource_query.get()
-                resource_obj.topics = resource["topics"]
-                resource_obj.worksheet_name = resource["worksheet_name"]
-                # TODO: update file fields
+                if "topics" in resource:
+                    resource_obj.topics = resource["topics"]
+                if "worksheetName" in resource:
+                    resource_obj.worksheet_name = resource["worksheetName"]
+                if "worksheetFile" in resource:
+                    resource_obj.worksheet_file = resource["worksheetFile"]
+                if "solutionFile" in resource:
+                    resource_obj.solution_file = resource["solutionFile"]
                 resource_obj.save()
         return Response(status.HTTP_200_OK)
 

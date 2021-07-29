@@ -14,8 +14,15 @@ const ResourceWrapper = ({ course_id }) => {
   /**
    * Save and PUT request the updated resource
    */
-  function handleUpdateResource(newResource) {
-    fetchWithMethod(`resources/${course_id}/resources/`, HTTP_METHODS.PUT, { "resource": newResource });
+  function handleUpdateResource(newResource, fileFormData) {
+    let resourceFormData = new FormData();
+    for (let key of Object.keys(newResource)) {
+      resourceFormData.set(key, newResource[key]);
+    }
+    for (let entry of fileFormData.entries()) {
+      resourceFormData.set(entry[0], entry[1])
+    }
+    fetchWithMethod(`resources/${course_id}/resources/`, HTTP_METHODS.PUT, resourceFormData, true);
   }
 
   return (
@@ -45,7 +52,8 @@ interface Resource {
 const ResourceRow = ({ initialResource, updateResource }) => {
   // call updateResource(resource) on change
   const [edit, setEdit] = useState(false);
-  const [resource, setResource] = useState(initialResource)
+  const [resource, setResource] = useState(initialResource);
+  const [fileFormData, setFileFormData] = useState(new FormData());
 
   /**
    * Modifies a specified field of the current resource.
@@ -58,6 +66,11 @@ const ResourceRow = ({ initialResource, updateResource }) => {
     setResource(resource)
   }
 
+  function handleFileChange(e, field) {
+    fileFormData.set(field, e.target.files[0]);
+    setFileFormData(fileFormData);
+  }
+
   /**
    * Bubbles change up to parent ResourceWrapper
    *
@@ -65,7 +78,7 @@ const ResourceRow = ({ initialResource, updateResource }) => {
    */
   function handleSubmit(e) {
     e.preventDefault()
-    updateResource(resource)
+    updateResource(resource, fileFormData)
   }
 
   return (
@@ -81,7 +94,7 @@ const ResourceRow = ({ initialResource, updateResource }) => {
         {
           edit ?
             <input type="text" defaultValue={resource.weekNum}
-              onChange={e => handleChange(e, 'week_num')} />
+              onChange={e => handleChange(e, 'weekNum')} />
             :
             <div>{resource.weekNum}</div>
         }
@@ -108,18 +121,28 @@ const ResourceRow = ({ initialResource, updateResource }) => {
         <div>Worksheet Name</div>
         {
           edit ?
-            <input type="text" defaultValue={resource.worksheetName} onChange={e => handleChange(e, 'worksheet_name')} />
+            <input type="text" defaultValue={resource.worksheetName} onChange={e => handleChange(e, 'worksheetName')} />
             :
             <div>{resource.worksheetName}</div>
         }
       </div>
-      <div> {/* TODO: change into file uploads */}
+      <div>
         <div>Worksheet File</div>
-        <div>{resource.worksheetFile}</div>
+        {
+          edit ?
+            <input type="file" onChange={e => handleFileChange(e, 'worksheetFile')} />
+            :
+            <div>{resource.worksheetFile}</div>
+        }
       </div>
       <div>
         <div>Solution File</div>
-        <div>{resource.solutionFile}</div>
+        {
+          edit ?
+            <input type="file" onChange={e => handleFileChange(e, 'solutionFile')} />
+            :
+            <div>{resource.solutionFile}</div>
+        }
       </div>
     </div>
   );

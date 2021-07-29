@@ -22,10 +22,20 @@ export function normalizeEndpoint(endpoint) {
   return `/api/${endpoint}`;
 }
 
-export function fetchWithMethod(endpoint, method, data = {}) {
+export function fetchWithMethod(endpoint, method, data = {}, isFormData = false) {
   if (!Object.prototype.hasOwnProperty.call(HTTP_METHODS, method)) {
     // check that method choice is valid
     throw new Error("HTTP method must be one of: POST, GET, PUT, PATCH, or DELETE");
+  }
+  if (isFormData) {
+    return fetch(normalizeEndpoint(endpoint), {
+      method: method,
+      credentials: "same-origin",
+      headers: {
+        "X-CSRFToken": Cookies.get("csrftoken")
+      },
+      body: data
+    });
   }
   return fetch(normalizeEndpoint(endpoint), {
     method: method,
