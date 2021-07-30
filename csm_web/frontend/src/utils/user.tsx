@@ -7,13 +7,19 @@ const DEFAULT_ROLES = {
     'COORDINATOR': new Set(),
 };
 
-function getRoles() {  // TODO: determine what type to return
+interface Roles {
+    STUDENT: Set<number>;
+    MENTOR: Set<number>;
+    COORDINATOR: Set<number>
+}
+
+export function getRoles(): Roles {
     const roles = cloneDeep(DEFAULT_ROLES);
 
     fetchJSON("/profiles").then(
         profiles => {
             profiles.map(course => {
-                roles[course.role].add(course.course);
+                roles[course.role].add(course.courseId);
             });
         }
     );

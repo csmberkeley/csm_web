@@ -1,0 +1,7 @@
+.tab-list li.active {
+	color: var(--csm-green-darkened);
+}
+
+.tab-list li:hover {
+	color: blue;
+}

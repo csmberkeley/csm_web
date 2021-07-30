@@ -333,23 +333,28 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                 return PermissionDenied("You must be a coordinator to change resources data!")
 
             resource = request.data
-            # query by week_num && date, update resource with new info
+            # query by resource id, update resource with new info
             resource_query = resources.filter(
-                course=course,
-                week_num=resource["weekNum"],
-                date=resource["date"]
+                pk=resource["id"]
             )
             if not resource_query.exists():
                 pass  # TODO: handle resource creation
             else:  # get existing resource
                 resource_obj = resource_query.get()
+                print(resource)
+                if "weekNum" in resource:
+                    resource_obj.week_num = resource["weekNum"]
+                if "date" in resource:
+                    resource_obj.date = resource["date"]
                 if "topics" in resource:
                     resource_obj.topics = resource["topics"]
                 if "worksheetName" in resource:
+                    print('worksheet name', resource["worksheetName"])
                     resource_obj.worksheet_name = resource["worksheetName"]
-                if "worksheetFile" in resource:
+                if "worksheetFile" in resource and not isinstance(resource["worksheetFile"], str):
+                    # only update if a new file was uploaded
                     resource_obj.worksheet_file = resource["worksheetFile"]
-                if "solutionFile" in resource:
+                if "solutionFile" in resource and not isinstance(resource["solutionFile"], str):
                     resource_obj.solution_file = resource["solutionFile"]
                 resource_obj.save()
         return Response(status.HTTP_200_OK)
