@@ -8,6 +8,7 @@ from django.conf import settings
 from django.db.models import Count
 from .models import (
     Course,
+    Resource,
     Section,
     Spacetime,
     Student,
@@ -155,6 +156,12 @@ class OverrideFactory(factory.django.DjangoModelFactory):
     spacetime = factory.SubFactory(SpacetimeFactory)
 
 
+class ResourceFactory(factory.django.DjangoModelFactory):
+
+    class Meta:
+        model = Resource
+
+
 def create_attendances_for(student):
     today = timezone.datetime.today().date()
     current_date = week_bounds(student.section.course.section_start)[0]
@@ -163,7 +170,7 @@ def create_attendances_for(student):
     existing_attendance_dates = set(student.attendance_set.values_list("date", flat=True))
     while current_date < student.section.course.valid_until:
         for spacetime_day in spacetime_days:
-            if (date := (current_date + timedelta(days=spacetime_day))) not in existing_attendance_dates:
+            if (date: = (current_date + timedelta(days=spacetime_day))) not in existing_attendance_dates:
                 if current_date < today:
                     AttendanceFactory.create(student=student, date=date)
                 else:
@@ -247,5 +254,10 @@ def generate_test_data(preconfirm=False):
                 create_attendances_for(student)
             section.students.set(students)
             section.save()
-        print("Done")
+        print("Done generating sections")
+        for i in range(random.randint(3, 5)):
+            date = enrollment_start + timedelta(days=7*i)
+            val = random.randint(1, 100)
+            ResourceFactory.create(course=course, week_num=i+1, date=date, topics=f"Topic {val}")
+        print("Done generating resources")
     create_demo_account()

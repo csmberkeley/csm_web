@@ -187,7 +187,7 @@ class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
         # TODO: handle file fields
-        fields = ['id', 'course', 'week_num', 'date', 'topics', 'worksheet_name']
+        fields = ['id', 'course', 'week_num', 'date', 'topics', 'worksheet_name', 'worksheet_file', 'solution_file']
 
 
 class OverrideSerializer(serializers.ModelSerializer):

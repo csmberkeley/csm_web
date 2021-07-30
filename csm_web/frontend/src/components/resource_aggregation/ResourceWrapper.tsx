@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import { getRoles } from "../../utils/user.tsx";
 
-const ResourceWrapper = ({ course_id }) => {
+const ResourceWrapper = ({ courseID }) => {
 
   const [resources, setResources] = useState([]);
+  const [canEdit, setCanEdit] = useState(false);
 
   useEffect(() => {
-    fetchJSON(`/resources/${course_id}/resources`).then(data => {
+    fetchJSON(`/resources/${courseID}/resources`).then(data => {
       setResources(data);
+      console.log(data);
+      setCanEdit(getRoles()['COORDINATOR'].has(courseID));
     });
-  }, [course_id]);
+  }, [courseID]);
 
   /**
    * Save and PUT request the updated resource
@@ -22,7 +26,14 @@ const ResourceWrapper = ({ course_id }) => {
     for (let entry of fileFormData.entries()) {
       resourceFormData.set(entry[0], entry[1])
     }
-    fetchWithMethod(`resources/${course_id}/resources/`, HTTP_METHODS.PUT, resourceFormData, true);
+    for (let entry of resourceFormData.entries()) {
+      console.log(entry)
+    }
+    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then(() => {
+      fetchJSON(`/resources/${courseID}/resources`).then(data => {
+        setResources(data);
+      });
+    });
   }
 
   return (
@@ -33,6 +44,7 @@ const ResourceWrapper = ({ course_id }) => {
             key={index}
             initialResource={resource}
             updateResource={handleUpdateResource}
+            canEdit={canEdit}
           />
         )
       }
@@ -49,11 +61,22 @@ interface Resource {
   solutionFile: string;
 }
 
-const ResourceRow = ({ initialResource, updateResource }) => {
+interface ResourceRow {
+  initialResource: Resource;
+  updateResource: Function;
+  canEdit: boolean;
+}
+
+const ResourceRow = ({ initialResource, updateResource, canEdit }: ResourceRow) => {
   // call updateResource(resource) on change
   const [edit, setEdit] = useState(false);
-  const [resource, setResource] = useState(initialResource);
+  const [resource, setResource]: [Resource, Function] = useState({});
   const [fileFormData, setFileFormData] = useState(new FormData());
+
+  // update current resource if initialResource changes
+  useEffect(() => {
+    setResource(initialResource);
+  }, [initialResource]);
 
   /**
    * Modifies a specified field of the current resource.
@@ -67,6 +90,7 @@ const ResourceRow = ({ initialResource, updateResource }) => {
   }
 
   function handleFileChange(e, field) {
+    console.log('file changed ' + field)
     fileFormData.set(field, e.target.files[0]);
     setFileFormData(fileFormData);
   }
@@ -79,6 +103,16 @@ const ResourceRow = ({ initialResource, updateResource }) => {
   function handleSubmit(e) {
     e.preventDefault()
     updateResource(resource, fileFormData)
+    setEdit(false);
+  }
+
+  /**
+   * Sets editing behavior depending on whether we can edit this resource/course
+   */
+  function handleSetEdit() {
+    if (canEdit) {
+      setEdit(true);
+    }
   }
 
   return (
@@ -87,13 +121,13 @@ const ResourceRow = ({ initialResource, updateResource }) => {
         edit ?
           <button onClick={handleSubmit}> SUBMIT </button>
           :
-          <button onClick={() => setEdit(true)}> EDIT </button>
+          canEdit ? <button onClick={handleSetEdit}> EDIT </button> : <></>
       }
       <div>
         <div>Week Number</div>
         {
           edit ?
-            <input type="text" defaultValue={resource.weekNum}
+            <input type="number" defaultValue={resource.weekNum}
               onChange={e => handleChange(e, 'weekNum')} />
             :
             <div>{resource.weekNum}</div>
@@ -118,30 +152,18 @@ const ResourceRow = ({ initialResource, updateResource }) => {
         }
       </div>
       <div>
-        <div>Worksheet Name</div>
         {
           edit ?
-            <input type="text" defaultValue={resource.worksheetName} onChange={e => handleChange(e, 'worksheetName')} />
+            (<div>
+              <label>Worksheet Name</label><input type="text" defaultValue={resource.worksheetName} onChange={e => handleChange(e, 'worksheetName')} /><br/>
+              <label>Worksheet File</label><input type="file" onChange={e => handleFileChange(e, 'worksheetFile')} /><br/>
+              <label>Solution File</label><input type="file" onChange={e => handleFileChange(e, 'solutionFile')} />
+            </div>)
             :
-            <div>{resource.worksheetName}</div>
-        }
-      </div>
-      <div>
-        <div>Worksheet File</div>
-        {
-          edit ?
-            <input type="file" onChange={e => handleFileChange(e, 'worksheetFile')} />
-            :
-            <div>{resource.worksheetFile}</div>
-        }
-      </div>
-      <div>
-        <div>Solution File</div>
-        {
-          edit ?
-            <input type="file" onChange={e => handleFileChange(e, 'solutionFile')} />
-            :
-            <div>{resource.solutionFile}</div>
+            (<div>
+              <a href={resource.worksheetFile}>{resource.worksheetName}</a>
+              (<a href={resource.solutionFile}>solutions</a>)
+            </div>)
         }
       </div>
     </div>
