@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
-import { getRoles } from "../../utils/user.tsx";
-import ResourceRow from "./ResourceRow.tsx";
+import { getRoles } from "../../utils/user";
+import ResourceRow from "./ResourceRow";
 
-const ResourceWrapper = ({ courseID }) => {
+export const ResourceWrapper = ({ courseID }) => {
   const [resources, setResources] = useState([]);
   const [canEdit, setCanEdit] = useState(false);
 
@@ -13,7 +13,10 @@ const ResourceWrapper = ({ courseID }) => {
   useEffect(() => {
     fetchJSON(`/resources/${courseID}/resources`).then(data => {
       setResources(data);
-      setCanEdit(getRoles()["COORDINATOR"].has(courseID));
+      getRoles().then( (roles) =>
+        setCanEdit(roles["COORDINATOR"].has(courseID))
+      );
+      //setCanEdit(getRoles()["COORDINATOR"].has(courseID));
     });
   }, [courseID]);
 
