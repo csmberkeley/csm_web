@@ -170,7 +170,7 @@ def create_attendances_for(student):
     existing_attendance_dates = set(student.attendance_set.values_list("date", flat=True))
     while current_date < student.section.course.valid_until:
         for spacetime_day in spacetime_days:
-            if (date: = (current_date + timedelta(days=spacetime_day))) not in existing_attendance_dates:
+            if (date := (current_date + timedelta(days=spacetime_day))) not in existing_attendance_dates:
                 if current_date < today:
                     AttendanceFactory.create(student=student, date=date)
                 else:
