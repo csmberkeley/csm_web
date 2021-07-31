@@ -13,7 +13,7 @@ interface Roles {
   COORDINATOR: Set<number>;
 }
 
-export function getRoles() {
+export function getRoles(): Promise<Roles>{
   return fetchJSON("/profiles").then(profiles => {
     const roles = cloneDeep(DEFAULT_ROLES);
     profiles.map(course => {
