@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import ResourceEdit from "./ResourceEdit.tsx";
+import ResourceEdit from "./ResourceEdit";
 import { Resource, ResourceRowProps } from "./ResourceTypes";
 
 const ResourceTopics = ({ topics }) => {
@@ -12,7 +12,7 @@ const ResourceTopics = ({ topics }) => {
   ));
 };
 
-const ResourceRow = ({ initialResource, updateResource, canEdit }: ResourceRowProps) => {
+export const ResourceRow = ({ initialResource, updateResource, canEdit }: ResourceRowProps) => {
   // call updateResource(resource) on change
   const [edit, setEdit] = useState(false);
   const [resource, setResource]: [Resource, Function] = useState({} as Resource);

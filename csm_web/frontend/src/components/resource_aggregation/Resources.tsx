@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { fetchJSON } from "../../utils/api";
 import ResourceWrapper from "./ResourceWrapper.tsx";
 
-const Resources = () => {
+export const Resources = () => {
   const [selectedCourseID, setSelectedCourseID] = useState(1);
   const [courses, setCourses] = useState([]);
   // TODO: have mapping of course id to resource list to store previous gets
@@ -18,7 +18,7 @@ const Resources = () => {
   }
 
   return (
-    <div>
+    <div className="outer">
       <div className="tabs">
         <ul className="tab-list">
           {courses.map(course => (

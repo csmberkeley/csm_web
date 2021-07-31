@@ -1,7 +1,7 @@
 import React from "react";
 import { ResourceEditProps } from "./ResourceTypes";
 
-const ResourceEdit = ({ resource, handleChange, handleFileChange, handleSubmit }: ResourceEditProps) => {
+export const ResourceEdit = ({ resource, handleChange, handleFileChange, handleSubmit }: ResourceEditProps) => {
   return (
     <div className="resourceEditContainer">
       <div id="resourceEditInner">

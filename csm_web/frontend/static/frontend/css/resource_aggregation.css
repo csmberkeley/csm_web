@@ -6,6 +6,10 @@
 	color: blue;
 }
 
+.outer {
+	border: thin solid green;
+}
+
 .resourceWrapperContainer a {
 	color: #519c6c;
 }
