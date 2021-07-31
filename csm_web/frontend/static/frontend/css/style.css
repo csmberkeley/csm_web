@@ -13,6 +13,10 @@ body {
 	overflow-x: hidden;
 }
 
+button:hover {
+	cursor: pointer;
+}
+
 :root {
 	--csm-green: #9ae0b3;
 	--csm-green-darkened: #88cea1;
@@ -31,6 +35,11 @@ body {
 	--csm-danger: #ff7272;
 	--csm-danger-darkened: #eb6060;
 	--csm-neutral: #c0c0c0;
+	--csm-resources: #e3e3e3;
+}
+
+a {
+	color: #519c6c;
 }
 
 /* Header */
@@ -1416,4 +1425,79 @@ table tbody tr:last-child > td {
 #stack-trace > pre {
 	width: fit-content;
 	margin: auto;
+}
+
+/* Resource Aggregation */
+
+.resourceWrapperContainer {
+	display: flex;
+	flex-direction: column;
+	margin: auto;
+	max-width: 1024px;
+}
+
+.resourceContainer,
+.resourceEditContainer {
+	background-color: var(--csm-resources);
+	border-radius: 8px;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 0 -1px rgb(0 0 0 / 6%);
+	display: flex;
+	margin: 16px;
+	padding: 16px;
+	text-align: center;
+	width: 100%;
+}
+
+.resourceInfo {
+	align-items: center;
+	justify-content: center;
+	margin: auto;
+	padding: 8px;
+	width: 80px;
+}
+
+.topic {
+	background-color: var(--csm-green);
+	border-radius: 4px;
+	margin: 4px;
+	padding: 4px;
+}
+
+#resourceTopics,
+#resourceWkstName {
+	width: 96px;
+}
+
+.resourceEditContainer {
+	flex-direction: column;
+}
+
+#resourceEditInner {
+	display: flex;
+	flex-direction: row;
+	margin: auto 20%;
+	justify-content: space-between;
+	padding: 16px;
+}
+
+.resourceInfoEdit {
+	margin: 4px;
+	padding: 4px;
+}
+
+.resourceInfoEdit > div {
+	margin: 4px 2px;
+}
+
+#resourceButtonSubmit {
+	background-color: var(--csm-green);
+	border: none;
+	border-radius: 8px;
+	margin: auto;
+	padding: 8px;
+	width: 160px;
+}
+
+#resourceButtonSubmit:hover {
+	background-color: var(--csm-green-darkened);
 }

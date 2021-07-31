@@ -1,7 +1,17 @@
 import { resourceUsage } from "process";
 import React, { useState, useEffect } from "react";
+import { render } from "react-dom";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { getRoles } from "../../utils/user.tsx";
+import ResourceEdit from "./ResourceEdit.tsx";
+
+const ResourceTopics = ({ topics }) => {
+  return (
+    topics.map((topic, index) =>
+      <div className="topic" key={index}>{topic}</div>
+    )
+  )
+}
 
 const ResourceWrapper = ({ courseID }) => {
 
@@ -16,24 +26,24 @@ const ResourceWrapper = ({ courseID }) => {
     });
   }, [courseID]);
 
-  const mockResources = [
-    {
-      weekNum: 1,
-      date: "8/31/21",
-      topics: ["scheme", "trees"],
-      worksheetNAme: "intro to 61a",
-      worksheetFile: "",
-      worksheetSolutions: ""
-    },
-    {
-      weekNum: 2,
-      date: "10/31/21",
-      topics: ["pandas", "threading"],
-      worksheetNAme: "not an intro to 61a",
-      worksheetFile: "",
-      worksheetSolutions: ""
-    }
-  ]
+  // const resources = [
+  //   {
+  //     weekNum: 1,
+  //     date: "8/31/21",
+  //     topics: ["scheme", "trees"],
+  //     worksheetName: "intro to 61a",
+  //     worksheetFile: "",
+  //     worksheetSolutions: ""
+  //   },
+  //   {
+  //     weekNum: 2,
+  //     date: "10/31/21",
+  //     topics: ["pandas", "threading"],
+  //     worksheetName: "not intro to 61a",
+  //     worksheetFile: "",
+  //     worksheetSolutions: ""
+  //   }
+  // ]
 
   /**
    * Save and PUT request the updated resource
@@ -57,7 +67,7 @@ const ResourceWrapper = ({ courseID }) => {
   }
 
   return (
-    <div className={styles.resourceWrapperContainer}>
+    <div className="resourceWrapperContainer">
       {
         resources.map((resource, index) =>
           <ResourceRow
@@ -135,57 +145,32 @@ const ResourceRow = ({ initialResource, updateResource, canEdit }: ResourceRow) 
     }
   }
 
+  if (edit) {
+    return <ResourceEdit resource={resource} handleChange={handleChange} handleFileChange ={handleFileChange} handleSubmit={handleSubmit} />
+  }
+
   return (
-    <div>
-      {
-        edit ?
-          <button onClick={handleSubmit}> SUBMIT </button>
-          :
-          canEdit ? <button onClick={handleSetEdit}> EDIT </button> : <></>
-      }
-      <div>
-        <div>Week Number</div>
-        {
-          edit ?
-            <input type="number" defaultValue={resource.weekNum}
-              onChange={e => handleChange(e, 'weekNum')} />
-            :
-            <div>{resource.weekNum}</div>
-        }
+    <div className="resourceContainer">
+      <div className="resourceInfo">
+        <div>Week {resource.weekNum}</div>
       </div>
-      <div>
-        <div>Date</div>
-        {
-          edit ?
-            <input type="date" defaultValue={resource.date} onChange={e => handleChange(e, 'date')} />
-            :
-            <div>{resource.date}</div>
-        }
+      <div className="resourceInfo">
+        <div>{resource.date}</div>
       </div>
-      <div>
+      <div className="resourceInfo" id="resourceTopics">
         <div>Topics</div>
-        {
-          edit ?
-            <input type="text" defaultValue={resource.topics} onChange={e => handleChange(e, 'topics')} />
-            :
-            <div>{resource.topics}</div>
-        }
+        <div><ResourceTopics topics={resource.topics} /></div>
       </div>
-      <div>
-        {
-          edit ?
-            (<div>
-              <label>Worksheet Name</label><input type="text" defaultValue={resource.worksheetName} onChange={e => handleChange(e, 'worksheetName')} /><br/>
-              <label>Worksheet File</label><input type="file" onChange={e => handleFileChange(e, 'worksheetFile')} /><br/>
-              <label>Solution File</label><input type="file" onChange={e => handleFileChange(e, 'solutionFile')} />
-            </div>)
-            :
-            (<div>
-              <a href={resource.worksheetFile}>{resource.worksheetName}</a>
-              (<a href={resource.solutionFile}>solutions</a>)
-            </div>)
-        }
+      <div className="resourceInfo" id="resourceWkstName">
+        <div>{resource.worksheetName}</div>
       </div>
+      <div className="resourceInfo">
+        <div><a href={resource.worksheetFile}>Worksheet</a></div>
+      </div>
+      <div className="resourceInfo">
+        <div><a href={resource.worksheetSolutions}>Solutions</a></div>
+      </div>
+       <button onClick={() => setEdit(true)} className="resourceButton"> EDIT </button>
     </div>
   );
 }
