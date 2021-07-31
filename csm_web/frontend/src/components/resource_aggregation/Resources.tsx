@@ -1,7 +1,6 @@
-import React, {useState, useEffect} from "react";
+import React, { useState, useEffect } from "react";
 import { fetchJSON } from "../../utils/api";
 import ResourceWrapper from "./ResourceWrapper.tsx";
-
 
 const Resources = () => {
   const [selectedCourseID, setSelectedCourseID] = useState(1);
@@ -14,8 +13,7 @@ const Resources = () => {
     });
   }, []);
 
-  const handleTabClick = (courseID) => {
-    console.log("on click works");
+  function handleTabClick(courseID) {
     setSelectedCourseID(courseID);
   }
 
@@ -23,22 +21,20 @@ const Resources = () => {
     <div>
       <div className="tabs">
         <ul className="tab-list">
-          {
-            courses.map((course) => (
-              <li
-                onClick={() => handleTabClick(course.id)}
-                key={course.id}
-                className={course.id === selectedCourseID ? "active": ""}
-              >
-                {course.name}
-              </li>
-            ))
-          }
+          {courses.map(course => (
+            <li
+              onClick={() => handleTabClick(course.id)}
+              key={course.id}
+              className={course.id === selectedCourseID ? "active" : ""}
+            >
+              {course.name}
+            </li>
+          ))}
         </ul>
       </div>
-      <ResourceWrapper courseID={selectedCourseID}/>
+      <ResourceWrapper courseID={selectedCourseID} />
     </div>
-  )
-}
+  );
+};
 
 export default Resources;

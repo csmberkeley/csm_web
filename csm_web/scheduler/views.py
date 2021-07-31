@@ -300,19 +300,19 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
     @action(detail=True, methods=['get', 'put'])
     def resources(self, request, pk=None):
         """
-        Endpoint: /api/resources/<course_id>
+        Endpoint: /api/resources/<course_id>/resources
         Returns all resources for the course, or edits resources for the course
 
         request data:
         {
             "resources": [
                 {
-                    "week_num": ...,
+                    "weekNum": ...,
                     "date": ...,
                     "topics": ...,
-                    "worksheet_name": ...,
-                    "worksheet_file": ...,  # TODO: what's the actual data here?
-                    "solution_file": ...,
+                    "worksheetName": ...,
+                    "worksheetFile": ...,  # TODO: what's the actual data here?
+                    "solutionFile": ...,
                 }
             ],
             ...
@@ -330,7 +330,7 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
 
             is_coordinator = course.coordinator_set.filter(user=request.user).exists()
             if not is_coordinator:
-                return PermissionDenied("You must be a coordinator to change resources data!")
+                raise PermissionDenied("You must be a coordinator to change resources data!")
 
             resource = request.data
             # query by resource id, update resource with new info
@@ -341,7 +341,6 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                 pass  # TODO: handle resource creation
             else:  # get existing resource
                 resource_obj = resource_query.get()
-                print(resource)
                 if "weekNum" in resource:
                     resource_obj.week_num = resource["weekNum"]
                 if "date" in resource:
@@ -358,47 +357,6 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                     resource_obj.solution_file = resource["solutionFile"]
                 resource_obj.save()
         return Response(status.HTTP_200_OK)
-
-    # temporary method for testing
-    @staticmethod
-    def _dummy_request():
-        # from scheduler.views import ResourceViewSet; ResourceViewSet._dummy_request()
-        from django.http import HttpRequest
-
-        data = {
-            "resources": [
-                {
-                    "week_num": 1,
-                    "date": "2021-01-01",
-                    "topics": "topics 1",
-                    "worksheet_name": "worksheet 1",
-                    "worksheet_file": "/worksheet/1",
-                    "solution_file": "/solution/1"
-                }, {
-                    "week_num": 2,
-                    "date": "2021-02-02",
-                    "topics": "topics 2",
-                    "worksheet_name": "worksheet 2",
-                    "worksheet_file": "/worksheet/2",
-                    "solution_file": "/solution/2"
-                }
-            ]
-        }
-
-        viewset = ResourceViewSet()
-
-        request = HttpRequest()
-        request.user = User.objects.get(first_name='Demo')  # demo_user
-
-        request.method = 'GET'
-        response = viewset.resources(request, pk=2)
-        print(response.data)
-
-        request.data = data
-        request.method = 'PUT'
-
-        response = viewset.resources(request, pk=2)
-        print(response.data)
 
 
 class ProfileViewSet(*viewset_with('list')):
