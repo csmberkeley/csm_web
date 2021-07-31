@@ -1,13 +1,12 @@
-import { resourceUsage } from "process";
 import React, { useState, useEffect } from "react";
-import { render } from "react-dom";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { getRoles } from "../../utils/user.tsx";
 import ResourceEdit from "./ResourceEdit.tsx";
 
 const ResourceTopics = ({ topics }) => {
+  if (topics === undefined) return <div></div>;
   return (
-    topics.map((topic, index) =>
+    topics.split('\x00').map((topic, index) =>
       <div className="topic" key={index}>{topic}</div>
     )
   )
@@ -21,29 +20,9 @@ const ResourceWrapper = ({ courseID }) => {
   useEffect(() => {
     fetchJSON(`/resources/${courseID}/resources`).then(data => {
       setResources(data);
-      console.log(data);
       setCanEdit(getRoles()['COORDINATOR'].has(courseID));
     });
   }, [courseID]);
-
-  // const resources = [
-  //   {
-  //     weekNum: 1,
-  //     date: "8/31/21",
-  //     topics: ["scheme", "trees"],
-  //     worksheetName: "intro to 61a",
-  //     worksheetFile: "",
-  //     worksheetSolutions: ""
-  //   },
-  //   {
-  //     weekNum: 2,
-  //     date: "10/31/21",
-  //     topics: ["pandas", "threading"],
-  //     worksheetName: "not intro to 61a",
-  //     worksheetFile: "",
-  //     worksheetSolutions: ""
-  //   }
-  // ]
 
   /**
    * Save and PUT request the updated resource
@@ -87,7 +66,7 @@ interface Resource {
   date: string;
   topics: string;
   worksheetName: string;
-  worksheetFile: string;  // TODO: finalize file handling
+  worksheetFile: string;
   solutionFile: string;
 }
 
@@ -106,6 +85,7 @@ const ResourceRow = ({ initialResource, updateResource, canEdit }: ResourceRow) 
   // update current resource if initialResource changes
   useEffect(() => {
     setResource(initialResource);
+    setEdit(false);
   }, [initialResource]);
 
   /**
@@ -168,9 +148,11 @@ const ResourceRow = ({ initialResource, updateResource, canEdit }: ResourceRow) 
         <div><a href={resource.worksheetFile}>Worksheet</a></div>
       </div>
       <div className="resourceInfo">
-        <div><a href={resource.worksheetSolutions}>Solutions</a></div>
+        <div><a href={resource.solutionFile}>Solutions</a></div>
       </div>
-       <button onClick={() => setEdit(true)} className="resourceButton"> EDIT </button>
+      {
+        canEdit ? <button onClick={handleSetEdit} className="resourceButton"> EDIT </button> : <></>
+      }
     </div>
   );
 }
