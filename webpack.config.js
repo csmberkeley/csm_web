@@ -8,6 +8,9 @@ module.exports = (env, argv) => {
     output: {
       path: path.resolve(__dirname, "./csm_web/frontend/static/frontend/")
     },
+    resolve: {
+      extensions: [".tsx", ".ts", ".js", ".json"]
+    },
     module: {
       rules: [
         {
