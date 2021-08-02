@@ -513,7 +513,6 @@ class DayEndFilter(admin.SimpleListFilter):
 class AttendanceAdmin(CoordAdmin):
 
     fields = (
-        "date",
         "student",
         "get_student_display",
         "student_email",
@@ -534,7 +533,6 @@ class AttendanceAdmin(CoordAdmin):
     )
 
     list_display = (
-        "date",
         "get_student_display",
         "student_email",
         "section_time",
@@ -546,7 +544,7 @@ class AttendanceAdmin(CoordAdmin):
 
     list_filter = ("presence", "student__section__course", DayStartFilter, DayEndFilter)
     search_fields = ("student__user__first_name", "student__user__last_name")
-    ordering = ("-date",)
+    #ordering = ("-date",)
 
     def formfield_for_foreignkey(self, db_field, request, **kwargs):
         if not request.user.is_superuser and db_field.name == "student":
