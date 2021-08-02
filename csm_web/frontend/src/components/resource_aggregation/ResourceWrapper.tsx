@@ -40,6 +40,12 @@ export const ResourceWrapper = ({ courseID }) => {
 
   return (
     <div className="resourceWrapperContainer">
+      <div className="resourceWrapperHeader">
+        <div className="weekNum">Week</div>
+        <div className="dateCell">Date</div>
+        <div className="resourceTopics">Topics</div>
+        <div className="resourceWkst">Worksheet and Solutions</div>
+      </div>
       {resources.map((resource, index) => (
         <ResourceRow key={index} initialResource={resource} updateResource={handleUpdateResource} canEdit={canEdit} />
       ))}

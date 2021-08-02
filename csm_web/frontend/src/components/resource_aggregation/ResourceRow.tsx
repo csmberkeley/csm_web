@@ -79,29 +79,24 @@ export const ResourceRow = ({ initialResource, updateResource, canEdit }: Resour
 
   return (
     <div className="resourceContainer">
-      <div className="resourceInfo">
+      <div className="resourceInfo weekNum">
         <div>Week {resource.weekNum}</div>
       </div>
-      <div className="resourceInfo">
-        <div className="dateCell">{resource.date}</div>
+      <div className="resourceInfo dateCell">
+        <div>{resource.date}</div>
       </div>
-      <div className="resourceInfo" id="resourceTopics">
+      <div className="resourceInfo resourceTopics">
         <div>
           <ResourceTopics topics={resource.topics} />
         </div>
       </div>
-      <div className="resourceInfo" id="resourceWkstName">
-        <div>{resource.worksheetName}</div>
-      </div>
-      <div className="resourceInfo">
-        <div>
+      <div className="resourceWkst">
+        <div className="resourceWkstFile">
           <a href={resource.worksheetFile} target="_blank">
-            Worksheet
+            {/*resource.worksheetName*/}Worksheet Name
           </a>
         </div>
-      </div>
-      <div className="resourceInfo">
-        <div>
+        <div className="resourceSoln">
           <a href={resource.solutionFile} target="_blank">
             Solutions
           </a>

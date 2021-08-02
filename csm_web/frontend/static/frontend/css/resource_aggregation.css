@@ -1,30 +1,40 @@
-.tab-list li.active {
-	color: var(--csm-green-darkened);
+.tab-list {
+	margin-bottom: 24px;
 }
 
-.tab-list li:hover {
-	color: blue;
+.tab.active {
+	background-color: var(--csm-green);
 }
 
-.resourceWrapperContainer a {
-	color: #519c6c;
+.tab.active:hover {
+	background-color: var(--csm-green);
 }
 
-.resourceWrapperContainer {
-	display: flex;
-	max-width: 1024px;
+.tab {
+	background-color: var(--csm-neutral);
+	border: none;
+	border-radius: 8px;
+	color: white;
+	font-size: 16px;
+	margin: 8px;
+	padding: 16px;
+	width: 88px;
+}
+
+.tab:hover {
+	background-color: var(--csm-neutral-darkened);
+}
+
+.tabs {
+	margin: auto;
+	text-align: center;
 }
 
 .resourceWrapperContainer {
 	display: flex;
 	flex-direction: column;
 	margin: auto;
-	max-width: 1024px;
-}
-
-.dateCell {
-	width: fit-content;
-	min-width: 100px;
+	max-width: 1064px;
 }
 
 .resourceContainer,
@@ -32,32 +42,79 @@
 	background-color: var(--csm-resources);
 	border-radius: 8px;
 	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 0 -1px rgb(0 0 0 / 6%);
+	margin: 16px auto;
+	padding: 24px 0;
+}
+
+.resourceContainer,
+.resourceEditContainer,
+.resourceWrapperHeader {
 	display: flex;
-	margin: 16px;
-	padding: 16px;
 	text-align: center;
 	width: 100%;
 }
 
-.resourceInfo {
+.resourceWrapperHeader {
+	margin-bottom: 4px;
+}
+
+.resourceInfo,
+.resourceWrapperHeader > div {
 	display: flex;
 	align-items: center;
 	justify-content: center;
 	margin: auto;
-	padding: 8px;
-	width: 15%;
+	padding: 0 8px;
+}
+
+.weekNum,
+.dateCell {
+	flex: 1;
+}
+
+.resourceTopics {
+	flex: 2;
+}
+
+.resourceWkst {
+	flex: 2;
+	display: flex;
+	flex-direction: column;
+	text-align: left;
+}
+
+.resourceWkstFile,
+.resourceSoln {
+	color: var(--csm-green-darkened);
+}
+
+.resourceWkstFile {
+	text-decoration: underline;
+}
+
+.resourceSoln {
+	border: 2px solid var(--csm-green-darkened);
+	border-radius: 5px;
+	font-size: 14px;
+	font-weight: 600;
+	margin-top: 8px;
+	padding: 4px;
+	text-align: center;
+	width: 80px;
+}
+
+.resourceWkstFile:hover,
+.resourceSoln:hover {
+	border-color: #4e7a5d;
+	color: #4e7a5d;
+	cursor: pointer;
 }
 
 .topic {
 	background-color: var(--csm-green);
 	border-radius: 4px;
 	margin: 4px;
-	padding: 4px;
-}
-
-#resourceTopics,
-#resourceWkstName {
-	width: 96px;
+	padding: 4px 8px;
 }
 
 .resourceEditContainer {
@@ -79,6 +136,11 @@
 
 .resourceInfoEdit > div {
 	margin: 4px 2px;
+}
+
+.resourceWrapperHeader > div {
+	font-size: 16px;
+	font-weight: 600;
 }
 
 #resourceButtonSubmit {

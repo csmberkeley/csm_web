@@ -20,17 +20,17 @@ export const Resources = () => {
   return (
     <div className="outer">
       <div className="tabs">
-        <ul className="tab-list">
+        <div className="tab-list">
           {courses.map(course => (
-            <li
+            <button
               onClick={() => handleTabClick(course.id)}
               key={course.id}
-              className={course.id === selectedCourseID ? "active" : ""}
+              className={course.id === selectedCourseID ? "active tab" : "tab"}
             >
               {course.name}
-            </li>
+            </button>
           ))}
-        </ul>
+        </div>
       </div>
       <ResourceWrapper courseID={selectedCourseID} />
     </div>

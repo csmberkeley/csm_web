@@ -19,7 +19,7 @@ button:hover {
 
 :root {
 	--csm-green: #9ae0b3;
-	--csm-green-darkened: #88cea1;
+	--csm-green-darkened: #75b38a;
 	--csm-theme-cs61a: var(--csm-green);
 	--csm-theme-cs61b: #63c5ff;
 	--csm-theme-cs61c: #797c99;
@@ -35,6 +35,7 @@ button:hover {
 	--csm-danger: #ff7272;
 	--csm-danger-darkened: #eb6060;
 	--csm-neutral: #c0c0c0;
+	--csm-neutral-darkened: #b6b6b6;
 	--csm-resources: #ededed;
 }
 
