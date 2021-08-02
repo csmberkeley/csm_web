@@ -67,7 +67,7 @@ class Attendance(ValidatingModel):
     sectionOccurrence = models.ForeignKey("SectionOccurrence", on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.date} {self.presence} {self.student.name}"
+        return f"{self.sectionOccurrence.date} {self.presence} {self.student.name}"
 
     @property
     def section(self):
@@ -75,12 +75,12 @@ class Attendance(ValidatingModel):
 
     @property
     def week_start(self):
-        return week_bounds(self.date)[0]
+        return week_bounds(self.sectionOccurrence.date)[0]
 
     class Meta:
-        unique_together = ("date", "student")
-        ordering = ("date",)
-        indexes = (models.Index(fields=("date",)),)
+        unique_together = ("sectionOccurrence", "student")
+        ordering = ("sectionOccurrence",)
+        #indexes = (models.Index(fields=("date",)),)
 
 
 class SectionOccurrence(ValidatingModel):
@@ -91,6 +91,9 @@ class SectionOccurrence(ValidatingModel):
     """
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
+
+    class Meta:
+        ordering = ("date",)
 
 
 class Course(ValidatingModel):
