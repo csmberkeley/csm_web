@@ -83,10 +83,9 @@ export const ResourceRow = ({ initialResource, updateResource, canEdit }: Resour
         <div>Week {resource.weekNum}</div>
       </div>
       <div className="resourceInfo">
-        <div>{resource.date}</div>
+        <div className="dateCell">{resource.date}</div>
       </div>
       <div className="resourceInfo" id="resourceTopics">
-        <div>Topics</div>
         <div>
           <ResourceTopics topics={resource.topics} />
         </div>

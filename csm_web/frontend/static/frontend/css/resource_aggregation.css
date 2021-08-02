@@ -6,10 +6,6 @@
 	color: blue;
 }
 
-.outer {
-	border: thin solid green;
-}
-
 .resourceWrapperContainer a {
 	color: #519c6c;
 }
@@ -26,6 +22,11 @@
 	max-width: 1024px;
 }
 
+.dateCell {
+	width: fit-content;
+	min-width: 100px;
+}
+
 .resourceContainer,
 .resourceEditContainer {
 	background-color: var(--csm-resources);
@@ -39,11 +40,12 @@
 }
 
 .resourceInfo {
+	display: flex;
 	align-items: center;
 	justify-content: center;
 	margin: auto;
 	padding: 8px;
-	width: 80px;
+	width: 15%;
 }
 
 .topic {
