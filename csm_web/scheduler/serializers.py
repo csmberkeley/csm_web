@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet
+from .models import Attendance, Course, SectionOccurrence, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet
 
 
 class Role(Enum):
@@ -125,12 +125,11 @@ class MentorSerializer(serializers.ModelSerializer):
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
-    #date = serializers.DateField(format="%b. %-d, %Y", read_only=True)
+    date = serializers.DateField(source='sectionOccurrence.date', format="%b. %-d, %Y", read_only=True)
 
     class Meta:
         model = Attendance
-        fields = ("id", "presence", "student", "sectionOccurrence")
-        #read_only_fields = ("date",)
+        fields = ("id", "presence", "student", "date")
         extra_kwargs = {'student': {'write_only': True}}
 
 
@@ -195,6 +194,15 @@ class ResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = Resource
         fields = ['id', 'course', 'week_num', 'date', 'topics', 'worksheets']
+
+
+class SectionOccurrenceSerializer(serializers.ModelSerializer):
+    attendances = AttendanceSerializer(source='attendance_set', many=True)
+    section = SectionSerializer()
+
+    class Meta:
+        model = SectionOccurrence
+        fields = ('id', 'date', 'section', 'attendances')
 
 
 class OverrideSerializer(serializers.ModelSerializer):
