@@ -21,6 +21,7 @@ from drf_nested_forms.parsers import NestedJSONParser, NestedMultiPartParser
 from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor, Coordinator, Resource, Worksheet
 from .serializers import (
     CourseSerializer,
+    SectionOccurrenceSerializer,
     SectionSerializer,
     StudentSerializer,
     AttendanceSerializer,
@@ -191,11 +192,27 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
             logger.info(f"<Section:Meta:Failure> Failed to update metadata on section {log_str(section)}")
             return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
+    @action(detail=True, methods=['get'])
+    def attendance(self, request, pk=None):
+        section = get_object_or_error(self.get_queryset(), pk=pk)
+        return Response(
+            SectionOccurrenceSerializer(
+                section.sectionoccurrence_set.all(), many=True
+            ).data
+        )
+
     @action(detail=True, methods=['get', 'put'])
     def students(self, request, pk=None):
         if request.method == 'GET':
             section = get_object_or_error(self.get_queryset(), pk=pk)
-            return Response(StudentSerializer(section.students.select_related("user").prefetch_related(Prefetch("attendance_set", queryset=Attendance.objects.order_by("date"))).filter(active=True), many=True).data)
+            return Response(
+                StudentSerializer(
+                    section.students.select_related("user")
+                    # , queryset=Attendance.objects.order_by("date")
+                    .prefetch_related(Prefetch("attendance_set"))
+                    .filter(active=True), many=True
+                ).data
+            )
         # PUT
         with transaction.atomic():
             """
