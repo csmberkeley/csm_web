@@ -1,108 +1,100 @@
 import React, { useState, useEffect } from "react";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
-import { getRoles } from "../../utils/user";
-import ResourceRow from "./ResourceRow";
-import { emptyResource } from "./ResourceTypes";
+import ResourceEdit from "./ResourceEdit";
+import { Resource, ResourceRowProps } from "./ResourceTypes";
+import ResourceRowRender from "./ResourceRow";
 
-export const ResourceWrapper = ({ courseID }) => {
-  const [resources, setResources] = useState([]);
-  const [canEdit, setCanEdit] = useState(false);
-  const [addingResource, setAddingResource] = useState(false);
+export const ResourceRow = ({ initialResource, onUpdateResource, onDeleteResource, canEdit, addingResource, cancelOverride }: ResourceRowProps) => {
+  // call updateResource(resource) on change
+  const [edit, setEdit] = useState(false);
+  const [resource, setResource]: [Resource, Function] = useState({} as Resource);
+  const [fileFormData, setFileFormData] = useState(new FormData());
 
-  /**
-   * Gets resource data for a specific course when courseID changes
-   */
+  // update current resource if initialResource changes
   useEffect(() => {
-    fetchJSON(`/resources/${courseID}/resources`).then(data => {
-      setResources(data);
-      getRoles().then((roles) =>
-        setCanEdit(roles["COORDINATOR"].has(courseID))
-      );
-      //setCanEdit(getRoles()["COORDINATOR"].has(courseID));
-    });
-  }, [courseID]);
+    setResource(initialResource);
+    setEdit(false);
+  }, [initialResource]);
 
+  useEffect(() => {
+    setEdit(addingResource);
+  }, [addingResource]);
 
-  function getResourceFormData(newResource, fileFormData) {
-    let resourceFormData = new FormData();
-    for (const [key, value] of Object.entries(newResource)) {
-      resourceFormData.set(key, value as any);
-    }
-    for (let entry of fileFormData.entries()) {
-      resourceFormData.set(entry[0], entry[1]);
-    }
-    return resourceFormData;
-  }
-
-  function handleAddResource(newResource, fileFormData) {
-    console.log('Submitted resource');
-    const resourceFormData = getResourceFormData(newResource, fileFormData);
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.POST, resourceFormData, true).then(() => {
-      fetchJSON(`/resources/${courseID}/resources`).then(data => {
-        setResources(data);
-      });
-    })
-    setAddingResource(false);
-  }
-
-  function handleCancelAddResource() {
-    console.log('canceled add resource');
-    setAddingResource(false);
+  /**
+   * Modifies a specified field of the current resource.
+   *
+   * @param e - onChange event
+   * @param field - resource field to change
+   */
+  function handleChange(e, field) {
+    resource[field] = e.target.value;
+    setResource(resource);
   }
 
   /**
-   * Save and PUT request the updated resource
+   * Modifies a specified file field of the current resource.
+   *
+   * @param e - onChange event
+   * @param field - resource field to change
    */
-  function handleUpdateResource(newResource, fileFormData) {
-    const resourceFormData = getResourceFormData(newResource, fileFormData);
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then(() => {
-      fetchJSON(`/resources/${courseID}/resources`).then(data => {
-        setResources(data);
-      });
-    });
+  function handleFileChange(e, field) {
+    fileFormData.set(field, e.target.files[0]);
+    setFileFormData(fileFormData);
   }
 
   /**
-   * Deletes a specified resource from the database
+   * Bubbles change up to parent ResourceWrapper
+   *
+   * @param e - onSubmit event
    */
-  function handleDeleteResource(resourceId) {
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.DELETE, { id: resourceId }, false).then(() => {
-      fetchJSON(`/resources/${courseID}/resources`).then(data => {
-        setResources(data);
-      });
-    });
+  function handleSubmit(e) {
+    e.preventDefault();
+    onUpdateResource(resource, fileFormData);
+    setEdit(false);
+  }
+
+  /**
+   * Sets editing behavior depending on whether we can edit this resource/course
+   */
+  function handleSetEdit() {
+    if (canEdit) {
+      setEdit(true);
+    }
+  }
+
+  /**
+   * Sets edit state to false when user exits out of edit mode.
+   */
+  function handleCancel() {
+    if (cancelOverride) {
+      cancelOverride();
+    } else {
+      setEdit(false);
+    }
   }
 
   return (
-    <div className="resourceWrapperContainer">
+    <div>
       {
-        canEdit &&
-        <button onClick={setAddingResource}>Add Resource</button>
+        !addingResource &&
+        <ResourceRowRender resource={resource} canEdit={canEdit} onSetEdit={handleSetEdit} onDelete={onDeleteResource} />
       }
-      <div className="resourceWrapperHeader">
-        <div className="weekNum">Week</div>
-        <div className="dateCell">Date</div>
-        <div className="resourceTopics">Topics</div>
-        <div className="resourceWkst">Worksheet and Solutions</div>
-      </div>
       {
-        addingResource &&
-        <ResourceRow
-          initialResource={emptyResource()}
-          updateResource={handleAddResource}
-          deleteResource={handleDeleteResource}
-          canEdit={canEdit}
-          addingResource={addingResource}
-          cancelOverride={handleCancelAddResource}
+        edit &&
+        <ResourceEdit
+          resource={resource}
+          onChange={handleChange}
+          onFileChange={handleFileChange}
+          onSubmit={handleSubmit}
+          onCancel={handleCancel}
         />
       }
-      {
-        resources.map((resource, index) => (
-          <ResourceRow key={index} initialResource={resource} updateResource={handleUpdateResource} deleteResource={handleDeleteResource} canEdit={canEdit} />
-        ))
-      }
     </div>
-  );
+  )
 };
 
-export default ResourceWrapper;
+ResourceRow.defaultProps = {
+  addingResource: false,
+  cancelOverride: null
+}
+
+export default ResourceRow;

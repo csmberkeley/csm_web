@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchJSON } from "../../utils/api";
-import ResourceWrapper from "./ResourceWrapper.tsx";
+import ResourceWrapper from "./ResourceTable";
 
 export const Resources = () => {
   const [selectedCourseID, setSelectedCourseID] = useState(1);

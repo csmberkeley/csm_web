@@ -9,19 +9,19 @@ export interface Resource {
 
 export interface ResourceRowProps {
   initialResource: Resource;
-  updateResource: Function;
+  onUpdateResource: Function;
   canEdit: boolean;
-  deleteResource: Function;
+  onDeleteResource: Function;
   addingResource: boolean;
   cancelOverride: Function;
 }
 
 export interface ResourceEditProps {
   resource: Resource;
-  handleChange: Function;
-  handleFileChange: Function;
-  handleSubmit: Function;
-  handleCancel: Function;
+  onChange: Function;
+  onFileChange: Function;
+  onSubmit: Function;
+  onCancel: Function;
 }
 
 export function emptyResource(): Resource {
