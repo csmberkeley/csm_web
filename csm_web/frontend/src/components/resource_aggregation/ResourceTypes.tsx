@@ -11,6 +11,9 @@ export interface ResourceRowProps {
   initialResource: Resource;
   updateResource: Function;
   canEdit: boolean;
+  deleteResource: Function;
+  addingResource: boolean;
+  cancelOverride: Function;
 }
 
 export interface ResourceEditProps {
@@ -18,4 +21,16 @@ export interface ResourceEditProps {
   handleChange: Function;
   handleFileChange: Function;
   handleSubmit: Function;
+  handleCancel: Function;
+}
+
+export function emptyResource(): Resource {
+  return {
+    'weekNum': 0,
+    'date': '',
+    'topics': '',
+    'worksheetName': '',
+    'worksheetFile': '',
+    'solutionFile': ''
+  }
 }
