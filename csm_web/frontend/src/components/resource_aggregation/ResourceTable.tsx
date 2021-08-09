@@ -3,6 +3,8 @@ import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { getRoles } from "../../utils/user";
 import ResourceRow from "./ResourceWrapper";
 import { emptyResource } from "./ResourceTypes";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
 
 export const ResourceTable = ({ courseID }) => {
   const [resources, setResources] = useState([]);
@@ -79,7 +81,10 @@ export const ResourceTable = ({ courseID }) => {
     <div className="resourceWrapperContainer">
       {
         canEdit &&
-        <button onClick={handleSetAddingResource}>Add Resource</button>
+        <button onClick={handleSetAddingResource} id="addResourceButton">
+          <FontAwesomeIcon icon={faPlusCircle} id="plusIcon"/>
+          <div>Add Resource</div>
+        </button>
       }
       <div className="resourceWrapperHeader">
         <div className="weekNum">Week</div>

@@ -1,4 +1,6 @@
 import React from "react";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faPencilAlt, faTrashAlt } from '@fortawesome/free-solid-svg-icons'
 
 const ResourceTopics = ({ topics }) => {
   if (topics === undefined) return <div></div>;
@@ -26,28 +28,30 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }) => {
         </div>
       </div>
       <div className="resourceWkst">
-        <div className="resourceWkstFile">
-          <a href={resource.worksheetFile} target="_blank">
-            {/*resource.worksheetName*/}Worksheet Name
-                </a>
-        </div>
-        <div className="resourceSoln">
-          <a href={resource.solutionFile} target="_blank">
-            Solutions
-                </a>
-        </div>
-      </div>
-      {
-        canEdit &&
         <div>
+          <div className="resourceWkstFile">
+            <a href={resource.worksheetFile} target="_blank">
+              {/*resource.worksheetName*/}Worksheet Name
+            </a>
+          </div>
+          <div className="resourceSoln">
+            <a href={resource.solutionFile} target="_blank">
+              Solutions
+            </a>
+          </div>
+        </div>
+        {
+        canEdit &&
+        <div className="resourceButtonsContainer">
           <button onClick={onSetEdit} className="resourceButton">
-            EDIT
-                    </button>
+            <FontAwesomeIcon icon={faPencilAlt} id="editIcon"/>
+          </button>
           <button onClick={() => onDelete(resource.id)} className="resourceButton">
-            DELETE
-                    </button>
+            <FontAwesomeIcon icon={faTrashAlt} id="deleteIcon"/>
+          </button>
         </div>
       }
+      </div>
     </div>
   );
 }
