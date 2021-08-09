@@ -1,5 +1,6 @@
 ansimarkup==1.4.0
 asgiref==3.3.1
+boto3==1.18.16
 Brotli==1.0.9
 certifi==2020.12.5
 cffi==1.14.4

@@ -3,6 +3,7 @@ import re
 from django.db import models
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.dispatch import receiver
 from django.utils import timezone, functional
 from rest_framework.serializers import ValidationError
 import logging
@@ -242,6 +243,46 @@ class Resource(ValidatingModel):
 
     class Meta:
         ordering = ['week_num']
+
+
+@receiver(models.signals.post_delete, sender=Resource)
+def auto_delete_file_on_delete(sender, instance, **kwargs):
+    """
+    Deletes file from filesystem when corresponding
+    `Resource` object is deleted.
+    """
+    if instance.worksheet_file:
+        instance.worksheet_file.delete(save=False)
+    if instance.solution_file:
+        instance.solution_file.delete(save=False)
+
+
+@receiver(models.signals.pre_save, sender=Resource)
+def auto_delete_file_on_change(sender, instance, **kwargs):
+    """
+    Deletes old file from filesystem when corresponding
+    `Resource` object is updated with a new file.
+    """
+    if not instance.pk:
+        return False
+
+    try:
+        old_file = Resource.objects.get(pk=instance.pk).worksheet_file
+    except Resource.DoesNotExist:
+        return False
+
+    new_file = instance.worksheet_file
+    if not old_file == new_file:
+        instance.worksheet_file.delete(save=False)
+
+    try:
+        old_file = Resource.objects.get(pk=instance.pk).solution_file
+    except Resource.DoesNotExist:
+        return False
+
+    new_file = instance.solution_file
+    if not old_file == new_file:
+        instance.solution_file.delete(save=False)
 
 
 class Spacetime(ValidatingModel):
