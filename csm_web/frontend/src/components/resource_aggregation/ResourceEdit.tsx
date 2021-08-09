@@ -1,10 +1,12 @@
 import React from "react";
 import Modal, { ModalCloser } from "../Modal";
 import { ResourceEditProps } from "./ResourceTypes";
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faUpload, faCheckCircle } from '@fortawesome/free-solid-svg-icons'
 
 export const ResourceEdit = ({ resource, onChange, onFileChange, onSubmit, onCancel }: ResourceEditProps) => {
   return (
-    <Modal closeModal={onCancel}>
+    <Modal closeModal={onCancel} className="resourceEditModal">
       <div className="resourceEditContainer">
         <div id="resourceEditInner">
           <div>
@@ -24,16 +26,22 @@ export const ResourceEdit = ({ resource, onChange, onFileChange, onSubmit, onCan
           <div>
             <div className="resourceInfoEdit">
               <div>Worksheet File</div>
-              <input className="fileUpload" type="file" onChange={e => onFileChange(e, "worksheetFile")} />
+              <label className="fileUpload">
+                <input type="file"/>
+                <FontAwesomeIcon icon={faUpload} className="uploadIcon" /> File Upload
+              </label>
             </div>
             <div className="resourceInfoEdit">
               <div>Solutions File</div>
-              <input className="fileUpload" type="file" onChange={e => onFileChange(e, "solutionFile")} />
+              <label className="fileUpload">
+                <input type="file"/>
+                <FontAwesomeIcon icon={faUpload} className="uploadIcon" /> File Upload
+              </label>
             </div>
           </div>
         </div>
         <button onClick={onSubmit} id="resourceButtonSubmit">
-          SUBMIT
+          <FontAwesomeIcon icon={faCheckCircle} id="saveIcon" /> SAVE
         </button>
       </div>
     </Modal>
