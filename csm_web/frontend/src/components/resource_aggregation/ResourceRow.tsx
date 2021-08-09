@@ -1,18 +1,9 @@
 import React, { useState, useEffect } from "react";
 import ResourceEdit from "./ResourceEdit";
 import { Resource, ResourceRowProps } from "./ResourceTypes";
+import ResourceRowRender from "./ResourceRowRender";
 
-const ResourceTopics = ({ topics }) => {
-  if (topics === undefined) return <div></div>;
-  // TODO: handle multiple topics with delimiters
-  return topics.split("\x00").map((topic, index) => (
-    <div className="topic" key={index}>
-      {topic.trim()}
-    </div>
-  ));
-};
-
-export const ResourceRow = ({ initialResource, updateResource, canEdit }: ResourceRowProps) => {
+export const ResourceRow = ({ initialResource, updateResource, deleteResource, canEdit, addingResource, cancelOverride }: ResourceRowProps) => {
   // call updateResource(resource) on change
   const [edit, setEdit] = useState(false);
   const [resource, setResource]: [Resource, Function] = useState({} as Resource);
@@ -21,8 +12,13 @@ export const ResourceRow = ({ initialResource, updateResource, canEdit }: Resour
   // update current resource if initialResource changes
   useEffect(() => {
     setResource(initialResource);
+    console.log(initialResource);
     setEdit(false);
   }, [initialResource]);
+
+  useEffect(() => {
+    setEdit(addingResource);
+  }, [addingResource]);
 
   /**
    * Modifies a specified field of the current resource.
@@ -66,56 +62,40 @@ export const ResourceRow = ({ initialResource, updateResource, canEdit }: Resour
     }
   }
 
-  if (edit) {
-    return (
-      <ResourceEdit
-        resource={resource}
-        handleChange={handleChange}
-        handleFileChange={handleFileChange}
-        handleSubmit={handleSubmit}
-      />
-    );
+  /**
+   * Sets edit state to false when user exits out of edit mode.
+   */
+  function handleCancel() {
+    if (cancelOverride) {
+      cancelOverride();
+    } else {
+      setEdit(false);
+    }
   }
 
   return (
-    <div className="resourceContainer">
-      <div className="resourceInfo">
-        <div>Week {resource.weekNum}</div>
-      </div>
-      <div className="resourceInfo">
-        <div className="dateCell">{resource.date}</div>
-      </div>
-      <div className="resourceInfo" id="resourceTopics">
-        <div>
-          <ResourceTopics topics={resource.topics} />
-        </div>
-      </div>
-      <div className="resourceInfo" id="resourceWkstName">
-        <div>{resource.worksheetName}</div>
-      </div>
-      <div className="resourceInfo">
-        <div>
-          <a href={resource.worksheetFile} target="_blank">
-            Worksheet
-          </a>
-        </div>
-      </div>
-      <div className="resourceInfo">
-        <div>
-          <a href={resource.solutionFile} target="_blank">
-            Solutions
-          </a>
-        </div>
-      </div>
-      {canEdit ? (
-        <button onClick={handleSetEdit} className="resourceButton">
-          EDIT
-        </button>
-      ) : (
-        <></>
-      )}
+    <div>
+      {
+        !addingResource &&
+        <ResourceRowRender resource={resource} canEdit={canEdit} handleSetEdit={handleSetEdit} handleDelete={deleteResource} />
+      }
+      {
+        edit &&
+        <ResourceEdit
+          resource={resource}
+          handleChange={handleChange}
+          handleFileChange={handleFileChange}
+          handleSubmit={handleSubmit}
+          handleCancel={handleCancel}
+        />
+      }
     </div>
-  );
+  )
 };
+
+ResourceRow.defaultProps = {
+  addingResource: false,
+  cancelOverride: null
+}
 
 export default ResourceRow;
