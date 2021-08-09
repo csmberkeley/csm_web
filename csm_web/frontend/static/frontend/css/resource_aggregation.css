@@ -125,9 +125,9 @@
 #resourceEditInner {
 	display: flex;
 	flex-direction: row;
-	margin: auto 20%;
-	justify-content: space-between;
-	padding: 16px;
+	justify-content: space-around;
+	margin: auto;
+	width: 80%;
 }
 
 .resourceInfoEdit {
@@ -137,6 +137,36 @@
 
 .resourceInfoEdit > div {
 	margin: 4px 2px;
+}
+
+.resourceInfoEdit > input {
+	padding: 6px;
+	width: 144px;
+}
+
+input[type="file"] {
+	display: none;
+}
+
+.fileUpload {
+	border: 2px solid #ccc;
+	background-color: white;
+	cursor: pointer;
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	margin-top: 16px;
+	padding: 8px 12px;
+	width: 152px;
+}
+
+.fileUpload:hover {
+	border-color: var(--csm-neutral-darkened);
+	color: var(--csm-green-darkened);
+}
+
+.uploadIcon {
+	margin: 0 !important;
 }
 
 .resourceWrapperHeader > div {
@@ -169,9 +199,20 @@
 	background-color: var(--csm-green);
 	border: none;
 	border-radius: 8px;
+	color: white;
+	display: flex;
+	flex-direction: row;
+	font-size: 16px;
+	font-weight: 600;
+	justify-content: space-evenly;
 	margin: auto;
-	padding: 8px;
-	width: 160px;
+	margin-top: 16px;
+	padding: 16px;
+	width: 120px;
+}
+
+#saveIcon {
+	margin: 0 !important;
 }
 
 #resourceButtonSubmit:hover {
@@ -202,4 +243,8 @@
 
 #plusIcon {
 	margin-right: 8px;
+}
+
+.resourceEditModal {
+	width: 60% !important;
 }
