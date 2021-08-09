@@ -297,7 +297,7 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
     def get_queryset(self):
         return Resource.objects.all()
 
-    @action(detail=True, methods=['get', 'put'])
+    @action(detail=True, methods=['get', 'put', 'post', 'delete'])
     def resources(self, request, pk=None):
         """
         Endpoint: /api/resources/<course_id>/resources
@@ -325,7 +325,7 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
             # return all resources for current course as a response
             return Response(ResourceSerializer(resources, many=True).data)
 
-        elif request.method == "PUT":
+        elif request.method in ("PUT", "POST"):
             # replace database entry for current course resources
 
             is_coordinator = course.coordinator_set.filter(user=request.user).exists()
@@ -334,28 +334,48 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
 
             resource = request.data
             # query by resource id, update resource with new info
-            resource_query = resources.filter(
-                pk=resource["id"]
-            )
-            if not resource_query.exists():
-                pass  # TODO: handle resource creation
-            else:  # get existing resource
+            resource_query = None
+            if "id" in resource:
+                resource_query = resources.filter(
+                    pk=resource["id"]
+                )
+
+            if (resource_query is None or not resource_query.exists()) and request.method == "POST":  # create new resource
+                resource_obj = Resource()
+                resource_obj.course = course
+            elif resource_query.exists():  # get existing resource
                 resource_obj = resource_query.get()
-                if "weekNum" in resource:
-                    resource_obj.week_num = resource["weekNum"]
-                if "date" in resource:
-                    resource_obj.date = resource["date"]
-                if "topics" in resource:
-                    resource_obj.topics = resource["topics"]
-                if "worksheetName" in resource:
-                    print('worksheet name', resource["worksheetName"])
-                    resource_obj.worksheet_name = resource["worksheetName"]
-                if "worksheetFile" in resource and not isinstance(resource["worksheetFile"], str):
-                    # only update if a new file was uploaded
-                    resource_obj.worksheet_file = resource["worksheetFile"]
-                if "solutionFile" in resource and not isinstance(resource["solutionFile"], str):
-                    resource_obj.solution_file = resource["solutionFile"]
-                resource_obj.save()
+            else:  # not POST and resource not found
+                raise ValueError(f"Resource object to query does not exist: {request.data}")
+
+            if "weekNum" in resource:
+                resource_obj.week_num = resource["weekNum"]
+            if "date" in resource:
+                resource_obj.date = resource["date"]
+            if "topics" in resource:
+                resource_obj.topics = resource["topics"]
+            if "worksheetName" in resource:
+                resource_obj.worksheet_name = resource["worksheetName"]
+            if "worksheetFile" in resource and not isinstance(resource["worksheetFile"], str):
+                # only update if a new file was uploaded
+                resource_obj.worksheet_file = resource["worksheetFile"]
+            if "solutionFile" in resource and not isinstance(resource["solutionFile"], str):
+                resource_obj.solution_file = resource["solutionFile"]
+            resource_obj.save()
+        elif request.method == "DELETE":
+            # remove resource from db
+            is_coordinator = course.coordinator_set.filter(user=request.user).exists()
+            if not is_coordinator:
+                raise PermissionDenied("You must be a coordinator to change resources data!")
+            resource = request.data
+            resource_query = resources.filter(pk=resource["id"])
+            if not resource_query.exists():  # resource to delete does not exist
+                raise ValueError(f"Resource object to delete does not exist: {request.data}")
+            else:
+                num_deleted, _ = resource_query.delete()
+                if num_deleted == 0:
+                    raise ValueError(f"Resource was unable to be deleted: {request.data}; {resource_query.get()}")
+
         return Response(status.HTTP_200_OK)
 
 
