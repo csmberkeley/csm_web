@@ -25,7 +25,25 @@ export const ResourceTable = ({ courseID }) => {
   }, [courseID]);
 
 
-  function getResourceFormData(newResource, fileFormData) {
+  /**
+   * TODO: update to include new worksheets and merge them in
+   * - merge fileFormData and newWorksheets (ensure id for new worksheets is null)
+   *
+   * {
+   *    [[resource fields]]
+   *    "worksheets": [
+   *        {id: ..., name: ..., worksheet_file: ..., solution_file: ...},
+   *        ...
+   *        {id: null, name: ..., worksheet_file: ..., solution_file: ...}
+   *    ]
+   * }
+   *
+   * @param newResource
+   * @param fileFormData
+   * @param newWorksheets
+   * @returns
+   */
+  function getResourceFormData(newResource, fileFormData, newWorksheets) {
     let resourceFormData = new FormData();
     for (const [key, value] of Object.entries(newResource)) {
       resourceFormData.set(key, value as any);

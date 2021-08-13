@@ -2,7 +2,13 @@ export interface Resource {
   weekNum: number;
   date: string;
   topics: string;
-  worksheetName: string;
+  worksheets: Worksheet[];
+}
+
+export interface Worksheet {
+  id: number;
+  resource: number;
+  name: string;
   worksheetFile: string;
   solutionFile: string;
 }

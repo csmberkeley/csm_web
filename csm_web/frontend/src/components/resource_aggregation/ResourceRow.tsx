@@ -13,6 +13,7 @@ const ResourceTopics = ({ topics }) => {
 };
 
 const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }) => {
+  console.log(resource);
 
   return (
     <div className="resourceContainer">
@@ -27,20 +28,26 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }) => {
           <ResourceTopics topics={resource.topics} />
         </div>
       </div>
-      <div className="resourceWkst">
-        <div>
-          <div className="resourceWkstFile">
-            <a href={resource.worksheetFile} target="_blank">
-              {/*resource.worksheetName*/}Worksheet Name
-            </a>
-          </div>
-          <div className="resourceSoln">
-            <a href={resource.solutionFile} target="_blank">
-              Solutions
-            </a>
-          </div>
-        </div>
+      <div className="resourceWkstFilesContainer">
         {
+          resource.worksheets &&
+          resource.worksheets.map(worksheet => (
+            <div key={worksheet.id} className="resourceWkst">
+              <div className="resourceWkstFile">
+                <a href={worksheet.worksheetFile} target="_blank">
+                  {worksheet.name}
+                </a>
+              </div>
+              <div className="resourceSoln">
+                <a href={worksheet.solutionFile} target="_blank">
+                  Solutions
+                </a>
+              </div>
+            </div>
+          ))
+        }
+      </div>
+      {
         canEdit &&
         <div className="resourceButtonsContainer">
           <button onClick={onSetEdit} className="resourceButton">
@@ -51,7 +58,6 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }) => {
           </button>
         </div>
       }
-      </div>
     </div>
   );
 }

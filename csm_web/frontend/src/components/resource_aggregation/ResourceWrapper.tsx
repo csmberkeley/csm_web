@@ -32,11 +32,13 @@ export const ResourceRow = ({ initialResource, onUpdateResource, onDeleteResourc
 
   /**
    * Modifies a specified file field of the current resource.
+   * TODO: modify to handle multiple resources
+   * - mapping from worksheet id to modifications?
    *
    * @param e - onChange event
    * @param field - resource field to change
    */
-  function handleFileChange(e, field) {
+  function handleFileChange(e, worksheet_id, field) {
     fileFormData.set(field, e.target.files[0]);
     setFileFormData(fileFormData);
   }
