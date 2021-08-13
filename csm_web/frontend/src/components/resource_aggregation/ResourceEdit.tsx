@@ -11,16 +11,16 @@ export const ResourceEdit = ({ resource, onChange, onFileChange, onSubmit, onCan
         <div id="resourceEditInner">
           <div>
             <div className="resourceInfoEdit">
-              <input type="text" defaultValue={resource.weekNum} onChange={e => onChange(e, "weekNum")} />
+              <input type="text" defaultValue={resource.weekNum} placeholder="Week Number" onChange={e => onChange(e, "weekNum")} />
             </div>
             <div className="resourceInfoEdit">
               <input type="date" defaultValue={resource.date} onChange={e => onChange(e, "date")} />
             </div>
             <div className="resourceInfoEdit">
-              <input type="text" defaultValue={resource.topics} onChange={e => onChange(e, "topics")} />
+              <input type="text" defaultValue={resource.topics} placeholder="Topics" onChange={e => onChange(e, "topics")} />
             </div>
             <div className="resourceInfoEdit">
-              <input type="text" defaultValue={resource.worksheetName} onChange={e => onChange(e, "worksheetName")} />
+              <input type="text" defaultValue={resource.worksheetName} placeholder="Worksheet Name" onChange={e => onChange(e, "worksheetName")} />
             </div>
           </div>
           <div>
