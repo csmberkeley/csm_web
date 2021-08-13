@@ -30,9 +30,16 @@ export default function MentorSection({
     setState({ students: [], attendances: {}, loaded: false });
     fetchJSON(`/sections/${id}/students/`).then(data => {
       const students = data.map(({ name, email, id }) => ({ name, email, id }));
+    });
+    fetchJSON(`/sections/${id}/attendance`).then(data => {
       const attendances = groupBy(
-        data.flatMap(({ name, id, attendances }) =>
-          attendances.map(attendance => ({ ...attendance, student: { name, id } }))
+        data.flatMap(({ attendances }) =>
+          attendances.map(({ id, presence, date, studentName, studentId }) => ({
+            id,
+            presence,
+            date,
+            student: { studentName, studentId }
+          }))
         ),
         attendance => attendance.date
       );
