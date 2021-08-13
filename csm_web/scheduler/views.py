@@ -16,7 +16,7 @@ from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
 from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
-from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor, Coordinator, Resource
+from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor, Coordinator, Resource, Worksheet
 from .serializers import (
     CourseSerializer,
     SectionSerializer,
@@ -304,19 +304,10 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
         Returns all resources for the course, or edits resources for the course
 
         request data:
-        {
-            "resources": [
-                {
-                    "weekNum": ...,
-                    "date": ...,
-                    "topics": ...,
-                    "worksheetName": ...,
-                    "worksheetFile": ...,  # TODO: what's the actual data here?
-                    "solutionFile": ...,
-                }
-            ],
-            ...
-        }
+        weekNum - week number corresponding to resource
+        date - week starting date corresponding to resource
+        topics - topics, delimited by a null byte TODO: see if null byte will cause any errors
+        worksheets - list of objects describing individual worksheets, with name and worksheet, solution files
         """
         course = Course.objects.get(pk=pk)
         resources = Resource.objects.filter(course=pk)
@@ -354,13 +345,16 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                 resource_obj.date = resource["date"]
             if "topics" in resource:
                 resource_obj.topics = resource["topics"]
-            if "worksheetName" in resource:
-                resource_obj.worksheet_name = resource["worksheetName"]
-            if "worksheetFile" in resource and not isinstance(resource["worksheetFile"], str):
-                # only update if a new file was uploaded
-                resource_obj.worksheet_file = resource["worksheetFile"]
-            if "solutionFile" in resource and not isinstance(resource["solutionFile"], str):
-                resource_obj.solution_file = resource["solutionFile"]
+            if "worksheetName" in resource and resource["worksheetName"]:
+                # only add worksheet if the name is not empty
+                worksheet_obj = Worksheet(resource=resource_obj)
+                worksheet_obj.name = resource["worksheetName"]
+                if "worksheetFile" in resource and not isinstance(resource["worksheetFile"], str):
+                    # only update if a new file was uploaded
+                    worksheet_obj.worksheet_file = resource["worksheetFile"]
+                if "solutionFile" in resource and not isinstance(resource["solutionFile"], str):
+                    worksheet_obj.solution_file = resource["solutionFile"]
+                worksheet_obj.save()
             resource_obj.save()
         elif request.method == "DELETE":
             # remove resource from db

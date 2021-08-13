@@ -228,7 +228,7 @@ class Section(ValidatingModel):
 
 def worksheet_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/<course_name>/<filename>
-    course_name = str(instance.course.name).replace(" ", "")
+    course_name = str(instance.resource.course.name).replace(" ", "")
     return f'resources/{course_name}/{filename}'
 
 
@@ -237,19 +237,23 @@ class Resource(ValidatingModel):
     week_num = models.PositiveSmallIntegerField()
     date = models.DateField()
     topics = models.CharField(blank=True, max_length=100)
-    worksheet_name = models.CharField(blank=True, max_length=100)
-    worksheet_file = models.FileField(blank=True, upload_to=worksheet_path)
-    solution_file = models.FileField(blank=True, upload_to=worksheet_path)
 
     class Meta:
         ordering = ['week_num']
 
 
-@receiver(models.signals.post_delete, sender=Resource)
+class Worksheet(ValidatingModel):
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100)
+    worksheet_file = models.FileField(blank=True, upload_to=worksheet_path)
+    solution_file = models.FileField(blank=True, upload_to=worksheet_path)
+
+
+@receiver(models.signals.post_delete, sender=Worksheet)
 def auto_delete_file_on_delete(sender, instance, **kwargs):
     """
     Deletes file from filesystem when corresponding
-    `Resource` object is deleted.
+    `Worksheet` object is deleted.
     """
     if instance.worksheet_file:
         instance.worksheet_file.delete(save=False)
@@ -257,18 +261,18 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
         instance.solution_file.delete(save=False)
 
 
-@receiver(models.signals.pre_save, sender=Resource)
+@receiver(models.signals.pre_save, sender=Worksheet)
 def auto_delete_file_on_change(sender, instance, **kwargs):
     """
     Deletes old file from filesystem when corresponding
-    `Resource` object is updated with a new file.
+    `Worksheet` object is updated with a new file.
     """
     if not instance.pk:
         return False
 
     try:
-        old_file = Resource.objects.get(pk=instance.pk).worksheet_file
-    except Resource.DoesNotExist:
+        old_file = Worksheet.objects.get(pk=instance.pk).worksheet_file
+    except Worksheet.DoesNotExist:
         return False
 
     new_file = instance.worksheet_file
@@ -276,8 +280,8 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
         instance.worksheet_file.delete(save=False)
 
     try:
-        old_file = Resource.objects.get(pk=instance.pk).solution_file
-    except Resource.DoesNotExist:
+        old_file = Worksheet.objects.get(pk=instance.pk).solution_file
+    except Worksheet.DoesNotExist:
         return False
 
     new_file = instance.solution_file
