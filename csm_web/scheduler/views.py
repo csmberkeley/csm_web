@@ -346,6 +346,8 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                 resource_obj.date = resource["date"]
             if "topics" in resource:
                 resource_obj.topics = resource["topics"]
+            resource_obj.save()
+
             if "worksheets" in resource:
                 # has edited worksheets
                 for worksheet in resource["worksheets"]:
@@ -353,10 +355,18 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                         # worksheet exists
                         worksheet_obj = Worksheet.objects.get(pk=worksheet["id"])
                         # delete if specified
-                        if "deleted" in worksheet:
-                            num_deleted, _ = worksheet_obj.delete()
-                            if num_deleted == 0:
-                                raise ValueError(f"Worksheet was unable to be deleted: {request.data}; {worksheet_obj}")
+                        if "deleted" in worksheet and len(worksheet["deleted"]) > 0:
+                            toDelete = worksheet["deleted"]
+                            if "worksheet" in toDelete:
+                                num_deleted, _ = worksheet_obj.delete()
+                                if num_deleted == 0:
+                                    raise ValueError(
+                                        f"Worksheet was unable to be deleted: {request.data}; {worksheet_obj}")
+                            else:
+                                if "worksheetFile" in toDelete and worksheet_obj.worksheet_file:
+                                    worksheet_obj.worksheet_file.delete()
+                                if "solutionFile" in toDelete and worksheet_obj.solution_file:
+                                    worksheet_obj.solution_file.delete()
                             continue  # continue with loop; do not parse other attributes in current worksheet
                     else:
                         # create new worksheet
@@ -367,7 +377,6 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                     if not isinstance(worksheet["solutionFile"], str):
                         worksheet_obj.solution_file = worksheet["solutionFile"]
                     worksheet_obj.save()
-            resource_obj.save()
         elif request.method == "DELETE":
             # remove resource from db
             is_coordinator = course.coordinator_set.filter(user=request.user).exists()
