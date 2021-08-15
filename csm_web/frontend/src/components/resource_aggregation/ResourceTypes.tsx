@@ -9,8 +9,8 @@ export interface Worksheet {
   id: number;
   resource: number;
   name: string;
-  worksheetFile: string;
-  solutionFile: string;
+  worksheetFile: string | File;
+  solutionFile: string | File;
 }
 
 export interface ResourceRowProps {
@@ -25,18 +25,25 @@ export interface ResourceRowProps {
 export interface ResourceEditProps {
   resource: Resource;
   onChange: Function;
-  onFileChange: Function;
   onSubmit: Function;
   onCancel: Function;
 }
 
 export function emptyResource(): Resource {
   return {
-    'weekNum': 0,
-    'date': '',
-    'topics': '',
-    'worksheetName': '',
-    'worksheetFile': '',
-    'solutionFile': ''
-  }
+    weekNum: 0,
+    date: "",
+    topics: "",
+    worksheets: []
+  };
+}
+
+export function emptyWorksheet(): Worksheet {
+  return {
+    id: null,
+    resource: null,
+    name: "",
+    worksheetFile: "",
+    solutionFile: ""
+  };
 }

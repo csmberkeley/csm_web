@@ -15,7 +15,8 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.views import APIView
-from rest_framework.parsers import FormParser, JSONParser, MultiPartParser
+from rest_framework.parsers import FormParser
+from drf_nested_forms.parsers import NestedJSONParser, NestedMultiPartParser
 from .models import Course, Section, Student, Spacetime, User, Override, Attendance, Mentor, Coordinator, Resource, Worksheet
 from .serializers import (
     CourseSerializer,
@@ -292,7 +293,7 @@ class StudentViewSet(viewsets.GenericViewSet):
 
 class ResourceViewSet(viewsets.GenericViewSet, APIView):
     serializer_class = ResourceSerializer
-    parser_classes = [JSONParser, FormParser, MultiPartParser]
+    parser_classes = [FormParser, NestedJSONParser, NestedMultiPartParser]
 
     def get_queryset(self):
         return Resource.objects.all()
@@ -345,16 +346,27 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                 resource_obj.date = resource["date"]
             if "topics" in resource:
                 resource_obj.topics = resource["topics"]
-            if "worksheetName" in resource and resource["worksheetName"]:
-                # only add worksheet if the name is not empty
-                worksheet_obj = Worksheet(resource=resource_obj)
-                worksheet_obj.name = resource["worksheetName"]
-                if "worksheetFile" in resource and not isinstance(resource["worksheetFile"], str):
-                    # only update if a new file was uploaded
-                    worksheet_obj.worksheet_file = resource["worksheetFile"]
-                if "solutionFile" in resource and not isinstance(resource["solutionFile"], str):
-                    worksheet_obj.solution_file = resource["solutionFile"]
-                worksheet_obj.save()
+            if "worksheets" in resource:
+                # has edited worksheets
+                for worksheet in resource["worksheets"]:
+                    if worksheet["id"] != None:
+                        # worksheet exists
+                        worksheet_obj = Worksheet.objects.get(pk=worksheet["id"])
+                        # delete if specified
+                        if "deleted" in worksheet:
+                            num_deleted, _ = worksheet_obj.delete()
+                            if num_deleted == 0:
+                                raise ValueError(f"Worksheet was unable to be deleted: {request.data}; {worksheet_obj}")
+                            continue  # continue with loop; do not parse other attributes in current worksheet
+                    else:
+                        # create new worksheet
+                        worksheet_obj = Worksheet(resource=resource_obj)
+                    worksheet_obj.name = worksheet["name"]
+                    if not isinstance(worksheet["worksheetFile"], str):
+                        worksheet_obj.worksheet_file = worksheet["worksheetFile"]
+                    if not isinstance(worksheet["solutionFile"], str):
+                        worksheet_obj.solution_file = worksheet["solutionFile"]
+                    worksheet_obj.save()
             resource_obj.save()
         elif request.method == "DELETE":
             # remove resource from db
