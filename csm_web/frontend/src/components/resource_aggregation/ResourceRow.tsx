@@ -13,8 +13,6 @@ const ResourceTopics = ({ topics }) => {
 };
 
 const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }) => {
-  console.log(resource);
-
   return (
     <div className="resourceContainer">
       <div className="resourceInfo weekNum">

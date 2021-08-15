@@ -1,13 +1,19 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, ChangeEvent } from "react";
 import ResourceEdit from "./ResourceEdit";
-import { Resource, ResourceRowProps } from "./ResourceTypes";
+import { Resource, ResourceRowProps, Worksheet } from "./ResourceTypes";
 import ResourceRowRender from "./ResourceRow";
 
-export const ResourceRow = ({ initialResource, onUpdateResource, onDeleteResource, canEdit, addingResource, cancelOverride }: ResourceRowProps) => {
+export const ResourceRow = ({
+  initialResource,
+  onUpdateResource,
+  onDeleteResource,
+  canEdit,
+  addingResource,
+  cancelOverride
+}: ResourceRowProps) => {
   // call updateResource(resource) on change
   const [edit, setEdit] = useState(false);
   const [resource, setResource]: [Resource, Function] = useState({} as Resource);
-  const [fileFormData, setFileFormData] = useState(new FormData());
 
   // update current resource if initialResource changes
   useEffect(() => {
@@ -25,22 +31,9 @@ export const ResourceRow = ({ initialResource, onUpdateResource, onDeleteResourc
    * @param e - onChange event
    * @param field - resource field to change
    */
-  function handleChange(e, field) {
+  function handleChange(e: ChangeEvent<HTMLInputElement>, field: string): void {
     resource[field] = e.target.value;
     setResource(resource);
-  }
-
-  /**
-   * Modifies a specified file field of the current resource.
-   * TODO: modify to handle multiple resources
-   * - mapping from worksheet id to modifications?
-   *
-   * @param e - onChange event
-   * @param field - resource field to change
-   */
-  function handleFileChange(e, worksheet_id, field) {
-    fileFormData.set(field, e.target.files[0]);
-    setFileFormData(fileFormData);
   }
 
   /**
@@ -48,16 +41,20 @@ export const ResourceRow = ({ initialResource, onUpdateResource, onDeleteResourc
    *
    * @param e - onSubmit event
    */
-  function handleSubmit(e) {
+  function handleSubmit(
+    e: ChangeEvent<HTMLInputElement>,
+    fileFormDataMap: Map<number, Worksheet>,
+    newWorksheets: Array<Worksheet>
+  ): void {
     e.preventDefault();
-    onUpdateResource(resource, fileFormData);
+    onUpdateResource(resource, fileFormDataMap, newWorksheets);
     setEdit(false);
   }
 
   /**
    * Sets editing behavior depending on whether we can edit this resource/course
    */
-  function handleSetEdit() {
+  function handleSetEdit(): void {
     if (canEdit) {
       setEdit(true);
     }
@@ -66,7 +63,7 @@ export const ResourceRow = ({ initialResource, onUpdateResource, onDeleteResourc
   /**
    * Sets edit state to false when user exits out of edit mode.
    */
-  function handleCancel() {
+  function handleCancel(): void {
     if (cancelOverride) {
       cancelOverride();
     } else {
@@ -76,27 +73,24 @@ export const ResourceRow = ({ initialResource, onUpdateResource, onDeleteResourc
 
   return (
     <div>
-      {
-        !addingResource &&
-        <ResourceRowRender resource={resource} canEdit={canEdit} onSetEdit={handleSetEdit} onDelete={onDeleteResource} />
-      }
-      {
-        edit &&
-        <ResourceEdit
+      {!addingResource && (
+        <ResourceRowRender
           resource={resource}
-          onChange={handleChange}
-          onFileChange={handleFileChange}
-          onSubmit={handleSubmit}
-          onCancel={handleCancel}
+          canEdit={canEdit}
+          onSetEdit={handleSetEdit}
+          onDelete={onDeleteResource}
         />
-      }
+      )}
+      {edit && (
+        <ResourceEdit resource={resource} onChange={handleChange} onSubmit={handleSubmit} onCancel={handleCancel} />
+      )}
     </div>
-  )
+  );
 };
 
 ResourceRow.defaultProps = {
   addingResource: false,
   cancelOverride: null
-}
+};
 
 export default ResourceRow;

@@ -2,9 +2,9 @@ import React, { useState, useEffect } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { getRoles } from "../../utils/user";
 import ResourceRow from "./ResourceWrapper";
-import { emptyResource } from "./ResourceTypes";
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
+import { emptyResource, Resource, Worksheet } from "./ResourceTypes";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 
 export const ResourceTable = ({ courseID }) => {
   const [resources, setResources] = useState([]);
@@ -17,13 +17,10 @@ export const ResourceTable = ({ courseID }) => {
   useEffect(() => {
     fetchJSON(`/resources/${courseID}/resources`).then(data => {
       setResources(data);
-      getRoles().then((roles) =>
-        setCanEdit(roles["COORDINATOR"].has(courseID))
-      );
+      getRoles().then(roles => setCanEdit(roles["COORDINATOR"].has(courseID)));
       //setCanEdit(getRoles()["COORDINATOR"].has(courseID));
     });
   }, [courseID]);
-
 
   /**
    * TODO: update to include new worksheets and merge them in
@@ -39,17 +36,35 @@ export const ResourceTable = ({ courseID }) => {
    * }
    *
    * @param newResource
-   * @param fileFormData
+   * @param fileFormDataMap
    * @param newWorksheets
    * @returns
    */
-  function getResourceFormData(newResource, fileFormData, newWorksheets) {
+  function getResourceFormData(
+    newResource: Resource,
+    fileFormDataMap: Map<number, Worksheet>,
+    newWorksheets: Array<Worksheet>
+  ) {
     let resourceFormData = new FormData();
     for (const [key, value] of Object.entries(newResource)) {
-      resourceFormData.set(key, value as any);
+      if (key != "worksheets") {
+        resourceFormData.set(key, value as any);
+      }
     }
-    for (let entry of fileFormData.entries()) {
-      resourceFormData.set(entry[0], entry[1]);
+    let idx = 0; // cumulative ndex in worksheet array
+    for (let worksheet of fileFormDataMap.values()) {
+      for (const [key, value] of Object.entries(worksheet)) {
+        // add each nested FormData entry
+        resourceFormData.append(`worksheets[${idx}][${key}]`, value);
+      }
+      idx++;
+    }
+    for (let worksheet of newWorksheets) {
+      for (const [key, value] of Object.entries(worksheet)) {
+        // add each nested FormData entry
+        resourceFormData.append(`worksheets[${idx}][${key}]`, value);
+      }
+      idx++;
     }
     return resourceFormData;
   }
@@ -58,13 +73,17 @@ export const ResourceTable = ({ courseID }) => {
     setAddingResource(true);
   }
 
-  function handleAddResource(newResource, fileFormData) {
-    const resourceFormData = getResourceFormData(newResource, fileFormData);
+  function handleAddResource(
+    newResource: Resource,
+    fileFormDataMap: Map<number, Worksheet>,
+    newWorksheets: Array<Worksheet>
+  ) {
+    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
     fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.POST, resourceFormData, true).then(() => {
       fetchJSON(`/resources/${courseID}/resources`).then(data => {
         setResources(data);
       });
-    })
+    });
     setAddingResource(false);
   }
 
@@ -75,8 +94,8 @@ export const ResourceTable = ({ courseID }) => {
   /**
    * Save and PUT request the updated resource
    */
-  function handleUpdateResource(newResource, fileFormData) {
-    const resourceFormData = getResourceFormData(newResource, fileFormData);
+  function handleUpdateResource(newResource, fileFormDataMap, newWorksheets) {
+    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
     fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then(() => {
       fetchJSON(`/resources/${courseID}/resources`).then(data => {
         setResources(data);
@@ -97,21 +116,19 @@ export const ResourceTable = ({ courseID }) => {
 
   return (
     <div className="resourceWrapperContainer">
-      {
-        canEdit &&
+      {canEdit && (
         <button onClick={handleSetAddingResource} id="addResourceButton">
-          <FontAwesomeIcon icon={faPlusCircle} id="plusIcon"/>
+          <FontAwesomeIcon icon={faPlusCircle} id="plusIcon" />
           <div>Add Resource</div>
         </button>
-      }
+      )}
       <div className="resourceWrapperHeader">
         <div className="weekNum">Week</div>
         <div className="dateCell">Date</div>
         <div className="resourceTopics">Topics</div>
         <div className="resourceWkst">Worksheet and Solutions</div>
       </div>
-      {
-        addingResource &&
+      {addingResource && (
         <ResourceRow
           initialResource={emptyResource()}
           onUpdateResource={handleAddResource}
@@ -120,12 +137,16 @@ export const ResourceTable = ({ courseID }) => {
           addingResource={addingResource}
           cancelOverride={handleCancelAddResource}
         />
-      }
-      {
-        resources.map((resource, index) => (
-          <ResourceRow key={index} initialResource={resource} onUpdateResource={handleUpdateResource} onDeleteResource={handleDeleteResource} canEdit={canEdit} />
-        ))
-      }
+      )}
+      {resources.map((resource, index) => (
+        <ResourceRow
+          key={index}
+          initialResource={resource}
+          onUpdateResource={handleUpdateResource}
+          onDeleteResource={handleDeleteResource}
+          canEdit={canEdit}
+        />
+      ))}
     </div>
   );
 };
