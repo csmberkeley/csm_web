@@ -53,15 +53,25 @@ export const ResourceTable = ({ courseID }) => {
     }
     let idx = 0; // cumulative ndex in worksheet array
     for (let worksheet of fileFormDataMap.values()) {
-      for (const [key, value] of Object.entries(worksheet)) {
-        // add each nested FormData entry
-        resourceFormData.append(`worksheets[${idx}][${key}]`, value);
+      for (let [key, value] of Object.entries(worksheet)) {
+        if (value instanceof Array) {
+          // add each nested array item
+          for (let [itemIdx, item] of value.entries()) {
+            resourceFormData.append(`worksheets[${idx}][${key}][${itemIdx}]`, item)
+          }
+        } else {
+          // add each nested FormData entry
+          resourceFormData.append(`worksheets[${idx}][${key}]`, value);
+        }
       }
       idx++;
     }
     for (let worksheet of newWorksheets) {
-      for (const [key, value] of Object.entries(worksheet)) {
+      for (let [key, value] of Object.entries(worksheet)) {
         // add each nested FormData entry
+        if (value instanceof Array) {
+          value = JSON.stringify(value);
+        }
         resourceFormData.append(`worksheets[${idx}][${key}]`, value);
       }
       idx++;

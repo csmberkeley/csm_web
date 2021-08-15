@@ -270,23 +270,28 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
     if not instance.pk:
         return False
 
+    db_obj = Worksheet.objects.get(pk=instance.pk)
+    exists = True
     try:
-        old_file = Worksheet.objects.get(pk=instance.pk).worksheet_file
+        old_file = db_obj.worksheet_file
     except Worksheet.DoesNotExist:
-        return False
+        exists = False
 
-    new_file = instance.worksheet_file
-    if not old_file == new_file:
-        instance.worksheet_file.delete(save=False)
+    if exists:
+        new_file = instance.worksheet_file
+        if old_file != new_file:
+            db_obj.worksheet_file.delete(save=False)
 
+    exists = True
     try:
-        old_file = Worksheet.objects.get(pk=instance.pk).solution_file
+        old_file = db_obj.solution_file
     except Worksheet.DoesNotExist:
-        return False
+        exists = False
 
-    new_file = instance.solution_file
-    if not old_file == new_file:
-        instance.solution_file.delete(save=False)
+    if exists:
+        new_file = instance.solution_file
+        if old_file != new_file:
+            db_obj.solution_file.delete(save=False)
 
 
 class Spacetime(ValidatingModel):

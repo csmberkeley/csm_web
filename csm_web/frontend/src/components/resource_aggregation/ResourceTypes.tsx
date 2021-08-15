@@ -11,6 +11,7 @@ export interface Worksheet {
   name: string;
   worksheetFile: string | File;
   solutionFile: string | File;
+  deleted?: string[];
 }
 
 export interface ResourceRowProps {

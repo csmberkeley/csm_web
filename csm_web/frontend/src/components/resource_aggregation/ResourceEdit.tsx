@@ -13,10 +13,20 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    */
   const [newWorksheets, setNewWorksheets] = useState([]);
 
+  let resourceWorksheetMap = new Map();
+  if (resource) {
+    for (let worksheet of resource.worksheets) {
+      // add existing resource worksheet to map
+      resourceWorksheetMap.set(worksheet.id, worksheet);
+    }
+  }
+
   /**
    * Mapping from worksheet id to FormData holding updated attributes
    */
-  const [existingWorksheetMap, setExistingWorksheetMap]: [Map<number, Worksheet>, Function] = useState(new Map());
+  const [existingWorksheetMap, setExistingWorksheetMap]: [Map<number, Worksheet>, Function] = useState(
+    resourceWorksheetMap
+  );
 
   /**
    * Handle updating newly created worksheets.
@@ -33,6 +43,25 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     } else {
       worksheet[field] = e.target.value;
     }
+  }
+
+  /**
+   * Retrieves a worksheet from the worksheet map,
+   * and calls the callback function on the worksheet.
+   *
+   * @param worksheetId Id of worksheet to retrieve
+   * @param callback function to call on retrieved worksheet
+   */
+  function retrieveAndExecute(worksheetId: number, callback: (worksheet: Worksheet) => void) {
+    let worksheet;
+    if (existingWorksheetMap.has(worksheetId)) {
+      worksheet = existingWorksheetMap.get(worksheetId);
+    } else {
+      console.error(`Worksheet not found: id ${worksheet.id}`);
+    }
+    callback(worksheet);
+    // update state and render
+    setExistingWorksheetMap(existingWorksheetMap);
   }
 
   /**
@@ -54,23 +83,14 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       `handleFileChange() field must be "worksheetFile" or "solutionFile" or "name"; got ${field}`
     );
     // retrieve worksheet FormData object
-    // TODO: also look in the resource worksheet attribute for data, as currently
-    // it always creates a new worksheet after first initialization
-    let worksheet: Worksheet;
-    if (existingWorksheetMap.has(worksheetId)) {
-      worksheet = existingWorksheetMap.get(worksheetId);
-    } else {
-      worksheet = emptyWorksheet();
-      worksheet.id = worksheetId;
-      existingWorksheetMap.set(worksheetId, worksheet);
-    }
-    // update field in worksheet FormData
-    if (getFile) {
-      worksheet[field] = e.target.files[0];
-    } else {
-      worksheet[field] = e.target.value;
-    }
-    setExistingWorksheetMap(existingWorksheetMap);
+    retrieveAndExecute(worksheetId, worksheet => {
+      // update field in worksheet FormData
+      if (getFile) {
+        worksheet[field] = e.target.files[0];
+      } else {
+        worksheet[field] = e.target.value;
+      }
+    });
   }
 
   /**
@@ -81,17 +101,33 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    *
    * TODO: update view to remove the deleted worksheet from the modal
    */
-  function handleExistingWorksheetDelete(e, worksheetId): void {
-    let worksheet;
-    if (existingWorksheetMap.has(worksheetId)) {
-      worksheet = existingWorksheetMap.get(worksheetId);
-    } else {
-      worksheet = emptyWorksheet();
-      worksheet.id = worksheetId;
-      existingWorksheetMap.set(worksheetId, worksheet);
-    }
-    worksheet.deleted = true;
-    setExistingWorksheetMap(existingWorksheetMap);
+  function handleExistingWorksheetDelete(e, worksheetId: number): void {
+    retrieveAndExecute(worksheetId, worksheet => {
+      if (worksheet.deleted == undefined || !(worksheet.deleted instanceof Array)) {
+        worksheet.deleted = [];
+      }
+      worksheet.deleted.push("worksheet");
+    });
+  }
+
+  /**
+   * Marks a worksheet file for deletion.
+   *
+   * @param e event
+   * @param worksheetId worksheet id
+   * @param field field of file to delete
+   */
+  function handleExistingWorksheetDeleteFile(e, worksheetId: number, field: string): void {
+    console.assert(
+      field == "worksheetFile" || field == "solutionFile",
+      `Expected "workheetFile" or "solutionFile"; got ${field}`
+    );
+    retrieveAndExecute(worksheetId, worksheet => {
+      if (worksheet.deleted == undefined || !(worksheet.deleted instanceof Array)) {
+        worksheet.deleted = [];
+      }
+      worksheet.deleted.push(field);
+    });
   }
 
   /**
@@ -104,6 +140,25 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     let updated = [...newWorksheets];
     updated.splice(index, 1);
     setNewWorksheets(updated);
+  }
+
+  /**
+   * Deletes a worksheet file from the array of new worksheets.
+   *
+   * @param e event object
+   * @param index worksheet index to delete from
+   * @param field field of worksheet to delete
+   */
+  function handleNewWorksheetDeleteFile(e, index: number, field: string): void {
+    console.assert(
+      field == "worksheetFile" || field == "solutionFile",
+      `Expected "workheetFile" or "solutionFile"; got ${field}`
+    );
+    // delete field of worksheet reference in map
+    let worksheet = newWorksheets[index];
+    worksheet[field] = "";
+    // update and render
+    setNewWorksheets(newWorksheets);
   }
 
   /**
@@ -139,37 +194,17 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
             </div>
           </div>
           <div>
-            {resource.worksheets ? (
+            {resource.worksheets &&
               resource.worksheets.map(worksheet => (
                 <ResourceWorksheetEdit
                   key={worksheet.id}
                   worksheet={worksheet}
                   onChange={handleExistingWorksheetChange}
                   onDelete={handleExistingWorksheetDelete}
+                  onDeleteFile={handleExistingWorksheetDeleteFile}
                 ></ResourceWorksheetEdit>
-              ))
-            ) : (
-              <div>
-                {/* <div className="resourceInfoEdit">
-                  <input type="text" placeholder="Worksheet Name" onChange={e => onChange(e, "worksheetName")} />
-                </div>
-                <div className="resourceInfoEdit">
-                  <div>Worksheet File</div>
-                  <label className="fileUpload">
-                    <input type="file" onChange={e => onFileChange(e, "worksheetFile")}/>
-                    <FontAwesomeIcon icon={faUpload} className="uploadIcon" /> File Upload
-                  </label>
-                </div>
-                <div className="resourceInfoEdit">
-                  <div>Solutions File</div>
-                  <label className="fileUpload">
-                    <input type="file" onChange={e => onFileChange(e, "solutionFile")}/>
-                    <FontAwesomeIcon icon={faUpload} className="uploadIcon" /> File Upload
-                  </label>
-                </div> */}
-              </div>
-            )}
-            {newWorksheets.length &&
+              ))}
+            {newWorksheets &&
               newWorksheets.map((worksheet, index) => (
                 <ResourceWorksheetEdit
                   key={index}
@@ -177,6 +212,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                   onChange={handleNewWorksheetChange}
                   index={index}
                   onDelete={handleNewWorksheetDelete}
+                  onDeleteFile={handleNewWorksheetDeleteFile}
                 ></ResourceWorksheetEdit>
               ))}
             <button onClick={handleAddWorksheet}>Add worksheet</button>
