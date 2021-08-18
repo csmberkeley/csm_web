@@ -3,6 +3,9 @@ import ResourceEdit from "./ResourceEdit";
 import { Resource, ResourceRowProps, Worksheet } from "./ResourceTypes";
 import ResourceRowRender from "./ResourceRow";
 
+/**
+ * React component representing a row of the resource table.
+ */
 export const ResourceRow = ({
   initialResource,
   onUpdateResource,
@@ -11,7 +14,6 @@ export const ResourceRow = ({
   addingResource,
   cancelOverride
 }: ResourceRowProps) => {
-  // call updateResource(resource) on change
   const [edit, setEdit] = useState(false);
   const [resource, setResource]: [Resource, Function] = useState({} as Resource);
 

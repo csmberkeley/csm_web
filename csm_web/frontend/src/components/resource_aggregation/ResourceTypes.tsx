@@ -30,6 +30,11 @@ export interface ResourceEditProps {
   onCancel: Function;
 }
 
+/**
+ * Creates an empty Resource object.
+ *
+ * @returns empty Resource object
+ */
 export function emptyResource(): Resource {
   return {
     weekNum: 0,
@@ -39,6 +44,11 @@ export function emptyResource(): Resource {
   };
 }
 
+/**
+ * Creates an empty Worksheet object.
+ *
+ * @returns empty Worksheet object
+ */
 export function emptyWorksheet(): Worksheet {
   return {
     id: null,
@@ -49,6 +59,12 @@ export function emptyWorksheet(): Worksheet {
   };
 }
 
+/**
+ * Creates a shallow copy of a worksheet object.
+ *
+ * @param worksheet worksheet object to copy from
+ * @returns copy of specified worksheet object
+ */
 export function copyWorksheet(worksheet: Worksheet): Worksheet {
   return {
     id: worksheet.id,
