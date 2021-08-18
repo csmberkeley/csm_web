@@ -23,8 +23,9 @@ export const ResourceTable = ({ courseID }) => {
   }, [courseID]);
 
   /**
-   * TODO: update to include new worksheets and merge them in
-   * - merge fileFormData and newWorksheets (ensure id for new worksheets is null)
+   * Merges fileFormData and newWorksheets with other resource attributes.
+   *
+   * All new worksheets have a null id, and existing worksheets use their id from the database.
    *
    * {
    *    [[resource fields]]
@@ -47,7 +48,7 @@ export const ResourceTable = ({ courseID }) => {
   ) {
     let resourceFormData = new FormData();
     for (const [key, value] of Object.entries(newResource)) {
-      if (key != "worksheets") {
+      if (key !== "worksheets") {
         resourceFormData.set(key, value as any);
       }
     }
