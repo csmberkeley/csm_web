@@ -5,6 +5,9 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
 
+/**
+ * React component to handle editing of resources.
+ */
 export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: ResourceEditProps) => {
   /**
    * List of FormData objects representing the current (local) newly added worksheets.
@@ -86,7 +89,8 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    * The value should not matter (as the attribute should not exist
    * on worksheets that are not marked for deletion), but is set to true nonetheless.
    *
-   * TODO: update view to remove the deleted worksheet from the modal
+   * @param e event object
+   * @param worksheetId id of worksheet that was deleted
    */
   function handleExistingWorksheetDelete(e, worksheetId: number): void {
     retrieveAndExecute(worksheetId, worksheet => {
@@ -102,7 +106,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   /**
    * Marks a worksheet file for deletion.
    *
-   * @param e event
+   * @param e event object
    * @param worksheetId worksheet id
    * @param field field of file to delete
    */
@@ -122,7 +126,12 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   }
 
   /**
-   * Handle updating newly created worksheets.
+   * Handles updating newly created worksheets.
+   *
+   * @param e event object
+   * @param index new worksheet index in array
+   * @param field changed field in worksheet
+   * @param getFile whether the user uploaded a new file
    */
   function handleNewWorksheetChange(
     e: ChangeEvent<HTMLInputElement>,

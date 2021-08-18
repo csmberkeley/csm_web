@@ -6,6 +6,9 @@ import { emptyResource, Resource, Worksheet } from "./ResourceTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 
+/**
+ * React component representing the entire resource table, managing all resource rows.
+ */
 export const ResourceTable = ({ courseID }) => {
   const [resources, setResources] = useState([]);
   const [canEdit, setCanEdit] = useState(false);
@@ -52,7 +55,7 @@ export const ResourceTable = ({ courseID }) => {
         resourceFormData.set(key, value as any);
       }
     }
-    let idx = 0; // cumulative ndex in worksheet array
+    let idx = 0; // cumulative index in worksheet array
     for (let worksheet of fileFormDataMap.values()) {
       for (let [key, value] of Object.entries(worksheet)) {
         if (value instanceof Array) {
