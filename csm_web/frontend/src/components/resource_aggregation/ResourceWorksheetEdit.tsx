@@ -3,8 +3,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 
 /**
- * TODO: currently, the ternary for "re-upload file" vs "upload file"
- * does not update when a file has just been uploaded locally.
+ * Helper component for a file field, updating when the user uploads/deletes files.
  */
 const ResourceFileField = ({ worksheet, fileType, title, onChange, onDelete }) => {
   return (

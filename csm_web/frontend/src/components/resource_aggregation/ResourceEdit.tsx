@@ -62,7 +62,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   ): void {
     // make sure the field is expected; TODO: maybe remove afterward?
     console.assert(
-      field == "worksheetFile" || field == "solutionFile" || field == "name",
+      field === "worksheetFile" || field === "solutionFile" || field === "name",
       `handleFileChange() field must be "worksheetFile" or "solutionFile" or "name"; got ${field}`
     );
     // retrieve worksheet FormData object
@@ -108,7 +108,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    */
   function handleExistingWorksheetDeleteFile(e, worksheetId: number, field: string): void {
     console.assert(
-      field == "worksheetFile" || field == "solutionFile",
+      field === "worksheetFile" || field === "solutionFile",
       `Expected "workheetFile" or "solutionFile"; got ${field}`
     );
     retrieveAndExecute(worksheetId, worksheet => {
@@ -162,7 +162,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    */
   function handleNewWorksheetDeleteFile(e, index: number, field: string): void {
     console.assert(
-      field == "worksheetFile" || field == "solutionFile",
+      field === "worksheetFile" || field === "solutionFile",
       `Expected "workheetFile" or "solutionFile"; got ${field}`
     );
     // delete field of worksheet reference in map
@@ -179,19 +179,8 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setNewWorksheets([...newWorksheets, emptyWorksheet()]);
   }
 
-  /**
-   * Clean up worksheets before canceling the edit.
-   */
-  function preOnCancel(): void {
-    // reset all deleted attributes
-    // for (let worksheet of existingWorksheetMap.values()) {
-    //   worksheet.deleted = undefined;
-    // }
-    onCancel();
-  }
-
   return (
-    <Modal closeModal={preOnCancel} className="resourceEditModal">
+    <Modal closeModal={onCancel as any} className="resourceEditModal">
       <div className="resourceEditContainer">
         <div id="resourceEditInner">
           <div>
