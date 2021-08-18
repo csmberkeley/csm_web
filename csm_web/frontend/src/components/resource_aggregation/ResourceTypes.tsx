@@ -48,3 +48,13 @@ export function emptyWorksheet(): Worksheet {
     solutionFile: ""
   };
 }
+
+export function copyWorksheet(worksheet: Worksheet): Worksheet {
+  return {
+    id: worksheet.id,
+    resource: worksheet.resource,
+    name: worksheet.name,
+    worksheetFile: worksheet.worksheetFile,
+    solutionFile: worksheet.solutionFile
+  };
+}

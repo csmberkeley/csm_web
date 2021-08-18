@@ -1,6 +1,6 @@
 import React, { ChangeEvent, useState } from "react";
 import Modal, { ModalCloser } from "../Modal";
-import { emptyWorksheet, ResourceEditProps, Worksheet } from "./ResourceTypes";
+import { copyWorksheet, emptyWorksheet, ResourceEditProps, Worksheet } from "./ResourceTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
@@ -16,8 +16,8 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   let resourceWorksheetMap = new Map();
   if (resource) {
     for (let worksheet of resource.worksheets) {
-      // add existing resource worksheet to map
-      resourceWorksheetMap.set(worksheet.id, worksheet);
+      // add copy of existing resource worksheet to map
+      resourceWorksheetMap.set(worksheet.id, copyWorksheet(worksheet));
     }
   }
 
@@ -27,23 +27,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   const [existingWorksheetMap, setExistingWorksheetMap]: [Map<number, Worksheet>, Function] = useState(
     resourceWorksheetMap
   );
-
-  /**
-   * Handle updating newly created worksheets.
-   */
-  function handleNewWorksheetChange(
-    e: ChangeEvent<HTMLInputElement>,
-    index: number,
-    field: string,
-    getFile: boolean
-  ): void {
-    let worksheet = newWorksheets[index];
-    if (getFile) {
-      worksheet[field] = e.target.files[0];
-    } else {
-      worksheet[field] = e.target.value;
-    }
-  }
 
   /**
    * Retrieves a worksheet from the worksheet map,
@@ -61,7 +44,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     }
     callback(worksheet);
     // update state and render
-    setExistingWorksheetMap(existingWorksheetMap);
+    setExistingWorksheetMap(new Map(existingWorksheetMap));
   }
 
   /**
@@ -90,6 +73,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       } else {
         worksheet[field] = e.target.value;
       }
+      // remove marker for deletion upon upload
+      if (worksheet.deleted && worksheet.deleted.includes(field)) {
+        worksheet.deleted.splice(worksheet.deleted.indexOf(field), 1);
+      }
     });
   }
 
@@ -106,7 +93,9 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       if (worksheet.deleted == undefined || !(worksheet.deleted instanceof Array)) {
         worksheet.deleted = [];
       }
-      worksheet.deleted.push("worksheet");
+      if (!worksheet.deleted.includes("worksheet")) {
+        worksheet.deleted.push("worksheet");
+      }
     });
   }
 
@@ -126,8 +115,30 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       if (worksheet.deleted == undefined || !(worksheet.deleted instanceof Array)) {
         worksheet.deleted = [];
       }
-      worksheet.deleted.push(field);
+      if (!worksheet.deleted.includes(field)) {
+        worksheet.deleted.push(field);
+      }
     });
+  }
+
+  /**
+   * Handle updating newly created worksheets.
+   */
+  function handleNewWorksheetChange(
+    e: ChangeEvent<HTMLInputElement>,
+    index: number,
+    field: string,
+    getFile: boolean
+  ): void {
+    console.log("new worksheet change");
+    let worksheet = newWorksheets[index];
+    if (getFile) {
+      worksheet[field] = e.target.files[0];
+    } else {
+      worksheet[field] = e.target.value;
+    }
+    // update state and render
+    setNewWorksheets([...newWorksheets]);
   }
 
   /**
@@ -139,7 +150,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   function handleNewWorksheetDelete(e, index: number): void {
     let updated = [...newWorksheets];
     updated.splice(index, 1);
-    setNewWorksheets(updated);
+    setNewWorksheets([...updated]);
   }
 
   /**
@@ -158,7 +169,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     let worksheet = newWorksheets[index];
     worksheet[field] = "";
     // update and render
-    setNewWorksheets(newWorksheets);
+    setNewWorksheets([...newWorksheets]);
   }
 
   /**
@@ -168,8 +179,19 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setNewWorksheets([...newWorksheets, emptyWorksheet()]);
   }
 
+  /**
+   * Clean up worksheets before canceling the edit.
+   */
+  function preOnCancel(): void {
+    // reset all deleted attributes
+    // for (let worksheet of existingWorksheetMap.values()) {
+    //   worksheet.deleted = undefined;
+    // }
+    onCancel();
+  }
+
   return (
-    <Modal closeModal={onCancel as any} className="resourceEditModal">
+    <Modal closeModal={preOnCancel} className="resourceEditModal">
       <div className="resourceEditContainer">
         <div id="resourceEditInner">
           <div>
@@ -194,16 +216,18 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
             </div>
           </div>
           <div>
-            {resource.worksheets &&
-              resource.worksheets.map(worksheet => (
-                <ResourceWorksheetEdit
-                  key={worksheet.id}
-                  worksheet={worksheet}
-                  onChange={handleExistingWorksheetChange}
-                  onDelete={handleExistingWorksheetDelete}
-                  onDeleteFile={handleExistingWorksheetDeleteFile}
-                ></ResourceWorksheetEdit>
-              ))}
+            {existingWorksheetMap &&
+              [...existingWorksheetMap.values()].map(worksheet =>
+                worksheet.deleted && worksheet.deleted.includes("worksheet") ? undefined : (
+                  <ResourceWorksheetEdit
+                    key={worksheet.id}
+                    worksheet={worksheet}
+                    onChange={handleExistingWorksheetChange}
+                    onDelete={handleExistingWorksheetDelete}
+                    onDeleteFile={handleExistingWorksheetDeleteFile}
+                  ></ResourceWorksheetEdit>
+                )
+              )}
             {newWorksheets &&
               newWorksheets.map((worksheet, index) => (
                 <ResourceWorksheetEdit
