@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 
@@ -6,17 +6,21 @@ import { faUpload, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
  * TODO: currently, the ternary for "re-upload file" vs "upload file"
  * does not update when a file has just been uploaded locally.
  */
-const ResourceFileField = ({ file, title, onChange, onDelete }) => (
-  <div className="resourceInfoEdit">
-    <div>{title}</div>
-    <label className="fileUpload">
-      <input type="file" onChange={onChange} />
-      <FontAwesomeIcon icon={faUpload} className="uploadIcon" />
-      {file ? "Re-upload File" : "Upload File"}
-    </label>
-    <button onClick={onDelete}>X</button>
-  </div>
-);
+const ResourceFileField = ({ worksheet, fileType, title, onChange, onDelete }) => {
+  return (
+    <div className="resourceInfoEdit">
+      <div>{title}</div>
+      <label className="fileUpload">
+        <input type="file" onChange={onChange} />
+        <FontAwesomeIcon icon={faUpload} className="uploadIcon" />
+        {worksheet[fileType] && !(worksheet.deleted && worksheet.deleted.includes(fileType))
+          ? "Re-upload File"
+          : "Upload File"}
+      </label>
+      <button onClick={onDelete}>X</button>
+    </div>
+  );
+};
 
 const ResourceWorksheetEdit = ({ worksheet, onChange, onDelete, onDeleteFile, index }) => {
   let currentId = index == undefined ? worksheet.id : index;
@@ -32,13 +36,15 @@ const ResourceWorksheetEdit = ({ worksheet, onChange, onDelete, onDeleteFile, in
         />
       </div>
       <ResourceFileField
-        file={worksheet.worksheetFile}
+        worksheet={worksheet}
+        fileType="worksheetFile"
         title={"Worksheet File"}
         onChange={e => onChange(e, currentId, "worksheetFile", true)}
         onDelete={e => onDeleteFile(e, currentId, "worksheetFile")}
       />
       <ResourceFileField
-        file={worksheet.solutionFile}
+        worksheet={worksheet}
+        fileType="solutionFile"
         title={"Solutions File"}
         onChange={e => onChange(e, currentId, "solutionFile", true)}
         onDelete={e => onDeleteFile(e, currentId, "solutionFile")}
