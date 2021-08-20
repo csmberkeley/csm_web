@@ -1,12 +1,13 @@
 import logging
 from operator import attrgetter
 import csv
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import transaction
 from django.db.models import Q, Count, Prefetch
 from django.db.models.query import EmptyQuerySet
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.http import HttpResponse
+from django.http.response import JsonResponse
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
 from itertools import groupby
@@ -340,12 +341,16 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
             else:  # not POST and resource not found
                 raise ValueError(f"Resource object to query does not exist: {request.data}")
 
-            if "weekNum" in resource:
-                resource_obj.week_num = resource["weekNum"]
-            if "date" in resource:
-                resource_obj.date = resource["date"]
-            if "topics" in resource:
-                resource_obj.topics = resource["topics"]
+            resource_obj.week_num = resource.get("weekNum", None)  # invalid if blank
+            resource_obj.date = resource.get("date", None)  # invalid if blank
+            if not resource_obj.date:  # if empty string, set blank field to get a better validation detail
+                resource_obj.date = None
+            resource_obj.topics = resource.get("topics", "")  # default to empty string
+
+            try:  # validate
+                resource_obj.full_clean()
+            except ValidationError as e:
+                return JsonResponse(e.message_dict, status=status.HTTP_400_BAD_REQUEST)
             resource_obj.save()
 
             if "worksheets" in resource:
@@ -371,11 +376,18 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                     else:
                         # create new worksheet
                         worksheet_obj = Worksheet(resource=resource_obj)
-                    worksheet_obj.name = worksheet["name"]
+
+                    worksheet_obj.name = worksheet.get("name", None)
                     if not isinstance(worksheet["worksheetFile"], str):
                         worksheet_obj.worksheet_file = worksheet["worksheetFile"]
                     if not isinstance(worksheet["solutionFile"], str):
                         worksheet_obj.solution_file = worksheet["solutionFile"]
+
+                    try:  # validate
+                        worksheet_obj.full_clean()
+                    except ValidationError as e:
+                        return JsonResponse(e.message_dict, status=status.HTTP_400_BAD_REQUEST)
+
                     worksheet_obj.save()
         elif request.method == "DELETE":
             # remove resource from db

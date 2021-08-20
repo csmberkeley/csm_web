@@ -93,7 +93,13 @@ export const ResourceTable = ({ courseID }) => {
     newWorksheets: Array<Worksheet>
   ) {
     const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.POST, resourceFormData, true).then(() => {
+    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.POST, resourceFormData, true).then((response) => {
+      if (response.status === 400) {
+        // Bad request; input invalid
+        response.json().then((data) => {
+          console.error(data);
+        });
+      }
       fetchJSON(`/resources/${courseID}/resources`).then(data => {
         setResources(data);
       });
@@ -110,7 +116,13 @@ export const ResourceTable = ({ courseID }) => {
    */
   function handleUpdateResource(newResource, fileFormDataMap, newWorksheets) {
     const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then(() => {
+    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then((response) => {
+      if (response.status === 400) {
+        // Bad request; input invalid
+        response.json().then((data) => {
+          console.error(data);
+        });
+      }
       fetchJSON(`/resources/${courseID}/resources`).then(data => {
         setResources(data);
       });
@@ -121,7 +133,13 @@ export const ResourceTable = ({ courseID }) => {
    * Deletes a specified resource from the database
    */
   function handleDeleteResource(resourceId) {
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.DELETE, { id: resourceId }, false).then(() => {
+    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.DELETE, { id: resourceId }, false).then((response) => {
+      if (response.status === 400) {
+        // Bad request; input invalid
+        response.json().then((data) => {
+          console.error(data);
+        });
+      }
       fetchJSON(`/resources/${courseID}/resources`).then(data => {
         setResources(data);
       });
