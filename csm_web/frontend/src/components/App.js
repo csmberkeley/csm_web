@@ -1,5 +1,6 @@
 import React, { useEffect } from "react";
 import { HashRouter as Router, Route, Switch, Link } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import ReactDOM from "react-dom";
 import PropTypes from "prop-types";
 import CourseMenu from "./CourseMenu";
@@ -51,7 +52,12 @@ function Header() {
       <Link to="/">
         <LogoNoText id="logo" />
       </Link>
-      <h3 id="site-title">Scheduler</h3>
+      <NavLink exact={true} to="/" className="site-title-link" activeClassName="is-active">
+        <h3 className="site-title">Scheduler</h3>
+      </NavLink>
+      <NavLink to="/resources" className="site-title-link" activeClassName="is-active">
+        <h3 className="site-title">Resources</h3>
+      </NavLink>
       <a id="logout-btn" href="/logout" title="Log out">
         <LogOutIcon width="1.25em" height="1.25em" />
       </a>

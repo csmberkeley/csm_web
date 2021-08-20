@@ -54,10 +54,19 @@ header {
 	margin-right: 20px;
 }
 
-#site-title {
+.site-title {
 	font-weight: 600;
 	font-size: 23px;
 	line-height: 18px;
+}
+
+.site-title-link {
+	text-decoration: none;
+	margin-right: 25px;
+	color: #bbbbbb;
+}
+
+.site-title-link.is-active {
 	color: #808080;
 }
 
