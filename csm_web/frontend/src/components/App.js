@@ -9,6 +9,9 @@ import { Resources } from "./resource_aggregation/Resources.tsx";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
 
+import { config } from "@fortawesome/fontawesome-svg-core";
+config.autoAddCss = false; // remove inline styling
+
 export default class App extends React.Component {
   state = { error: null };
 
