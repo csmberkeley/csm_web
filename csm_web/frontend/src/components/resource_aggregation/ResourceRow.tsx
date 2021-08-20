@@ -1,62 +1,98 @@
-import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
+import React, { useState, useEffect, ChangeEvent } from "react";
+import ResourceEdit from "./ResourceEdit";
+import { Resource, ResourceRowProps, Worksheet } from "./ResourceTypes";
+import ResourceRowRender from "./ResourceRowRender";
 
-const ResourceTopics = ({ topics }) => {
-  if (topics === undefined) return <div></div>;
-  // TODO: handle multiple topics with delimiters
-  return topics.split("\x00").map((topic, index) => (
-    <div className="topic" key={index}>
-      {topic.trim()}
-    </div>
-  ));
-};
+/**
+ * React component representing a row of the resource table.
+ */
+export const ResourceRow = ({
+  initialResource,
+  onUpdateResource,
+  onDeleteResource,
+  canEdit,
+  addingResource,
+  cancelOverride
+}: ResourceRowProps) => {
+  const [edit, setEdit] = useState(false);
+  const [resource, setResource]: [Resource, Function] = useState({} as Resource);
 
-const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }) => {
+  // update current resource if initialResource changes
+  useEffect(() => {
+    setResource(initialResource);
+    setEdit(false);
+  }, [initialResource]);
+
+  useEffect(() => {
+    setEdit(addingResource);
+  }, [addingResource]);
+
+  /**
+   * Modifies a specified field of the current resource.
+   *
+   * @param e - onChange event
+   * @param field - resource field to change
+   */
+  function handleChange(e: ChangeEvent<HTMLInputElement>, field: string): void {
+    resource[field] = e.target.value;
+    setResource(resource);
+  }
+
+  /**
+   * Bubbles change up to parent ResourceWrapper
+   *
+   * @param e - onSubmit event
+   */
+  function handleSubmit(
+    e: ChangeEvent<HTMLInputElement>,
+    fileFormDataMap: Map<number, Worksheet>,
+    newWorksheets: Array<Worksheet>
+  ): void {
+    e.preventDefault();
+    onUpdateResource(resource, fileFormDataMap, newWorksheets);
+    setEdit(false);
+  }
+
+  /**
+   * Sets editing behavior depending on whether we can edit this resource/course
+   */
+  function handleSetEdit(): void {
+    if (canEdit) {
+      setEdit(true);
+    }
+  }
+
+  /**
+   * Sets edit state to false when user exits out of edit mode.
+   */
+  function handleCancel(): void {
+    if (cancelOverride) {
+      cancelOverride();
+    } else {
+      setEdit(false);
+    }
+  }
+
   return (
-    <div className="resourceContainer">
-      <div className="resourceInfo weekNum">
-        <div>Week {resource.weekNum}</div>
-      </div>
-      <div className="resourceInfo dateCell">
-        <div>{resource.date}</div>
-      </div>
-      <div className="resourceInfo resourceTopics">
-        <div>
-          <ResourceTopics topics={resource.topics} />
-        </div>
-      </div>
-      <div className="resourceWkstFilesContainer">
-        {resource.worksheets &&
-          resource.worksheets.map(worksheet => (
-            <div key={worksheet.id} className="resourceWkst">
-              <div className="resourceWkstFile">
-                <a href={worksheet.worksheetFile} target="_blank">
-                  {worksheet.name}
-                </a>
-              </div>
-              {worksheet.solutionFile && (
-                <div className="resourceSoln">
-                  <a href={worksheet.solutionFile} target="_blank">
-                    Solutions
-                  </a>
-                </div>
-              )}
-            </div>
-          ))}
-      </div>
-      {canEdit && (
-        <div className="resourceButtonsContainer">
-          <button onClick={onSetEdit} className="resourceButton">
-            <FontAwesomeIcon icon={faPencilAlt} id="editIcon" />
-          </button>
-          <button onClick={() => onDelete(resource.id)} className="resourceButton">
-            <FontAwesomeIcon icon={faTrashAlt} id="deleteIcon" />
-          </button>
-        </div>
+    <div>
+      {!addingResource && (
+        <ResourceRowRender
+          resource={resource}
+          canEdit={canEdit}
+          onSetEdit={handleSetEdit}
+          onDelete={onDeleteResource}
+        />
+      )}
+      {edit && (
+        <ResourceEdit resource={resource} onChange={handleChange} onSubmit={handleSubmit} onCancel={handleCancel} />
       )}
     </div>
   );
 };
 
-export default ResourceRowRender;
+ResourceRow.defaultProps = {
+  addingResource: false,
+  cancelOverride: null
+};
+
+export default ResourceRow;

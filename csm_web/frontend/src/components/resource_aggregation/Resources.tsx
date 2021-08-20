@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchJSON } from "../../utils/api";
-import ResourceWrapper from "./ResourceTable";
+import ResourceTable from "./ResourceTable";
 
 export const Resources = () => {
   const [selectedCourseID, setSelectedCourseID] = useState(1);
@@ -32,7 +32,7 @@ export const Resources = () => {
           ))}
         </div>
       </div>
-      <ResourceWrapper courseID={selectedCourseID} />
+      <ResourceTable courseID={selectedCourseID} />
     </div>
   );
 };

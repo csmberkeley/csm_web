@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { getRoles } from "../../utils/user";
-import ResourceRow from "./ResourceWrapper";
+import ResourceRow from "./ResourceRow";
 import { emptyResource, Resource, Worksheet } from "./ResourceTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
