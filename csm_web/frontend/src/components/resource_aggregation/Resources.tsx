@@ -1,13 +1,16 @@
 import React, { useState, useEffect } from "react";
 import { fetchJSON } from "../../utils/api";
+import { emptyRoles, getRoles } from "../../utils/user";
 import ResourceTable from "./ResourceTable";
 
 export const Resources = () => {
+  const [roles, setRoles] = useState(emptyRoles());
   const [selectedCourseID, setSelectedCourseID] = useState(1);
   const [courses, setCourses] = useState([]);
-  // TODO: have mapping of course id to resource list to store previous gets
+  const [cache, setCache] = useState(new Map());
 
   useEffect(() => {
+    getRoles().then(roles => setRoles(roles));
     fetchJSON("courses").then(data => {
       setCourses(data);
     });
@@ -15,6 +18,39 @@ export const Resources = () => {
 
   function handleTabClick(courseID) {
     setSelectedCourseID(courseID);
+  }
+
+  /**
+   * Retrieves resources from cache, populating the cache if cache miss.
+   *
+   * @param courseID id of course to get resources for
+   * @returns promise for asynchronous data fetch
+   */
+  function getResources(courseID): Promise<void> {
+    if (cache.has(courseID)) {
+      // still create promise for cache retrieve
+      return new Promise((resolve, _) => {
+        resolve(cache.get(courseID));
+      });
+    } else {
+      // get data and store in cache
+      return updateResources(courseID);
+    }
+  }
+
+  /**
+   * Fetches resources from API, replacing the cache entry if it already exists.
+   *
+   * @param courseID id of course to update resources for
+   * @returns promise for asynchronous data fetch
+   */
+  function updateResources(courseID) {
+    return fetchJSON(`/resources/${courseID}/resources`).then(data => {
+      const updatedCache = new Map(cache);
+      updatedCache.set(courseID, data);
+      setCache(updatedCache);
+      return data;
+    });
   }
 
   return (
@@ -32,7 +68,12 @@ export const Resources = () => {
           ))}
         </div>
       </div>
-      <ResourceTable courseID={selectedCourseID} />
+      <ResourceTable
+        courseID={selectedCourseID}
+        roles={roles}
+        getResources={() => getResources(selectedCourseID)}
+        updateResources={() => updateResources(selectedCourseID)}
+      />
     </div>
   );
 };
