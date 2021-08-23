@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
-import { getRoles } from "../../utils/user";
+import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import ResourceRow from "./ResourceRow";
 import { emptyResource, Resource, Worksheet } from "./ResourceTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -9,7 +8,7 @@ import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 /**
  * React component representing the entire resource table, managing all resource rows.
  */
-export const ResourceTable = ({ courseID }) => {
+export const ResourceTable = ({ courseID, roles, getResources, updateResources }) => {
   const [resources, setResources] = useState([]);
   const [canEdit, setCanEdit] = useState(false);
   const [addingResource, setAddingResource] = useState(false);
@@ -18,12 +17,11 @@ export const ResourceTable = ({ courseID }) => {
    * Gets resource data for a specific course when courseID changes
    */
   useEffect(() => {
-    fetchJSON(`/resources/${courseID}/resources`).then(data => {
+    setCanEdit(roles["COORDINATOR"].has(courseID));
+    getResources().then(data => {
       setResources(data);
-      getRoles().then(roles => setCanEdit(roles["COORDINATOR"].has(courseID)));
-      //setCanEdit(getRoles()["COORDINATOR"].has(courseID));
     });
-  }, [courseID]);
+  }, [courseID, roles]);
 
   /**
    * Merges fileFormData and newWorksheets with other resource attributes.
@@ -100,7 +98,7 @@ export const ResourceTable = ({ courseID }) => {
           console.error(data);
         });
       }
-      fetchJSON(`/resources/${courseID}/resources`).then(data => {
+      updateResources().then(data => {
         setResources(data);
       });
     });
@@ -123,7 +121,7 @@ export const ResourceTable = ({ courseID }) => {
           console.error(data);
         });
       }
-      fetchJSON(`/resources/${courseID}/resources`).then(data => {
+      updateResources().then(data => {
         setResources(data);
       });
     });
@@ -140,7 +138,7 @@ export const ResourceTable = ({ courseID }) => {
           console.error(data);
         });
       }
-      fetchJSON(`/resources/${courseID}/resources`).then(data => {
+      updateResources().then(data => {
         setResources(data);
       });
     });
