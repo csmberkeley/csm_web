@@ -37,7 +37,7 @@ export interface ResourceEditProps {
  */
 export function emptyResource(): Resource {
   return {
-    weekNum: 0,
+    weekNum: "" as unknown as number,  // to trick typescript in accepting an empty string
     date: "",
     topics: "",
     worksheets: []
