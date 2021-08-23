@@ -1,6 +1,6 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+import { faUpload, faExclamationCircle, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
 
 /**
  * Helper component for a file field, updating when the user uploads/deletes files.
@@ -21,7 +21,7 @@ const ResourceFileField = ({ worksheet, fileType, title, onChange, onDelete }) =
   );
 };
 
-const ResourceWorksheetEdit = ({ worksheet, onChange, onDelete, onDeleteFile, index }) => {
+const ResourceWorksheetEdit = ({ worksheet, onChange, onDelete, onDeleteFile, onBlur, formErrorsMap, index }) => {
   let currentId = index == undefined ? worksheet.id : index;
   // TODO: rename the delete button/restyle, and group these worksheet edit items better
   return (
@@ -32,7 +32,12 @@ const ResourceWorksheetEdit = ({ worksheet, onChange, onDelete, onDeleteFile, in
           defaultValue={worksheet.name}
           placeholder="Worksheet Name"
           onChange={e => onChange(e, currentId, "name")}
+          onBlur={e => onBlur(e)}
         />
+        <div className="resourceValidationError">
+          {formErrorsMap.get(currentId) && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+          {formErrorsMap.get(currentId)}
+        </div>
       </div>
       <ResourceFileField
         worksheet={worksheet}

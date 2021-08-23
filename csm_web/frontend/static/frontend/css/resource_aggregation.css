@@ -215,12 +215,29 @@ input[type="file"] {
 	width: 120px;
 }
 
+#resourceButtonSubmit:disabled,
+#resourceButtonSubmit[disabled="disabled"],
+#resourceButtonSubmit:disabled:hover,
+#resourceButtonSubmit[disabled="disabled"]:hover {
+	background-color: #cdf3db;
+	cursor: not-allowed;
+}
+
 #saveIcon {
 	margin: 0 !important;
 }
 
 #resourceButtonSubmit:hover {
 	background-color: var(--csm-green-darkened);
+}
+
+.exclamationIcon {
+	display: inline;
+}
+
+.resourceValidationError {
+	color: red;
+	font-size: 80%;
 }
 
 #addResourceButton {
