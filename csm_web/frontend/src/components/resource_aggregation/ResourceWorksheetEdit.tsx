@@ -9,7 +9,13 @@ const ResourceFileField = ({ worksheet, fileType, onChange, onDelete }) => {
   const isDeleted = worksheet.deleted && worksheet.deleted.includes(fileType);
   let uploadLabel = "Upload File";
   if (worksheet[fileType] && !isDeleted) {
-    uploadLabel = worksheet[fileType].name;
+    if (typeof worksheet[fileType] === "string") {
+      // already uploaded to S3; parse filename/type from URL
+      uploadLabel = worksheet[fileType].split('#').shift().split('?').shift().split('/').pop();
+    } else {
+      // newly uplaoded; name is in File object
+      uploadLabel = worksheet[fileType].name;
+    }
   }
   return (
     <div className="resourceWorksheetEditFile">
@@ -17,7 +23,7 @@ const ResourceFileField = ({ worksheet, fileType, onChange, onDelete }) => {
         <input type="file" onChange={onChange} />
         <FontAwesomeIcon icon={faUpload} className="uploadIcon" />
         <span className="fileUploadLabel">
-          {worksheet[fileType] && !isDeleted ? worksheet[fileType].name : "Upload File"}
+          {uploadLabel}
         </span>
       </label>
       {worksheet[fileType] && !isDeleted && (
@@ -60,7 +66,7 @@ const ResourceWorksheetEdit = ({ worksheet, onChange, onDelete, onDeleteFile, on
         onDelete={e => onDeleteFile(e, currentId, "solutionFile")}
       />
       <button onClick={e => onDelete(e, currentId)} className="deleteWorksheet">
-        <FontAwesomeIcon icon={faTrashAlt}/>
+        <FontAwesomeIcon icon={faTrashAlt} />
       </button>
     </div>
   );

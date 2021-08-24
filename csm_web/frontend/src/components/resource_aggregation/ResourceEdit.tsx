@@ -392,8 +392,11 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   return (
     <Modal closeModal={onCancel as any} className="resourceEditModal">
       <div className="resourceEditContainer">
+        <div className="resourceEditHead">
+        </div>
         <div id="resourceEditInner">
           <div className="resourceInfoEdit">
+            <div className="resourceEditHeadItem">Week Number</div>
             <input
               type="text"
               defaultValue={resource.weekNum}
@@ -407,6 +410,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
             </div>
           </div>
           <div className="resourceInfoEdit">
+            <div className="resourceEditHeadItem">Date</div>
             <input
               type="date"
               defaultValue={resource.date}
@@ -419,6 +423,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
             </div>
           </div>
           <div className="resourceInfoEdit">
+            <div className="resourceEditHeadItem">Topics</div>
             <input
               type="text"
               defaultValue={resource.topics}
