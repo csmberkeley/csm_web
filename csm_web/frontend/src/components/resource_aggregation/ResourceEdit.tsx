@@ -3,7 +3,7 @@ import _ from "lodash";
 import Modal from "../Modal";
 import { copyWorksheet, emptyWorksheet, ResourceEditProps, Worksheet } from "./ResourceTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheckCircle, faExclamationCircle } from "@fortawesome/free-solid-svg-icons";
+import { faCheckCircle, faExclamationCircle, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
 
 const DEFAULT_FORM_ERRORS = {
@@ -12,8 +12,8 @@ const DEFAULT_FORM_ERRORS = {
   topics: "",
   // mapping of worksheet id/index to error string
   existingWorksheets: new Map(),
-  newWorksheets: new Map(),
-}
+  newWorksheets: new Map()
+};
 
 const DEFAULT_TOUCHED = {
   weekNum: false,
@@ -21,16 +21,16 @@ const DEFAULT_TOUCHED = {
   topics: false,
   // set of ids/indices of touched worksheets
   existingWorksheets: new Set(),
-  newWorksheets: new Set(),
-}
+  newWorksheets: new Set()
+};
 
 const ALL_TOUCHED = {
   weekNum: true,
   date: true,
   topics: true,
   existingWorksheets: new Set(),
-  newWorksheets: new Set(),
-}
+  newWorksheets: new Set()
+};
 
 /**
  * React component to handle editing of resources.
@@ -44,7 +44,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   const [newWorksheets, setNewWorksheets] = useState([]);
   const [formErrors, setFormErrors] = useState(DEFAULT_FORM_ERRORS);
   const [touched, setTouched] = useState(DEFAULT_TOUCHED);
-
 
   let resourceWorksheetMap = new Map();
   if (resource) {
@@ -63,9 +62,9 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
   /**
    * Validates form inputs, updating error strings and returning whether or not the fields are valid
-   * 
+   *
    * The `validateAll` parameter is needed because of the asynchronous state updates.
-   * 
+   *
    * @param validateAll whether all fields should be validated
    */
   function validate(validateAll = false) {
@@ -83,10 +82,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       newFormErrors["weekNum"] = weekNumError;
     }
     if (validateAll || touched.date) {
-      newFormErrors["date"] = date ? "" : "Date is required"
+      newFormErrors["date"] = date ? "" : "Date is required";
     }
     if (validateAll || touched.topics) {
-      newFormErrors["topics"] = topics ? "" : "Topics is required"
+      newFormErrors["topics"] = topics ? "" : "Topics is required";
     }
 
     // handle worksheet validation
@@ -127,7 +126,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
   /**
    * Checks formErrors to see if there are any error messages
-   * 
+   *
    * @returns whether or not the fields are valid
    */
   function checkValid(): boolean {
@@ -147,7 +146,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
   /**
    * Updates the touched fields when the user unfocuses from the field
-   * 
+   *
    * @param field string containing type of input field
    */
   function handleBlur(field) {
@@ -168,15 +167,14 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
   useEffect(() => {
     validate();
-  }, [touched])
+  }, [touched]);
 
   /**
    * Wrapper for the onSubmit function, validating all fields before submission.
-   * 
+   *
    * @param e onSubmit event
    */
   function handleSubmit(e) {
-
     // set all fields as touched for future validates
     setTouched(ALL_TOUCHED);
 
@@ -358,80 +356,96 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setNewWorksheets([...newWorksheets, emptyWorksheet()]);
   }
 
+  let existingDisplay =
+    existingWorksheetMap &&
+    [...existingWorksheetMap.values()].map(worksheet =>
+      worksheet.deleted && worksheet.deleted.includes("worksheet") ? undefined : (
+        <ResourceWorksheetEdit
+          key={worksheet.id}
+          worksheet={worksheet}
+          onChange={handleExistingWorksheetChange}
+          onDelete={handleExistingWorksheetDelete}
+          onDeleteFile={handleExistingWorksheetDeleteFile}
+          onBlur={e => handleBlurExistingWorksheet(worksheet.id)}
+          formErrorsMap={formErrors.existingWorksheets}
+        ></ResourceWorksheetEdit>
+      )
+    );
+
+  let newDisplay =
+    newWorksheets &&
+    newWorksheets.map((worksheet, index) => (
+      <ResourceWorksheetEdit
+        key={index}
+        worksheet={worksheet}
+        onChange={handleNewWorksheetChange}
+        index={index}
+        onDelete={handleNewWorksheetDelete}
+        onDeleteFile={handleNewWorksheetDeleteFile}
+        onBlur={e => handleBlurNewWorksheet(index)}
+        formErrorsMap={formErrors.newWorksheets}
+      ></ResourceWorksheetEdit>
+    ));
+
+  let hasWorksheets = existingWorksheetMap && newWorksheets && (existingDisplay.length > 0 || newDisplay.length > 0);
+
   return (
     <Modal closeModal={onCancel as any} className="resourceEditModal">
       <div className="resourceEditContainer">
         <div id="resourceEditInner">
-          <div>
-            <div className="resourceInfoEdit">
-              <input
-                type="text"
-                defaultValue={resource.weekNum}
-                placeholder="Week Number"
-                onChange={e => onChange(e, "weekNum")}
-                onBlur={e => handleBlur("weekNum")}
-              />
-              <div className="resourceValidationError">
-                {formErrors.weekNum && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
-                {formErrors.weekNum}
-              </div>
-            </div>
-            <div className="resourceInfoEdit">
-              <input
-                type="date"
-                defaultValue={resource.date}
-                onChange={e => onChange(e, "date")}
-                onBlur={e => handleBlur("date")}
-              />
-              <div className="resourceValidationError">
-                {formErrors.date && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
-                {formErrors.date}
-              </div>
-            </div>
-            <div className="resourceInfoEdit">
-              <input
-                type="text"
-                defaultValue={resource.topics}
-                placeholder="Topics"
-                onChange={e => onChange(e, "topics")}
-                onBlur={e => handleBlur("topics")}
-              />
-              <div className="resourceValidationError">
-                {formErrors.topics && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
-                {formErrors.topics}
-              </div>
+          <div className="resourceInfoEdit">
+            <input
+              type="text"
+              defaultValue={resource.weekNum}
+              placeholder="Week Number"
+              onChange={e => onChange(e, "weekNum")}
+              onBlur={e => handleBlur("weekNum")}
+            />
+            <div className="resourceValidationError">
+              {formErrors.weekNum && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+              {formErrors.weekNum}
             </div>
           </div>
-          <div>
-            {existingWorksheetMap &&
-              [...existingWorksheetMap.values()].map(worksheet =>
-                worksheet.deleted && worksheet.deleted.includes("worksheet") ? undefined : (
-                  <ResourceWorksheetEdit
-                    key={worksheet.id}
-                    worksheet={worksheet}
-                    onChange={handleExistingWorksheetChange}
-                    onDelete={handleExistingWorksheetDelete}
-                    onDeleteFile={handleExistingWorksheetDeleteFile}
-                    onBlur={e => handleBlurExistingWorksheet(worksheet.id)}
-                    formErrorsMap={formErrors.existingWorksheets}
-                  ></ResourceWorksheetEdit>
-                )
-              )}
-            {newWorksheets &&
-              newWorksheets.map((worksheet, index) => (
-                <ResourceWorksheetEdit
-                  key={index}
-                  worksheet={worksheet}
-                  onChange={handleNewWorksheetChange}
-                  index={index}
-                  onDelete={handleNewWorksheetDelete}
-                  onDeleteFile={handleNewWorksheetDeleteFile}
-                  onBlur={e => handleBlurNewWorksheet(index)}
-                  formErrorsMap={formErrors.newWorksheets}
-                ></ResourceWorksheetEdit>
-              ))}
-            <button onClick={handleAddWorksheet}>Add worksheet</button>
+          <div className="resourceInfoEdit">
+            <input
+              type="date"
+              defaultValue={resource.date}
+              onChange={e => onChange(e, "date")}
+              onBlur={e => handleBlur("date")}
+            />
+            <div className="resourceValidationError">
+              {formErrors.date && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+              {formErrors.date}
+            </div>
           </div>
+          <div className="resourceInfoEdit">
+            <input
+              type="text"
+              defaultValue={resource.topics}
+              placeholder="Topics"
+              onChange={e => onChange(e, "topics")}
+              onBlur={e => handleBlur("topics")}
+            />
+            <div className="resourceValidationError">
+              {formErrors.topics && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+              {formErrors.topics}
+            </div>
+          </div>
+        </div>
+        <div className="resourceWorksheetContainer">
+          {hasWorksheets && (
+            <div className="resourceWorksheetHead">
+              <div className="resourceWorksheetHeadItem">Name</div>
+              <div className="resourceWorksheetHeadItem">Worksheet File</div>
+              <div className="resourceWorksheetHeadItem">Solution File</div>
+            </div>
+          )}
+          {existingDisplay}
+          {newDisplay}
+          <button onClick={handleAddWorksheet} id="addWorksheetButton">
+            <FontAwesomeIcon icon={faPlusCircle} id="plusIcon" />
+            Add Worksheet
+          </button>
         </div>
         <button onClick={handleSubmit} id="resourceButtonSubmit" disabled={!checkValid()}>
           <FontAwesomeIcon icon={faCheckCircle} id="saveIcon" /> SAVE

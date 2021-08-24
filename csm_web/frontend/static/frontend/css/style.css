@@ -18,6 +18,11 @@ button:hover {
 	cursor: pointer;
 }
 
+button {
+	/* use parent font instead of default button font */
+	font-family: inherit;
+}
+
 :root {
 	--csm-green: #9ae0b3;
 	--csm-green-darkened: #75b38a;
