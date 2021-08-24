@@ -1,22 +1,30 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload, faExclamationCircle, faCheckCircle } from "@fortawesome/free-solid-svg-icons";
+import { faUpload, faExclamationCircle, faTimes, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 
 /**
  * Helper component for a file field, updating when the user uploads/deletes files.
  */
-const ResourceFileField = ({ worksheet, fileType, title, onChange, onDelete }) => {
+const ResourceFileField = ({ worksheet, fileType, onChange, onDelete }) => {
+  const isDeleted = worksheet.deleted && worksheet.deleted.includes(fileType);
+  let uploadLabel = "Upload File";
+  if (worksheet[fileType] && !isDeleted) {
+    uploadLabel = worksheet[fileType].name;
+  }
   return (
-    <div className="resourceInfoEdit">
-      <div>{title}</div>
+    <div className="resourceWorksheetEditFile">
       <label className="fileUpload">
         <input type="file" onChange={onChange} />
         <FontAwesomeIcon icon={faUpload} className="uploadIcon" />
-        {worksheet[fileType] && !(worksheet.deleted && worksheet.deleted.includes(fileType))
-          ? "Re-upload File"
-          : "Upload File"}
+        <span className="fileUploadLabel">
+          {worksheet[fileType] && !isDeleted ? worksheet[fileType].name : "Upload File"}
+        </span>
       </label>
-      <button onClick={onDelete}>X</button>
+      {worksheet[fileType] && !isDeleted && (
+        <button onClick={onDelete} className="clearFile">
+          <FontAwesomeIcon icon={faTimes} />
+        </button>
+      )}
     </div>
   );
 };
@@ -25,8 +33,8 @@ const ResourceWorksheetEdit = ({ worksheet, onChange, onDelete, onDeleteFile, on
   let currentId = index == undefined ? worksheet.id : index;
   // TODO: rename the delete button/restyle, and group these worksheet edit items better
   return (
-    <div>
-      <div className="resourceInfoEdit">
+    <div className="resourceWorksheet">
+      <div className="resourceWorksheetEditItem">
         <input
           type="text"
           defaultValue={worksheet.name}
@@ -42,18 +50,18 @@ const ResourceWorksheetEdit = ({ worksheet, onChange, onDelete, onDeleteFile, on
       <ResourceFileField
         worksheet={worksheet}
         fileType="worksheetFile"
-        title={"Worksheet File"}
         onChange={e => onChange(e, currentId, "worksheetFile", true)}
         onDelete={e => onDeleteFile(e, currentId, "worksheetFile")}
       />
       <ResourceFileField
         worksheet={worksheet}
         fileType="solutionFile"
-        title={"Solutions File"}
         onChange={e => onChange(e, currentId, "solutionFile", true)}
         onDelete={e => onDeleteFile(e, currentId, "solutionFile")}
       />
-      <button onClick={e => onDelete(e, currentId)}>Delete above</button>
+      <button onClick={e => onDelete(e, currentId)} className="deleteWorksheet">
+        <FontAwesomeIcon icon={faTrashAlt}/>
+      </button>
     </div>
   );
 };
