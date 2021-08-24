@@ -30,9 +30,16 @@
 	text-align: center;
 }
 
-.resourceWrapperContainer {
+/* .resourceWrapperContainer {
 	display: flex;
 	flex-direction: column;
+	margin: auto;
+	max-width: 1064px;
+} */
+
+.resourceWrapperContainer {
+	/* display: grid;
+	grid-template-columns: repeat(1, minmax(100px, 1fr)); */
 	margin: auto;
 	max-width: 1064px;
 }
@@ -50,7 +57,10 @@
 .resourceContainer,
 .resourceEditContainer,
 .resourceWrapperHeader {
-	display: flex;
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: repeat(3, minmax(50px, 1fr)) 2fr 40px;
+	column-gap: 10px;
 	text-align: center;
 	width: 100%;
 }
@@ -68,33 +78,43 @@
 	padding: 0 8px;
 }
 
+.resourceRowRender {
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: repeat(3, minmax(100px, 1fr));
+}
+
 .weekNum,
 .dateCell {
-	flex: 1;
 }
 
 .resourceTopics {
-	flex: 2;
 }
 
 .resourceWkstFilesContainer {
-	flex: 2;
-	display: flex;
-	flex-direction: column;
 }
 
 .resourceWkst {
-	display: flex;
-	text-align: left;
+	display: grid;
+	grid-auto-columns: 2fr 1fr;
+	/* flex-direction: row; */
+	align-items: center;
+	justify-content: center;
+	margin: 6px 0;
 }
 
 .resourceWkstFile,
-.resourceSoln {
+.resourceSoln,
+.resourceWkstFile a:link,
+.resourceSoln a:link,
+.resourceWkstFile a:visited,
+.resourceSoln a:visited {
 	color: var(--csm-green-darkened);
 }
 
 .resourceWkstFile {
 	text-decoration: underline;
+	grid-column: 1;
 }
 
 .resourceSoln {
@@ -102,14 +122,19 @@
 	border-radius: 5px;
 	font-size: 14px;
 	font-weight: 600;
-	margin-top: 8px;
+	/* margin-top: 8px; */
 	padding: 4px;
 	text-align: center;
 	width: 80px;
+	height: fit-content;
+	margin-left: 10px;
+	grid-column: 2;
 }
 
 .resourceWkstFile:hover,
-.resourceSoln:hover {
+.resourceSoln:hover,
+.resourceWkstFile a:hover,
+.resourceSoln a:hover {
 	border-color: #4e7a5d;
 	color: #4e7a5d;
 	cursor: pointer;
@@ -181,7 +206,7 @@ input[type="file"] {
 .resourceButtonsContainer {
 	display: flex;
 	flex-direction: column;
-	justify-content: space-between;
+	justify-content: center;
 	margin-right: 16px;
 }
 
