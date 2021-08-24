@@ -30,6 +30,24 @@ export interface ResourceEditProps {
   onCancel: Function;
 }
 
+
+export interface FormErrors {
+  weekNum: string;
+  date: string;
+  topics: string;
+  existingWorksheets: Map<number, string>;
+  newWorksheets: Map<number, string>;
+}
+
+export interface Touched {
+  weekNum: boolean,
+  date: boolean,
+  topics: boolean,
+  // set of ids/indices of touched worksheets
+  existingWorksheets: Set<number>,
+  newWorksheets: Set<number>
+}
+
 /**
  * Creates an empty Resource object.
  *
@@ -72,5 +90,53 @@ export function copyWorksheet(worksheet: Worksheet): Worksheet {
     name: worksheet.name,
     worksheetFile: worksheet.worksheetFile,
     solutionFile: worksheet.solutionFile
+  };
+}
+
+/**
+ * Creates an empty FormErrors object
+ * 
+ * @returns empty FormErrors object
+ */
+export function emptyFormErrors(): FormErrors {
+  return {
+    weekNum: "",
+    date: "",
+    topics: "",
+    // mapping of worksheet id/index to error string
+    existingWorksheets: new Map(),
+    newWorksheets: new Map()
+  }
+}
+
+/**
+ * Creates an empty Touched object
+ * 
+ * @returns empty Touched object
+ */
+export function emptyTouched(): Touched {
+  return {
+    weekNum: false,
+    date: false,
+    topics: false,
+    // set of ids/indices of touched worksheets
+    existingWorksheets: new Set(),
+    newWorksheets: new Set()
+  };
+}
+
+/**
+ * Creates a complete Touched object
+ * 
+ * @returns complete Touched object
+ */
+export function allTouched(): Touched {
+  return {
+    weekNum: true,
+    date: true,
+    topics: true,
+    // set of ids/indices of touched worksheets
+    existingWorksheets: new Set(),
+    newWorksheets: new Set()
   };
 }

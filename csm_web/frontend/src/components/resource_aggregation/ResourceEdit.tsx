@@ -1,36 +1,10 @@
 import React, { ChangeEvent, useState, useEffect } from "react";
 import _ from "lodash";
 import Modal from "../Modal";
-import { copyWorksheet, emptyWorksheet, ResourceEditProps, Worksheet } from "./ResourceTypes";
+import { copyWorksheet, emptyWorksheet, ResourceEditProps, Worksheet, FormErrors, Touched, emptyFormErrors, emptyTouched, allTouched } from "./ResourceTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle, faExclamationCircle, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
-
-const DEFAULT_FORM_ERRORS = {
-  weekNum: "",
-  date: "",
-  topics: "",
-  // mapping of worksheet id/index to error string
-  existingWorksheets: new Map(),
-  newWorksheets: new Map()
-};
-
-const DEFAULT_TOUCHED = {
-  weekNum: false,
-  date: false,
-  topics: false,
-  // set of ids/indices of touched worksheets
-  existingWorksheets: new Set(),
-  newWorksheets: new Set()
-};
-
-const ALL_TOUCHED = {
-  weekNum: true,
-  date: true,
-  topics: true,
-  existingWorksheets: new Set(),
-  newWorksheets: new Set()
-};
 
 /**
  * React component to handle editing of resources.
@@ -42,8 +16,8 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    * and on upload/edit of worksheet fields, the FormData object should be updated to reflect changes.
    */
   const [newWorksheets, setNewWorksheets] = useState([]);
-  const [formErrors, setFormErrors] = useState(DEFAULT_FORM_ERRORS);
-  const [touched, setTouched] = useState(DEFAULT_TOUCHED);
+  const [formErrors, setFormErrors]: [FormErrors, Function] = useState(emptyFormErrors());
+  const [touched, setTouched]: [Touched, Function] = useState(emptyTouched());
 
   let resourceWorksheetMap = new Map();
   if (resource) {
@@ -176,7 +150,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    */
   function handleSubmit(e) {
     // set all fields as touched for future validates
-    setTouched(ALL_TOUCHED);
+    setTouched(allTouched());
 
     // validate all fields
     if (validate(true)) {
@@ -321,12 +295,28 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
     // update touched and formErrors
     let updatedTouched = { ...touched };
-    updatedTouched.newWorksheets = new Set(updatedTouched.newWorksheets);
-    updatedTouched.newWorksheets.delete(index);
+    let oldWorksheets: Set<number> = updatedTouched.newWorksheets as Set<number>;
+    updatedTouched.newWorksheets = new Set();
+    for (let idx of oldWorksheets) {
+      if (idx < index) {
+        updatedTouched.newWorksheets.add(idx);
+      } else if (idx > index) {
+        // shift indices after deleted worksheet
+        updatedTouched.newWorksheets.add(idx - 1);
+      }
+    }
     setTouched(updatedTouched);
     let updatedFormErrors = { ...formErrors };
-    updatedFormErrors.newWorksheets = new Map(updatedFormErrors.newWorksheets);
-    updatedFormErrors.newWorksheets.delete(index);
+    let oldWorksheetErrors = updatedFormErrors.newWorksheets;
+    updatedFormErrors.newWorksheets = new Map();
+    for (let [idx, error] of oldWorksheetErrors.entries()) {
+      if (idx < index) {
+        updatedFormErrors.newWorksheets.set(idx, error);
+      } else if (idx > index) {
+        // shift indices after deleted worksheet
+        updatedFormErrors.newWorksheets.set(idx - 1, error);
+      }
+    }
     setFormErrors(updatedFormErrors);
   }
 
