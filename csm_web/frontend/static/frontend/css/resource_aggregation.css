@@ -55,7 +55,6 @@
 }
 
 .resourceContainer,
-.resourceEditContainer,
 .resourceWrapperHeader {
 	grid-column: 1 / -1;
 	display: grid;
@@ -68,6 +67,8 @@
 .resourceEditContainer {
 	height: calc(60vh - 146px);
 	overflow-y: scroll;
+	display: flex;
+	flex-direction: column;
 }
 
 .resourceEditModal {
@@ -159,10 +160,6 @@
 	border-radius: 4px;
 	margin: 4px;
 	padding: 4px 8px;
-}
-
-.resourceEditContainer {
-	flex-direction: column;
 }
 
 #resourceEditInner {
