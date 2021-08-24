@@ -4,8 +4,7 @@ import { faPencilAlt, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 
 const ResourceTopics = ({ topics }) => {
   if (topics === undefined) return <div></div>;
-  // TODO: handle multiple topics with delimiters
-  return topics.split("\x00").map((topic, index) => (
+  return topics.split(";").map((topic, index) => (
     <div className="topic" key={index}>
       {topic.trim()}
     </div>
