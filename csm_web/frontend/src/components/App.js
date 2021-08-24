@@ -47,12 +47,20 @@ export default class App extends React.Component {
 }
 
 function Header() {
+  /**
+   * Helper function to determine whether or not "Scheduler" should be active.
+   * That is, it should always be active unless we're in a location prefixed by /resources
+   */
+  function schedulerActive(match, location) {
+    return !location.pathname.startsWith("/resources");
+  }
+
   return (
     <header>
       <Link to="/">
         <LogoNoText id="logo" />
       </Link>
-      <NavLink exact={true} to="/" className="site-title-link" activeClassName="is-active">
+      <NavLink isActive={schedulerActive} to="/" className="site-title-link" activeClassName="is-active">
         <h3 className="site-title">Scheduler</h3>
       </NavLink>
       <NavLink to="/resources" className="site-title-link" activeClassName="is-active">
