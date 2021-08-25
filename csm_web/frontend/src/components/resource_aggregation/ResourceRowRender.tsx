@@ -21,9 +21,7 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }) => {
         <div>{resource.date}</div>
       </div>
       <div className="resourceInfo resourceTopics">
-        <div>
-          <ResourceTopics topics={resource.topics} />
-        </div>
+        <ResourceTopics topics={resource.topics} />
       </div>
       <div className="resourceWkstFilesContainer">
         {resource.worksheets &&

@@ -37,10 +37,6 @@
 
 .resourceTable {
 	min-width: 750px;
-	hyphens: auto;
-	-webkit-hyphens: auto;
-	-moz-hyphens: auto;
-	-ms-hyphens: auto;
 }
 
 .resourceTableContainer {
@@ -98,10 +94,18 @@
 .resourceInfo,
 .resourceWrapperHeader > div {
 	display: flex;
+	flex-direction: column;
 	align-items: center;
 	justify-content: center;
 	margin: auto;
 	padding: 0 8px;
+}
+
+.resourceRow {
+	hyphens: auto;
+	-webkit-hyphens: auto;
+	-moz-hyphens: auto;
+	-ms-hyphens: auto;
 }
 
 .resourceRowRender {
