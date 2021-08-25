@@ -59,7 +59,7 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
         if (value instanceof Array) {
           // add each nested array item
           for (let [itemIdx, item] of value.entries()) {
-            resourceFormData.append(`worksheets[${idx}][${key}][${itemIdx}]`, item)
+            resourceFormData.append(`worksheets[${idx}][${key}][${itemIdx}]`, item);
           }
         } else {
           // add each nested FormData entry
@@ -91,10 +91,10 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
     newWorksheets: Array<Worksheet>
   ) {
     const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.POST, resourceFormData, true).then((response) => {
+    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.POST, resourceFormData, true).then(response => {
       if (response.status === 400) {
         // Bad request; input invalid
-        response.json().then((data) => {
+        response.json().then(data => {
           console.error(data);
         });
       }
@@ -114,10 +114,10 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
    */
   function handleUpdateResource(newResource, fileFormDataMap, newWorksheets) {
     const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then((response) => {
+    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then(response => {
       if (response.status === 400) {
         // Bad request; input invalid
-        response.json().then((data) => {
+        response.json().then(data => {
           console.error(data);
         });
       }
@@ -131,17 +131,19 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
    * Deletes a specified resource from the database
    */
   function handleDeleteResource(resourceId) {
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.DELETE, { id: resourceId }, false).then((response) => {
-      if (response.status === 400) {
-        // Bad request; input invalid
-        response.json().then((data) => {
-          console.error(data);
+    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.DELETE, { id: resourceId }, false).then(
+      response => {
+        if (response.status === 400) {
+          // Bad request; input invalid
+          response.json().then(data => {
+            console.error(data);
+          });
+        }
+        updateResources().then(data => {
+          setResources(data);
         });
       }
-      updateResources().then(data => {
-        setResources(data);
-      });
-    });
+    );
   }
 
   return (
@@ -152,31 +154,35 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
           <div>Add Resource</div>
         </button>
       )}
-      <div className="resourceWrapperHeader">
-        <div className="weekNum">Week</div>
-        <div className="dateCell">Date</div>
-        <div className="resourceTopics">Topics</div>
-        <div className="resourceWkst">Worksheet and Solutions</div>
+      <div className="resourceTableContainer">
+        <div className="resourceTable">
+          <div className="resourceWrapperHeader">
+            <div className="weekNum">Week</div>
+            <div className="dateCell">Date</div>
+            <div className="resourceTopics">Topics</div>
+            <div className="resourceWkst">Worksheet and Solutions</div>
+          </div>
+          {addingResource && (
+            <ResourceRow
+              initialResource={emptyResource()}
+              onUpdateResource={handleAddResource}
+              onDeleteResource={handleDeleteResource}
+              canEdit={canEdit}
+              addingResource={addingResource}
+              cancelOverride={handleCancelAddResource}
+            />
+          )}
+          {resources.map((resource, index) => (
+            <ResourceRow
+              key={index}
+              initialResource={resource}
+              onUpdateResource={handleUpdateResource}
+              onDeleteResource={handleDeleteResource}
+              canEdit={canEdit}
+            />
+          ))}
+        </div>
       </div>
-      {addingResource && (
-        <ResourceRow
-          initialResource={emptyResource()}
-          onUpdateResource={handleAddResource}
-          onDeleteResource={handleDeleteResource}
-          canEdit={canEdit}
-          addingResource={addingResource}
-          cancelOverride={handleCancelAddResource}
-        />
-      )}
-      {resources.map((resource, index) => (
-        <ResourceRow
-          key={index}
-          initialResource={resource}
-          onUpdateResource={handleUpdateResource}
-          onDeleteResource={handleDeleteResource}
-          canEdit={canEdit}
-        />
-      ))}
     </div>
   );
 };

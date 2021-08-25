@@ -95,6 +95,31 @@ header {
 	fill: #5e5e5e;
 }
 
+/* smaller screens */
+@media screen and (max-width: 500px) {
+	header {
+		flex-direction: column;
+		align-items: center;
+	}
+
+	#logo {
+		margin-right: 0;
+		margin-bottom: 10px;
+	}
+
+	.site-title {
+		margin: 10px 0;
+	}
+
+	.site-title-link {
+		margin-right: 0;
+	}
+
+	#logout-btn {
+		margin: 10px auto auto auto;
+	}
+}
+
 .modal {
 	position: fixed;
 	top: 50%;

@@ -1,7 +1,17 @@
 import React, { ChangeEvent, useState, useEffect } from "react";
 import _ from "lodash";
 import Modal from "../Modal";
-import { copyWorksheet, emptyWorksheet, ResourceEditProps, Worksheet, FormErrors, Touched, emptyFormErrors, emptyTouched, allTouched } from "./ResourceTypes";
+import {
+  copyWorksheet,
+  emptyWorksheet,
+  ResourceEditProps,
+  Worksheet,
+  FormErrors,
+  Touched,
+  emptyFormErrors,
+  emptyTouched,
+  allTouched
+} from "./ResourceTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle, faExclamationCircle, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
@@ -382,65 +392,67 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   return (
     <Modal closeModal={onCancel as any} className="resourceEditModal">
       <div className="resourceEditContainer">
-        <div className="resourceEditHead">
-        </div>
-        <div id="resourceEditInner">
-          <div className="resourceInfoEdit">
-            <div className="resourceEditHeadItem">Week Number</div>
-            <input
-              type="text"
-              defaultValue={resource.weekNum}
-              placeholder="Week Number"
-              onChange={e => onChange(e, "weekNum")}
-              onBlur={e => handleBlur("weekNum")}
-            />
-            <div className="resourceValidationError">
-              {formErrors.weekNum && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
-              {formErrors.weekNum}
+        <div className="resourceEditContentWrapper">
+          <div className="resourceEditContent">
+            <div id="resourceEditInner">
+              <div className="resourceInfoEdit">
+                <div className="resourceEditHeadItem">Week Number</div>
+                <input
+                  type="text"
+                  defaultValue={resource.weekNum}
+                  placeholder="Week Number"
+                  onChange={e => onChange(e, "weekNum")}
+                  onBlur={e => handleBlur("weekNum")}
+                />
+                <div className="resourceValidationError">
+                  {formErrors.weekNum && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+                  {formErrors.weekNum}
+                </div>
+              </div>
+              <div className="resourceInfoEdit">
+                <div className="resourceEditHeadItem">Date</div>
+                <input
+                  type="date"
+                  defaultValue={resource.date}
+                  onChange={e => onChange(e, "date")}
+                  onBlur={e => handleBlur("date")}
+                />
+                <div className="resourceValidationError">
+                  {formErrors.date && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+                  {formErrors.date}
+                </div>
+              </div>
+              <div className="resourceInfoEdit">
+                <div className="resourceEditHeadItem">Topics</div>
+                <input
+                  type="text"
+                  defaultValue={resource.topics}
+                  placeholder="Topics"
+                  onChange={e => onChange(e, "topics")}
+                  onBlur={e => handleBlur("topics")}
+                />
+                <div className="resourceValidationError">
+                  {formErrors.topics && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+                  {formErrors.topics}
+                </div>
+              </div>
+            </div>
+            <div className="resourceWorksheetContainer">
+              {hasWorksheets && (
+                <div className="resourceWorksheetHead">
+                  <div className="resourceWorksheetHeadItem">Name</div>
+                  <div className="resourceWorksheetHeadItem">Worksheet File</div>
+                  <div className="resourceWorksheetHeadItem">Solution File</div>
+                </div>
+              )}
+              {existingDisplay}
+              {newDisplay}
+              <button onClick={handleAddWorksheet} id="addWorksheetButton">
+                <FontAwesomeIcon icon={faPlusCircle} id="plusIcon" />
+                Add Worksheet
+              </button>
             </div>
           </div>
-          <div className="resourceInfoEdit">
-            <div className="resourceEditHeadItem">Date</div>
-            <input
-              type="date"
-              defaultValue={resource.date}
-              onChange={e => onChange(e, "date")}
-              onBlur={e => handleBlur("date")}
-            />
-            <div className="resourceValidationError">
-              {formErrors.date && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
-              {formErrors.date}
-            </div>
-          </div>
-          <div className="resourceInfoEdit">
-            <div className="resourceEditHeadItem">Topics</div>
-            <input
-              type="text"
-              defaultValue={resource.topics}
-              placeholder="Topics"
-              onChange={e => onChange(e, "topics")}
-              onBlur={e => handleBlur("topics")}
-            />
-            <div className="resourceValidationError">
-              {formErrors.topics && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
-              {formErrors.topics}
-            </div>
-          </div>
-        </div>
-        <div className="resourceWorksheetContainer">
-          {hasWorksheets && (
-            <div className="resourceWorksheetHead">
-              <div className="resourceWorksheetHeadItem">Name</div>
-              <div className="resourceWorksheetHeadItem">Worksheet File</div>
-              <div className="resourceWorksheetHeadItem">Solution File</div>
-            </div>
-          )}
-          {existingDisplay}
-          {newDisplay}
-          <button onClick={handleAddWorksheet} id="addWorksheetButton">
-            <FontAwesomeIcon icon={faPlusCircle} id="plusIcon" />
-            Add Worksheet
-          </button>
         </div>
         <button onClick={handleSubmit} id="resourceButtonSubmit" disabled={!checkValid()}>
           <FontAwesomeIcon icon={faCheckCircle} id="saveIcon" /> SAVE

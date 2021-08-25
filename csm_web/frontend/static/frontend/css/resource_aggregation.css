@@ -35,6 +35,18 @@
 	max-width: 1064px;
 }
 
+.resourceTable {
+	min-width: 750px;
+	hyphens: auto;
+	-webkit-hyphens: auto;
+	-moz-hyphens: auto;
+	-ms-hyphens: auto;
+}
+
+.resourceTableContainer {
+	overflow-x: auto;
+}
+
 .resourceContainer,
 .resourceEditContainer {
 	background-color: var(--csm-resources);
@@ -49,22 +61,30 @@
 .resourceWrapperHeader {
 	grid-column: 1 / -1;
 	display: grid;
-	grid-template-columns: repeat(3, minmax(50px, 1fr)) 2fr 40px;
+	grid-template-columns: repeat(2, minmax(50px, 1fr)) 2fr 2fr 40px;
 	column-gap: 10px;
 	text-align: center;
 	width: 100%;
 }
 
 .resourceEditContainer {
-	height: calc(60vh - 146px);
-	overflow-y: scroll;
+	height: calc(75vh - 146px);
 	display: flex;
 	flex-direction: column;
+	justify-content: center;
+}
+
+.resourceEditContentWrapper {
+	overflow: auto;
+}
+
+.resourceEditContent {
+	min-width: 600px;
 }
 
 .resourceEditModal {
 	width: 80vw !important;
-	height: 60vh !important;
+	height: 75vh !important;
 }
 
 .resourceEditModal .modal-contents {
@@ -92,11 +112,17 @@
 
 .resourceWkst {
 	display: grid;
-	grid-auto-columns: 2fr 1fr;
+	grid-auto-columns: 2fr 1.5fr;
 	/* flex-direction: row; */
 	align-items: center;
 	justify-content: center;
 	margin: 6px 0;
+}
+
+.resourceWkstFilesContainer {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
 }
 
 .resourceWkstFile,
@@ -108,9 +134,16 @@
 	color: var(--csm-green-darkened);
 }
 
+.resourceSoln a {
+	text-decoration: none;
+}
+
 .resourceWkstFile {
-	text-decoration: underline;
 	grid-column: 1;
+}
+
+.resourceWkstFile a:link {
+	text-decoration: underline;
 }
 
 .resourceSoln {
@@ -118,8 +151,7 @@
 	border-radius: 5px;
 	font-size: 14px;
 	font-weight: 600;
-	/* margin-top: 8px; */
-	padding: 4px;
+	padding: 2px;
 	text-align: center;
 	width: 80px;
 	height: fit-content;
@@ -127,8 +159,6 @@
 	grid-column: 2;
 }
 
-.resourceWkstFile:hover,
-.resourceSoln:hover,
 .resourceWkstFile a:hover,
 .resourceSoln a:hover {
 	border-color: #4e7a5d;
@@ -331,8 +361,7 @@ button.clearFile:hover {
 	font-size: 16px;
 	font-weight: 600;
 	justify-content: space-evenly;
-	margin: auto;
-	margin-top: 16px;
+	margin: 40px auto 20px;
 	padding: 16px;
 	width: 120px;
 }
