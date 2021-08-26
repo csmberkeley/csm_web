@@ -11,6 +11,7 @@ import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 export const ResourceTable = ({ courseID, roles, getResources, updateResources }) => {
   const [resources, setResources] = useState([]);
   const [canEdit, setCanEdit] = useState(false);
+  const [viewEdit, setViewEdit] = useState(false);
   const [addingResource, setAddingResource] = useState(false);
 
   /**
@@ -81,10 +82,23 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
     return resourceFormData;
   }
 
+  /**
+   * Toggle whether or not the user is currently adding a new resoruce.
+   *
+   * This needs to be a separate state because we reuse the same ResourceEdit component,
+   * but we do not want to render the new resource just yet.
+   */
   function handleSetAddingResource() {
     setAddingResource(true);
   }
 
+  /**
+   * Save and POST request the newly added resource
+   *
+   * @param newResource new resource to add
+   * @param fileFormDataMap FormData object for any files to add
+   * @param newWorksheets list of worksheets to add to resource
+   */
   function handleAddResource(
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
@@ -146,13 +160,30 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
     );
   }
 
+  /**
+   * Toggles whether the user wants to view the editing buttons.
+   *
+   * @param e checkbox toggle event
+   */
+  function handleToggleViewEdit(e) {
+    setViewEdit(e.target.checked);
+  }
+
   return (
     <div className="resourceWrapperContainer">
       {canEdit && (
-        <button onClick={handleSetAddingResource} id="addResourceButton">
-          <FontAwesomeIcon icon={faPlusCircle} id="plusIcon" />
-          <div>Add Resource</div>
-        </button>
+        <div className="resourceTableOptions">
+          <button onClick={handleSetAddingResource} id="addResourceButton">
+            <FontAwesomeIcon icon={faPlusCircle} id="plusIcon" />
+            <div>Add Resource</div>
+          </button>
+          <div className="toggleViewEditContainer">
+            <label for="toggleViewEditInput" id="toggleViewEditLabel">
+              <input type="checkbox" id="toggleViewEditInput" onChange={handleToggleViewEdit} />
+              Toggle Edit
+            </label>
+          </div>
+        </div>
       )}
       <div className="resourceTableContainer">
         <div className="resourceTable">
@@ -167,7 +198,7 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
               initialResource={emptyResource()}
               onUpdateResource={handleAddResource}
               onDeleteResource={handleDeleteResource}
-              canEdit={canEdit}
+              canEdit={viewEdit}
               addingResource={addingResource}
               cancelOverride={handleCancelAddResource}
             />
@@ -178,7 +209,7 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
               initialResource={resource}
               onUpdateResource={handleUpdateResource}
               onDeleteResource={handleDeleteResource}
-              canEdit={canEdit}
+              canEdit={viewEdit}
             />
           ))}
         </div>
