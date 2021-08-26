@@ -30,7 +30,6 @@ export interface ResourceEditProps {
   onCancel: Function;
 }
 
-
 export interface FormErrors {
   weekNum: string;
   date: string;
@@ -40,12 +39,12 @@ export interface FormErrors {
 }
 
 export interface Touched {
-  weekNum: boolean,
-  date: boolean,
-  topics: boolean,
+  weekNum: boolean;
+  date: boolean;
+  topics: boolean;
   // set of ids/indices of touched worksheets
-  existingWorksheets: Set<number>,
-  newWorksheets: Set<number>
+  existingWorksheets: Set<number>;
+  newWorksheets: Set<number>;
 }
 
 /**
@@ -55,7 +54,7 @@ export interface Touched {
  */
 export function emptyResource(): Resource {
   return {
-    weekNum: "" as unknown as number,  // to trick typescript in accepting an empty string
+    weekNum: ("" as unknown) as number, // to trick typescript in accepting an empty string
     date: "",
     topics: "",
     worksheets: []
@@ -95,7 +94,7 @@ export function copyWorksheet(worksheet: Worksheet): Worksheet {
 
 /**
  * Creates an empty FormErrors object
- * 
+ *
  * @returns empty FormErrors object
  */
 export function emptyFormErrors(): FormErrors {
@@ -106,12 +105,12 @@ export function emptyFormErrors(): FormErrors {
     // mapping of worksheet id/index to error string
     existingWorksheets: new Map(),
     newWorksheets: new Map()
-  }
+  };
 }
 
 /**
  * Creates an empty Touched object
- * 
+ *
  * @returns empty Touched object
  */
 export function emptyTouched(): Touched {
@@ -127,7 +126,7 @@ export function emptyTouched(): Touched {
 
 /**
  * Creates a complete Touched object
- * 
+ *
  * @returns complete Touched object
  */
 export function allTouched(): Touched {

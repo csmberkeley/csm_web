@@ -11,7 +11,7 @@ const ResourceFileField = ({ worksheet, fileType, onChange, onDelete }) => {
   if (worksheet[fileType] && !isDeleted) {
     if (typeof worksheet[fileType] === "string") {
       // already uploaded to S3; parse filename/type from URL
-      uploadLabel = worksheet[fileType].split('#').shift().split('?').shift().split('/').pop();
+      uploadLabel = worksheet[fileType].split("#").shift().split("?").shift().split("/").pop();
     } else {
       // newly uplaoded; name is in File object
       uploadLabel = worksheet[fileType].name;
@@ -22,9 +22,7 @@ const ResourceFileField = ({ worksheet, fileType, onChange, onDelete }) => {
       <label className="fileUpload">
         <input type="file" onChange={onChange} />
         <FontAwesomeIcon icon={faUpload} className="uploadIcon" />
-        <span className="fileUploadLabel">
-          {uploadLabel}
-        </span>
+        <span className="fileUploadLabel">{uploadLabel}</span>
       </label>
       {worksheet[fileType] && !isDeleted && (
         <button onClick={onDelete} className="clearFile">

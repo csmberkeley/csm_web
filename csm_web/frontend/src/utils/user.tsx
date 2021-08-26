@@ -14,8 +14,8 @@ export function emptyRoles(): Roles {
   return {
     STUDENT: new Set(),
     MENTOR: new Set(),
-    COORDINATOR: new Set(),
-  }
+    COORDINATOR: new Set()
+  };
 }
 
 /**
@@ -23,7 +23,7 @@ export function emptyRoles(): Roles {
  *
  * @returns all user roles split by role type
  */
-export function getRoles(): Promise<Roles>{
+export function getRoles(): Promise<Roles> {
   return fetchJSON("/profiles").then(profiles => {
     const roles = emptyRoles();
     profiles.map(course => {
