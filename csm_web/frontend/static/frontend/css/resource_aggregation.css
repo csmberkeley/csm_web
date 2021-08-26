@@ -115,18 +115,17 @@
 }
 
 .resourceWkst {
-	display: grid;
-	grid-auto-columns: 2fr 1.5fr;
-	/* flex-direction: row; */
-	align-items: center;
-	justify-content: center;
+	display: contents;
 	margin: 6px 0;
 }
 
 .resourceWkstFilesContainer {
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	align-items: center;
+	align-content: center;
 	justify-content: center;
+	grid-auto-columns: 2fr 1.5fr;
+	row-gap: 10px;
 }
 
 .resourceWkstFile,
