@@ -9,10 +9,10 @@ import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
  * React component representing the entire resource table, managing all resource rows.
  */
 export const ResourceTable = ({ courseID, roles, getResources, updateResources }) => {
-  const [resources, setResources] = useState([]);
-  const [canEdit, setCanEdit] = useState(false);
-  const [viewEdit, setViewEdit] = useState(false);
-  const [addingResource, setAddingResource] = useState(false);
+  const [resources, setResources]: [Resource[], Function] = useState([]);
+  const [canEdit, setCanEdit]: [boolean, Function] = useState(false);
+  const [viewEdit, setViewEdit]: [boolean, Function] = useState(false);
+  const [addingResource, setAddingResource]: [boolean, Function] = useState(false);
 
   /**
    * Gets resource data for a specific course when courseID changes
@@ -161,6 +161,26 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
   }
 
   /**
+   * Creates a new resource, populating the week number with the next week number,
+   * and populating the date with the date a week after the previous resource.
+   */
+  function getNextResource() {
+    let newResource = emptyResource();
+    let lastResource = resources[resources.length - 1]; // get last resource
+    newResource.weekNum = lastResource.weekNum + 1;
+
+    // add a week
+    let date = new Date(Date.parse(lastResource.date));
+    date.setUTCDate(date.getUTCDate() + 7);
+
+    // pad month and day
+    let newMonth = `${date.getUTCMonth() + 1}`.padStart(2, "0");
+    let newDay = `${date.getUTCDate()}`.padStart(2, "0");
+    newResource.date = `${date.getUTCFullYear()}-${newMonth}-${newDay}`;
+    return newResource;
+  }
+
+  /**
    * Toggles whether the user wants to view the editing buttons.
    *
    * @param e checkbox toggle event
@@ -195,7 +215,7 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
           </div>
           {addingResource && (
             <ResourceRow
-              initialResource={emptyResource()}
+              initialResource={getNextResource()}
               onUpdateResource={handleAddResource}
               onDeleteResource={handleDeleteResource}
               canEdit={viewEdit}
