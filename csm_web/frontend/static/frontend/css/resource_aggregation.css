@@ -453,3 +453,12 @@ button.clearFile:hover {
 #plusIcon {
 	margin-right: 8px;
 }
+
+.resourceDeleteConfirmation .resourceDeleteText {
+	margin-top: 15px;
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+	text-align: center;
+}
