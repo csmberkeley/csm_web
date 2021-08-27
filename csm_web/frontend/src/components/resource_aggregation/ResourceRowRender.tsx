@@ -24,11 +24,11 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }) => {
       {deletionStage === 1 && (
         <Modal className="resourceDeleteConfirmation" closeModal={() => setDeletionStage(0)}>
           <div className="resourceDeleteText">
-          <h2>Are you sure you want to delete this resource?</h2>
-          <p>This action is irreversible!</p>
-          <button className="danger-btn" onClick={() => onDelete(resource.id)}>
-            Confirm
-          </button>
+            <h2>Are you sure you want to delete this resource?</h2>
+            <p>This action is irreversible!</p>
+            <button className="danger-btn" onClick={() => onDelete(resource.id)}>
+              Confirm
+            </button>
           </div>
         </Modal>
       )}
