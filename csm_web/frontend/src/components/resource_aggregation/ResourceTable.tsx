@@ -218,7 +218,7 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
               initialResource={getNextResource()}
               onUpdateResource={handleAddResource}
               onDeleteResource={handleDeleteResource}
-              canEdit={viewEdit}
+              canEdit={canEdit && viewEdit}
               addingResource={addingResource}
               cancelOverride={handleCancelAddResource}
             />
@@ -229,7 +229,7 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
               initialResource={resource}
               onUpdateResource={handleUpdateResource}
               onDeleteResource={handleDeleteResource}
-              canEdit={viewEdit}
+              canEdit={canEdit && viewEdit}
             />
           ))}
         </div>
