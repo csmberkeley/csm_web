@@ -199,7 +199,7 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
           </button>
           <div className="toggleViewEditContainer">
             <label htmlFor="toggleViewEditInput" id="toggleViewEditLabel">
-              <input type="checkbox" id="toggleViewEditInput" onChange={handleToggleViewEdit} />
+              <input type="checkbox" checked={viewEdit} id="toggleViewEditInput" onChange={handleToggleViewEdit} />
               Toggle Edit
             </label>
           </div>
