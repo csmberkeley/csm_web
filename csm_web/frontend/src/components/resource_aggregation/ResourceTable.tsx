@@ -126,6 +126,9 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
 
   /**
    * Save and PUT request the updated resource
+   * @param newResource new resource to add
+   * @param fileFormDataMap FormData object for any files to add
+   * @param newWorksheets list of worksheets to add to resource
    */
   function handleUpdateResource(
     newResource: Resource,
@@ -148,6 +151,7 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
 
   /**
    * Deletes a specified resource from the database
+   * @param resourceId - numerical id of resource
    */
   function handleDeleteResource(resourceId) {
     fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.DELETE, { id: resourceId }, false).then(

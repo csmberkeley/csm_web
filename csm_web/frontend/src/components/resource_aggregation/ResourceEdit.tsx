@@ -135,12 +135,20 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setTouched({ ...touched, [field]: true });
   }
 
+  /**
+   *
+   * @param worksheetId numerical ID of worksheet
+   */
   function handleBlurExistingWorksheet(worksheetId: number) {
     const updatedExistingWorksheets = new Set(touched.existingWorksheets);
     updatedExistingWorksheets.add(worksheetId);
     setTouched({ ..._.merge(touched, { existingWorksheets: updatedExistingWorksheets }) });
   }
 
+  /**
+   *
+   * @param index position of worksheet in resource's worksheet array
+   */
   function handleBlurNewWorksheet(index: number) {
     const updatedNewWorksheets = new Set(touched.newWorksheets);
     updatedNewWorksheets.add(index);
@@ -191,6 +199,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    * @param e - onChange event
    * @param worksheetId - id of worksheet that was changed
    * @param field - resource field to change
+   * @param getFile - whether file should be retrieved
    */
   function handleExistingWorksheetChange(
     e: ChangeEvent<HTMLInputElement>,

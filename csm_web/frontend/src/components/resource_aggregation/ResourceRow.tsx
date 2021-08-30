@@ -42,6 +42,8 @@ export const ResourceRow = ({
    * Bubbles change up to parent ResourceWrapper
    *
    * @param e - onSubmit event
+   * @param fileFormDataMap - form data object containing file info
+   * @param newWorksheets - new worksheets
    */
   function handleSubmit(
     e: MouseEvent<HTMLButtonElement>,
