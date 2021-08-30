@@ -328,7 +328,7 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
             resource = request.data
             # query by resource id, update resource with new info
             resource_query = None
-            if "id" in resource:
+            if "id" in resource and resource["id"]:
                 resource_query = resources.filter(
                     pk=resource["id"]
                 )

@@ -20,6 +20,15 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
    * 1: confirmation; clicked delete button, asking for confirmation in modal
    */
   const [deletionStage, setDeletionStage] = useState<number>(0);
+
+  /**
+   * Handles actual deletion of resource; sets deletion stage to 0 to close modal.
+   */
+  function handleDelete() {
+    onDelete(resource.id);
+    setDeletionStage(0);
+  }
+
   return (
     <>
       {deletionStage === 1 && (
@@ -27,7 +36,7 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
           <div className="resourceDeleteText">
             <h2>Are you sure you want to delete this resource?</h2>
             <p>This action is irreversible!</p>
-            <button className="danger-btn" onClick={() => onDelete(resource.id)}>
+            <button className="danger-btn" onClick={() => handleDelete()}>
               Confirm
             </button>
           </div>

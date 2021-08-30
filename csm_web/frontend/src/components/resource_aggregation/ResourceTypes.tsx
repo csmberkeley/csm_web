@@ -2,7 +2,7 @@ import { ChangeEvent, MouseEvent } from "react";
 import { Roles } from "../../utils/user";
 
 export interface Resource {
-  id: number;
+  id?: number;
   weekNum: number;
   date: string;
   topics: string;
@@ -97,7 +97,6 @@ export interface Touched {
  */
 export function emptyResource(): Resource {
   return {
-    id: null,
     weekNum: ("" as unknown) as number, // to trick typescript in accepting an empty string
     date: "",
     topics: "",
