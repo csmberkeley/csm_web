@@ -1,5 +1,6 @@
 import { fetchJSON } from "./api";
-interface Roles {
+
+export interface Roles {
   STUDENT: Set<number>;
   MENTOR: Set<number>;
   COORDINATOR: Set<number>;

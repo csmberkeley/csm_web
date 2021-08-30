@@ -1,4 +1,4 @@
-import React, { useState, useEffect, ChangeEvent } from "react";
+import React, { useState, useEffect, ChangeEvent, MouseEvent } from "react";
 import ResourceEdit from "./ResourceEdit";
 import { Resource, ResourceRowProps, Worksheet } from "./ResourceTypes";
 import ResourceRowRender from "./ResourceRowRender";
@@ -13,9 +13,9 @@ export const ResourceRow = ({
   canEdit,
   addingResource,
   cancelOverride
-}: ResourceRowProps) => {
-  const [edit, setEdit] = useState(false);
-  const [resource, setResource]: [Resource, Function] = useState({} as Resource);
+}: ResourceRowProps): JSX.Element => {
+  const [edit, setEdit] = useState<boolean>(false);
+  const [resource, setResource] = useState<Resource>({} as Resource);
 
   // update current resource if initialResource changes
   useEffect(() => {
@@ -44,7 +44,7 @@ export const ResourceRow = ({
    * @param e - onSubmit event
    */
   function handleSubmit(
-    e: ChangeEvent<HTMLInputElement>,
+    e: MouseEvent<HTMLButtonElement>,
     fileFormDataMap: Map<number, Worksheet>,
     newWorksheets: Array<Worksheet>
   ): void {

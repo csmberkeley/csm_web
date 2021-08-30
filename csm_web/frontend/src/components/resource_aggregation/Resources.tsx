@@ -2,8 +2,9 @@ import React, { useState, useEffect } from "react";
 import { fetchJSON } from "../../utils/api";
 import { emptyRoles, getRoles } from "../../utils/user";
 import ResourceTable from "./ResourceTable";
+import { Resource } from "./ResourceTypes";
 
-export const Resources = () => {
+export const Resources = (): JSX.Element => {
   const [roles, setRoles] = useState(emptyRoles());
   const [selectedCourseID, setSelectedCourseID] = useState(1);
   const [courses, setCourses] = useState([]);
@@ -16,7 +17,7 @@ export const Resources = () => {
     });
   }, []);
 
-  function handleTabClick(courseID) {
+  function handleTabClick(courseID: number) {
     setSelectedCourseID(courseID);
   }
 
@@ -26,10 +27,10 @@ export const Resources = () => {
    * @param courseID id of course to get resources for
    * @returns promise for asynchronous data fetch
    */
-  function getResources(courseID): Promise<void> {
+  function getResources(courseID: number): Promise<Array<Resource>> {
     if (cache.has(courseID)) {
       // still create promise for cache retrieve
-      return new Promise((resolve, _) => {
+      return new Promise(resolve => {
         resolve(cache.get(courseID));
       });
     } else {
@@ -44,7 +45,7 @@ export const Resources = () => {
    * @param courseID id of course to update resources for
    * @returns promise for asynchronous data fetch
    */
-  function updateResources(courseID) {
+  function updateResources(courseID: number): Promise<Array<Resource>> {
     return fetchJSON(`/resources/${courseID}/resources`).then(data => {
       const updatedCache = new Map(cache);
       updatedCache.set(courseID, data);

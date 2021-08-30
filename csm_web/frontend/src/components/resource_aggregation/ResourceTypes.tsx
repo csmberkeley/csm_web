@@ -1,4 +1,8 @@
+import { ChangeEvent, MouseEvent } from "react";
+import { Roles } from "../../utils/user";
+
 export interface Resource {
+  id: number;
   weekNum: number;
   date: string;
   topics: string;
@@ -14,20 +18,59 @@ export interface Worksheet {
   deleted?: string[];
 }
 
+export interface ResourceTableProps {
+  courseID: number;
+  roles: Roles;
+  getResources: () => Promise<Array<Resource>>;
+  updateResources: () => Promise<Array<Resource>>;
+}
+
 export interface ResourceRowProps {
   initialResource: Resource;
-  onUpdateResource: Function;
+  onUpdateResource: (
+    newResource: Resource,
+    fileFormDataMap: Map<number, Worksheet>,
+    newWorksheets: Array<Worksheet>
+  ) => void;
   canEdit: boolean;
-  onDeleteResource: Function;
+  onDeleteResource: (resourceId: number) => void;
   addingResource: boolean;
-  cancelOverride: Function;
+  cancelOverride: () => void;
+}
+
+export interface ResourceRowRenderProps {
+  resource: Resource;
+  canEdit: boolean;
+  onSetEdit: () => void;
+  onDelete: (resourceId: number) => void;
+}
+
+export interface ResourceFileFieldProps {
+  worksheet: Worksheet;
+  fileType: string;
+  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onDelete: (e: MouseEvent<HTMLButtonElement>) => void;
+}
+
+export interface ResourceWorksheetEditProps {
+  worksheet: Worksheet;
+  onChange: (e: ChangeEvent<HTMLInputElement>, worksheetId: number, field: string, getFile?: boolean) => void;
+  onDelete: (worksheetId: number) => void;
+  onDeleteFile: (worksheetId: number, field: string) => void;
+  onBlur: () => void;
+  formErrorsMap: Map<number, string>;
+  index: number;
 }
 
 export interface ResourceEditProps {
   resource: Resource;
-  onChange: Function;
-  onSubmit: Function;
-  onCancel: Function;
+  onChange: (e: ChangeEvent<HTMLInputElement>, field: string) => void;
+  onSubmit: (
+    e: MouseEvent<HTMLButtonElement>,
+    fileFormDataMap: Map<number, Worksheet>,
+    newWorksheets: Array<Worksheet>
+  ) => void;
+  onCancel: () => void;
 }
 
 export interface FormErrors {
@@ -54,6 +97,7 @@ export interface Touched {
  */
 export function emptyResource(): Resource {
   return {
+    id: null,
     weekNum: ("" as unknown) as number, // to trick typescript in accepting an empty string
     date: "",
     topics: "",

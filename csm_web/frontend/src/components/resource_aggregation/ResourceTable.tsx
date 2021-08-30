@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import ResourceRow from "./ResourceRow";
-import { emptyResource, Resource, Worksheet } from "./ResourceTypes";
+import { emptyResource, Resource, ResourceTableProps, Worksheet } from "./ResourceTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 
 /**
  * React component representing the entire resource table, managing all resource rows.
  */
-export const ResourceTable = ({ courseID, roles, getResources, updateResources }) => {
-  const [resources, setResources]: [Resource[], Function] = useState([]);
-  const [canEdit, setCanEdit]: [boolean, Function] = useState(false);
-  const [viewEdit, setViewEdit]: [boolean, Function] = useState(false);
-  const [addingResource, setAddingResource]: [boolean, Function] = useState(false);
+export const ResourceTable = ({ courseID, roles, getResources, updateResources }: ResourceTableProps): JSX.Element => {
+  const [resources, setResources] = useState<Array<Resource>>([]);
+  const [canEdit, setCanEdit] = useState<boolean>(false);
+  const [viewEdit, setViewEdit] = useState<boolean>(false);
+  const [addingResource, setAddingResource] = useState<boolean>(false);
 
   /**
    * Gets resource data for a specific course when courseID changes
@@ -48,18 +48,18 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
     fileFormDataMap: Map<number, Worksheet>,
     newWorksheets: Array<Worksheet>
   ) {
-    let resourceFormData = new FormData();
+    const resourceFormData = new FormData();
     for (const [key, value] of Object.entries(newResource)) {
       if (key !== "worksheets") {
-        resourceFormData.set(key, value as any);
+        resourceFormData.set(key, value);
       }
     }
     let idx = 0; // cumulative index in worksheet array
-    for (let worksheet of fileFormDataMap.values()) {
-      for (let [key, value] of Object.entries(worksheet)) {
+    for (const worksheet of fileFormDataMap.values()) {
+      for (const [key, value] of Object.entries(worksheet)) {
         if (value instanceof Array) {
           // add each nested array item
-          for (let [itemIdx, item] of value.entries()) {
+          for (const [itemIdx, item] of value.entries()) {
             resourceFormData.append(`worksheets[${idx}][${key}][${itemIdx}]`, item);
           }
         } else {
@@ -69,13 +69,14 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
       }
       idx++;
     }
-    for (let worksheet of newWorksheets) {
-      for (let [key, value] of Object.entries(worksheet)) {
+    for (const worksheet of newWorksheets) {
+      for (const [key, value] of Object.entries(worksheet)) {
+        let updatedValue = value;
         // add each nested FormData entry
         if (value instanceof Array) {
-          value = JSON.stringify(value);
+          updatedValue = JSON.stringify(value);
         }
-        resourceFormData.append(`worksheets[${idx}][${key}]`, value);
+        resourceFormData.append(`worksheets[${idx}][${key}]`, updatedValue);
       }
       idx++;
     }
@@ -126,7 +127,11 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
   /**
    * Save and PUT request the updated resource
    */
-  function handleUpdateResource(newResource, fileFormDataMap, newWorksheets) {
+  function handleUpdateResource(
+    newResource: Resource,
+    fileFormDataMap: Map<number, Worksheet>,
+    newWorksheets: Array<Worksheet>
+  ) {
     const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
     fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then(response => {
       if (response.status === 400) {
@@ -165,17 +170,17 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
    * and populating the date with the date a week after the previous resource.
    */
   function getNextResource() {
-    let newResource = emptyResource();
-    let lastResource = resources[resources.length - 1]; // get last resource
+    const newResource = emptyResource();
+    const lastResource = resources[resources.length - 1]; // get last resource
     newResource.weekNum = lastResource.weekNum + 1;
 
     // add a week
-    let date = new Date(Date.parse(lastResource.date));
+    const date = new Date(Date.parse(lastResource.date));
     date.setUTCDate(date.getUTCDate() + 7);
 
     // pad month and day
-    let newMonth = `${date.getUTCMonth() + 1}`.padStart(2, "0");
-    let newDay = `${date.getUTCDate()}`.padStart(2, "0");
+    const newMonth = `${date.getUTCMonth() + 1}`.padStart(2, "0");
+    const newDay = `${date.getUTCDate()}`.padStart(2, "0");
     newResource.date = `${date.getUTCFullYear()}-${newMonth}-${newDay}`;
     return newResource;
   }

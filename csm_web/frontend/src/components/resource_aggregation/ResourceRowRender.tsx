@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import Modal from "../Modal";
+import { ResourceRowRenderProps } from "./ResourceTypes";
 
 const ResourceTopics = ({ topics }) => {
   if (topics === undefined) return <div></div>;
@@ -12,13 +13,13 @@ const ResourceTopics = ({ topics }) => {
   ));
 };
 
-const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }) => {
+const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceRowRenderProps): JSX.Element => {
   /**
    * Deletion stages:
    * 0: initial; did not click delete button
    * 1: confirmation; clicked delete button, asking for confirmation in modal
    */
-  const [deletionStage, setDeletionStage] = useState(0);
+  const [deletionStage, setDeletionStage] = useState<number>(0);
   return (
     <>
       {deletionStage === 1 && (
@@ -47,13 +48,13 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }) => {
             resource.worksheets.map(worksheet => (
               <div key={worksheet.id} className="resourceWkst">
                 <div className="resourceWkstFile">
-                  <a href={worksheet.worksheetFile} target="_blank">
+                  <a href={worksheet.worksheetFile as string} target="_blank" rel="noreferrer">
                     {worksheet.name}
                   </a>
                 </div>
                 {worksheet.solutionFile && (
                   <div className="resourceSoln">
-                    <a href={worksheet.solutionFile} target="_blank">
+                    <a href={worksheet.solutionFile as string} target="_blank" rel="noreferrer">
                       Solutions
                     </a>
                   </div>

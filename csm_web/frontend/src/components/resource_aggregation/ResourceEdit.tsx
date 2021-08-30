@@ -1,4 +1,4 @@
-import React, { ChangeEvent, useState, useEffect } from "react";
+import React, { ChangeEvent, MouseEvent, useState, useEffect } from "react";
 import _ from "lodash";
 import Modal from "../Modal";
 import {
@@ -19,19 +19,19 @@ import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
 /**
  * React component to handle editing of resources.
  */
-export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: ResourceEditProps) => {
+export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: ResourceEditProps): JSX.Element => {
   /**
    * List of FormData objects representing the current (local) newly added worksheets.
    * When clicking the add worksheet button, a new empty FormData object should be added,
    * and on upload/edit of worksheet fields, the FormData object should be updated to reflect changes.
    */
-  const [newWorksheets, setNewWorksheets] = useState([]);
-  const [formErrors, setFormErrors]: [FormErrors, Function] = useState(emptyFormErrors());
-  const [touched, setTouched]: [Touched, Function] = useState(emptyTouched());
+  const [newWorksheets, setNewWorksheets] = useState<Array<Worksheet>>([]);
+  const [formErrors, setFormErrors] = useState<FormErrors>(emptyFormErrors());
+  const [touched, setTouched] = useState<Touched>(emptyTouched());
 
-  let resourceWorksheetMap = new Map();
+  const resourceWorksheetMap = new Map();
   if (resource) {
-    for (let worksheet of resource.worksheets) {
+    for (const worksheet of resource.worksheets) {
       // add copy of existing resource worksheet to map
       resourceWorksheetMap.set(worksheet.id, copyWorksheet(worksheet));
     }
@@ -40,9 +40,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   /**
    * Mapping from worksheet id to FormData holding updated attributes
    */
-  const [existingWorksheetMap, setExistingWorksheetMap]: [Map<number, Worksheet>, Function] = useState(
-    resourceWorksheetMap
-  );
+  const [existingWorksheetMap, setExistingWorksheetMap] = useState<Map<number, Worksheet>>(resourceWorksheetMap);
 
   /**
    * Validates form inputs, updating error strings and returning whether or not the fields are valid
@@ -53,7 +51,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    */
   function validate(validateAll = false) {
     const { weekNum, date, topics } = resource;
-    let newFormErrors = { ...formErrors };
+    const newFormErrors = { ...formErrors };
     newFormErrors["newWorksheets"] = new Map(newFormErrors["newWorksheets"]);
     newFormErrors["existingWorksheets"] = new Map(newFormErrors["existingWorksheets"]);
     if (validateAll || touched.weekNum) {
@@ -74,9 +72,9 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
     // handle worksheet validation
     let anyWorksheetsInvalid = false;
-    let allTouchedIndices = new Set();
-    let allTouchedIds = new Set();
-    for (let [index, worksheet] of newWorksheets.entries()) {
+    const allTouchedIndices = new Set();
+    const allTouchedIds = new Set();
+    for (const [index, worksheet] of newWorksheets.entries()) {
       if (validateAll || touched.newWorksheets.has(index)) {
         if (!worksheet.name) {
           newFormErrors["newWorksheets"].set(index, "Worksheet name is required");
@@ -87,8 +85,8 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
         allTouchedIndices.add(index);
       }
     }
-    for (let worksheetId of existingWorksheetMap.keys()) {
-      let worksheet = existingWorksheetMap.get(worksheetId);
+    for (const worksheetId of existingWorksheetMap.keys()) {
+      const worksheet = existingWorksheetMap.get(worksheetId);
       if (validateAll || touched.existingWorksheets.has(worksheetId)) {
         if (worksheet.deleted && worksheet.deleted.includes("worksheet")) {
           newFormErrors["existingWorksheets"].delete(worksheetId);
@@ -119,10 +117,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       return false;
     }
     // worksheet fields
-    for (let errorMsg of formErrors.newWorksheets) {
+    for (const errorMsg of formErrors.newWorksheets) {
       if (errorMsg) return false;
     }
-    for (let errorMsg of formErrors.existingWorksheets) {
+    for (const errorMsg of formErrors.existingWorksheets) {
       if (errorMsg) return false;
     }
     return true;
@@ -133,18 +131,18 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    *
    * @param field string containing type of input field
    */
-  function handleBlur(field) {
+  function handleBlur(field: string) {
     setTouched({ ...touched, [field]: true });
   }
 
-  function handleBlurExistingWorksheet(worksheetId) {
-    let updatedExistingWorksheets = new Set(touched.existingWorksheets);
+  function handleBlurExistingWorksheet(worksheetId: number) {
+    const updatedExistingWorksheets = new Set(touched.existingWorksheets);
     updatedExistingWorksheets.add(worksheetId);
     setTouched({ ..._.merge(touched, { existingWorksheets: updatedExistingWorksheets }) });
   }
 
-  function handleBlurNewWorksheet(index) {
-    let updatedNewWorksheets = new Set(touched.newWorksheets);
+  function handleBlurNewWorksheet(index: number) {
+    const updatedNewWorksheets = new Set(touched.newWorksheets);
     updatedNewWorksheets.add(index);
     setTouched({ ..._.merge(touched, { newWorksheets: updatedNewWorksheets }) });
   }
@@ -158,7 +156,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    *
    * @param e onSubmit event
    */
-  function handleSubmit(e) {
+  function handleSubmit(e: MouseEvent<HTMLButtonElement>) {
     // set all fields as touched for future validates
     setTouched(allTouched());
 
@@ -200,7 +198,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     field: string,
     getFile: boolean
   ): void {
-    // make sure the field is expected; TODO: maybe remove afterward?
+    // make sure the field is expected
     console.assert(
       field === "worksheetFile" || field === "solutionFile" || field === "name",
       `handleFileChange() field must be "worksheetFile" or "solutionFile" or "name"; got ${field}`
@@ -226,12 +224,11 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    * The value should not matter (as the attribute should not exist
    * on worksheets that are not marked for deletion), but is set to true nonetheless.
    *
-   * @param e event object
    * @param worksheetId id of worksheet that was deleted
    */
-  function handleExistingWorksheetDelete(e, worksheetId: number): void {
+  function handleExistingWorksheetDelete(worksheetId: number): void {
     // update touched and formErrors
-    let updatedFormErrors = { ...formErrors };
+    const updatedFormErrors = { ...formErrors };
     updatedFormErrors.existingWorksheets = new Map(updatedFormErrors.existingWorksheets);
     updatedFormErrors.existingWorksheets.delete(worksheetId);
     setFormErrors(updatedFormErrors);
@@ -249,11 +246,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   /**
    * Marks a worksheet file for deletion.
    *
-   * @param e event object
    * @param worksheetId worksheet id
    * @param field field of file to delete
    */
-  function handleExistingWorksheetDeleteFile(e, worksheetId: number, field: string): void {
+  function handleExistingWorksheetDeleteFile(worksheetId: number, field: string): void {
     console.assert(
       field === "worksheetFile" || field === "solutionFile",
       `Expected "workheetFile" or "solutionFile"; got ${field}`
@@ -282,7 +278,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     field: string,
     getFile: boolean
   ): void {
-    let worksheet = newWorksheets[index];
+    const worksheet = newWorksheets[index];
     if (getFile) {
       worksheet[field] = e.target.files[0];
     } else {
@@ -295,19 +291,18 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   /**
    * Removes the new worksheet from the list.
    *
-   * @param e event object
    * @param index index in newWorksheets
    */
-  function handleNewWorksheetDelete(e, index: number): void {
-    let updated = [...newWorksheets];
+  function handleNewWorksheetDelete(index: number): void {
+    const updated = [...newWorksheets];
     updated.splice(index, 1);
     setNewWorksheets([...updated]);
 
     // update touched and formErrors
-    let updatedTouched = { ...touched };
-    let oldWorksheets: Set<number> = updatedTouched.newWorksheets as Set<number>;
+    const updatedTouched = { ...touched };
+    const oldWorksheets: Set<number> = updatedTouched.newWorksheets;
     updatedTouched.newWorksheets = new Set();
-    for (let idx of oldWorksheets) {
+    for (const idx of oldWorksheets) {
       if (idx < index) {
         updatedTouched.newWorksheets.add(idx);
       } else if (idx > index) {
@@ -316,10 +311,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       }
     }
     setTouched(updatedTouched);
-    let updatedFormErrors = { ...formErrors };
-    let oldWorksheetErrors = updatedFormErrors.newWorksheets;
+    const updatedFormErrors = { ...formErrors };
+    const oldWorksheetErrors = updatedFormErrors.newWorksheets;
     updatedFormErrors.newWorksheets = new Map();
-    for (let [idx, error] of oldWorksheetErrors.entries()) {
+    for (const [idx, error] of oldWorksheetErrors.entries()) {
       if (idx < index) {
         updatedFormErrors.newWorksheets.set(idx, error);
       } else if (idx > index) {
@@ -333,17 +328,16 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   /**
    * Deletes a worksheet file from the array of new worksheets.
    *
-   * @param e event object
    * @param index worksheet index to delete from
    * @param field field of worksheet to delete
    */
-  function handleNewWorksheetDeleteFile(e, index: number, field: string): void {
+  function handleNewWorksheetDeleteFile(index: number, field: string): void {
     console.assert(
       field === "worksheetFile" || field === "solutionFile",
       `Expected "workheetFile" or "solutionFile"; got ${field}`
     );
     // delete field of worksheet reference in map
-    let worksheet = newWorksheets[index];
+    const worksheet = newWorksheets[index];
     worksheet[field] = "";
     // update and render
     setNewWorksheets([...newWorksheets]);
@@ -356,7 +350,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setNewWorksheets([...newWorksheets, emptyWorksheet()]);
   }
 
-  let existingDisplay =
+  const existingDisplay =
     existingWorksheetMap &&
     [...existingWorksheetMap.values()].map(worksheet =>
       worksheet.deleted && worksheet.deleted.includes("worksheet") ? undefined : (
@@ -366,13 +360,13 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
           onChange={handleExistingWorksheetChange}
           onDelete={handleExistingWorksheetDelete}
           onDeleteFile={handleExistingWorksheetDeleteFile}
-          onBlur={e => handleBlurExistingWorksheet(worksheet.id)}
+          onBlur={() => handleBlurExistingWorksheet(worksheet.id)}
           formErrorsMap={formErrors.existingWorksheets}
         ></ResourceWorksheetEdit>
       )
     );
 
-  let newDisplay =
+  const newDisplay =
     newWorksheets &&
     newWorksheets.map((worksheet, index) => (
       <ResourceWorksheetEdit
@@ -382,15 +376,15 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
         index={index}
         onDelete={handleNewWorksheetDelete}
         onDeleteFile={handleNewWorksheetDeleteFile}
-        onBlur={e => handleBlurNewWorksheet(index)}
+        onBlur={() => handleBlurNewWorksheet(index)}
         formErrorsMap={formErrors.newWorksheets}
       ></ResourceWorksheetEdit>
     ));
 
-  let hasWorksheets = existingWorksheetMap && newWorksheets && (existingDisplay.length > 0 || newDisplay.length > 0);
+  const hasWorksheets = existingWorksheetMap && newWorksheets && (existingDisplay.length > 0 || newDisplay.length > 0);
 
   return (
-    <Modal closeModal={onCancel as any} className="resourceEditModal">
+    <Modal closeModal={onCancel} className="resourceEditModal">
       <div className="resourceEditContainer">
         <div className="resourceEditContentWrapper">
           <div className="resourceEditContent">
@@ -402,7 +396,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                   defaultValue={resource.weekNum}
                   placeholder="Week Number"
                   onChange={e => onChange(e, "weekNum")}
-                  onBlur={e => handleBlur("weekNum")}
+                  onBlur={() => handleBlur("weekNum")}
                 />
                 <div className="resourceValidationError">
                   {formErrors.weekNum && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
@@ -415,7 +409,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                   type="date"
                   defaultValue={resource.date}
                   onChange={e => onChange(e, "date")}
-                  onBlur={e => handleBlur("date")}
+                  onBlur={() => handleBlur("date")}
                 />
                 <div className="resourceValidationError">
                   {formErrors.date && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
@@ -429,7 +423,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                   defaultValue={resource.topics}
                   placeholder="Topics"
                   onChange={e => onChange(e, "topics")}
-                  onBlur={e => handleBlur("topics")}
+                  onBlur={() => handleBlur("topics")}
                 />
                 <div className="resourceValidationError">
                   {formErrors.topics && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
