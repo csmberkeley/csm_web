@@ -90,7 +90,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ("id", "name", "enrollment_open", "user_can_enroll")
+        fields = ("id", "name", "enrollment_start", "enrollment_open", "user_can_enroll")
 
 
 class ProfileSerializer(serializers.Serializer):

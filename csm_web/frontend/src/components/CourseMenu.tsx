@@ -9,6 +9,7 @@ interface CourseType {
   id: number;
   name: string;
   enrollmentOpen: boolean;
+  enrollmentStart: string;
 }
 
 interface CourseMenuState {
@@ -38,7 +39,20 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
   render() {
     const { path } = this.props.match;
     const { loaded, courses } = this.state;
-    const show_enrollment_times = true;
+    let show_enrollment_times = false;
+    const enrollment_times_by_course: Array<{ courseName: string; enrollmentDate: Date }> = [];
+
+    if (loaded) {
+      for (const course of courses.values()) {
+        show_enrollment_times ||= !course.enrollmentOpen;
+        if (!course.enrollmentOpen) {
+          enrollment_times_by_course.push({
+            courseName: course.name,
+            enrollmentDate: new Date(Date.parse(course.enrollmentStart))
+          });
+        }
+      }
+    }
 
     const enrollment_menu = (
       <React.Fragment>
@@ -61,12 +75,30 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
       </React.Fragment>
     );
 
+    const date_locale_string_options: Intl.DateTimeFormatOptions = {
+      weekday: "long",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      hour12: true,
+      timeZoneName: "short"
+    };
+
     const enrollment_times = (
       <React.Fragment>
-        <h3 className="page-title center-title">Enrollment will open:</h3>
-        <p className="center-title">Wednesday 9/8 at 7 PM for CS61B, CS88</p>
-        <p className="center-title">Thursday 9/9 at 7 PM for CS61C, CS70, EECS16A</p>
-        <p className="center-title">Friday 9/10 at 7 PM for CS61A, EECS16B</p>
+        <h3 className="page-title center-title">Enrollment Times:</h3>
+        <div className="enrollment-container">
+          {enrollment_times_by_course.map(({ courseName, enrollmentDate }) => (
+            <div className="enrollment-row" key={courseName}>
+              <div className="enrollment-course">{courseName}</div>
+              <div className="enrollment-time">{`${enrollmentDate.toLocaleDateString(
+                "en-US",
+                date_locale_string_options
+              )}`}</div>
+            </div>
+          ))}
+        </div>
       </React.Fragment>
     );
 
