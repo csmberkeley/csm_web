@@ -367,6 +367,28 @@ header {
 	width: 50px;
 }
 
+.enrollment-container {
+	display: grid;
+	justify-content: center;
+}
+
+.enrollment-row {
+	display: contents;
+	font-size: 1.1em;
+}
+
+.enrollment-course {
+	grid-column: 1;
+	padding: 8px;
+	text-align: right;
+	border-right: 2px solid var(--csm-neutral);
+}
+
+.enrollment-time {
+	grid-column: 2;
+	padding: 8px;
+}
+
 /* Section enrollment */
 
 .create-section-btn {
