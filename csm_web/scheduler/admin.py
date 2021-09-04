@@ -318,10 +318,15 @@ class SectionForm(forms.ModelForm):
             "spacetime",
             "capacity"
         )
+"""
 
 
 @admin.register(Section)
 class SectionAdmin(CoordAdmin):
+    pass
+
+
+"""
     actions = ("swap_mentors",)
     form = SectionForm
     fieldsets = (
@@ -554,7 +559,6 @@ class AttendanceAdmin(CoordAdmin):
     def get_queryset(self, request):
         queryset = super().get_queryset(request).select_related(
             "student__section",
-            "student__section__spacetime",
             "student__section__mentor__user",
             "student__user"
         )
@@ -563,10 +567,12 @@ class AttendanceAdmin(CoordAdmin):
         return queryset.filter(student__section__course__in=get_visible_courses(request.user))
 
     def section_time(self, obj):
-        return obj.student.section.spacetime.start_time
+        # TODO Sections have multiple spacetimes, but I only captured the first
+        return obj.section.spacetimes.values()[0]['start_time']
 
     def section_location(self, obj):
-        return obj.student.section.spacetime.location
+        # TODO Sections have multiple spacetimes, but I only captured the first
+        return obj.section.spacetimes.values()[0]['location']
 
     def get_mentor_display(self, obj):
         return get_admin_link_for(obj.student.section.mentor, "admin:scheduler_mentor_change")
