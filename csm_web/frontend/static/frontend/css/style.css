@@ -380,7 +380,6 @@ header {
 .enrollment-course {
 	grid-column: 1;
 	padding: 8px;
-	text-align: right;
 	border-right: 2px solid var(--csm-neutral);
 }
 
