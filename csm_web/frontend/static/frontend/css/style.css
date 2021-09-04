@@ -252,6 +252,13 @@ header {
 	outline: 0;
 }
 
+.csm-btn.disabled,
+.csm-btn.disabled:hover,
+.csm-btn.disabled:focus {
+	background-color: var(--csm-neutral-darkened);
+	pointer-events: none;
+}
+
 .course-card {
 	position: relative;
 	width: 320px;
@@ -312,6 +319,7 @@ header {
 	color: white;
 	min-width: 60px;
 	max-width: fit-content;
+	max-width: -moz-fit-content;
 	text-align: center;
 	border-radius: 20px;
 	margin-top: auto;
@@ -804,6 +812,7 @@ main {
 	color: white;
 	font-size: 15px;
 	width: fit-content;
+	width: -moz-fit-content;
 	padding: 3px 5px;
 	border-radius: 4px;
 	margin: 10px 0;
@@ -881,6 +890,7 @@ table tbody tr:last-child > td {
 	flex-wrap: wrap;
 	flex-direction: column;
 	width: fit-content;
+	width: -moz-fit-content;
 }
 
 #section-detail-sidebar a {
@@ -1461,5 +1471,6 @@ table tbody tr:last-child > td {
 
 #stack-trace > pre {
 	width: fit-content;
+	width: -moz-fit-content;
 	margin: auto;
 }
