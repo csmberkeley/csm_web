@@ -94,6 +94,7 @@ class SectionOccurrence(ValidatingModel):
     date = models.DateField()
 
     class Meta:
+        unique_together = ("section", "date")
         ordering = ("date",)
 
 
@@ -162,11 +163,20 @@ class Student(Profile):
                 section_day_num == now.weekday() and spacetime.start_time < now.time())
             course = self.section.course
             if self.active and course.section_start <= now.date() < course.valid_until\
-                    and not section_already_held and not self.attendance_set.filter(date=week_start+datetime.timedelta(days=section_day_num)).exists():
+                    and not section_already_held and not self.attendance_set.filter(sectionOccurrence__date=week_start+datetime.timedelta(days=section_day_num)).exists():
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
                     logger.info(
+                        f"<SectionOccurrence> SO automatically created for student {self.user.email} in course {course.name} for date {now.date()}")
+                    logger.info(
                         f"<Attendance> Attendance automatically created for student {self.user.email} in course {course.name} for date {now.date()}")
-                Attendance.objects.create(student=self, date=week_start + datetime.timedelta(days=section_day_num))
+                so_qs = SectionOccurrence.objects.filter(
+                    section=self.section, date=week_start + datetime.timedelta(days=section_day_num))
+                if not so_qs.exists():
+                    so = SectionOccurrence.objects.create(
+                        section=self.section, date=week_start + datetime.timedelta(days=section_day_num))
+                else:
+                    so = so_qs.get()
+                Attendance.objects.create(student=self, sectionOccurrence=so)
 
     class Meta:
         unique_together = ("user", "section")

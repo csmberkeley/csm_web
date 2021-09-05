@@ -10,6 +10,7 @@ from .models import (
     Course,
     Resource,
     Section,
+    SectionOccurrence,
     Spacetime,
     Student,
     Mentor,
@@ -132,6 +133,11 @@ class SectionFactory(factory.django.DjangoModelFactory):
         return obj
 
 
+class SectionOccurrenceFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = SectionOccurrence
+
+
 class AttendanceFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Attendance
@@ -167,15 +173,17 @@ def create_attendances_for(student):
     current_date = week_bounds(student.section.course.section_start)[0]
     spacetime_days = [day_to_number(day_of_week)
                       for day_of_week in student.section.spacetimes.values_list("day_of_week", flat=True)]
-    existing_attendance_dates = set(student.attendance_set.values_list("date", flat=True))
+    existing_attendance_dates = set(student.attendance_set.values_list("sectionOccurrence__date", flat=True))
     while current_date < student.section.course.valid_until:
         for spacetime_day in spacetime_days:
-            if (date := (current_date + timedelta(days=spacetime_day))) not in existing_attendance_dates:
+            date = current_date + timedelta(days=spacetime_day)
+            if date not in existing_attendance_dates:
+                so = student.section.sectionoccurrence_set.get(date=date)
                 if current_date < today:
-                    AttendanceFactory.create(student=student, date=date)
+                    AttendanceFactory.create(student=student, sectionOccurrence=so)
                 else:
                     # Students cannot have attended or not attended sections that haven't happened yet
-                    AttendanceFactory.create(student=student, date=date, presence="")
+                    AttendanceFactory.create(student=student, sectionOccurrence=so, presence="")
         current_date += timedelta(weeks=1)
 
 
@@ -249,6 +257,16 @@ def generate_test_data(preconfirm=False):
         print(course_name + "...", end=" ")
         for _ in range(random.randint(5, 10)):
             section = SectionFactory.create(course=course)
+
+            current_date = week_bounds(section.course.section_start)[0]
+            spacetime_days = [day_to_number(day_of_week)
+                              for day_of_week in section.spacetimes.values_list("day_of_week", flat=True)]
+            while current_date < section.course.valid_until:
+                for spacetime_day in spacetime_days:
+                    date = current_date + timedelta(days=spacetime_day)
+                    SectionOccurrenceFactory.create(section=section, date=date)
+                current_date += timedelta(weeks=1)
+
             students = StudentFactory.create_batch(random.randint(0, section.capacity), section=section)
             for student in students:
                 create_attendances_for(student)
