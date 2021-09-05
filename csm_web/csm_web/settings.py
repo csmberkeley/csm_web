@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "frontend",
     "django_extensions",
     "django.contrib.postgres",
+    "django_apscheduler",
 ]
 
 SHELL_PLUS_SUBCLASSES_IMPORT = [ModelSerializer, Serializer, DjangoModelFactory]
