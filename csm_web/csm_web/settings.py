@@ -99,6 +99,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "csm_web.wsgi.application"
 
+DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
 
 POSTGRES_EXTRA_AUTO_EXTENSION_SET_UP = False
 POSTGRES_EXTRA_DB_BACKEND_BASE = 'django.db.backends.postgresql'
