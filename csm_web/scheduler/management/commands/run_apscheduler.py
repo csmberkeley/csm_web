@@ -11,6 +11,7 @@ from django_apscheduler.models import DjangoJobExecution
 from django_apscheduler import util
 
 logger = logging.getLogger(__name__)
+logger.info = logger.warn
 
 
 @util.close_old_connections
