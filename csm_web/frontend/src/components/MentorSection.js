@@ -25,11 +25,24 @@ export default function MentorSection({
   userRole,
   mentor
 }) {
-  const [{ students, attendances, loaded }, setState] = useState({ students: [], attendances: {}, loaded: false });
+  const [{ students, attendances, loaded_progress, loaded }, setState] = useState({
+    students: [],
+    attendances: {},
+    loaded: false,
+    loaded_progress: 0
+  });
   useEffect(() => {
-    setState({ students: [], attendances: {}, loaded: false });
+    setState({ students: [], attendances: {}, loaded: false, loaded_progress: 0 });
     fetchJSON(`/sections/${id}/students/`).then(data => {
       const students = data.map(({ name, email, id }) => ({ name, email, id }));
+      setState(state => {
+        return {
+          students,
+          attendances: state.attendances,
+          loaded: state.loaded_progress == 1,
+          loaded_progress: state.loaded_progress + 1
+        };
+      });
     });
     fetchJSON(`/sections/${id}/attendance`).then(data => {
       const attendances = groupBy(
@@ -43,7 +56,14 @@ export default function MentorSection({
         ),
         attendance => attendance.date
       );
-      setState({ students, attendances, loaded: true });
+      setState(state => {
+        return {
+          students: state.students,
+          attendances,
+          loaded: state.loaded_progress == 1,
+          loaded_progress: state.loaded_progress + 1
+        };
+      });
     });
   }, [id]);
 
