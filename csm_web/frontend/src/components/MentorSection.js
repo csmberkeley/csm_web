@@ -51,7 +51,7 @@ export default function MentorSection({
             id,
             presence,
             date,
-            student: { studentName, studentId }
+            student: { name: studentName, id: studentId }
           }))
         ),
         attendance => attendance.date

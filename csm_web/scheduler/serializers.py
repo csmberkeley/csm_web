@@ -127,13 +127,19 @@ class MentorSerializer(serializers.ModelSerializer):
 class AttendanceSerializer(serializers.ModelSerializer):
     date = serializers.DateField(source='sectionOccurrence.date', format="%b. %-d, %Y", read_only=True)
     student_name = serializers.CharField(source='student.name')
-    student_id = serializers.IntegerField(source='student.user.id')
+    student_id = serializers.IntegerField(source='student.id')
     student_email = serializers.CharField(source='student.user.email')
 
     class Meta:
         model = Attendance
         fields = ("id", "date", "presence", "student_name", "student_id", "student_email")
         extra_kwargs = {'student': {'write_only': True}}
+
+    def update(self, instance, validated_data):
+        # only update the attendance date
+        instance.presence = validated_data.get('presence')
+        instance.save()
+        return instance
 
 
 class StudentSerializer(serializers.ModelSerializer):

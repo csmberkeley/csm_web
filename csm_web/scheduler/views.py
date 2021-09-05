@@ -295,7 +295,12 @@ class StudentViewSet(viewsets.GenericViewSet):
         try:  # update
             attendance = student.attendance_set.get(pk=request.data['id'])
             serializer = AttendanceSerializer(
-                attendance, data={'student': student.id, 'presence': request.data['presence']})
+                attendance, data={
+                    'student_id': student.id,
+                    'student_name': student.name,
+                    'student_email': student.user.email,
+                    'presence': request.data['presence']
+                })
         except ObjectDoesNotExist:
             logger.error(
                 f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, used non-existent attendance id {request.data['id']}")
