@@ -10,7 +10,7 @@ class Command(BaseCommand):
     help = "Creates attendances for the current week"
 
     def handle(self, *args, **options):
-        week_start, _ = week_bounds(timezone.now().date() - timedelta(weeks=11))
+        week_start, _ = week_bounds(timezone.now().date())
         sections = Section.objects.all()
         print(f"Updating attendance for week of {week_start}")
         with postgres_manager(SectionOccurrence) as so_db, postgres_manager(Attendance) as attend_db:
@@ -20,7 +20,12 @@ class Command(BaseCommand):
             sos = [{"date": week_start + timedelta(days=day_to_number(spacetime.day_of_week)),
                     "section": section} for section in sections for spacetime in section.spacetimes.all()]
             sos = so_manager.bulk_insert(sos, return_model=True)
+            print(f"Inserted {len(sos)} SectionOccurrences.")
 
             attendances = [{"student": student, "sectionOccurrence": so, "presence": ''}
                            for so in sos for student in so.section.students.all()]
-            attendance_manager.bulk_insert(attendances)
+            if attendances:
+                inserted = attendance_manager.bulk_insert(attendances)
+                print(f"Inserted {len(inserted)} attendances.")
+            else:
+                print("No attendances to insert.")
