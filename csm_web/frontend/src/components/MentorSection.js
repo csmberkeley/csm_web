@@ -34,7 +34,9 @@ export default function MentorSection({
   useEffect(() => {
     setState({ students: [], attendances: {}, loaded: false, loaded_progress: 0 });
     fetchJSON(`/sections/${id}/students/`).then(data => {
-      const students = data.map(({ name, email, id }) => ({ name, email, id }));
+      const students = data
+        .map(({ name, email, id }) => ({ name, email, id }))
+        .sort((stu1, stu2) => stu1.name >= stu2.name);
       setState(state => {
         return {
           students,
@@ -47,12 +49,14 @@ export default function MentorSection({
     fetchJSON(`/sections/${id}/attendance`).then(data => {
       const attendances = groupBy(
         data.flatMap(({ attendances }) =>
-          attendances.map(({ id, presence, date, studentName, studentId }) => ({
-            id,
-            presence,
-            date,
-            student: { name: studentName, id: studentId }
-          }))
+          attendances
+            .map(({ id, presence, date, studentName, studentId }) => ({
+              id,
+              presence,
+              date,
+              student: { name: studentName, id: studentId }
+            }))
+            .sort((att1, att2) => att1.student.name >= att2.student.name)
         ),
         attendance => attendance.date
       );
