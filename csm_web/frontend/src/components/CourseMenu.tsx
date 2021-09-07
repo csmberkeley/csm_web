@@ -109,11 +109,7 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
           render={routeProps => {
             const course = loaded && courses.get(Number(routeProps.match.params.id));
             const isOpen = course && course.enrollmentOpen;
-            if (isOpen) {
-              return <Course name={loaded && course.name} {...routeProps} />;
-            } else {
-              return <h3 className="page-title center-title">Enrollment is not open.</h3>;
-            }
+            return <Course name={loaded && course.name} isOpen={isOpen} {...routeProps} />;
           }}
         />
         <Route

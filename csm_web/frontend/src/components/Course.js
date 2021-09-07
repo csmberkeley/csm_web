@@ -37,7 +37,8 @@ export default class Course extends React.Component {
      * We structure things like this in order to avoid a 'waterfall' where we don't start fetching sections until
      * CourseMenu is done with its API requests, making the user suffer twice the latency for no reason.
      */
-    name: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]).isRequired
+    name: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]).isRequired,
+    isOpen: PropTypes.bool
   };
 
   constructor(props) {
@@ -70,7 +71,8 @@ export default class Course extends React.Component {
       match: {
         params: { id }
       },
-      name
+      name,
+      isOpen
     } = this.props;
     const {
       sectionsLoaded,
@@ -100,6 +102,11 @@ export default class Course extends React.Component {
         );
       }
     };
+
+    // only let coordinators see the course if enrollment is not open
+    if (!isOpen && sectionsLoaded && !userIsCoordinator) {
+      return <h3 className="page-title center-title">Enrollment is not open.</h3>;
+    }
 
     return !(name && sectionsLoaded) ? null : (
       <div id="course-section-selector">
