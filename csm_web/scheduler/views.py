@@ -244,6 +244,13 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                 old_section = student.section
                 student.section = section
                 student.active = True
+                # generate new attendance objects for this student in all section occurrences past this date
+                future_sectionOccurrences = section.sectionoccurrence_set.filter(Q(date__gte=timezone.now()))
+                for sectionOccurrence in future_sectionOccurrences:
+                    Attendance(student=student, sectionOccurrence=sectionOccurrence, presence="").save()
+                logger.info(
+                    f"<Enrollment> Created {len(future_sectionOccurrences)} new attendances for user {log_str(student.user)} in Section {log_str(section)}")
+
                 student.save()
                 logger.info(
                     f"<Enrollment:Success> User {log_str(student.user)} swapped into Section {log_str(section)} from Section {log_str(old_section)}")
@@ -283,6 +290,11 @@ class StudentViewSet(viewsets.GenericViewSet):
             student.banned = request.data.get('banned', False)
         student.save()
         logger.info(f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)}")
+        # filter attendances and delete future attendances
+        num_deleted, _ = student.attendance_set.filter(
+            Q(sectionOccurrence__date__gte=timezone.now(), sectionOccurrence__section=student.section)).delete()
+        logger.info(
+            f"<Drop> Deleted {num_deleted} attendances for user {log_str(student.user)} in Section {log_str(student.section)} after {timezone.now()}")
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['get', 'put'])

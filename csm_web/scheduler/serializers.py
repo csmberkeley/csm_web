@@ -206,15 +206,8 @@ class ResourceSerializer(serializers.ModelSerializer):
 
 
 class SectionOccurrenceSerializer(serializers.ModelSerializer):
-    attendances = serializers.SerializerMethodField()
+    attendances = AttendanceSerializer(source='attendance_set', many=True)
     section = SectionSerializer()
-
-    def get_attendances(self, obj):
-        return AttendanceSerializer(
-            obj.attendance_set
-            .prefetch_related('sectionOccurrence', 'student')
-            .filter(student__active=True, student__section=obj.section), many=True
-        ).data
 
     class Meta:
         model = SectionOccurrence
