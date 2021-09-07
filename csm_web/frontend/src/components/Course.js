@@ -46,7 +46,7 @@ export default class Course extends React.Component {
       sections: null,
       sectionsLoaded: false,
       currDayGroup: "",
-      showUnavailable: true,
+      showUnavailable: false,
       userIsCoordinator: false,
       showModal: false,
       whichModal: COURSE_MODAL_TYPE.createSection
