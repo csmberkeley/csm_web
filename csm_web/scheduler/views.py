@@ -38,18 +38,18 @@ logger.info = logger.warn
 
 def log_str(obj):
     def log_format(*args):
-        return '<' + ';'.join(f'{attr}={attrgetter(attr)(obj)}' for attr in args) + '>'
+        return '<' + ';'.join(f'{attr}={val() if callable(val := attrgetter(attr)(obj)) else val}' for attr in args) + '>'
     try:
         if isinstance(obj, User):
             return log_format('pk', 'email')
         if isinstance(obj, Section):
-            return log_format('pk', 'course.name', 'spacetime.location', 'spacetime.start_time')
+            return log_format('pk', 'course.name', 'spacetimes.all')
         if isinstance(obj, Spacetime):
             return log_format('pk', 'section.course.name', 'location', 'start_time')
         if isinstance(obj, Override):
             return log_format('pk', 'date', 'spacetime.pk')
         if isinstance(obj, Attendance):
-            return log_format('pk', 'date', 'presence')
+            return log_format('pk', 'sectionOccurrence.date', 'presence')
     except Exception as error:
         logger.error(f"<Logging> Exception while logging: {error}")
         return ''
