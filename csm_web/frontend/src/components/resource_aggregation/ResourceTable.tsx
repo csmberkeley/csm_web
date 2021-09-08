@@ -175,6 +175,10 @@ export const ResourceTable = ({ courseID, roles, getResources, updateResources }
    */
   function getNextResource() {
     const newResource = emptyResource();
+    // return empty resource if first resource to be added
+    if (resources.length == 0) {
+      return newResource;
+    }
     const lastResource = resources[resources.length - 1]; // get last resource
     newResource.weekNum = lastResource.weekNum + 1;
 
