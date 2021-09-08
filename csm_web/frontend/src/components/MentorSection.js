@@ -335,7 +335,8 @@ class SpacetimeEditModal extends React.Component {
       time: timeString.slice(0, sliceIndex),
       isPermanent: false,
       changeDate: "",
-      mode: "virtual",
+      // Logic to determine whether or not the location is virtual or in person (same logic as backend to omit video call links)
+      mode: props.defaultSpacetime.location.startsWith("http") ? "virtual" : "inperson",
       showSaveSpinner: false
     };
     this.handleChange = this.handleChange.bind(this);
@@ -386,8 +387,7 @@ class SpacetimeEditModal extends React.Component {
       <Modal className="spacetime-edit-modal" closeModal={this.props.closeModal}>
         <form className="csm-form" id="spacetime-edit-form" onSubmit={this.handleSubmit}>
           <h4>Change Time and Location</h4>
-          {/* TODO: Uncomment this when Berkeley resumes in-person instruction (if I graduate online I'm gonna be real sad)
-						<div className="mode-selection">
+          <div className="mode-selection">
             <label>Section is</label>
             <div className="mode-selection-options">
               <label>
@@ -411,7 +411,7 @@ class SpacetimeEditModal extends React.Component {
                 Virtual
               </label>
             </div>
-					</div> */}
+          </div>
           <label>
             {mode === "inperson" ? "Location" : "Video Call Link"}
             <input
