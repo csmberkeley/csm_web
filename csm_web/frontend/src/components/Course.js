@@ -256,6 +256,13 @@ class SectionCard extends React.Component {
     if (!showModal && enrollmentSuccessful) {
       return <Redirect to="/" />;
     }
+    // set of all distinct locations
+    const spacetimeLocationSet = new Set();
+    for (const spacetime of spacetimes) {
+      spacetimeLocationSet.add(spacetime.location);
+    }
+    // remove the first location because it'll always be displayed
+    spacetimeLocationSet.delete(spacetimes[0].location);
     return (
       <React.Fragment>
         {showModal && <Modal closeModal={this.closeModal}>{this.modalContents().props.children}</Modal>}
@@ -264,10 +271,20 @@ class SectionCard extends React.Component {
             {description && <span className="section-card-description">{description}</span>}
             <p title="Location">
               <LocationIcon width={iconWidth} height={iconHeight} />{" "}
-              {/* TODO: For now this is hardcoded, but when sections return in person, this needs to be implemented.
-									An important note:  Backend returns location as null if it's a video-call link to avoid leaking info to unenrolled students,
-									so a strict (===) equality check is going to be very important here.  See scheduler/views.py for further explanation on 'leaking info'.*/}
-              Online
+              {spacetimes[0].location === null ? "Online" : spacetimes[0].location}
+              {spacetimeLocationSet.size > 0 && (
+                <span className="section-card-additional-times">
+                  {Array.from(spacetimeLocationSet).map((location, id) => (
+                    <React.Fragment key={id}>
+                      <span
+                        className="section-card-icon-placeholder"
+                        style={{ minWidth: iconWidth, minHeight: iconHeight }}
+                      />{" "}
+                      {location === null ? "Online" : location}
+                    </React.Fragment>
+                  ))}
+                </span>
+              )}
             </p>
             <p title="Time">
               <ClockIcon width={iconWidth} height={iconHeight} /> {spacetimes[0].time}
