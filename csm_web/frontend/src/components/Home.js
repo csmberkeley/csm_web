@@ -24,9 +24,11 @@ export default class Home extends React.Component {
         </div>
         {profilesLoaded && (
           <div className="course-cards-container">
-            {Object.entries(groupBy(profiles, profile => profile.course)).map(([course, courseProfiles]) => (
-              <CourseCard key={course} profiles={courseProfiles} />
-            ))}
+            {Object.entries(groupBy(profiles, profile => [profile.course, profile.role])).map(
+              ([course, courseProfiles]) => (
+                <CourseCard key={course} profiles={courseProfiles} />
+              )
+            )}
           </div>
         )}
       </div>
