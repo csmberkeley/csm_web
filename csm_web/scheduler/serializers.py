@@ -170,10 +170,12 @@ class SectionSerializer(serializers.ModelSerializer):
         try:
             return obj.students.get(user=user)
         except Student.DoesNotExist:
+            coordinator = obj.course.coordinator_set.filter(user=user).first()
+            if coordinator:
+                return coordinator
             if obj.mentor and obj.mentor.user == user:
                 return obj.mentor
-            coordinator = obj.course.coordinator_set.filter(user=user).first()
-            return coordinator  # If coordinator is None we'd return None anyway at this point
+        return None  # no profile
 
     def get_user_role(self, obj):
         profile = self.user_associated_profile(obj)
