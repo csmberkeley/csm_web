@@ -4,6 +4,11 @@ from scheduler.models import Attendance, SectionOccurrence, Section, week_bounds
 from psqlextra.util import postgres_manager
 from psqlextra.types import ConflictAction
 from datetime import timedelta
+import logging
+
+
+logger = logging.getLogger(__name__)
+logger.info = logger.warn
 
 
 class Command(BaseCommand):
@@ -24,8 +29,20 @@ class Command(BaseCommand):
 
             attendances = [{"student": student, "sectionOccurrence": so, "presence": ''}
                            for so in sos for student in so.section.students.all()]
-            if attendances:
+
+            # validate attendances
+            valid = True
+            for attendance in attendances:
+                student = attendance.get("student")
+                SO = attendance.get("sectionOccurrence")
+                if student and SO:
+                    if student.section.pk != SO.section.pk:
+                        valid = False
+                        logger.error(f"<Logging> student.section.pk != SO.section.pk, attendance to add: {attendances}")
+                        break
+
+            if attendances and valid:
                 inserted = attendance_manager.bulk_insert(attendances)
                 print(f"Inserted {len(inserted)} attendances.")
             else:
-                print("No attendances to insert.")
+                print("No attendances to insert or error.")
