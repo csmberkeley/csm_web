@@ -15,6 +15,7 @@ from scheduler.models import (
     Mentor,
     Coordinator,
     Section,
+    SectionOccurrence,
     Spacetime,
     Override,
     DayOfWeekField
@@ -512,6 +513,14 @@ class DayEndFilter(admin.SimpleListFilter):
                 return queryset.all()
         except ValidationError:
             return queryset.all()
+
+
+@admin.register(SectionOccurrence)
+class SectionOccurrenceAdmin(CoordAdmin):
+    fields = ("section", "date")
+    list_display = ("id", "section", "date")
+    list_filter = ("date",)
+    search_fields = ("section__mentor__user__first_name", "section__mentor__user__last_name", "date")
 
 
 @admin.register(Attendance)

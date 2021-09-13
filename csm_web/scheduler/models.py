@@ -93,6 +93,9 @@ class SectionOccurrence(ValidatingModel):
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
 
+    def __str__(self):
+        return f"SectionOccurrence for {self.section} at {self.date}"
+
     class Meta:
         unique_together = ("section", "date")
         ordering = ("date",)
