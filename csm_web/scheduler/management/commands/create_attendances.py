@@ -30,7 +30,7 @@ class Command(BaseCommand):
                 print(f"Inserted {len(sos)} SectionOccurrences.")
 
                 attendances = [{"student": student, "sectionOccurrence": so, "presence": ''}
-                               for so in sos for student in so.section.students.all()]
+                               for so in sos for student in so.section.students.filter(active=True)]
 
                 # validate attendances
                 valid = True
