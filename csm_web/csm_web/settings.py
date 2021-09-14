@@ -214,6 +214,9 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 
+# To fix AuthStateMissing error: https://github.com/python-social-auth/social-core/issues/250
+SESSION_COOKIE_SAMESITE = None
+
 # REST Framework
 REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
