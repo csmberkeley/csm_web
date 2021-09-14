@@ -20,15 +20,16 @@ class Command(BaseCommand):
         sections = Section.objects.all()
         print(f"Updating attendance for week of {week_start}")
         with transaction.atomic():
-            with postgres_manager(SectionOccurrence) as so_db, postgres_manager(Attendance) as attend_db:
+            with postgres_manager(SectionOccurrence) as so_db:
                 so_manager = so_db.on_conflict(["date", "section"], ConflictAction.NOTHING)
-                attendance_manager = attend_db.on_conflict(["sectionOccurrence", "student"], ConflictAction.NOTHING)
 
                 sos = [{"date": week_start + timedelta(days=day_to_number(spacetime.day_of_week)),
                         "section": section} for section in sections for spacetime in section.spacetimes.all()]
                 sos = so_manager.bulk_insert(sos, return_model=True)
                 print(f"Inserted {len(sos)} SectionOccurrences.")
 
+            with postgres_manager(Attendance) as attend_db:
+                attendance_manager = attend_db.on_conflict(["sectionOccurrence", "student"], ConflictAction.NOTHING)
                 attendances = [{"student": student, "sectionOccurrence": so, "presence": ''}
                                for so in sos for student in so.section.students.filter(active=True)]
 
