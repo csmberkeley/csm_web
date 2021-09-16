@@ -238,32 +238,32 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                 raise PermissionDenied("There is no space available in this section", status.HTTP_423_LOCKED)
             try:  # Student dropped a section in this course and is now enrolling in a different one
                 if is_coordinator:
+                    student_queryset = Student.objects.filter(
+                        section__course=section.course, user__email=request.data['email'])
+
+                    # initial check for duplicate entries in database
+                    if student_queryset.count() > 1:
+                        # something bad happened
+                        logger.error(
+                            f"<Enrollment:Critical> Multiple student objects exist in the database (Students {student_queryset.all()})!")
+                        return Response({'error': 'Duplicate students exist! Report this in #tech-bugs immediately.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
                     # get student if active; if it does, return an error
-                    active_student = Student.objects.filter(
-                        active=True, section__course=section.course, user__email=request.data['email'])
-                    if active_student.exists():
+                    active_student_queryset = student_queryset.filter(active=True)
+                    if active_student_queryset.exists():
                         # active student already exists
+                        active_student = active_student_queryset.get()  # guaranteed to be 1 student, because of prior checks
                         logger.warn(
-                            f"<Enrollment:Failure> Coordinator {log_str(request.user)} was unable to enroll user {log_str(active_student.first().user)} in Section {log_str(section)} because the student already exists")
-                        if active_student.count() > 1:
-                            # something bad happened
-                            logger.error(
-                                f"<Enrollment:Critical> Multiple active students exist in the database (Students {active_student.all()})!")
-                            return Response({'error': f'Duplicate students exist! Report this in #tech-bugs immediately.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-                        elif int(active_student.first().section.pk) == int(pk):
+                            f"<Enrollment:Failure> Coordinator {log_str(request.user)} was unable to enroll user {log_str(active_student.user)} in Section {log_str(section)} because the student already exists")
+                        if int(active_student.section.pk) == int(pk):
                             # currently enrolled in the section
                             return Response({'error': f'Student {request.data["email"]} is already enrolled in the section!'}, status=status.HTTP_409_CONFLICT)
                         # currently enrolled in a different section
-                        return Response({'error': f'Student {request.data["email"]} already exists in the database!', 'section_pk': active_student.first().section.pk}, status=status.HTTP_409_CONFLICT)
+                        return Response({'error': f'Student {request.data["email"]} already exists in the database!', 'section_pk': active_student.section.pk}, status=status.HTTP_409_CONFLICT)
 
                     # student is inactive (i.e. they've dropped a section)
-                    inactive_student = Student.objects.filter(
-                        active=False, section__course=section.course, user__email=request.data['email'])
-                    if inactive_student.count() > 1:
-                        # something bad happened
-                        logger.error(
-                            f"<Enrollment:Failure> Multiple inactive students exist in the database (Students {inactive_student.all()})!")
-                        return Response({'error': f'Duplicate students exist! Report this in #tech-bugs immediately.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    # guaranteed to be either 0 or 1 objects in queryset, because of prior check
+                    inactive_student = student_queryset.filter(active=False)
                     student = inactive_student.get()  # will error if queryset is empty with Student.DoesNotExist
                 else:
                     student = request.user.student_set.get(active=False, section__course=section.course)
