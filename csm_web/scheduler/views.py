@@ -231,7 +231,8 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                 raise PermissionDenied(
                     "You are already either mentoring for this course or enrolled in a section", status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-            if section.current_student_count >= section.capacity:
+            # allow coordinators to enroll people beyond the capacity limits
+            if not is_coordinator and section.current_student_count >= section.capacity:
                 logger.warn(
                     f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because it was full")
                 raise PermissionDenied("There is no space available in this section", status.HTTP_423_LOCKED)
