@@ -567,7 +567,8 @@ function MentorSectionInfo({
     setNewStudentError({});
   }, [id]);
   const closeModal = () => setShowModal(MentorSectionInfo.MODAL_STATES.NONE);
-  function handleAddStudentSubmit() {
+  function handleAddStudentSubmit(e) {
+    e.preventDefault(); // prevent refresh on submit, which stops this request
     fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT, { email: newStudentEmail }).then(response => {
       if (!response.ok) {
         response.json().then(body => {

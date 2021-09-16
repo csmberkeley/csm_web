@@ -257,13 +257,14 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                         return Response({'error': f'Student {request.data["email"]} already exists in the database!', 'section_pk': active_student.first().section.pk}, status=status.HTTP_409_CONFLICT)
 
                     # student is inactive (i.e. they've dropped a section)
-                    inactive_student = Student.objects.get(
+                    inactive_student = Student.objects.filter(
                         active=False, section__course=section.course, user__email=request.data['email'])
                     if inactive_student.count() > 1:
                         # something bad happened
                         logger.error(
                             f"<Enrollment:Failure> Multiple inactive students exist in the database (Students {inactive_student.all()})!")
                         return Response({'error': f'Duplicate students exist! Report this in #tech-bugs immediately.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                    student = inactive_student.get()  # will error if queryset is empty with Student.DoesNotExist
                 else:
                     student = request.user.student_set.get(active=False, section__course=section.course)
                 old_section = student.section
