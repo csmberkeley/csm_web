@@ -1041,6 +1041,13 @@ table tbody tr:last-child > td {
 	background-color: #aeaeae;
 }
 
+.newStudentErrorContainer {
+	display: flex;
+	flex-direction: column;
+	color: red;
+	font-size: 0.8rem;
+}
+
 #students-table .csm-form {
 	display: flex;
 	padding-left: 0;
