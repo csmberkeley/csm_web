@@ -781,6 +781,12 @@ main {
 	flex-wrap: wrap;
 }
 
+.section-info-cards-right {
+	flex: 1;
+	display: flex;
+	flex-wrap: wrap;
+}
+
 .section-detail-info-card {
 	margin: 0 50px 50px 0;
 }
@@ -949,10 +955,16 @@ table tbody tr:last-child > td {
 
 #section-detail-body {
 	display: flex;
-	flex-wrap: wrap;
 	--csm-attendance-present: var(--csm-green);
 	--csm-attendance-excused: #797979;
 	--csm-attendance-unexcused: var(--csm-danger);
+}
+
+@media screen and (max-width: 1100px) {
+	/* only wrap for medium/small screens */
+	#section-detail-body {
+		flex-wrap: wrap;
+	}
 }
 
 #students-table .inline-plus-sign {
