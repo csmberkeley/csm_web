@@ -492,8 +492,9 @@ class SpacetimeEditModal extends React.Component {
   }
 }
 
-function MetaEditModal({ closeModal, sectionId, reloadSection }) {
-  const [formState, setFormState] = useState({ capacity: "", description: "" });
+function MetaEditModal({ closeModal, sectionId, reloadSection, capacity, description }) {
+  // use existing capacity and description as initial values
+  const [formState, setFormState] = useState({ capacity: capacity, description: description });
   function handleChange({ target: { name, value } }) {
     setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
   }
@@ -536,7 +537,9 @@ function MetaEditModal({ closeModal, sectionId, reloadSection }) {
 MetaEditModal.propTypes = {
   sectionId: PropTypes.number.isRequired,
   closeModal: PropTypes.func.isRequired,
-  reloadSection: PropTypes.func.isRequired
+  reloadSection: PropTypes.func.isRequired,
+  capacity: PropTypes.number.isRequired,
+  description: PropTypes.string.isRequired
 };
 
 function MentorSectionInfo({
@@ -650,44 +653,54 @@ function MentorSectionInfo({
           )}
           {!loaded && <LoadingSpinner />}
         </InfoCard>
+        <div className="section-info-cards-right">
+          {spacetimes.map(({ override, ...spacetime }, index) => (
+            <SectionSpacetime
+              manySpacetimes={spacetimes.length > 1}
+              index={index}
+              key={spacetime.id}
+              spacetime={spacetime}
+              override={override}
+            >
+              {showModal === MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT && focusedSpacetimeID === spacetime.id && (
+                <SpacetimeEditModal
+                  key={spacetime.id}
+                  reloadSection={reloadSection}
+                  defaultSpacetime={spacetime}
+                  closeModal={closeModal}
+                />
+              )}
+              <button
+                className="info-card-edit-btn"
+                onClick={() => {
+                  setShowModal(MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT);
+                  setFocusedSpacetimeID(spacetime.id);
+                }}
+              >
+                <PencilIcon width="1em" height="1em" /> Edit
+              </button>
+            </SectionSpacetime>
+          ))}
 
-        {spacetimes.map(({ override, ...spacetime }, index) => (
-          <SectionSpacetime
-            manySpacetimes={spacetimes.length > 1}
-            index={index}
-            key={spacetime.id}
-            spacetime={spacetime}
-            override={override}
-          >
-            {showModal === MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT && focusedSpacetimeID === spacetime.id && (
-              <SpacetimeEditModal
-                key={spacetime.id}
-                reloadSection={reloadSection}
-                defaultSpacetime={spacetime}
-                closeModal={closeModal}
-              />
-            )}
-            <button
-              className="info-card-edit-btn"
-              onClick={() => {
-                setShowModal(MentorSectionInfo.MODAL_STATES.SPACETIME_EDIT);
-                setFocusedSpacetimeID(spacetime.id);
-              }}
-            >
-              <PencilIcon width="1em" height="1em" /> Edit
-            </button>
-          </SectionSpacetime>
-        ))}
-        {isCoordinator && (
           <InfoCard title="Meta">
-            <button
-              className="info-card-edit-btn"
-              onClick={() => setShowModal(MentorSectionInfo.MODAL_STATES.META_EDIT)}
-            >
-              <PencilIcon width="1em" height="1em" /> Edit
-            </button>
-            {showModal === MentorSectionInfo.MODAL_STATES.META_EDIT && (
-              <MetaEditModal sectionId={id} closeModal={closeModal} reloadSection={reloadSection} />
+            {isCoordinator && (
+              <React.Fragment>
+                <button
+                  className="info-card-edit-btn"
+                  onClick={() => setShowModal(MentorSectionInfo.MODAL_STATES.META_EDIT)}
+                >
+                  <PencilIcon width="1em" height="1em" /> Edit
+                </button>
+                {showModal === MentorSectionInfo.MODAL_STATES.META_EDIT && (
+                  <MetaEditModal
+                    sectionId={id}
+                    closeModal={closeModal}
+                    reloadSection={reloadSection}
+                    capacity={capacity}
+                    description={description}
+                  />
+                )}
+              </React.Fragment>
             )}
             <p>
               <span className="meta-field">Capacity:</span> {capacity}
@@ -696,7 +709,7 @@ function MentorSectionInfo({
               <span className="meta-field">Description:</span> {description}
             </p>
           </InfoCard>
-        )}
+        </div>
       </div>
     </React.Fragment>
   );
