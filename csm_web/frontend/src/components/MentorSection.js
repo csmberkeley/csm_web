@@ -3,7 +3,7 @@ import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import { SPACETIME_SHAPE } from "../utils/types";
 import { SectionDetail, InfoCard, SectionSpacetime, ROLES } from "./Section";
-import { Switch, Route } from "react-router-dom";
+import { Switch, Route, NavLink } from "react-router-dom";
 import { groupBy } from "lodash";
 import CopyIcon from "../../static/frontend/img/copy.svg";
 import CheckCircle from "../../static/frontend/img/check_circle.svg";
@@ -554,17 +554,34 @@ function MentorSectionInfo({
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState(-1);
   const [userEmails, setUserEmails] = useState([]);
   const [newStudentEmail, setNewStudentEmail] = useState("");
+  const [newStudentError, setNewStudentError] = useState({});
   useEffect(() => {
     if (!isCoordinator) {
       return;
     }
     fetchJSON("/users/").then(userEmails => setUserEmails(userEmails));
   }, [id, isCoordinator]);
+  useEffect(() => {
+    // reset error on section change
+    setNewStudentEmail("");
+    setNewStudentError({});
+  }, [id]);
   const closeModal = () => setShowModal(MentorSectionInfo.MODAL_STATES.NONE);
   function handleAddStudentSubmit() {
-    fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT, { email: newStudentEmail }).then(() =>
-      reloadSection()
-    );
+    fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT, { email: newStudentEmail }).then(response => {
+      if (!response.ok) {
+        response.json().then(body => {
+          setNewStudentError(previous => ({ ...previous, error: body.error ? body.error : body.detail }));
+          if (response.status === 409 && body.sectionPk) {
+            // conflict; add link to existing section
+            setNewStudentError(previous => ({ ...previous, link: `/sections/${body.sectionPk}` }));
+          }
+        });
+      } else {
+        setNewStudentError({});
+        reloadSection();
+      }
+    });
   }
   return (
     <React.Fragment>
@@ -574,49 +591,61 @@ function MentorSectionInfo({
       <div className="section-info-cards-container">
         <InfoCard title="Students">
           {loaded && (
-            <table id="students-table">
-              <thead>
-                <tr>
-                  <th>Name</th>
-                </tr>
-              </thead>
-              <tbody>
-                {(students.length === 0 ? [{ name: "No students enrolled", id: -1 }] : students).map(
-                  ({ name, email, id }) => (
-                    <tr key={id}>
+            <React.Fragment>
+              <table id="students-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(students.length === 0 ? [{ name: "No students enrolled", id: -1 }] : students).map(
+                    ({ name, email, id }) => (
+                      <tr key={id}>
+                        <td>
+                          {isCoordinator && id !== -1 && <StudentDropper id={id} reloadSection={reloadSection} />}
+                          <span className="student-info">{name || email}</span>
+                        </td>
+                      </tr>
+                    )
+                  )}
+                  {isCoordinator && (
+                    <tr>
                       <td>
-                        {isCoordinator && id !== -1 && <StudentDropper id={id} reloadSection={reloadSection} />}
-                        <span className="student-info">{name || email}</span>
+                        <form className="csm-form" onSubmit={handleAddStudentSubmit}>
+                          <input type="submit" className="inline-plus-sign" value="+" />
+                          <input
+                            type="email"
+                            required
+                            pattern=".+@berkeley.edu$"
+                            title="Please enter a valid @berkeley.edu email address"
+                            placeholder="New student's email"
+                            list="user-emails-list"
+                            value={newStudentEmail}
+                            onChange={({ target: { value } }) => setNewStudentEmail(value)}
+                          />
+                          <datalist id="user-emails-list">
+                            {userEmails.map(email => (
+                              <option key={email} value={email} />
+                            ))}
+                          </datalist>
+                        </form>
                       </td>
                     </tr>
-                  )
-                )}
-                {isCoordinator && (
-                  <tr>
-                    <td>
-                      <form className="csm-form" onSubmit={handleAddStudentSubmit}>
-                        <input type="submit" className="inline-plus-sign" value="+" />
-                        <input
-                          type="email"
-                          required
-                          pattern=".+@berkeley.edu$"
-                          title="Please enter a valid @berkeley.edu email address"
-                          placeholder="New student's email"
-                          list="user-emails-list"
-                          value={newStudentEmail}
-                          onChange={({ target: { value } }) => setNewStudentEmail(value)}
-                        />
-                        <datalist id="user-emails-list">
-                          {userEmails.map(email => (
-                            <option key={email} value={email} />
-                          ))}
-                        </datalist>
-                      </form>
-                    </td>
-                  </tr>
-                )}
-              </tbody>
-            </table>
+                  )}
+                </tbody>
+              </table>
+              {newStudentError && (
+                <div className="newStudentErrorContainer">
+                  <span className="newStudentError">{newStudentError.error}</span>
+                  {newStudentError.link && (
+                    <NavLink className="newStudentLink" to={newStudentError.link}>
+                      Link to existing section
+                    </NavLink>
+                  )}
+                </div>
+              )}
+            </React.Fragment>
           )}
           {!loaded && <LoadingSpinner />}
         </InfoCard>

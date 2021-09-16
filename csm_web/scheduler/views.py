@@ -237,8 +237,32 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                 raise PermissionDenied("There is no space available in this section", status.HTTP_423_LOCKED)
             try:  # Student dropped a section in this course and is now enrolling in a different one
                 if is_coordinator:
-                    student = Student.objects.get(active=False, section__course=section.course,
-                                                  user__email=request.data['email'])
+                    # get student if active; if it does, return an error
+                    active_student = Student.objects.filter(
+                        active=True, section__course=section.course, user__email=request.data['email'])
+                    if active_student.exists():
+                        # active student already exists
+                        logger.warn(
+                            f"<Enrollment:Failure> Coordinator {log_str(request.user)} was unable to enroll user {log_str(active_student.first().user)} in Section {log_str(section)} because the student already exists")
+                        if active_student.count() > 1:
+                            # something bad happened
+                            logger.error(
+                                f"<Enrollment:Critical> Multiple active students exist in the database (Students {active_student.all()})!")
+                            return Response({'error': f'Duplicate students exist! Report this in #tech-bugs immediately.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+                        elif int(active_student.first().section.pk) == int(pk):
+                            # currently enrolled in the section
+                            return Response({'error': f'Student {request.data["email"]} is already enrolled in the section!'}, status=status.HTTP_409_CONFLICT)
+                        # currently enrolled in a different section
+                        return Response({'error': f'Student {request.data["email"]} already exists in the database!', 'section_pk': active_student.first().section.pk}, status=status.HTTP_409_CONFLICT)
+
+                    # student is inactive (i.e. they've dropped a section)
+                    inactive_student = Student.objects.get(
+                        active=False, section__course=section.course, user__email=request.data['email'])
+                    if inactive_student.count() > 1:
+                        # something bad happened
+                        logger.error(
+                            f"<Enrollment:Failure> Multiple inactive students exist in the database (Students {inactive_student.all()})!")
+                        return Response({'error': f'Duplicate students exist! Report this in #tech-bugs immediately.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
                 else:
                     student = request.user.student_set.get(active=False, section__course=section.course)
                 old_section = student.section
@@ -289,7 +313,8 @@ class StudentViewSet(viewsets.GenericViewSet):
         if is_coordinator:
             student.banned = request.data.get('banned', False)
         student.save()
-        logger.info(f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)}")
+        logger.info(
+            f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)} for Student user {log_str(student.user)}")
         # filter attendances and delete future attendances
         num_deleted, _ = student.attendance_set.filter(
             Q(sectionOccurrence__date__gte=timezone.now(), sectionOccurrence__section=student.section)).delete()
