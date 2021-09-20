@@ -818,6 +818,134 @@ main {
 	align-items: center;
 }
 
+.coordinator-add-student-modal {
+	overflow: hidden;
+	height: 65vh;
+	width: 60vw;
+}
+
+.coordinator-add-student-modal .modal-contents {
+	overflow: hidden;
+}
+
+.coordinator-add-student-modal-contents {
+	height: calc(65vh - 89px);
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: center;
+	padding-bottom: 20px;
+}
+
+.coordinator-email-content {
+	max-height: 75%;
+	overflow: auto;
+	width: 95%;
+	margin: 10px 0;
+}
+
+.coordinator-email-input-list {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.coordinator-email-input-item {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+}
+
+.coordinator-email-input-item .inline-plus-sign {
+	transform: rotate(45deg);
+	-webkit-transform: rotate(45deg);
+	-moz-transform: rotate(45deg);
+	-ms-transform: rotate(45deg);
+	-o-transform: rotate(45deg);
+	color: var(--csm-danger);
+	cursor: pointer;
+	user-select: none;
+	-webkit-user-select: none;
+	-moz-user-select: none;
+}
+
+.coordinator-email-input-item .inline-plus-sign:hover {
+	color: var(--csm-danger-darkened);
+}
+
+.coordinator-email-input {
+	max-width: 100%;
+	width: 250px;
+	margin-left: 5px;
+}
+
+.coordinator-email-input-buttons {
+	display: flex;
+	flex-direction: column;
+	justify-content: center;
+	align-items: center;
+}
+
+.coordinator-email-input-buttons-top {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+.coordinator-email-input-add,
+.coordinator-email-modal-button {
+	background-color: var(--csm-neutral);
+	border: none;
+	border-radius: 8px;
+	color: white;
+	display: flex;
+	flex-direction: row;
+	font-size: 16px;
+	font-weight: 600;
+	justify-content: space-evenly;
+	margin: 3px auto 3px;
+	padding: 8px 20px;
+}
+
+.coordinator-email-modal-button {
+	font-weight: normal;
+	background-color: var(--csm-neutral);
+	padding: 8px;
+	font-size: 0.95rem;
+	margin: auto;
+}
+
+.coordinator-email-input-add:hover,
+.coordinator-email-modal-button:hover {
+	background-color: var(--csm-neutral-darkened);
+}
+
+.coordinator-email-input-submit {
+	background-color: var(--csm-green);
+	border: none;
+	border-radius: 8px;
+	color: white;
+	display: flex;
+	flex-direction: row;
+	font-size: 16px;
+	font-weight: 600;
+	justify-content: space-evenly;
+	margin: 10px auto 10px;
+	padding: 10px 20px;
+}
+
+.coordinator-email-input-submit:hover {
+	background-color: var(--csm-green-darkened);
+}
+
+#coordinator-add-student-form input:not(.lock-validation):invalid {
+	background-color: #ffdddd;
+}
+
 .danger-btn {
 	display: block;
 	border: none;

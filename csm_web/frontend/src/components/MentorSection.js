@@ -558,6 +558,7 @@ function MentorSectionInfo({
   const [userEmails, setUserEmails] = useState([]);
   const [newStudentEmail, setNewStudentEmail] = useState("");
   const [newStudentError, setNewStudentError] = useState({});
+  const [isAddingStudent, setIsAddingStudent] = useState(false);
   useEffect(() => {
     if (!isCoordinator) {
       return;
@@ -570,23 +571,6 @@ function MentorSectionInfo({
     setNewStudentError({});
   }, [id]);
   const closeModal = () => setShowModal(MentorSectionInfo.MODAL_STATES.NONE);
-  function handleAddStudentSubmit(e) {
-    e.preventDefault(); // prevent refresh on submit, which stops this request
-    fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT, { email: newStudentEmail }).then(response => {
-      if (!response.ok) {
-        response.json().then(body => {
-          setNewStudentError(previous => ({ ...previous, error: body.error ? body.error : body.detail }));
-          if (response.status === 409 && body.sectionPk) {
-            // conflict; add link to existing section
-            setNewStudentError(previous => ({ ...previous, link: `/sections/${body.sectionPk}` }));
-          }
-        });
-      } else {
-        setNewStudentError({});
-        reloadSection();
-      }
-    });
-  }
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">{`${
@@ -614,28 +598,15 @@ function MentorSectionInfo({
                     )
                   )}
                   {isCoordinator && (
-                    <tr>
-                      <td>
-                        <form className="csm-form" onSubmit={handleAddStudentSubmit}>
-                          <input type="submit" className="inline-plus-sign" value="+" />
-                          <input
-                            type="email"
-                            required
-                            pattern=".+@berkeley.edu$"
-                            title="Please enter a valid @berkeley.edu email address"
-                            placeholder="New student's email"
-                            list="user-emails-list"
-                            value={newStudentEmail}
-                            onChange={({ target: { value } }) => setNewStudentEmail(value)}
-                          />
-                          <datalist id="user-emails-list">
-                            {userEmails.map(email => (
-                              <option key={email} value={email} />
-                            ))}
-                          </datalist>
-                        </form>
-                      </td>
-                    </tr>
+                    <React.Fragment>
+                      <tr>
+                        <td>
+                          <button className="coordinator-email-modal-button" onClick={() => setIsAddingStudent(true)}>
+                            Add students
+                          </button>
+                        </td>
+                      </tr>
+                    </React.Fragment>
                   )}
                 </tbody>
               </table>
@@ -648,6 +619,9 @@ function MentorSectionInfo({
                     </NavLink>
                   )}
                 </div>
+              )}
+              {isCoordinator && isAddingStudent && (
+                <CoordinatorAddStudentModal closeModal={() => setIsAddingStudent(false)} userEmails={userEmails} />
               )}
             </React.Fragment>
           )}
@@ -739,6 +713,139 @@ MentorSectionInfo.propTypes = {
   capacity: PropTypes.number,
   description: PropTypes.string,
   id: PropTypes.number.isRequired
+};
+
+function CoordinatorAddStudentModal({ closeModal, userEmails }) {
+  const [emailsToAdd, setEmailsToAdd] = useState([""]);
+  const [addStage, setAddStage] = useState(CoordinatorAddStudentModal.STATES.INITIAL);
+  /**
+   * Whether or not the form fields should be highlighted if invalid
+   */
+  const [validationEnabled, setValidationEnabled] = useState(false);
+
+  function setEmail(index, value) {
+    let newEmailsToAdd = [...emailsToAdd];
+    newEmailsToAdd[index] = value;
+    console.log(index, value);
+    setEmailsToAdd(newEmailsToAdd);
+  }
+
+  function addNewEmail() {
+    setEmailsToAdd([...emailsToAdd, ""]);
+  }
+
+  function addEmailsFromClipboard() {
+    // this will error with a DOMException if clipboard access is denied
+    navigator.clipboard.readText().then(text => {
+      console.log(text.split(/\s+/g));
+      setEmailsToAdd(lastEmails => {
+        if (lastEmails.length == 1 && lastEmails[0] === "") {
+          // just the initial value, so overwrite it
+          lastEmails = [];
+        }
+        return [...lastEmails, ...text.split(/\s+/g)];
+      });
+    });
+  }
+
+  function removeEmail(index) {
+    let newEmailsToAdd = [...emailsToAdd];
+    newEmailsToAdd.splice(index, 1);
+    setEmailsToAdd(newEmailsToAdd);
+  }
+
+  function handleAddStudentSubmit(e) {
+    // TODO: decide whether this should be inside or outside of the modal component
+    e.preventDefault(); // prevent refresh on submit, which stops this request
+    setAddStage(CoordinatorAddStudentModal.STATES.LOADING);
+
+    // fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT, { emails: emailsToAdd }).then(response => {
+    //   if (!response.ok) {
+    //     response.json().then(body => {
+    //       setAddStage(CoordinatorAddStudentModal.STATES.WARNING);
+    //       setNewStudentError(previous => ({ ...previous, error: body.error ? body.error : body.detail }));
+    //       if (response.status === 409 && body.sectionPk) {
+    //         // conflict; add link to existing section
+    //         setNewStudentError(previous => ({ ...previous, link: `/sections/${body.sectionPk}` }));
+    //       }
+    //     });
+    //   } else {
+    //     setNewStudentError({});
+    //     reloadSection();
+    //   }
+    // });
+  }
+
+  return (
+    <Modal className="coordinator-add-student-modal" closeModal={closeModal}>
+      <form
+        id="coordinator-add-student-form"
+        className="coordinator-add-student-modal-contents"
+        onSubmit={handleAddStudentSubmit}
+      >
+        <h4>Add new students</h4>
+        <div className="coordinator-email-content">
+          <div
+            id="coordinator-email-form"
+            className="coordinator-email-input-list"
+            onSubmit={() => handleAddStudentSubmit(emailsToAdd)}
+          >
+            {emailsToAdd.map((email, index) => (
+              <div className="coordinator-email-input-item" key={index}>
+                <span className="inline-plus-sign ban-cancel" onClick={() => removeEmail(index)}>
+                  +
+                </span>
+                <input
+                  className={"coordinator-email-input" + (validationEnabled ? "" : " lock-validation")}
+                  type="email"
+                  required
+                  pattern=".+@berkeley.edu$"
+                  title="Please enter a valid @berkeley.edu email address"
+                  placeholder="New student's email"
+                  list="user-emails-list"
+                  value={email}
+                  onChange={({ target: { value } }) => setEmail(index, value)}
+                />
+              </div>
+            ))}
+            <datalist id="user-emails-list">
+              {userEmails.map(email => (
+                <option key={email} value={email} />
+              ))}
+            </datalist>
+          </div>
+        </div>
+        <div className="coordinator-email-input-buttons">
+          <button className="coordinator-email-input-add" onClick={() => addNewEmail()}>
+            Add email
+          </button>
+          {
+            /* Firefox doesn't support clipboard reads from sites; readText would be undefined */
+            navigator.clipboard.readText && (
+              <button className="coordinator-email-input-add" onClick={() => addEmailsFromClipboard()}>
+                Add from clipboard
+              </button>
+            )
+          }
+          <button className="coordinator-email-input-submit" type="submit" onClick={() => setValidationEnabled(true)}>
+            Submit
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+Object.defineProperty(CoordinatorAddStudentModal, "STATES", {
+  enumerable: false,
+  configurable: false,
+  writable: false,
+  value: Object.freeze({ INITIAL: "INITIAL", WARNING: "WARNING", ERROR: "ERROR", LOADING: "LOADING" })
+});
+
+CoordinatorAddStudentModal.propTypes = {
+  closeModal: PropTypes.func.isRequired,
+  userEmails: PropTypes.array.isRequired
 };
 
 function StudentDropper({ id, reloadSection }) {
