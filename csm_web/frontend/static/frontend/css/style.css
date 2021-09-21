@@ -859,7 +859,8 @@ main {
 	width: 100%;
 }
 
-.coordinator-email-input-item .inline-plus-sign {
+.coordinator-email-input-item .inline-plus-sign,
+.coordinator-email-response-item .inline-plus-sign {
 	transform: rotate(45deg);
 	-webkit-transform: rotate(45deg);
 	-moz-transform: rotate(45deg);
@@ -872,7 +873,8 @@ main {
 	-moz-user-select: none;
 }
 
-.coordinator-email-input-item .inline-plus-sign:hover {
+.coordinator-email-input-item .inline-plus-sign:hover,
+.coordinator-email-response-item .inline-plus-sign:hover {
 	color: var(--csm-danger-darkened);
 }
 
@@ -944,6 +946,100 @@ main {
 
 #coordinator-add-student-form input:not(.lock-validation):invalid {
 	background-color: #ffdddd;
+}
+
+.coordinator-email-response-list {
+	display: flex;
+	flex-direction: column;
+	text-align: left;
+	margin: auto;
+	width: fit-content;
+	width: -moz-fit-content;
+}
+
+.coordinator-email-response-item {
+	display: flex;
+	flex-direction: column;
+	justify-content: left;
+	margin: 5px 0;
+}
+
+.coordinator-email-response-item .inline-plus-sign {
+	margin-left: -10px;
+}
+
+.coordinator-email-response-email {
+	margin-left: 3px;
+}
+
+.coordinator-email-response-email-status {
+	display: flex;
+	flex-direction: row;
+	justify-content: left;
+	align-items: center;
+}
+
+.coordinator-email-response-form-info {
+	color: red;
+	font-size: 0.9rem;
+	margin-left: 20px;
+	margin-bottom: 2px;
+}
+
+.coordinator-email-response-form {
+	display: flex;
+	flex-direction: column;
+	margin-left: 40px;
+}
+
+.coordinator-email-response-form label {
+	font-size: 0.9rem;
+}
+
+.coordinator-email-response-status {
+	margin-left: 5px;
+}
+
+.coordinator-email-response-status-ok,
+.coordinator-email-response-status-conflict,
+.coordinator-email-response-status-banned,
+.coordinator-email-response-capacity {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.coordinator-email-response-status-ok {
+	color: green;
+}
+
+.coordinator-email-response-status-ok-icon {
+	width: 1.25rem;
+	height: 1.25rem;
+	padding: 3px;
+}
+
+.coordinator-email-response-status-conflict-icon {
+	width: 1.5rem;
+	height: 1.5rem;
+	padding: 2px;
+	fill: red;
+}
+
+.coordinator-email-response-status-conflict,
+.coordinator-email-response-status-banned,
+.coordinator-email-response-capacity {
+	color: red;
+}
+
+.internal-error-title {
+	color: var(--csm-danger) !important;
+}
+
+.internal-error-body {
+	font-size: 1.5rem;
+	text-align: center;
+	width: 80%;
 }
 
 .danger-btn {

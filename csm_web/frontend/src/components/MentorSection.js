@@ -8,6 +8,7 @@ import { groupBy } from "lodash";
 import CopyIcon from "../../static/frontend/img/copy.svg";
 import CheckCircle from "../../static/frontend/img/check_circle.svg";
 import PencilIcon from "../../static/frontend/img/pencil.svg";
+import ErrorCircle from "../../static/frontend/img/error_outline.svg";
 import { ATTENDANCE_LABELS } from "./Section";
 import Modal from "./Modal";
 import LoadingSpinner from "./LoadingSpinner";
@@ -621,7 +622,11 @@ function MentorSectionInfo({
                 </div>
               )}
               {isCoordinator && isAddingStudent && (
-                <CoordinatorAddStudentModal closeModal={() => setIsAddingStudent(false)} userEmails={userEmails} />
+                <CoordinatorAddStudentModal
+                  closeModal={() => setIsAddingStudent(false)}
+                  userEmails={userEmails}
+                  sectionId={id}
+                />
               )}
             </React.Fragment>
           )}
@@ -715,8 +720,13 @@ MentorSectionInfo.propTypes = {
   id: PropTypes.number.isRequired
 };
 
-function CoordinatorAddStudentModal({ closeModal, userEmails }) {
+function CoordinatorAddStudentModal({ closeModal, userEmails, sectionId }) {
   const [emailsToAdd, setEmailsToAdd] = useState([""]);
+  const [response, setResponse] = useState({});
+  /**
+   * Mapping from email to action for what the user replies with after the first submission
+   */
+  const [responseActions, setResponseActions] = useState(new Map());
   const [addStage, setAddStage] = useState(CoordinatorAddStudentModal.STATES.INITIAL);
   /**
    * Whether or not the form fields should be highlighted if invalid
@@ -726,7 +736,6 @@ function CoordinatorAddStudentModal({ closeModal, userEmails }) {
   function setEmail(index, value) {
     let newEmailsToAdd = [...emailsToAdd];
     newEmailsToAdd[index] = value;
-    console.log(index, value);
     setEmailsToAdd(newEmailsToAdd);
   }
 
@@ -737,7 +746,6 @@ function CoordinatorAddStudentModal({ closeModal, userEmails }) {
   function addEmailsFromClipboard() {
     // this will error with a DOMException if clipboard access is denied
     navigator.clipboard.readText().then(text => {
-      console.log(text.split(/\s+/g));
       setEmailsToAdd(lastEmails => {
         if (lastEmails.length == 1 && lastEmails[0] === "") {
           // just the initial value, so overwrite it
@@ -748,32 +756,312 @@ function CoordinatorAddStudentModal({ closeModal, userEmails }) {
     });
   }
 
-  function removeEmail(index) {
+  function removeEmailByIndex(index) {
     let newEmailsToAdd = [...emailsToAdd];
     newEmailsToAdd.splice(index, 1);
     setEmailsToAdd(newEmailsToAdd);
   }
 
+  function removeResponseEmail(email) {
+    setEmailsToAdd(emailsToAdd.filter(item => item !== email));
+    setResponse(lastResponse => ({
+      ...lastResponse,
+      progress: lastResponse.progress.filter(email_obj => email_obj.email !== email)
+    }));
+  }
+
   function handleAddStudentSubmit(e) {
-    // TODO: decide whether this should be inside or outside of the modal component
     e.preventDefault(); // prevent refresh on submit, which stops this request
     setAddStage(CoordinatorAddStudentModal.STATES.LOADING);
 
-    // fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT, { emails: emailsToAdd }).then(response => {
-    //   if (!response.ok) {
-    //     response.json().then(body => {
-    //       setAddStage(CoordinatorAddStudentModal.STATES.WARNING);
-    //       setNewStudentError(previous => ({ ...previous, error: body.error ? body.error : body.detail }));
-    //       if (response.status === 409 && body.sectionPk) {
-    //         // conflict; add link to existing section
-    //         setNewStudentError(previous => ({ ...previous, link: `/sections/${body.sectionPk}` }));
-    //       }
-    //     });
-    //   } else {
-    //     setNewStudentError({});
-    //     reloadSection();
-    //   }
-    // });
+    let request_emails = emailsToAdd.map(email => {
+      let action = {};
+      if (responseActions.has(email)) {
+        action = responseActions.get(email);
+      }
+      return { email: email, ...action };
+    });
+
+    let request = { emails: request_emails, actions: {} };
+    if (responseActions.has("capacity")) {
+      request.actions["capacity"] = responseActions.get("capacity");
+    }
+
+    fetchWithMethod(`sections/${sectionId}/students/`, HTTP_METHODS.PUT, request).then(response => {
+      if (!response.ok) {
+        if (response.status === 500) {
+          // internal error
+          response.text().then(() => {
+            setResponse({
+              errors: { critical: `A internal error occurred. Please report this error to #tech-bugs immediately.` }
+            });
+            setAddStage(CoordinatorAddStudentModal.STATES.ERROR);
+          });
+        } else {
+          response.json().then(body => {
+            setResponse(body);
+            if (body.errors.critical) {
+              setAddStage(CoordinatorAddStudentModal.STATES.ERROR);
+            } else {
+              setAddStage(CoordinatorAddStudentModal.STATES.WARNING);
+            }
+          });
+        }
+        setValidationEnabled(false); // reset validation
+      } else {
+        closeModal();
+      }
+    });
+  }
+
+  function updateResponseAction(e, email, field) {
+    let newAction = {};
+    if (responseActions.has(email)) {
+      newAction = responseActions.get(email);
+    }
+
+    if (e.target.checked) {
+      newAction[field] = e.target.value;
+    } else {
+      delete newAction[field];
+    }
+
+    let newResponseActions = new Map(responseActions);
+    newResponseActions.set(email, newAction);
+    setResponseActions(newResponseActions);
+  }
+
+  function updateGeneralResponseAction(e, field) {
+    let newResponseActions = new Map(responseActions);
+    if (e.target.checked) {
+      newResponseActions.set(field, e.target.value);
+    } else {
+      newResponseActions.delete(field);
+    }
+    setResponseActions(newResponseActions);
+  }
+
+  const initial_component = (
+    <React.Fragment>
+      <h4>Add new students</h4>
+      <div className="coordinator-email-content">
+        <div className="coordinator-email-input-list">
+          {emailsToAdd.map((email, index) => (
+            <div className="coordinator-email-input-item" key={index}>
+              <span className="inline-plus-sign ban-cancel" onClick={() => removeEmailByIndex(index)}>
+                +
+              </span>
+              <input
+                className={"coordinator-email-input" + (validationEnabled ? "" : " lock-validation")}
+                type="email"
+                required
+                pattern=".+@berkeley.edu$"
+                title="Please enter a valid @berkeley.edu email address"
+                placeholder="New student's email"
+                list="user-emails-list"
+                value={email}
+                onChange={({ target: { value } }) => setEmail(index, value)}
+              />
+            </div>
+          ))}
+          <datalist id="user-emails-list">
+            {userEmails.map(email => (
+              <option key={email} value={email} />
+            ))}
+          </datalist>
+        </div>
+      </div>
+      <div className="coordinator-email-input-buttons">
+        <button className="coordinator-email-input-add" onClick={() => addNewEmail()}>
+          Add email
+        </button>
+        {
+          /* Firefox doesn't support clipboard reads from sites; readText would be undefined */
+          navigator.clipboard.readText && (
+            <button className="coordinator-email-input-add" onClick={() => addEmailsFromClipboard()}>
+              Add from clipboard
+            </button>
+          )
+        }
+        <button className="coordinator-email-input-submit" type="submit" onClick={() => setValidationEnabled(true)}>
+          Submit
+        </button>
+      </div>
+    </React.Fragment>
+  );
+
+  const loading_component = (
+    <React.Fragment>
+      <h4>Add new students</h4>
+      <LoadingSpinner />
+      <div></div> {/* empty element to align the content */}
+    </React.Fragment>
+  );
+
+  const ADD_STATUS = {
+    OK: "OK",
+    CONFLICT: "CONFLICT",
+    BANNED: "BANNED"
+  };
+
+  const warning_component = (
+    <React.Fragment>
+      <h4>Add new students</h4>
+      <div className="coordinator-email-content">
+        <div className="coordinator-email-response-list">
+          {response &&
+            response.progress &&
+            response.progress.map(email_obj => {
+              let status = "";
+              let formInfo = "";
+              let inputs = "";
+              switch (email_obj.status) {
+                case ADD_STATUS.OK:
+                  status = (
+                    <div className="coordinator-email-response-status-ok">
+                      <CheckCircle className="coordinator-email-response-status-ok-icon" />
+                      OK
+                    </div>
+                  );
+                  break;
+                case ADD_STATUS.CONFLICT:
+                  status = (
+                    <div className="coordinator-email-response-status-conflict">
+                      <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
+                      Section conflict
+                    </div>
+                  );
+                  if (email_obj.detail.section.id == sectionId) {
+                    // enrolled in this section
+                    formInfo = "User is already enrolled in this section!";
+                  } else {
+                    formInfo = `Conflicting section: ${email_obj.detail.section.mentor.name} (id ${email_obj.detail.section.id})`;
+                    inputs = (
+                      <React.Fragment>
+                        <label>
+                          <input
+                            type="checkbox"
+                            value="DROP"
+                            onChange={e => updateResponseAction(e, email_obj.email, "conflict_action")}
+                          />
+                          Drop student from other section
+                        </label>
+                      </React.Fragment>
+                    );
+                  }
+                  break;
+                case ADD_STATUS.BANNED:
+                  status = (
+                    <div className="coordinator-email-response-status-banned">
+                      <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
+                      Student banned
+                    </div>
+                  );
+                  inputs = (
+                    <React.Fragment>
+                      <label>
+                        <input
+                          type="radio"
+                          name={`unban-${email_obj.email}`}
+                          value="UNBAN_ENROLL"
+                          onChange={e => updateResponseAction(e, email_obj.email, "ban_action")}
+                        />
+                        Unban student and enroll in section
+                      </label>
+                      <label>
+                        <input
+                          type="radio"
+                          name={`unban-${email_obj.email}`}
+                          value="UNBAN_SKIP"
+                          onChange={e => updateResponseAction(e, email_obj.email, "ban_action")}
+                        />
+                        Unban student but <i>do not</i> enroll in section
+                      </label>
+                    </React.Fragment>
+                  );
+                  break;
+              }
+
+              return (
+                <div key={email_obj.email} className="coordinator-email-response-item">
+                  <div className="coordinator-email-response-email-status">
+                    <span className="inline-plus-sign ban-cancel" onClick={() => removeResponseEmail(email_obj.email)}>
+                      +
+                    </span>
+                    <div className="coordinator-email-response-email">{email_obj.email}</div>
+                    <div className="coordinator-email-response-status">{status}</div>
+                  </div>
+                  {formInfo && <div className="coordinator-email-response-form-info">{formInfo}</div>}
+                  {inputs && <div className="coordinator-email-response-form">{inputs}</div>}
+                </div>
+              );
+            })}
+          {response && response.errors && response.errors.capacity && (
+            <div className="coordinator-email-response-item">
+              <div className="coordinator-email-response-email-status">
+                <div className="coordinator-email-response-capacity">
+                  <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
+                  Section capacity exceeded!
+                </div>
+              </div>
+              <div className="coordinator-email-response-form">
+                <label>
+                  <input
+                    type="radio"
+                    name="capacity"
+                    value="EXPAND"
+                    onChange={e => updateGeneralResponseAction(e, "capacity")}
+                  />
+                  Enroll and expand section
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="capacity"
+                    value="EXPAND"
+                    onChange={e => updateGeneralResponseAction(e, "capacity")}
+                  />
+                  Enroll but do not expand
+                </label>
+                <label>
+                  <input
+                    type="radio"
+                    name="capacity"
+                    value="SKIP"
+                    onChange={e => updateGeneralResponseAction(e, "capacity")}
+                  />
+                  Ignore (delete students manually)
+                </label>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="coordinator-email-input-buttons">
+        <button className="coordinator-email-input-submit" type="submit" onClick={() => setValidationEnabled(true)}>
+          Retry
+        </button>
+      </div>
+    </React.Fragment>
+  );
+
+  const error_component = (
+    <React.Fragment>
+      <h4 className="internal-error-title">Internal Error</h4>
+      <div className="internal-error-body">{response && response.errors && response.errors.critical}</div>
+      <div>Timestamp: {`${new Date()}`}</div>
+    </React.Fragment>
+  );
+
+  let curContents = "";
+  if (addStage === CoordinatorAddStudentModal.STATES.INITIAL) {
+    curContents = initial_component;
+  } else if (addStage === CoordinatorAddStudentModal.STATES.LOADING) {
+    curContents = loading_component;
+  } else if (addStage === CoordinatorAddStudentModal.STATES.ERROR) {
+    curContents = error_component;
+  } else if (addStage === CoordinatorAddStudentModal.STATES.WARNING) {
+    curContents = warning_component;
   }
 
   return (
@@ -783,54 +1071,7 @@ function CoordinatorAddStudentModal({ closeModal, userEmails }) {
         className="coordinator-add-student-modal-contents"
         onSubmit={handleAddStudentSubmit}
       >
-        <h4>Add new students</h4>
-        <div className="coordinator-email-content">
-          <div
-            id="coordinator-email-form"
-            className="coordinator-email-input-list"
-            onSubmit={() => handleAddStudentSubmit(emailsToAdd)}
-          >
-            {emailsToAdd.map((email, index) => (
-              <div className="coordinator-email-input-item" key={index}>
-                <span className="inline-plus-sign ban-cancel" onClick={() => removeEmail(index)}>
-                  +
-                </span>
-                <input
-                  className={"coordinator-email-input" + (validationEnabled ? "" : " lock-validation")}
-                  type="email"
-                  required
-                  pattern=".+@berkeley.edu$"
-                  title="Please enter a valid @berkeley.edu email address"
-                  placeholder="New student's email"
-                  list="user-emails-list"
-                  value={email}
-                  onChange={({ target: { value } }) => setEmail(index, value)}
-                />
-              </div>
-            ))}
-            <datalist id="user-emails-list">
-              {userEmails.map(email => (
-                <option key={email} value={email} />
-              ))}
-            </datalist>
-          </div>
-        </div>
-        <div className="coordinator-email-input-buttons">
-          <button className="coordinator-email-input-add" onClick={() => addNewEmail()}>
-            Add email
-          </button>
-          {
-            /* Firefox doesn't support clipboard reads from sites; readText would be undefined */
-            navigator.clipboard.readText && (
-              <button className="coordinator-email-input-add" onClick={() => addEmailsFromClipboard()}>
-                Add from clipboard
-              </button>
-            )
-          }
-          <button className="coordinator-email-input-submit" type="submit" onClick={() => setValidationEnabled(true)}>
-            Submit
-          </button>
-        </div>
+        {curContents}
       </form>
     </Modal>
   );
@@ -845,7 +1086,8 @@ Object.defineProperty(CoordinatorAddStudentModal, "STATES", {
 
 CoordinatorAddStudentModal.propTypes = {
   closeModal: PropTypes.func.isRequired,
-  userEmails: PropTypes.array.isRequired
+  userEmails: PropTypes.array.isRequired,
+  sectionId: PropTypes.number.isRequired
 };
 
 function StudentDropper({ id, reloadSection }) {
