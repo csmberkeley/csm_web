@@ -223,50 +223,207 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
             section = get_object_or_error(Section.objects, pk=pk)
             section = Section.objects.select_for_update().get(pk=section.pk)
             is_coordinator = bool(section.course.coordinator_set.filter(user=request.user).count())
-            if is_coordinator and not request.data.get('email'):
-                return Response({'error': 'Must specify email of student to enroll'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-            if not (request.user.can_enroll_in_course(section.course) or is_coordinator):
-                logger.warn(
-                    f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because they are already involved in this course")
-                raise PermissionDenied(
-                    "You are already either mentoring for this course or enrolled in a section", status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-            # allow coordinators to enroll people beyond the capacity limits
-            if not is_coordinator and section.current_student_count >= section.capacity:
-                logger.warn(
-                    f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because it was full")
-                raise PermissionDenied("There is no space available in this section", status.HTTP_423_LOCKED)
-            try:  # Student dropped a section in this course and is now enrolling in a different one
-                if is_coordinator:
-                    student_queryset = Student.objects.filter(
-                        section__course=section.course, user__email=request.data['email'])
+            """
+            Request format:
+            - student add:
+                request.user: student that wants to add section
+                pk: primary key of section to enroll into
 
-                    # initial check for duplicate entries in database
-                    if student_queryset.count() > 1:
-                        # something bad happened
-                        logger.error(
-                            f"<Enrollment:Critical> Multiple student objects exist in the database (Students {student_queryset.all()})!")
-                        return Response({'error': 'Duplicate students exist! Report this in #tech-bugs immediately.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+            - coordinator add:
+                request.user: coordinator that wants to add students
+                pk: primary key of section to enroll into
+                request.data['emails']: array of objects with keys:
+                    - 'email': email of student
+                    - 'conflict_action': whether or not the coord has confirmed to drop this user from their existing section
+                      possible values:
+                        - empty: default; will result in a 422 response if there are conflicts
+                        - 'DROP': drop the student from their existing section
+                    - 'ban_action': what to do about the student if they're banned
+                      possible values:
+                        - empty: default; will result in a 422 response if the student is banned
+                        - 'UNBAN_SKIP': unban the student, but *do not* enroll
+                        - 'UNBAN': unban the students and enroll them
+                request.data['actions']: dict of actions to take for misc errors
+                    - request.data['actions']['capacity']: value is one of
+                        - 'EXPAND': expand section
+                        - 'ENROLL': enroll students in section and bypass the capacity limit
+                                    TODO: see whether we even need this
+                        - 'SKIP': ignore the error (this means that the user should have deleted some students to add;
+                                  if not, the server will respond again with the error)
+                                  TODO: see whether we even need this; we could just omit the specification
 
-                    # get student if active; if it does, return an error
-                    active_student_queryset = student_queryset.filter(active=True)
-                    if active_student_queryset.exists():
-                        # active student already exists
-                        active_student = active_student_queryset.get()  # guaranteed to be 1 student, because of prior checks
-                        logger.warn(
-                            f"<Enrollment:Failure> Coordinator {log_str(request.user)} was unable to enroll user {log_str(active_student.user)} in Section {log_str(section)} because the student already exists")
-                        if int(active_student.section.pk) == int(pk):
-                            # currently enrolled in the section
-                            return Response({'error': f'Student {request.data["email"]} is already enrolled in the section!'}, status=status.HTTP_409_CONFLICT)
-                        # currently enrolled in a different section
-                        return Response({'error': f'Student {request.data["email"]} already exists in the database!', 'section_pk': active_student.section.pk}, status=status.HTTP_409_CONFLICT)
+            Error message format:
+            - student add:
+                { 'detail': 'error text' }
+            - coordinator add:
+                {
+                    'errors': {
+                        'critical': 'error text',
+                        'capacity': 'capacity error message (not in dict if not raised)',
+                    },
+                    'progress': [
+                        {'email': email, 'status': status, 'detail': {...detail}},
+                        ...
+                    ]
+                }
 
-                    # student is inactive (i.e. they've dropped a section)
-                    # guaranteed to be either 0 or 1 objects in queryset, because of prior check
-                    inactive_student = student_queryset.filter(active=False)
-                    student = inactive_student.get()  # will error if queryset is empty with Student.DoesNotExist
+            Error status format:
+            - 'OK': student is ready to be enrolled (but no action has been taken)
+            - 'CONFLICT': student is already enrolled in another section
+                - detail = { 'section': serialized section }
+            - 'BANNED': student is currently banned from the course
+
+            HTTP response status codes:
+            - HTTP_422_UNPROCESSABLE_ENTITY: invalid input, or partially invalid input
+                    sent with a 'progress' response indicating what went through and what didn't
+            - HTTP_423_LOCKED: capacity hit (only sent if initiated by student)
+            """
+
+            if is_coordinator:
+                return self._coordinator_add(request, section)
+            else:
+                return self._student_add(request, section)
+
+    def _coordinator_add(self, request, section):
+        """
+        Adds a list of students as a coordinator.
+        """
+        class Status:
+            """enum for different response statuses"""
+            OK = 'OK'
+            CONFLICT = 'CONFLICT'
+            BANNED = 'BANNED'
+
+        class ConflictAction:
+            """enum for actions to drop students"""
+            DROP = 'DROP'
+
+        class CapacityAction:
+            """enum for actions about capacity limits"""
+            EXPAND = 'EXPAND'
+            ENROLL = 'ENROLL'
+            SKIP = 'SKIP'
+
+        class BanAction:
+            """enum for actions about banned students"""
+            UNBAN_SKIP = 'UNBAN_SKIP'
+            UNBAN_ENROLL = 'UNBAN_ENROLL'
+
+        data = request.data
+
+        if not data.get('emails'):
+            return Response({'error': 'Must specify emails of students to enroll'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        # filter out objects with no associated email
+        emails = [obj for obj in data.get('emails') if obj and obj.get('email')]
+
+        response = {'errors': {}}
+
+        """
+        Possible items in db_actions:
+        - ('capacity', 'EXPAND'): expand the section capacity
+        - ('capacity', 'ENROLL'): enroll the students without expanding section capacity
+        - ('create', email): create a new student object with email (and create user if needed)
+        - ('enroll', student): modify the student object so they are now enrolled in this section (includes drop & enroll)
+        - ('unban', student): unban the student from the course
+        - ('unban_enroll', student): unban the student and enroll them in the section
+        """
+        db_actions = []
+
+        any_invalid = False  # whether any studenet could not be added
+
+        if len(emails) > section.capacity - section.current_student_count:
+            # check whether the user has given any response to the capacity conflict
+            if data.get('actions') and data['actions'].get('capacity') and data['actions']['capacity'] in (CapacityAction.EXPAND, CapacityAction.ENROLL):
+                # we're all good; store the user's choice
+                db_actions.append(('capacity', data['actions']['capacity']))
+            else:
+                # no response, so add to the errors dict
+                any_invalid = True
+                response['errors']['capacity'] = 'There is no space available in this section'
+
+        statuses = []  # status for each email
+
+        # Phase 1: go through emails and check for validity/conflicts
+        for email_obj in emails:
+            email = email_obj['email']
+            curstatus = {'email': email}
+            # check to see if the student can be added
+
+            # get all students with the email in the course
+            student_queryset = Student.objects.filter(section__course=section.course, user__email=email)
+
+            if student_queryset.count() > 1:
+                # something bad happened, return immediately with error
+                logger.error(
+                    f"<Enrollment:Critical> Multiple student objects exist in the database (Students {student_queryset.all()})!")
+                return Response(
+                    {'errors': {
+                        'critical': f'Duplicate student objects exist in the database (Students {student_queryset.all()})'}},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            elif student_queryset.count() == 0:
+                # student does not exist yet; we can always create it
+                db_actions.append(('create', email))
+                curstatus['status'] = Status.OK
+            else:  # student_queryset.count() == 1
+                student = student_queryset.get()
+
+                if student.active:
+                    # active student already exists
+                    if email_obj.get('conflict_action') and email_obj['conflict_action'] == ConflictAction.DROP:
+                        # response confirmed, drop student and enroll
+                        db_actions.append(('enroll', student))
+                        curstatus['status'] = Status.OK
+                    else:  # no response, give warning
+                        any_invalid = True
+                        curstatus['status'] = Status.CONFLICT
+                        curstatus['detail'] = {
+                            'section': SectionSerializer(student.section).data
+                        }
+                elif student.banned:
+                    # check if there is a response
+                    if email_obj.get('ban_action') == BanAction.UNBAN_SKIP:
+                        # unban the student but do not enroll them
+                        db_actions.append(('unban', student))
+                        curstatus['status'] = Status.OK
+                    elif email_obj.get('ban_action') == BanAction.UNBAN_ENROLL:
+                        # unban the student and enroll them
+                        db_actions.append(('unban_enroll', student))
+                        curstatus['status'] = Status.OK
+                    else:
+                        any_invalid = True
+                        curstatus['status'] = Status.BANNED
                 else:
-                    student = request.user.student_set.get(active=False, section__course=section.course)
+                    # student is inactive (i.e. they've dropped a section)
+                    db_actions.append(('enroll', student))
+                    curstatus['status'] = Status.OK
+            statuses.append(curstatus)
+
+        if any_invalid:
+            # stop early and return the warnings
+            response['progress'] = statuses
+            return Response(response, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        # Phase 2: everything's good to go; do the database actions
+        expand_capacity = False
+        for action in db_actions:
+            action_type, obj = action
+            if action_type == 'capacity':
+                if obj == CapacityAction.EXPAND:
+                    expand_capacity = True  # expand after we've enrolled everybody so we know how many we're enrolling
+            elif action_type == 'create':  # obj=email, type str
+                email = obj
+                # create student
+                user, _ = User.objects.get_or_create(email=email, username=email.split('@')[0])
+                student = Student.objects.create(user=user, section=section)
+                logger.info(f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}")
+            elif action_type in ('enroll', 'unban_enroll'):  # obj=student, type Student
+                student = obj
+                if action_type == 'unban_enroll':  # unban student first
+                    student.banned = False
+                # enroll student
                 old_section = student.section
                 student.section = section
                 student.active = True
@@ -276,21 +433,62 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                     Attendance(student=student, sectionOccurrence=sectionOccurrence, presence="").save()
                 logger.info(
                     f"<Enrollment> Created {len(future_sectionOccurrences)} new attendances for user {log_str(student.user)} in Section {log_str(section)}")
-
                 student.save()
                 logger.info(
                     f"<Enrollment:Success> User {log_str(student.user)} swapped into Section {log_str(section)} from Section {log_str(old_section)}")
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except Student.DoesNotExist:  # Student is enrolling in this course for the first time
-                if is_coordinator:
-                    user, _ = User.objects.get_or_create(
-                        email=request.data['email'], username=request.data['email'].split('@')[0])
-                    student = Student.objects.create(user=user, section=section)
-                else:
-                    student = Student.objects.create(user=request.user, section=section)
-                logger.info(
-                    f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}")
-                return Response({'id': student.id}, status=status.HTTP_201_CREATED)
+            elif action_type == 'unban':  # obj=student, type Student
+                student = obj
+                # unban student
+                student.banned = False
+                student.save()
+
+        if expand_capacity:
+            section.capacity = max(section.capacity, section.students.count())
+
+        return Response(status=status.HTTP_200_OK)
+
+    def _student_add(self, request, section):
+        """
+        Adds a student to a section (initiated by a student)
+        """
+        if not request.user.can_enroll_in_course(section.course):
+            logger.warn(
+                f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because they are already involved in this course")
+            raise PermissionDenied(
+                "You are already either mentoring for this course or enrolled in a section", status.HTTP_422_UNPROCESSABLE_ENTITY)
+        if section.current_student_count >= section.capacity:
+            logger.warn(
+                f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because it was full")
+            raise PermissionDenied("There is no space available in this section", status.HTTP_423_LOCKED)
+
+        student_queryset = request.user.student_set.filter(active=False, section__course=section.course)
+        if student_queryset.count() > 1:
+            logger.error(
+                f"<Enrollment:Critical> Multiple student objects exist in the database (Students {student_queryset.all()})!")
+            return PermissionDenied(
+                f'An internal error occurred; email mentors@berkeley.edu immediately. (Duplicate students exist in the database (Students {student_queryset.all()}))',
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+        elif student_queryset.count() == 1:
+            student = student_queryset.get()
+            old_section = student.section
+            student.section = section
+            student.active = True
+            # generate new attendance objects for this student in all section occurrences past this date
+            future_sectionOccurrences = section.sectionoccurrence_set.filter(Q(date__gte=timezone.now()))
+            for sectionOccurrence in future_sectionOccurrences:
+                Attendance(student=student, sectionOccurrence=sectionOccurrence, presence="").save()
+            logger.info(
+                f"<Enrollment> Created {len(future_sectionOccurrences)} new attendances for user {log_str(student.user)} in Section {log_str(section)}")
+            student.save()
+            logger.info(
+                f"<Enrollment:Success> User {log_str(student.user)} swapped into Section {log_str(section)} from Section {log_str(old_section)}")
+            return Response(status=status.HTTP_204_NO_CONTENT)
+        else:
+            student = Student.objects.create(user=request.user, section=section)
+            logger.info(
+                f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}")
+            return Response({'id': student.id}, status=status.HTTP_201_CREATED)
 
 
 class StudentViewSet(viewsets.GenericViewSet):
