@@ -28,13 +28,8 @@ class Command(BaseCommand):
             sos_models = []  # list of section occurrence models
             for so in sos:
                 try:
-                    existing = SectionOccurrence.objects.filter(**so)
-                    if existing.exists():
-                        sos_models.append(existing.get())
-                    else:
-                        cur = SectionOccurrence(**so)
-                        cur.save()
-                        sos_models.append(cur)
+                    cur, _ = SectionOccurrence.objects.get_or_create(**so)
+                    sos_models.append(cur)
                 except Error as e:
                     logger.error("<Logging> Failed to save {so};", e)
             # sos = so_manager.bulk_insert(sos, return_model=True)
@@ -60,9 +55,7 @@ class Command(BaseCommand):
             if attendances and valid:
                 for attendance in attendances:
                     try:
-                        existing = Attendance.objects.filter(**attendance)
-                        if not existing.exists():
-                            Attendance(**attendance).save()
+                        Attendance.objects.get_or_create(**attendance)
                     except Error as e:
                         logger.error("<Logging> Failed to save {attendance};", e)
                 # inserted = attendance_manager.bulk_insert(attendances)
