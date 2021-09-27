@@ -58,7 +58,7 @@ export default function MentorSection({
     fetchJSON(`/sections/${id}/students/`).then(data => {
       const students: Student[] = data
         .map(({ name, email, id }: Student) => ({ name, email, id }))
-        .sort((stu1: Student, stu2: Student) => Number(stu1.name >= stu2.name));
+        .sort((stu1: Student, stu2: Student) => stu1.name.toLowerCase().localeCompare(stu2.name.toLowerCase()));
       setState(state => {
         return {
           students,
