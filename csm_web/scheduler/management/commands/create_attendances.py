@@ -55,7 +55,8 @@ class Command(BaseCommand):
             if attendances and valid:
                 for attendance in attendances:
                     try:
-                        Attendance.objects.get_or_create(**attendance)
+                        Attendance.objects.get_or_create(
+                            sectionOccurrence=attendance['sectionOccurrence'], student=attendance['student'])
                     except Error as e:
                         logger.error("<Logging> Failed to save {attendance};", e)
                 # inserted = attendance_manager.bulk_insert(attendances)
