@@ -849,7 +849,7 @@ function CoordinatorAddStudentModal({ closeModal, userEmails, sectionId }) {
           {emailsToAdd.map((email, index) => (
             <div className="coordinator-email-input-item" key={index}>
               <span className="inline-plus-sign ban-cancel" onClick={() => removeEmailByIndex(index)}>
-                +
+                ×
               </span>
               <input
                 className={"coordinator-email-input" + (validationEnabled ? "" : " lock-validation")}
@@ -904,100 +904,155 @@ function CoordinatorAddStudentModal({ closeModal, userEmails, sectionId }) {
     BANNED: "BANNED"
   };
 
+  let ok_arr = [];
+  let conflict_arr = [];
+  let banned_arr = [];
+
+  if (response && response.progress) {
+    for (let email_obj of response.progress) {
+      switch (email_obj.status) {
+        case ADD_STATUS.OK:
+          ok_arr.push(email_obj);
+          break;
+        case ADD_STATUS.CONFLICT:
+          conflict_arr.push(email_obj);
+          break;
+        case ADD_STATUS.BANNED:
+          banned_arr.push(email_obj);
+          break;
+      }
+    }
+  }
+
   const warning_component = (
     <React.Fragment>
       <h4>Add new students</h4>
       <div className="coordinator-email-content">
         <div className="coordinator-email-response-list">
-          {response &&
-            response.progress &&
-            response.progress.map(email_obj => {
-              let status = "";
-              let formInfo = "";
-              let inputs = "";
-              switch (email_obj.status) {
-                case ADD_STATUS.OK:
-                  status = (
-                    <div className="coordinator-email-response-status-ok">
-                      <CheckCircle className="coordinator-email-response-status-ok-icon" />
-                      OK
-                    </div>
-                  );
-                  break;
-                case ADD_STATUS.CONFLICT:
-                  status = (
-                    <div className="coordinator-email-response-status-conflict">
-                      <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
-                      Section conflict
-                    </div>
-                  );
-                  if (email_obj.detail.section.id == sectionId) {
-                    // enrolled in this section
-                    formInfo = "User is already enrolled in this section!";
-                  } else {
-                    formInfo = `Conflicting section: ${email_obj.detail.section.mentor.name} (id ${email_obj.detail.section.id})`;
-                    inputs = (
-                      <React.Fragment>
-                        <label>
-                          <input
-                            type="checkbox"
-                            value="DROP"
-                            onChange={e => updateResponseAction(e, email_obj.email, "conflict_action")}
-                          />
-                          Drop student from other section
-                        </label>
-                      </React.Fragment>
-                    );
-                  }
-                  break;
-                case ADD_STATUS.BANNED:
-                  status = (
-                    <div className="coordinator-email-response-status-banned">
-                      <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
-                      Student banned
-                    </div>
-                  );
-                  inputs = (
-                    <React.Fragment>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`unban-${email_obj.email}`}
-                          value="UNBAN_ENROLL"
-                          onChange={e => updateResponseAction(e, email_obj.email, "ban_action")}
-                        />
-                        Unban student and enroll in section
-                      </label>
-                      <label>
-                        <input
-                          type="radio"
-                          name={`unban-${email_obj.email}`}
-                          value="UNBAN_SKIP"
-                          onChange={e => updateResponseAction(e, email_obj.email, "ban_action")}
-                        />
-                        Unban student but <i>do not</i> enroll in section
-                      </label>
-                    </React.Fragment>
-                  );
-                  break;
-              }
-
-              return (
-                <div key={email_obj.email} className="coordinator-email-response-item">
-                  <div className="coordinator-email-response-email-status">
-                    <span className="inline-plus-sign ban-cancel" onClick={() => removeResponseEmail(email_obj.email)}>
-                      +
-                    </span>
-                    <div className="coordinator-email-response-email">{email_obj.email}</div>
-                    <div className="coordinator-email-response-status">{status}</div>
-                  </div>
-                  {formInfo && <div className="coordinator-email-response-form-info">{formInfo}</div>}
-                  {inputs && <div className="coordinator-email-response-form">{inputs}</div>}
+          {conflict_arr.length > 0 && (
+            <div className="coordinator-email-response-container">
+              <div className="coordinator-email-response-head">
+                <div className="coordinator-email-response-head-left coordinator-email-response-status-conflict">
+                  <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
+                  Section conflict
                 </div>
-              );
-            })}
+                <div className="coordinator-email-response-head-right">
+                  <div className="coordinator-email-reaponse-head-right-item">Drop?</div>
+                </div>
+              </div>
+              <div className="coordinator-email-response-item-container">
+                {conflict_arr.map(email_obj => (
+                  <div key={email_obj.email} className="coordinator-email-response-item">
+                    <div className="coordinator-email-response-item-left">
+                      <div className="coordinator-email-response-item-left-email">
+                        <span
+                          className="inline-plus-sign ban-cancel"
+                          onClick={() => removeResponseEmail(email_obj.email)}
+                        >
+                          ×
+                        </span>
+                        {email_obj.email}
+                      </div>
+                      <div className="coordinator-email-response-item-left-detail">
+                        {email_obj.detail.section.id == sectionId
+                          ? "Already enrolled!"
+                          : `Conflict: ${email_obj.detail.section.mentor.name} (id ${email_obj.detail.section.id})`}
+                      </div>
+                    </div>
+                    <div className="coordinator-email-response-item-right">
+                      <input
+                        type="checkbox"
+                        value="DROP"
+                        disabled={email_obj.detail.section.id == sectionId}
+                        onChange={e => updateResponseAction(e, email_obj.email, "conflict_action")}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {banned_arr.length > 0 && (
+            <div className="coordinator-email-response-container">
+              <div className="coordinator-email-response-head">
+                <div className="coordinator-email-response-head-left coordinator-email-response-status-banned">
+                  <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
+                  Student banned
+                </div>
+                <div className="coordinator-email-response-head-right">
+                  <div className="coordinator-email-reaponse-head-right-item">
+                    Unban,
+                    <br /> Enroll
+                  </div>
+                  <div className="coordinator-email-reaponse-head-right-item">
+                    Unban,
+                    <br /> No Enroll
+                  </div>
+                </div>
+              </div>
+              <div className="coordinator-email-response-item-container">
+                {banned_arr.map(email_obj => (
+                  <div key={email_obj.email} className="coordinator-email-response-item">
+                    <div className="coordinator-email-response-item-left">
+                      <div className="coordinator-email-response-item-left-email">
+                        <span
+                          className="inline-plus-sign ban-cancel"
+                          onClick={() => removeResponseEmail(email_obj.email)}
+                        >
+                          ×
+                        </span>
+                        {email_obj.email}
+                      </div>
+                    </div>
+                    <div className="coordinator-email-response-item-right">
+                      <input
+                        type="radio"
+                        name={`unban-${email_obj.email}`}
+                        value="UNBAN_ENROLL"
+                        onChange={e => updateResponseAction(e, email_obj.email, "ban_action")}
+                      />
+                      <input
+                        type="radio"
+                        name={`unban-${email_obj.email}`}
+                        value="UNBAN_SKIP"
+                        onChange={e => updateResponseAction(e, email_obj.email, "ban_action")}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {ok_arr.length > 0 && (
+            <div className="coordinator-email-response-container">
+              <div className="coordinator-email-response-head">
+                <div className="coordinator-email-response-head-left coordinator-email-response-status-ok">
+                  <CheckCircle className="coordinator-email-response-status-ok-icon" />
+                  OK
+                </div>
+                <div className="coordinator-email-response-head-right"></div>
+              </div>
+              <div className="coordinator-email-response-item-container">
+                {ok_arr.map(email_obj => (
+                  <div key={email_obj.email} className="coordinator-email-response-item">
+                    <div className="coordinator-email-response-item-left">
+                      <span
+                        className="inline-plus-sign ban-cancel"
+                        onClick={() => removeResponseEmail(email_obj.email)}
+                      >
+                        ×
+                      </span>
+                      {email_obj.email}
+                    </div>
+                    <div className="coordinator-email-response-item-right"></div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
           {response && response.errors && response.errors.capacity && (
-            <div className="coordinator-email-response-item">
+            <div className="coordinator-email-response-capacity-container">
+              <hr className="coordinator-email-response-hr" />
               <div className="coordinator-email-response-email-status">
                 <div className="coordinator-email-response-capacity">
                   <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
