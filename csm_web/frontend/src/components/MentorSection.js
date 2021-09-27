@@ -1018,15 +1018,6 @@ function CoordinatorAddStudentModal({ closeModal, userEmails, sectionId }) {
                   <input
                     type="radio"
                     name="capacity"
-                    value="EXPAND"
-                    onChange={e => updateGeneralResponseAction(e, "capacity")}
-                  />
-                  Enroll but do not expand
-                </label>
-                <label>
-                  <input
-                    type="radio"
-                    name="capacity"
                     value="SKIP"
                     onChange={e => updateGeneralResponseAction(e, "capacity")}
                   />

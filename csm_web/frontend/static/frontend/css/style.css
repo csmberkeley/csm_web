@@ -820,7 +820,7 @@ main {
 
 .coordinator-add-student-modal {
 	overflow: hidden;
-	height: 65vh;
+	height: 75vh;
 	width: 60vw;
 }
 
@@ -829,7 +829,7 @@ main {
 }
 
 .coordinator-add-student-modal-contents {
-	height: calc(65vh - 89px);
+	height: calc(75vh - 89px);
 	display: flex;
 	flex-direction: column;
 	justify-content: space-between;
@@ -838,10 +838,11 @@ main {
 }
 
 .coordinator-email-content {
+	width: 95%;
+	height: 75%;
 	max-height: 75%;
 	overflow: auto;
-	width: 95%;
-	margin: 10px 0;
+	margin: auto;
 }
 
 .coordinator-email-input-list {

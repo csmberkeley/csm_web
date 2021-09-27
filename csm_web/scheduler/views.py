@@ -247,11 +247,8 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                 request.data['actions']: dict of actions to take for misc errors
                     - request.data['actions']['capacity']: value is one of
                         - 'EXPAND': expand section
-                        - 'ENROLL': enroll students in section and bypass the capacity limit
-                                    TODO: see whether we even need this
                         - 'SKIP': ignore the error (this means that the user should have deleted some students to add;
                                   if not, the server will respond again with the error)
-                                  TODO: see whether we even need this; we could just omit the specification
 
             Error message format:
             - student add:
@@ -302,7 +299,6 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
         class CapacityAction:
             """enum for actions about capacity limits"""
             EXPAND = 'EXPAND'
-            ENROLL = 'ENROLL'
             SKIP = 'SKIP'
 
         class BanAction:
@@ -335,7 +331,7 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
 
         if len(emails) > section.capacity - section.current_student_count:
             # check whether the user has given any response to the capacity conflict
-            if data.get('actions') and data['actions'].get('capacity') and data['actions']['capacity'] in (CapacityAction.EXPAND, CapacityAction.ENROLL):
+            if data.get('actions') and data['actions'].get('capacity') and data['actions']['capacity'] == CapacityAction.EXPAND:
                 # we're all good; store the user's choice
                 db_actions.append(('capacity', data['actions']['capacity']))
             else:
