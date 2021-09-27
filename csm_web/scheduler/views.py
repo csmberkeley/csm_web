@@ -311,8 +311,13 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
         if not data.get('emails'):
             return Response({'error': 'Must specify emails of students to enroll'}, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-        # filter out objects with no associated email
-        emails = [obj for obj in data.get('emails') if obj and obj.get('email')]
+        # filter out objects with no associated email, and remove duplicates
+        _email_set = set()
+        emails = []
+        for obj in data.get('emails'):
+            if obj and obj.get('email') and obj.get('email') not in _email_set:
+                emails.append(obj)
+                _email_set.add(obj.get('email'))
 
         response = {'errors': {}}
 
