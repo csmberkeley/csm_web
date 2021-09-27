@@ -37,7 +37,7 @@ class Command(BaseCommand):
 
             # with postgres_manager(Attendance) as attend_db:
             #     attendance_manager = attend_db.on_conflict(["sectionOccurrence", "student"], ConflictAction.NOTHING)
-            attendances = [{"student": student, "sectionOccurrence": so, "presence": ''}
+            attendances = [{"student": student, "sectionOccurrence": so}
                            for so in sos_models for student in so.section.students.filter(active=True)]
 
             # validate attendances
@@ -55,8 +55,7 @@ class Command(BaseCommand):
             if attendances and valid:
                 for attendance in attendances:
                     try:
-                        Attendance.objects.get_or_create(
-                            sectionOccurrence=attendance['sectionOccurrence'], student=attendance['student'])
+                        Attendance.objects.get_or_create(**attendance)
                     except Error as e:
                         logger.error("<Logging> Failed to save {attendance};", e)
                 # inserted = attendance_manager.bulk_insert(attendances)
