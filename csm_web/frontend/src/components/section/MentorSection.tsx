@@ -78,7 +78,7 @@ export default function MentorSection({
               date,
               student: { name: studentName, id: studentId }
             }))
-            .sort((att1, att2) => Number(att1.student.name >= att2.student.name))
+            .sort((att1, att2) => att1.student.name.toLowerCase().localeCompare(att2.student.name.toLowerCase()))
         ),
         attendance => attendance.date
       );
