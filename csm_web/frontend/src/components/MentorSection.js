@@ -572,6 +572,10 @@ function MentorSectionInfo({
     setNewStudentError({});
   }, [id]);
   const closeModal = () => setShowModal(MentorSectionInfo.MODAL_STATES.NONE);
+  const closeAddModal = () => {
+    setIsAddingStudent(false);
+    reloadSection();
+  };
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">{`${
@@ -622,11 +626,7 @@ function MentorSectionInfo({
                 </div>
               )}
               {isCoordinator && isAddingStudent && (
-                <CoordinatorAddStudentModal
-                  closeModal={() => setIsAddingStudent(false)}
-                  userEmails={userEmails}
-                  sectionId={id}
-                />
+                <CoordinatorAddStudentModal closeModal={closeAddModal} userEmails={userEmails} sectionId={id} />
               )}
             </React.Fragment>
           )}
@@ -781,6 +781,12 @@ function CoordinatorAddStudentModal({ closeModal, userEmails, sectionId }) {
       }
       return { email: email, ...action };
     });
+
+    if (request_emails.length == 0) {
+      // no student emails to add, so just exit
+      closeModal();
+      return;
+    }
 
     let request = { emails: request_emails, actions: {} };
     if (responseActions.has("capacity")) {
@@ -941,34 +947,51 @@ function CoordinatorAddStudentModal({ closeModal, userEmails, sectionId }) {
                 </div>
               </div>
               <div className="coordinator-email-response-item-container">
-                {conflict_arr.map(email_obj => (
-                  <div key={email_obj.email} className="coordinator-email-response-item">
-                    <div className="coordinator-email-response-item-left">
-                      <div className="coordinator-email-response-item-left-email">
-                        <span
-                          className="inline-plus-sign ban-cancel"
-                          onClick={() => removeResponseEmail(email_obj.email)}
-                        >
-                          ×
-                        </span>
-                        {email_obj.email}
+                {conflict_arr.map(email_obj => {
+                  let conflictDetail = "";
+                  let drop_disabled = false;
+                  if (!email_obj.detail.section) {
+                    // look at reason
+                    if (!email_obj.detail.reason || email_obj.detail.reason === "other") {
+                      // unknown reason
+                      conflictDetail = "Unable to enroll user in section!";
+                    } else if (email_obj.detail.reason === "coordinator") {
+                      conflictDetail = "User is already a coordinator for the course!";
+                    } else if (email_obj.detail.reason === "mentor") {
+                      conflictDetail = "User is already a mentor for the course!";
+                    }
+                    drop_disabled = true;
+                  } else if (email_obj.detail.section.id == sectionId) {
+                    conflictDetail = "Already enrolled!";
+                    drop_disabled = true;
+                  } else {
+                    conflictDetail = `Conflict: ${email_obj.detail.section.mentor.name} (id ${email_obj.detail.section.id})`;
+                  }
+                  return (
+                    <div key={email_obj.email} className="coordinator-email-response-item">
+                      <div className="coordinator-email-response-item-left">
+                        <div className="coordinator-email-response-item-left-email">
+                          <span
+                            className="inline-plus-sign ban-cancel"
+                            onClick={() => removeResponseEmail(email_obj.email)}
+                          >
+                            ×
+                          </span>
+                          {email_obj.email}
+                        </div>
+                        <div className="coordinator-email-response-item-left-detail">{conflictDetail}</div>
                       </div>
-                      <div className="coordinator-email-response-item-left-detail">
-                        {email_obj.detail.section.id == sectionId
-                          ? "Already enrolled!"
-                          : `Conflict: ${email_obj.detail.section.mentor.name} (id ${email_obj.detail.section.id})`}
+                      <div className="coordinator-email-response-item-right">
+                        <input
+                          type="checkbox"
+                          value="DROP"
+                          disabled={drop_disabled}
+                          onChange={e => updateResponseAction(e, email_obj.email, "conflict_action")}
+                        />
                       </div>
                     </div>
-                    <div className="coordinator-email-response-item-right">
-                      <input
-                        type="checkbox"
-                        value="DROP"
-                        disabled={email_obj.detail.section.id == sectionId}
-                        onChange={e => updateResponseAction(e, email_obj.email, "conflict_action")}
-                      />
-                    </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             </div>
           )}
