@@ -268,7 +268,10 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
             Error status format:
             - 'OK': student is ready to be enrolled (but no action has been taken)
             - 'CONFLICT': student is already enrolled in another section
-                - detail = { 'section': serialized section }
+                - if there is a cnoflicting section:
+                    detail = { 'section': serialized section }
+                - if user can't enroll:
+                    detail = { 'reason': reason }
             - 'BANNED': student is currently banned from the course
 
             HTTP response status codes:
@@ -345,6 +348,8 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                 response['errors']['capacity'] = 'There is no space available in this section'
 
         statuses = []  # status for each email
+        # set of coord users (contains user ids)
+        course_coords = section.course.coordinator_set.values_list('user', flat=True)
 
         # Phase 1: go through emails and check for validity/conflicts
         for email_obj in emails:
@@ -365,9 +370,24 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
             elif student_queryset.count() == 0:
-                # student does not exist yet; we can always create it
-                db_actions.append(('create', email))
-                curstatus['status'] = Status.OK
+                # check if the user can actually enroll in the section
+                student_user = User.objects.get(email=email)
+                if student_user.id not in course_coords and student_user.can_enroll_in_course(section.course):
+                    # student does not exist yet; we can always create it
+                    db_actions.append(('create', email))
+                    curstatus['status'] = Status.OK
+                else:
+                    # user can't enroll; give details on the reason why
+                    any_invalid = True
+                    curstatus['status'] = Status.CONFLICT
+                    reason = 'other'
+                    if student_user.id in course_coords:
+                        reason = 'coordinator'
+                    elif student_user.mentor_set.filter(section__course=section.course).exists():
+                        reason = 'mentor'
+                    curstatus['detail'] = {
+                        'reason': reason
+                    }
             else:  # student_queryset.count() == 1
                 student = student_queryset.get()
 
