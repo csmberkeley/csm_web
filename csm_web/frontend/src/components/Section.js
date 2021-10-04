@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
-import { SPACETIME_SHAPE } from "../utils/js_types";
+import { Spacetime } from "../utils/types";
 import StudentSection from "./StudentSection";
 import MentorSection from "./section/MentorSection";
 
@@ -106,8 +106,8 @@ export function SectionSpacetime({ manySpacetimes, index, spacetime: { location,
 }
 
 SectionSpacetime.propTypes = {
-  spacetime: SPACETIME_SHAPE.isRequired,
-  override: PropTypes.shape({ spacetime: SPACETIME_SHAPE.isRequired, date: PropTypes.string.isRequired }),
+  spacetime: Spacetime,
+  override: PropTypes.shape({ spacetime: Spacetime, date: PropTypes.string.isRequired }),
   children: PropTypes.node,
   manySpacetimes: PropTypes.bool.isRequired,
   index: PropTypes.number.isRequired // 0-indexed in code, displayed 1-indexed to user

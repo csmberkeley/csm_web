@@ -1,7 +1,10 @@
 import React from "react";
-import PropTypes from "prop-types";
 
-export default function LoadingSpinner({ id }) {
+interface LoadingSpinnerProps {
+  id: string;
+}
+
+export default function LoadingSpinner({ id }: LoadingSpinnerProps): JSX.Element {
   return (
     <div className="sk-fading-circle" id={id}>
       {[...Array(12)].map((_, i) => (
@@ -10,5 +13,3 @@ export default function LoadingSpinner({ id }) {
     </div>
   );
 }
-
-LoadingSpinner.propTypes = { id: PropTypes.string };

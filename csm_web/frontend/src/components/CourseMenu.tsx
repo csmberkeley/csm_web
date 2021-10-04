@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 import { Link, Route, Switch } from "react-router-dom";
 import { fetchJSON } from "../utils/api";
 import Course from "./Course";
@@ -24,7 +23,7 @@ interface CourseMenuProps {
 export default class CourseMenu extends React.Component<CourseMenuProps> {
   state: CourseMenuState = { courses: null, loaded: false };
 
-  componentDidMount() {
+  componentDidMount(): void {
     fetchJSON("/courses").then(courses => {
       // We use a Map here instead of an object because we want the entries() iterator to reflect the order of insertion,
       // which in turn reflects the sorting order returned by the backend
@@ -36,7 +35,7 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
     });
   }
 
-  render() {
+  render(): JSX.Element {
     const { path } = this.props.match;
     const { loaded, courses } = this.state;
     let show_enrollment_times = false;
@@ -106,7 +105,7 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
       <Switch>
         <Route
           path="/courses/:id"
-          render={routeProps => {
+          render={(routeProps: any) => {
             const course = loaded && courses.get(Number(routeProps.match.params.id));
             const isOpen = course && course.enrollmentOpen;
             return <Course name={loaded && course.name} isOpen={isOpen} {...routeProps} />;

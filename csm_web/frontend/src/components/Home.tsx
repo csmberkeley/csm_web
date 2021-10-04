@@ -1,18 +1,27 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import PropTypes from "prop-types";
 import { groupBy } from "lodash";
 import { fetchJSON } from "../utils/api";
 import { ROLES } from "./Section";
+import { Profile } from "../utils/types";
+
+interface HomeState {
+  profiles: Array<Profile>;
+  profilesLoaded: boolean;
+}
+
+interface CourseCardProps {
+  profiles: Array<Profile>;
+}
 
 export default class Home extends React.Component {
-  state = { profiles: [], profilesLoaded: false };
+  state: HomeState = { profiles: [], profilesLoaded: false };
 
-  componentDidMount() {
+  componentDidMount(): void {
     fetchJSON("/profiles").then(profiles => this.setState({ profiles, profilesLoaded: true }));
   }
 
-  render() {
+  render(): JSX.Element {
     const { profiles, profilesLoaded } = this.state;
     return (
       <div id="home-courses">
@@ -24,7 +33,7 @@ export default class Home extends React.Component {
         </div>
         {profilesLoaded && (
           <div className="course-cards-container">
-            {Object.entries(groupBy(profiles, profile => [profile.course, profile.role])).map(
+            {Object.entries(groupBy(profiles, (profile: Profile) => [profile.course, profile.role])).map(
               ([course, courseProfiles]) => (
                 <CourseCard key={course} profiles={courseProfiles} />
               )
@@ -36,10 +45,10 @@ export default class Home extends React.Component {
   }
 }
 
-function CourseCard({ profiles }) {
+function CourseCard({ profiles }: CourseCardProps): JSX.Element {
   const { course, courseTitle, role, sectionId, courseId } = profiles[0];
   const relation = role.toLowerCase();
-  function Card() {
+  function Card(): JSX.Element {
     return (
       <div className="course-card" style={{ borderTopColor: `var(--csm-theme-${course.toLowerCase()})` }}>
         <div className="course-card-contents">
@@ -77,15 +86,3 @@ function CourseCard({ profiles }) {
     <Card />
   );
 }
-
-const profileShape = PropTypes.shape({
-  id: PropTypes.number.isRequired,
-  sectionId: PropTypes.number,
-  sectionSpacetime: PropTypes.shape({ time: PropTypes.string.isRequired, location: PropTypes.string }),
-  course: PropTypes.string.isRequired,
-  courseTitle: PropTypes.string.isRequired,
-  courseId: PropTypes.number.isRequired,
-  role: PropTypes.oneOf(Object.values(ROLES)).isRequired
-});
-
-CourseCard.propTypes = { profiles: PropTypes.arrayOf(profileShape).isRequired };
