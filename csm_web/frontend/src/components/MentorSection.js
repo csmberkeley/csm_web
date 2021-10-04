@@ -604,15 +604,16 @@ function MentorSectionInfo({
                       </tr>
                     )
                   )}
-                  <React.Fragment>
-                    <tr>
-                      <td>
-                        <button className="coordinator-email-modal-button" onClick={() => setIsAddingStudent(true)}>
-                          Add students
-                        </button>
-                      </td>
-                    </tr>
-                  </React.Fragment>
+                  {isCoordinator && (
+                    <React.Fragment>
+                      <tr>
+                        <td>
+                          <button className="coordinator-email-modal-button" onClick={() => setIsAddingStudent(true)}>
+                            Add students
+                          </button>
+                        </td>
+                      </tr>
+                    </React.Fragment>
                   )}
                 </tbody>
               </table>
@@ -1160,11 +1161,15 @@ CoordinatorAddStudentModal.propTypes = {
   sectionId: PropTypes.number.isRequired
 };
 
-function StudentDropper({ id, reloadSection }) {
-  const [showBanPrompt, setShowBanPrompt] = useState(false);
-  function handleClickDrop(banned) {
-    fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH, { banned }).then(() => reloadSection());
+function StudentDropper({ id, name, reloadSection }) {
+  const [showDropPrompt, setShowDropPrompt] = useState(false);
+  const [drop, setDrop] = useState(false);
+  const [ban, setBan] = useState(false);
+
+  function handleClickDrop() {
+    fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH, { ban }).then(() => reloadSection());
   }
+
   return (
     <span className={`student-dropper ${showDropPrompt ? "ban-prompt-visible" : ""}`}>
       <span title="Drop student from section" className="inline-plus-sign" onClick={() => setShowDropPrompt(true)}>
