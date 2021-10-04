@@ -596,22 +596,23 @@ function MentorSectionInfo({
                     ({ name, email, id }) => (
                       <tr key={id}>
                         <td>
-                          {isCoordinator && id !== -1 && <StudentDropper id={id} reloadSection={reloadSection} />}
+                          {isCoordinator && id !== -1 && (
+                            <StudentDropper name={name} id={id} reloadSection={reloadSection} />
+                          )}
                           <span className="student-info">{name || email}</span>
                         </td>
                       </tr>
                     )
                   )}
-                  {isCoordinator && (
-                    <React.Fragment>
-                      <tr>
-                        <td>
-                          <button className="coordinator-email-modal-button" onClick={() => setIsAddingStudent(true)}>
-                            Add students
-                          </button>
-                        </td>
-                      </tr>
-                    </React.Fragment>
+                  <React.Fragment>
+                    <tr>
+                      <td>
+                        <button className="coordinator-email-modal-button" onClick={() => setIsAddingStudent(true)}>
+                          Add students
+                        </button>
+                      </td>
+                    </tr>
+                  </React.Fragment>
                   )}
                 </tbody>
               </table>
@@ -1165,31 +1166,51 @@ function StudentDropper({ id, reloadSection }) {
     fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH, { banned }).then(() => reloadSection());
   }
   return (
-    <span className={`student-dropper ${showBanPrompt ? "ban-prompt-visible" : ""}`}>
-      <span title="Drop student from section" className="inline-plus-sign" onClick={() => setShowBanPrompt(true)}>
-        +
+    <span className={`student-dropper ${showDropPrompt ? "ban-prompt-visible" : ""}`}>
+      <span title="Drop student from section" className="inline-plus-sign" onClick={() => setShowDropPrompt(true)}>
+        ×
       </span>
-      {showBanPrompt && (
-        <div className="should-ban-prompt">
-          <span className="inline-plus-sign ban-cancel" onClick={() => setShowBanPrompt(false)}>
-            +
-          </span>
-          Prevent student from reenrolling?
-          <div className="btn-group">
-            <button className="csm-btn yes" onClick={() => handleClickDrop(true)}>
-              Yes
-            </button>
-            <button className="csm-btn no" onClick={() => handleClickDrop(false)}>
-              No
-            </button>
+      {showDropPrompt && (
+        <Modal closeModal={() => setShowDropPrompt(false)}>
+          <div className="studentDropper">
+            <div className="studentDropperHeadItem">DROP Student</div>
+            <div>
+              <input type="checkbox" id="drop" name="drop" onChange={e => setDrop(e.target.checked)} />
+              <label className="studentDropperCheckboxLabel" htmlFor="drop">
+                I would like to DROP {name} from this section.
+              </label>
+              <br></br>
+            </div>
+            <div className="studentDropperHeadItem">BAN Student</div>
+            <div>
+              <input type="checkbox" id="ban" name="ban" onChange={e => setBan(e.target.checked)} disabled={!drop} />
+              <label className="studentDropperCheckboxLabel" htmlFor="ban">
+                I would like to BAN {name} from this course.
+              </label>
+              <br></br>
+            </div>
+            <div className="studentDropperSubmitWrapper">
+              <button
+                className="studentDropperSubmit"
+                id="dropper submit button"
+                onClick={handleClickDrop}
+                disabled={!drop}
+              >
+                Submit
+              </button>
+            </div>
           </div>
-        </div>
+        </Modal>
       )}
     </span>
   );
 }
 
-StudentDropper.propTypes = { id: PropTypes.number.isRequired, reloadSection: PropTypes.func.isRequired };
+StudentDropper.propTypes = {
+  id: PropTypes.number.isRequired,
+  name: PropTypes.string.isRequired,
+  reloadSection: PropTypes.func.isRequired
+};
 
 function MentorSectionRoster({ students, loaded }) {
   const [emailsCopied, setEmailsCopied] = useState(false);
