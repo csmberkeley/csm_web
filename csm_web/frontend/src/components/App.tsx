@@ -1,30 +1,43 @@
 import React, { useEffect } from "react";
-import { HashRouter as Router, Route, Switch, Link } from "react-router-dom";
+import { HashRouter as Router, Route, Switch, Link, match as RouterMatch } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 import ReactDOM from "react-dom";
-import PropTypes from "prop-types";
 import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Section from "./Section";
-import { Resources } from "./resource_aggregation/Resources.tsx";
+import { Resources } from "./resource_aggregation/Resources";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
 
 import { config } from "@fortawesome/fontawesome-svg-core";
 config.autoAddCss = false; // remove inline styling
 
-export default class App extends React.Component {
-  state = { error: null };
+interface ErrorType {
+  message: string;
+  stack: string;
+}
 
-  static getDerivedStateFromError(error) {
+interface AppState {
+  error: ErrorType;
+}
+
+interface ErrorPageProps {
+  error: ErrorType;
+  clearError: () => void;
+}
+
+export default class App extends React.Component {
+  state: AppState = { error: null };
+
+  static getDerivedStateFromError(error: ErrorType): { error: ErrorType } {
     return { error };
   }
 
-  clearError = () => {
+  clearError = (): void => {
     this.setState({ error: null });
   };
 
-  render() {
+  render(): JSX.Element {
     if (this.state.error) {
       return <ErrorPage error={this.state.error} clearError={this.clearError} />;
     }
@@ -46,12 +59,12 @@ export default class App extends React.Component {
   }
 }
 
-function Header() {
+function Header(): JSX.Element {
   /**
    * Helper function to determine whether or not "Scheduler" should be active.
    * That is, it should always be active unless we're in a location prefixed by /resources
    */
-  function schedulerActive(match, location) {
+  function schedulerActive(match: RouterMatch, location: { pathname: string }): boolean {
     return !location.pathname.startsWith("/resources");
   }
 
@@ -73,7 +86,7 @@ function Header() {
   );
 }
 
-function ErrorPage({ error: { message, stack }, clearError }) {
+function ErrorPage({ error: { message, stack }, clearError }: ErrorPageProps) {
   useEffect(() => {
     const prevHistoryFunc = window.onpopstate;
     window.onpopstate = () => {
@@ -107,10 +120,5 @@ function ErrorPage({ error: { message, stack }, clearError }) {
   );
 }
 
-ErrorPage.propTypes = {
-  error: PropTypes.shape({ message: PropTypes.string.isRequired, stack: PropTypes.string.isRequired }).isRequired,
-  clearError: PropTypes.func.isRequired
-};
-
-const wrapper = document.getElementById("app");
+const wrapper: HTMLElement = document.getElementById("app");
 wrapper ? ReactDOM.render(<App />, wrapper) : null;

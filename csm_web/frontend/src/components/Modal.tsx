@@ -1,9 +1,18 @@
 import React, { useContext } from "react";
-import PropTypes from "prop-types";
 
 const ModalContext = React.createContext(Function.prototype);
 
-export default function Modal({ children, closeModal, className = "" }) {
+interface ModalProps {
+  children: JSX.Element | JSX.Element[];
+  closeModal: React.MouseEventHandler<Element>;
+  className?: string;
+}
+
+interface ModalCloserProps {
+  children: JSX.Element | JSX.Element[];
+}
+
+export default function Modal({ children, closeModal, className = "" }: ModalProps): JSX.Element {
   return (
     <ModalContext.Provider value={closeModal}>
       <div className="modal-overlay" onClick={closeModal} />
@@ -21,21 +30,11 @@ export default function Modal({ children, closeModal, className = "" }) {
   );
 }
 
-Modal.propTypes = {
-  children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired,
-  closeModal: PropTypes.func.isRequired,
-  className: PropTypes.string
-};
-
-export function ModalCloser({ children }) {
-  const closeModal = useContext(ModalContext);
+export function ModalCloser({ children }: ModalCloserProps): JSX.Element {
+  const closeModal = useContext(ModalContext) as React.MouseEventHandler<Element>;
   return (
     <div onClick={closeModal} className="modal-close">
       {children}
     </div>
   );
 }
-
-ModalCloser.propTypes = {
-  children: PropTypes.oneOfType([PropTypes.element, PropTypes.arrayOf(PropTypes.element)]).isRequired
-};

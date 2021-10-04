@@ -10,7 +10,7 @@ import ClockIcon from "../../static/frontend/img/clock.svg";
 import CheckCircle from "../../static/frontend/img/check_circle.svg";
 import XCircle from "../../static/frontend/img/x_circle.svg";
 import Modal, { ModalCloser } from "./Modal";
-import { SPACETIME_SHAPE } from "../utils/js_types";
+import { Course as CourseType, Mentor, Section, Spacetime } from "../utils/types";
 import { DAYS_OF_WEEK } from "./section/utils";
 import TimeInput from "./TimeInput";
 
@@ -29,7 +29,29 @@ const COURSE_MODAL_TYPE = Object.freeze({
   createSection: "mksec"
 });
 
-export default class Course extends React.Component {
+interface CourseProps {
+  match: {
+    params: {
+      id: string;
+    };
+  };
+  name: boolean | string;
+  isOpen: boolean;
+}
+
+interface CourseState {
+  sectionsLoaded: boolean;
+  sections: {
+    [day: string]: Section[];
+  };
+  currDayGroup: string;
+  showUnavailable: boolean;
+  userIsCoordinator: boolean;
+  showModal: boolean;
+  whichModal: string;
+}
+
+export default class Course extends React.Component<CourseProps, CourseState> {
   static propTypes = {
     match: PropTypes.shape({ params: PropTypes.shape({ id: PropTypes.string.isRequired }) }).isRequired,
     /*
@@ -41,7 +63,9 @@ export default class Course extends React.Component {
     isOpen: PropTypes.bool
   };
 
-  constructor(props) {
+  props: CourseProps;
+
+  constructor(props: CourseProps) {
     super(props);
     this.state = {
       sections: null,
@@ -55,18 +79,18 @@ export default class Course extends React.Component {
     this.reloadSections = this.reloadSections.bind(this);
   }
 
-  reloadSections() {
+  reloadSections(): void {
     const { id } = this.props.match.params;
     fetchJSON(`/courses/${id}/sections`).then(({ sections, userIsCoordinator }) =>
       this.setState({ sections, userIsCoordinator, sectionsLoaded: true, currDayGroup: Object.keys(sections)[0] })
     );
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     this.reloadSections();
   }
 
-  render() {
+  render(): JSX.Element {
     const {
       match: {
         params: { id }
@@ -171,24 +195,30 @@ export default class Course extends React.Component {
   }
 }
 
-class SectionCard extends React.Component {
-  constructor(props) {
+interface SectionCardProps {
+  id: number;
+  spacetimes: Spacetime[];
+  mentor: Mentor;
+  numStudentsEnrolled: number;
+  capacity: number;
+  description: string;
+  userIsCoordinator: boolean;
+}
+
+interface SectionCardState {
+  showModal: boolean;
+  enrollmentSuccessful?: boolean;
+  errorMessage: string;
+}
+
+class SectionCard extends React.Component<SectionCardProps, SectionCardState> {
+  constructor(props: SectionCardProps) {
     super(props);
     this.state = { showModal: false, enrollmentSuccessful: undefined, errorMessage: "" };
     this.enroll = this.enroll.bind(this);
     this.closeModal = this.closeModal.bind(this);
     this.modalContents = this.modalContents.bind(this);
   }
-
-  static propTypes = {
-    id: PropTypes.number.isRequired,
-    spacetimes: PropTypes.arrayOf(SPACETIME_SHAPE.isRequired).isRequired,
-    mentor: PropTypes.shape({ name: PropTypes.string.isRequired }),
-    numStudentsEnrolled: PropTypes.number.isRequired,
-    capacity: PropTypes.number.isRequired,
-    description: PropTypes.string,
-    userIsCoordinator: PropTypes.bool.isRequired
-  };
 
   enroll() {
     fetchWithMethod(`sections/${this.props.id}/students/`, HTTP_METHODS.PUT)
@@ -218,7 +248,7 @@ class SectionCard extends React.Component {
   }
 
   closeModal() {
-    this.setState({ showModal: false, modalContents: null });
+    this.setState({ showModal: false });
   }
 
   modalContents() {
@@ -324,14 +354,29 @@ class SectionCard extends React.Component {
   }
 }
 
-class CreateSectionModal extends React.Component {
+interface CreateSectionModalProps {
+  courseId: number;
+  closeModal: () => void;
+  reloadSections: () => void;
+}
+
+interface CreateSectionModalState {
+  userEmails: string[];
+  mentorEmail: string;
+  spacetimes: Spacetime[];
+  description: string;
+  capacity: string;
+  courseId?: number;
+}
+
+class CreateSectionModal extends React.Component<CreateSectionModalProps, CreateSectionModalState> {
   static propTypes = {
     courseId: PropTypes.number.isRequired,
     closeModal: PropTypes.func.isRequired,
     reloadSections: PropTypes.func.isRequired
   };
 
-  constructor(props) {
+  constructor(props: CreateSectionModalProps) {
     super(props);
     this.state = { userEmails: [], mentorEmail: "", spacetimes: [this.makeSpacetime()], description: "", capacity: "" };
     this.handleChange = this.handleChange.bind(this);
@@ -339,20 +384,20 @@ class CreateSectionModal extends React.Component {
     this.appendSpacetime = this.appendSpacetime.bind(this);
   }
 
-  makeSpacetime() {
-    return { dayOfWeek: "", startTime: "", location: "" };
+  makeSpacetime(): Spacetime {
+    return { dayOfWeek: "", startTime: "", location: "" } as Spacetime;
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     fetchJSON("/users/").then(userEmails => this.setState({ userEmails }));
   }
 
-  appendSpacetime(event) {
+  appendSpacetime(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault(); // Annoyingly the submit event for the form gets fired, so we have to suppress it
     this.setState({ spacetimes: [...this.state.spacetimes, this.makeSpacetime()] });
   }
 
-  handleChange({ target: { name, value } }) {
+  handleChange({ target: { name, value } }: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void {
     if (name.startsWith("location") || name.startsWith("startTime") || name.startsWith("dayOfWeek")) {
       const { spacetimes } = this.state;
       // Funny JavaScript scoping workaround (let [name, index] = name.split("|") doesn't work)
@@ -367,11 +412,11 @@ class CreateSectionModal extends React.Component {
         ]
       });
     } else {
-      this.setState({ [name]: value });
+      this.setState({ [name]: value } as any);
     }
   }
 
-  handleSubmit(event) {
+  handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
     event.preventDefault();
     // eslint-disable-next-line no-unused-vars
     const { userEmails: _, ...data } = this.state;
@@ -424,7 +469,7 @@ class CreateSectionModal extends React.Component {
                   onChange={this.handleChange}
                 />
               </label>
-              <label name="description">
+              <label>
                 Description
                 <input name="description" type="text" value={description} onChange={this.handleChange} />
               </label>
@@ -457,7 +502,12 @@ class CreateSectionModal extends React.Component {
                   </label>
                   <label>
                     Time
-                    <TimeInput onChange={this.handleChange} required name={`startTime|${index}`} value={startTime} />
+                    <TimeInput
+                      onChange={this.handleChange as React.FormEventHandler<HTMLInputElement>}
+                      required
+                      name={`startTime|${index}`}
+                      value={startTime}
+                    />
                   </label>
                   {index === spacetimes.length - 1 && (
                     <button className="csm-btn" id="add-occurence-btn" onClick={this.appendSpacetime}>
@@ -475,33 +525,37 @@ class CreateSectionModal extends React.Component {
   }
 }
 
+interface DataExportModalProps {
+  closeModal: () => void;
+}
+
 /**
  * @function DataExportModal
  * @component
- * @param {DataExportModal.propTypes} props
+ * @param {DataExportModalProps} props
  * @returns Modal that coords use to export a csv of student emails
  *          in selected courses.
  */
-function DataExportModal(props) {
+function DataExportModal(props: DataExportModalProps) {
   // Need to move to parent if rerequest coursedata everytime
   /**
    * @state courseMap : map of course ID to course name
    */
-  const [courseMap, setCourseMap] = useState(null);
+  const [courseMap, setCourseMap] = useState<Map<number, string>>(null);
   /**
    * @state {boolean} courseLoaded : true if course data has been
    *        loaded
    */
-  const [courseLoaded, setCourseLoaded] = useState(false);
+  const [courseLoaded, setCourseLoaded] = useState<boolean>(false);
   /**
    * @state courseChecks : map of course id to boolean (if checkmarked)
    */
-  const [courseChecks, setCourseChecks] = useState([]);
+  const [courseChecks, setCourseChecks] = useState<Map<number, boolean>>(null);
 
   useEffect(() => {
-    fetchJSON("/courses").then(courses => {
-      const coursesById = new Map();
-      const courseCheckbyId = new Map();
+    fetchJSON("/courses").then((courses: CourseType[]) => {
+      const coursesById = new Map<number, string>();
+      const courseCheckbyId = new Map<number, boolean>();
       for (const course of courses) {
         coursesById.set(course.id, course.name);
         courseCheckbyId.set(course.id, false);
@@ -512,7 +566,7 @@ function DataExportModal(props) {
     });
   }, []);
 
-  function getStudentEmails() {
+  function getStudentEmails(): void {
     const courses = Array.from(courseChecks.keys())
       .filter(id => courseChecks.get(id))
       .join();
@@ -523,16 +577,16 @@ function DataExportModal(props) {
     window.open(normalizeEndpoint(`/courses/students/?ids=${courses}`));
   }
 
-  const updateCourseChecks = (k, v) => {
+  const updateCourseChecks = (k: number, v: boolean): void => {
     setCourseChecks(new Map(courseChecks.set(k, v)));
   };
 
-  function renderCheckGrid() {
+  function renderCheckGrid(): JSX.Element {
     const checks = Array.from(courseMap.keys()).map(i => renderCheck(i));
     return <div className="data-export-checkbox-grid">{checks}</div>;
   }
 
-  function renderCheck(i) {
+  function renderCheck(i: number): JSX.Element {
     return (
       <div className="data-export-checkbox">
         <label>
