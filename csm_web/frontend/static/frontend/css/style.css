@@ -1,4 +1,5 @@
 @import url("./resource_aggregation.css");
+@import url("./student_dropper.css");
 @import url("./fontawesome-styles.css");
 
 html,
@@ -192,7 +193,6 @@ header {
 
 .modal-close-x > button > span {
 	display: inline-block;
-	transform: rotate(45deg);
 	color: #575757;
 }
 
@@ -1275,7 +1275,6 @@ table tbody tr:last-child > td {
 
 #students-table .inline-plus-sign {
 	display: inline-block;
-	transform: rotate(45deg);
 	color: var(--csm-danger);
 	cursor: pointer;
 	position: relative;
@@ -1323,7 +1322,6 @@ table tbody tr:last-child > td {
 }
 
 .should-ban-prompt .ban-cancel {
-	transform: rotate(45deg);
 	position: absolute !important;
 	top: -5px;
 	right: 3px;
