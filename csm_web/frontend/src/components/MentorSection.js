@@ -572,9 +572,11 @@ function MentorSectionInfo({
     setNewStudentError({});
   }, [id]);
   const closeModal = () => setShowModal(MentorSectionInfo.MODAL_STATES.NONE);
-  const closeAddModal = () => {
+  const closeAddModal = (reload = false) => {
     setIsAddingStudent(false);
-    reloadSection();
+    if (reload) {
+      reloadSection();
+    }
   };
   return (
     <React.Fragment>
@@ -785,7 +787,7 @@ function CoordinatorAddStudentModal({ closeModal, userEmails, sectionId }) {
     });
 
     if (request_emails.length == 0) {
-      // no student emails to add, so just exit
+      // no student emails to add, so just exit without reloading
       closeModal();
       return;
     }
@@ -817,7 +819,8 @@ function CoordinatorAddStudentModal({ closeModal, userEmails, sectionId }) {
         }
         setValidationEnabled(false); // reset validation
       } else {
-        closeModal();
+        // close modal and refresh the page
+        closeModal(true);
       }
     });
   }
@@ -1136,7 +1139,7 @@ function CoordinatorAddStudentModal({ closeModal, userEmails, sectionId }) {
   }
 
   return (
-    <Modal className="coordinator-add-student-modal" closeModal={closeModal}>
+    <Modal className="coordinator-add-student-modal" closeModal={() => closeModal()}>
       <form
         id="coordinator-add-student-form"
         className="coordinator-add-student-modal-contents"
@@ -1167,7 +1170,7 @@ function StudentDropper({ id, name, reloadSection }) {
   const [ban, setBan] = useState(false);
 
   function handleClickDrop() {
-    fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH, { ban }).then(() => reloadSection());
+    fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH, { banned: ban }).then(() => reloadSection());
   }
 
   return (
