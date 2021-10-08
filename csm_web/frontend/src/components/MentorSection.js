@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
 import { SPACETIME_SHAPE } from "../utils/types";
@@ -970,7 +971,14 @@ function CoordinatorAddStudentModal({ closeModal, userEmails, sectionId }) {
                     conflictDetail = "Already enrolled!";
                     drop_disabled = true;
                   } else {
-                    conflictDetail = `Conflict: ${email_obj.detail.section.mentor.name} (id ${email_obj.detail.section.id})`;
+                    conflictDetail = (
+                      <React.Fragment>
+                        Conflict:{" "}
+                        <Link to={`/sections/${email_obj.detail.section.id}`} target="_blank" rel="noopener noreferrer">
+                          {email_obj.detail.section.mentor.name}
+                        </Link>
+                      </React.Fragment>
+                    );
                   }
                   return (
                     <div key={email_obj.email} className="coordinator-email-response-item">
