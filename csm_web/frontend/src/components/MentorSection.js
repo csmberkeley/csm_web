@@ -599,7 +599,7 @@ function MentorSectionInfo({
                       <tr key={id}>
                         <td>
                           {isCoordinator && id !== -1 && (
-                            <StudentDropper name={name} id={id} reloadSection={reloadSection} />
+                            <StudentDropper name={name ? name : email} id={id} reloadSection={reloadSection} />
                           )}
                           <span className="student-info">{name || email}</span>
                         </td>
