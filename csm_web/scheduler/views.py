@@ -465,6 +465,7 @@ class SectionViewSet(*viewset_with('retrieve', 'partial_update', 'create')):
 
         if expand_capacity:
             section.capacity = max(section.capacity, section.students.count())
+            section.save()
 
         return Response(status=status.HTTP_200_OK)
 
