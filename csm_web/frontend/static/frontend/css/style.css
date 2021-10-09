@@ -874,7 +874,7 @@ main {
 
 .coordinator-email-input-item .inline-plus-sign,
 .coordinator-email-response-item .inline-plus-sign {
-	color: var(--csm-danger);
+	color: #777;
 	cursor: pointer;
 	user-select: none;
 	-webkit-user-select: none;
@@ -884,7 +884,7 @@ main {
 
 .coordinator-email-input-item .inline-plus-sign:hover,
 .coordinator-email-response-item .inline-plus-sign:hover {
-	color: var(--csm-danger-darkened);
+	color: #aaa;
 }
 
 .coordinator-email-response-item .inline-plus-sign {
