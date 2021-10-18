@@ -1,5 +1,5 @@
 import pytest
-from scheduler.models import User
+from scheduler.models import User, Course
 
 
 @pytest.mark.django_db
@@ -23,6 +23,34 @@ def create_users(db, django_user_model):
         return users
     return make_users
 
+
+"""
+    - Create course
+    - 2 sections with capacity 6
+    - 2 mentors teaching different days
+    - 4 students per section
+    return
+        'courses': [course_id]
+
+"""
+
+
+@pytest.fixture
+def create_attendance_test_data(db):
+    def make_attendance_test_data(course_num, section_num, capacity, student_num):
+        courses, sections, mentors, students = [], [], [], []
+        for course_id in range(course_num):
+            course_name = "course_" + str(course_id).rjust(2, "0")
+            C = Course(name=course_name, title=course_name)
+            C.save()
+            courses.append(C)
+        return courses
+    return make_attendance_test_data
+
 # TODO: add student to section -> new SO/attendance creates
+
+
+def test_attendance_add_student_to_section(create_attendance_test_data):
+    Cs = create_attendance_test_data(1, 1, 1, 1)
 
 # TODO: student drop -> extra attendance/SO deleted
