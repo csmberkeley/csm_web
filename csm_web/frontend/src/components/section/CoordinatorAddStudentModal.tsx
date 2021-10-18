@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchWithMethod, HTTP_METHODS } from "../utils/api";
-import LoadingSpinner from "./LoadingSpinner";
-import Modal from "./Modal";
+import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import LoadingSpinner from "../LoadingSpinner";
+import Modal from "../Modal";
 
 import CheckCircle from "../../static/frontend/img/check_circle.svg";
 import ErrorCircle from "../../static/frontend/img/error_outline.svg";

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
-import { SPACETIME_SHAPE } from "../utils/types";
+import { SPACETIME_SHAPE } from "../utils/js_types";
 import Modal from "./Modal";
 import XIcon from "../../static/frontend/img/x.svg";
 import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime, ROLES } from "./Section";
