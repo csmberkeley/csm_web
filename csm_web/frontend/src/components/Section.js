@@ -2,9 +2,9 @@ import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON } from "../utils/api";
-import { SPACETIME_SHAPE } from "../utils/types";
+import { SPACETIME_SHAPE } from "../utils/js_types";
 import StudentSection from "./StudentSection";
-import MentorSection from "./MentorSection";
+import MentorSection from "./section/MentorSection";
 
 export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
