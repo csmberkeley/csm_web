@@ -1,11 +1,21 @@
 import React, { useEffect, useState } from "react";
 import { Switch, Route, Redirect } from "react-router-dom";
 import PropTypes from "prop-types";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../utils/api";
-import { SPACETIME_SHAPE } from "../utils/js_types";
-import Modal from "./Modal";
-import XIcon from "../../static/frontend/img/x.svg";
+import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import { Attendance, Mentor, Override, Spacetime } from "../../utils/types";
+import Modal from "../Modal";
+import XIcon from "../../../static/frontend/img/x.svg";
 import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime, ROLES } from "./Section";
+
+interface StudentSectionType {
+  course: string;
+  courseTitle: string;
+  mentor: Mentor;
+  spacetimes: Spacetime[];
+  override?: Override;
+  associatedProfileId: number;
+  url: string;
+}
 
 export default function StudentSection({
   course,
@@ -15,7 +25,7 @@ export default function StudentSection({
   override,
   associatedProfileId,
   url
-}) {
+}: StudentSectionType) {
   return (
     <SectionDetail
       course={course}
@@ -47,18 +57,15 @@ export default function StudentSection({
   );
 }
 
-StudentSection.propTypes = {
-  course: PropTypes.string.isRequired,
-  courseTitle: PropTypes.string.isRequired,
-  mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
-  spacetimes: PropTypes.arrayOf(SPACETIME_SHAPE).isRequired,
-  override: PropTypes.object,
-  associatedProfileId: PropTypes.number.isRequired,
-  url: PropTypes.string.isRequired
-};
+interface StudentSectionInfoProps {
+  mentor: Mentor;
+  spacetimes: Spacetime[];
+  override?: Override;
+  associatedProfileId: number;
+}
 
 // eslint-disable-next-line no-unused-vars
-function StudentSectionInfo({ mentor, spacetimes, override, associatedProfileId }) {
+function StudentSectionInfo({ mentor, spacetimes, override, associatedProfileId }: StudentSectionInfoProps) {
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">My Section</h3>
@@ -84,18 +91,18 @@ function StudentSectionInfo({ mentor, spacetimes, override, associatedProfileId 
   );
 }
 
-StudentSectionInfo.propTypes = {
-  mentor: PropTypes.shape({ email: PropTypes.string.isRequired, name: PropTypes.string.isRequired }),
-  spacetimes: PropTypes.arrayOf(SPACETIME_SHAPE).isRequired,
-  override: PropTypes.object,
-  associatedProfileId: PropTypes.number.isRequired
-};
+interface DropSectionProps {
+  profileId: number;
+}
 
-class DropSection extends React.Component {
+interface DropSectionState {
+  stage: string;
+}
+
+class DropSection extends React.Component<DropSectionProps, DropSectionState> {
   static STAGES = Object.freeze({ INITIAL: "INITIAL", CONFIRM: "CONFIRM", DROPPED: "DROPPED" });
-  static propTypes = { profileId: PropTypes.number.isRequired };
 
-  constructor(props) {
+  constructor(props: DropSectionProps) {
     super(props);
     this.state = { stage: DropSection.STAGES.INITIAL };
     this.performDrop = this.performDrop.bind(this);
@@ -136,8 +143,20 @@ class DropSection extends React.Component {
   }
 }
 
-function StudentSectionAttendance({ associatedProfileId }) {
-  const [state, setState] = useState({ attendances: null, loaded: false });
+interface StudentSectionAttendanceProps {
+  associatedProfileId: number;
+}
+
+interface StudentSectionAttendanceState {
+  attendances: Attendance[];
+  loaded: boolean;
+}
+
+function StudentSectionAttendance({ associatedProfileId }: StudentSectionAttendanceProps) {
+  const [state, setState] = useState<StudentSectionAttendanceState>({
+    attendances: (null as unknown) as Attendance[], // type coersion to avoid future type errors
+    loaded: false
+  });
   useEffect(() => {
     fetchJSON(`/students/${associatedProfileId}/attendances`).then(attendances =>
       setState({ attendances, loaded: true })

@@ -14,7 +14,7 @@ import { Course as CourseType, Mentor, Section, Spacetime } from "../utils/types
 import { DAYS_OF_WEEK } from "./section/utils";
 import TimeInput from "./TimeInput";
 
-const DAY_OF_WEEK_ABREVIATIONS = Object.freeze({
+const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",
   Tuesday: "Tu",
   Wednesday: "W",
@@ -35,6 +35,11 @@ interface CourseProps {
       id: string;
     };
   };
+  /*
+   * Name will be false if it hasn't yet been loaded (the relevant request to the API is performed in CourseMenu)
+   * We structure things like this in order to avoid a 'waterfall' where we don't start fetching sections until
+   * CourseMenu is done with its API requests, making the user suffer twice the latency for no reason.
+   */
   name: boolean | string;
   isOpen: boolean;
 }
@@ -52,23 +57,10 @@ interface CourseState {
 }
 
 export default class Course extends React.Component<CourseProps, CourseState> {
-  static propTypes = {
-    match: PropTypes.shape({ params: PropTypes.shape({ id: PropTypes.string.isRequired }) }).isRequired,
-    /*
-     * Name will be false if it hasn't yet been loaded (the relevant request to the API is performed in CourseMenu)
-     * We structure things like this in order to avoid a 'waterfall' where we don't start fetching sections until
-     * CourseMenu is done with its API requests, making the user suffer twice the latency for no reason.
-     */
-    name: PropTypes.oneOfType([PropTypes.bool, PropTypes.string]).isRequired,
-    isOpen: PropTypes.bool
-  };
-
-  props: CourseProps;
-
   constructor(props: CourseProps) {
     super(props);
     this.state = {
-      sections: null,
+      sections: null as any,
       sectionsLoaded: false,
       currDayGroup: "",
       showUnavailable: false,
@@ -80,8 +72,13 @@ export default class Course extends React.Component<CourseProps, CourseState> {
   }
 
   reloadSections(): void {
+    interface JSONResponseType {
+      sections: CourseState["sections"];
+      userIsCoordinator: CourseState["userIsCoordinator"];
+    }
+
     const { id } = this.props.match.params;
-    fetchJSON(`/courses/${id}/sections`).then(({ sections, userIsCoordinator }) =>
+    fetchJSON(`/courses/${id}/sections`).then(({ sections, userIsCoordinator }: JSONResponseType) =>
       this.setState({ sections, userIsCoordinator, sectionsLoaded: true, currDayGroup: Object.keys(sections)[0] })
     );
   }
@@ -90,7 +87,7 @@ export default class Course extends React.Component<CourseProps, CourseState> {
     this.reloadSections();
   }
 
-  render(): JSX.Element {
+  render(): React.ReactNode {
     const {
       match: {
         params: { id }
@@ -221,15 +218,19 @@ class SectionCard extends React.Component<SectionCardProps, SectionCardState> {
   }
 
   enroll() {
+    interface FetchJSON {
+      detail: string;
+    }
+
     fetchWithMethod(`sections/${this.props.id}/students/`, HTTP_METHODS.PUT)
-      .then(response => {
+      .then((response: { ok: boolean; json: () => Promise<FetchJSON> }) => {
         if (response.ok) {
           this.setState({
             showModal: true,
             enrollmentSuccessful: true
           });
         } else {
-          response.json().then(({ detail }) =>
+          response.json().then(({ detail }: FetchJSON) =>
             this.setState({
               showModal: true,
               enrollmentSuccessful: false,
@@ -238,7 +239,7 @@ class SectionCard extends React.Component<SectionCardProps, SectionCardState> {
           );
         }
       })
-      .catch(error =>
+      .catch((error: any) =>
         this.setState({
           showModal: true,
           enrollmentSuccessful: false,
@@ -389,7 +390,7 @@ class CreateSectionModal extends React.Component<CreateSectionModalProps, Create
   }
 
   componentDidMount(): void {
-    fetchJSON("/users/").then(userEmails => this.setState({ userEmails }));
+    fetchJSON("/users/").then((userEmails: string[]) => this.setState({ userEmails }));
   }
 
   appendSpacetime(event: React.MouseEvent<HTMLButtonElement>) {
@@ -541,7 +542,7 @@ function DataExportModal(props: DataExportModalProps) {
   /**
    * @state courseMap : map of course ID to course name
    */
-  const [courseMap, setCourseMap] = useState<Map<number, string>>(null);
+  const [courseMap, setCourseMap] = useState<Map<number, string>>(new Map());
   /**
    * @state {boolean} courseLoaded : true if course data has been
    *        loaded
@@ -550,7 +551,7 @@ function DataExportModal(props: DataExportModalProps) {
   /**
    * @state courseChecks : map of course id to boolean (if checkmarked)
    */
-  const [courseChecks, setCourseChecks] = useState<Map<number, boolean>>(null);
+  const [courseChecks, setCourseChecks] = useState<Map<number, boolean>>(new Map());
 
   useEffect(() => {
     fetchJSON("/courses").then((courses: CourseType[]) => {
@@ -581,12 +582,12 @@ function DataExportModal(props: DataExportModalProps) {
     setCourseChecks(new Map(courseChecks.set(k, v)));
   };
 
-  function renderCheckGrid(): JSX.Element {
+  function renderCheckGrid(): React.ReactElement {
     const checks = Array.from(courseMap.keys()).map(i => renderCheck(i));
     return <div className="data-export-checkbox-grid">{checks}</div>;
   }
 
-  function renderCheck(i: number): JSX.Element {
+  function renderCheck(i: number): React.ReactElement {
     return (
       <div className="data-export-checkbox">
         <label>
@@ -628,4 +629,4 @@ DataExportModal.propTypes = {
   closeModal: PropTypes.func.isRequired
 };
 
-const Checkbox = props => <input type="checkbox" {...props} />;
+const Checkbox = (props: any) => <input type="checkbox" {...props} />;

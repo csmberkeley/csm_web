@@ -19,7 +19,7 @@ import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
 /**
  * React component to handle editing of resources.
  */
-export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: ResourceEditProps): JSX.Element => {
+export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: ResourceEditProps): React.ReactElement => {
   /**
    * List of FormData objects representing the current (local) newly added worksheets.
    * When clicking the add worksheet button, a new empty FormData object should be added,
@@ -86,7 +86,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       }
     }
     for (const worksheetId of existingWorksheetMap.keys()) {
-      const worksheet = existingWorksheetMap.get(worksheetId);
+      const worksheet = existingWorksheetMap.get(worksheetId)!;
       if (validateAll || touched.existingWorksheets.has(worksheetId)) {
         if (worksheet.deleted && worksheet.deleted.includes("worksheet")) {
           newFormErrors["existingWorksheets"].delete(worksheetId);

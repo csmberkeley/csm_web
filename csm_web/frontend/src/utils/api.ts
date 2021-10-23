@@ -3,16 +3,15 @@ import Cookies from "js-cookie";
 /* Why is this useful? Trying to access a mispelled property of an object will result in an error
    during build, whereas a mispelled string literal would cause an error only when fetch
    was actually called */
-const HTTP_METHODS = Object.freeze({
+export const HTTP_METHODS = Object.freeze({
   POST: "POST",
   GET: "GET",
   PUT: "PUT",
   PATCH: "PATCH",
   DELETE: "DELETE"
 });
-export { HTTP_METHODS };
 
-export function normalizeEndpoint(endpoint) {
+export function normalizeEndpoint(endpoint: string) {
   if (endpoint[0] == "/") {
     endpoint = endpoint.slice(1);
   }
@@ -22,7 +21,7 @@ export function normalizeEndpoint(endpoint) {
   return `/api/${endpoint}`;
 }
 
-export function fetchWithMethod(endpoint, method, data = {}, isFormData = false) {
+export function fetchWithMethod(endpoint: string, method: string, data: any = {}, isFormData = false) {
   if (!Object.prototype.hasOwnProperty.call(HTTP_METHODS, method)) {
     // check that method choice is valid
     throw new Error("HTTP method must be one of: POST, GET, PUT, PATCH, or DELETE");
@@ -49,6 +48,7 @@ export function fetchWithMethod(endpoint, method, data = {}, isFormData = false)
   });
 }
 
-export function fetchJSON(endpoint) {
-  return fetch(normalizeEndpoint(endpoint), { credentials: "same-origin" }).then(response => response.json());
+export async function fetchJSON(endpoint: string) {
+  const response = await fetch(normalizeEndpoint(endpoint), { credentials: "same-origin" });
+  return await response.json();
 }

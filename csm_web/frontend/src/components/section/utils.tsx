@@ -1,4 +1,4 @@
-export const MONTH_NUMBERS = Object.freeze({
+export const MONTH_NUMBERS: Readonly<{ [month: string]: number }> = Object.freeze({
   Jan: 1,
   Feb: 2,
   Mar: 3,
@@ -13,7 +13,7 @@ export const MONTH_NUMBERS = Object.freeze({
   Dec: 12
 });
 
-export const DAYS_OF_WEEK = Object.freeze([
+export const DAYS_OF_WEEK: Readonly<string[]> = Object.freeze([
   "Monday",
   "Tuesday",
   "Wednesday",
@@ -23,7 +23,7 @@ export const DAYS_OF_WEEK = Object.freeze([
   "Sunday"
 ]);
 
-export function formatDate(dateString) {
+export function formatDate(dateString: string): string {
   /*
    * Example:
    * formatDate("Jan. 6, 2020") --> "1/6"
@@ -33,7 +33,7 @@ export function formatDate(dateString) {
   return `${MONTH_NUMBERS[month]}/${day}`;
 }
 
-export function dateSort(date1, date2) {
+export function dateSort(date1: string, date2: string) {
   const [month1, day1] = formatDate(date1)
     .split("/")
     .map(part => Number(part));
@@ -43,6 +43,6 @@ export function dateSort(date1, date2) {
   return month2 - month1 || day2 - day1;
 }
 
-export function zeroPadTwoDigit(num) {
+export function zeroPadTwoDigit(num: number) {
   return num < 10 ? `0${num}` : num;
 }

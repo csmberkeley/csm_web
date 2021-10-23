@@ -1,7 +1,7 @@
 import React from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import LoadingSpinner from "../LoadingSpinner";
-import { ATTENDANCE_LABELS } from "../Section";
+import { ATTENDANCE_LABELS } from "./Section";
 import { dateSort, formatDate } from "./utils";
 import { Attendance } from "../../utils/types";
 
@@ -16,8 +16,8 @@ interface MentorSectionAttendanceProps {
 }
 
 interface MentorSectionAttendanceState {
-  selectedDate: string;
-  stagedAttendances: Attendance[];
+  selectedDate?: string;
+  stagedAttendances?: Attendance[];
   showAttendanceSaveSuccess: boolean;
   showSaveSpinner: boolean;
 }
@@ -31,8 +31,8 @@ export default class MentorSectionAttendance extends React.Component<
   constructor(props: MentorSectionAttendanceProps) {
     super(props);
     this.state = {
-      selectedDate: null,
-      stagedAttendances: null,
+      selectedDate: undefined,
+      stagedAttendances: undefined,
       showAttendanceSaveSuccess: false,
       showSaveSpinner: false
     };
@@ -42,18 +42,18 @@ export default class MentorSectionAttendance extends React.Component<
     this.attendanceTitle = React.createRef<HTMLHeadingElement>();
   }
 
-  componentDidMount() {
+  componentDidMount(): void {
     if (this.attendanceTitle.current) {
       this.attendanceTitle.current.scrollIntoView();
     }
   }
 
-  handleAttendanceChange({ target: { name: id, value } }) {
+  handleAttendanceChange({ target: { name: id, value } }: React.ChangeEvent<HTMLSelectElement>): void {
     this.setState((prevState, props) => {
       const prevStagedAttendances = prevState.stagedAttendances || Object.values(props.attendances)[0];
       return {
         stagedAttendances: prevStagedAttendances.map(attendance =>
-          attendance.id == id ? { ...attendance, presence: value } : attendance
+          attendance.id == Number(id) ? { ...attendance, presence: value } : attendance
         )
       };
     });
@@ -71,7 +71,7 @@ export default class MentorSectionAttendance extends React.Component<
         fetchWithMethod(`students/${studentId}/attendances/`, HTTP_METHODS.PUT, { id, presence })
       )
     ).then(() => {
-      this.props.updateAttendance(selectedDate, stagedAttendances);
+      this.props.updateAttendance(selectedDate!, stagedAttendances);
       this.setState({ showAttendanceSaveSuccess: true, showSaveSpinner: false });
       setTimeout(() => this.setState({ showAttendanceSaveSuccess: false }), 1500);
     });
@@ -83,14 +83,14 @@ export default class MentorSectionAttendance extends React.Component<
       this.setState({ selectedDate, stagedAttendances });
     }
     this.setState(prevState => ({
-      stagedAttendances: prevState.stagedAttendances.map(attendance => ({ ...attendance, presence: "PR" }))
+      stagedAttendances: prevState.stagedAttendances!.map(attendance => ({ ...attendance, presence: "PR" }))
     }));
   }
 
   render() {
     const { attendances, loaded } = this.props;
     const selectedDate = this.state.selectedDate || (loaded && Object.keys(attendances)[0]);
-    const stagedAttendances = this.state.stagedAttendances || attendances[selectedDate];
+    const stagedAttendances = this.state.stagedAttendances || (selectedDate ? attendances[selectedDate] : []);
     const { showAttendanceSaveSuccess, showSaveSpinner } = this.state;
     return (
       <React.Fragment>

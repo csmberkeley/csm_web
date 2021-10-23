@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { groupBy } from "lodash";
 import { fetchJSON } from "../utils/api";
-import { ROLES } from "./Section";
+import { ROLES } from "./section/Section";
 import { Profile } from "../utils/types";
 
 interface HomeState {
@@ -21,7 +21,7 @@ export default class Home extends React.Component {
     fetchJSON("/profiles").then(profiles => this.setState({ profiles, profilesLoaded: true }));
   }
 
-  render(): JSX.Element {
+  render(): React.ReactNode {
     const { profiles, profilesLoaded } = this.state;
     return (
       <div id="home-courses">
@@ -45,10 +45,10 @@ export default class Home extends React.Component {
   }
 }
 
-function CourseCard({ profiles }: CourseCardProps): JSX.Element {
+function CourseCard({ profiles }: CourseCardProps): React.ReactElement {
   const { course, courseTitle, role, sectionId, courseId } = profiles[0];
   const relation = role.toLowerCase();
-  function Card(): JSX.Element {
+  function Card(): React.ReactElement {
     return (
       <div className="course-card" style={{ borderTopColor: `var(--csm-theme-${course.toLowerCase()})` }}>
         <div className="course-card-contents">

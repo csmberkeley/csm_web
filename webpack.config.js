@@ -22,7 +22,7 @@ module.exports = (env, argv) => {
           }
         },
         {
-          test: /\.tsx$/,
+          test: /\.tsx?$/,
           exclude: /node_modules/,
           include: path.resolve(__dirname, "./csm_web/frontend/src/"),
           use: {

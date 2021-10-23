@@ -35,7 +35,7 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
     });
   }
 
-  render(): JSX.Element {
+  render(): React.ReactNode {
     const { path } = this.props.match;
     const { loaded, courses } = this.state;
     let show_enrollment_times = false;
