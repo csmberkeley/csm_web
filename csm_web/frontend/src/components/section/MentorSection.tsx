@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchJSON } from "../../utils/api";
 import { Attendance, Mentor, Spacetime, Student } from "../../utils/types";
-import { SectionDetail, ROLES } from "../Section";
+import { SectionDetail, ROLES } from "./Section";
 import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
 import MentorSectionAttendance from "./MentorSectionAttendance";
@@ -17,21 +17,23 @@ interface MentorSectionProps {
   reloadSection: () => void;
   userRole: string;
   mentor: Mentor;
-  capacity?: number;
-  description?: string;
+  capacity: number;
+  description: string;
 }
 
 interface MentorSectionState {
   students: Student[];
   attendances: {
-    id?: number;
-    presence?: string;
-    date?: string;
-    student?: Student;
+    [date: string]: Attendance[];
   };
   loaded: boolean;
   loaded_progress: number;
 }
+
+type ResponseAttendance = {
+  studentId: number;
+  studentName: string;
+} & Attendance;
 
 export default function MentorSection({
   id,
@@ -56,7 +58,7 @@ export default function MentorSection({
     fetchJSON(`/sections/${id}/students/`).then(data => {
       const students: Student[] = data
         .map(({ name, email, id }: Student) => ({ name, email, id }))
-        .sort((stu1: Student, stu2: Student) => stu1.name >= stu2.name);
+        .sort((stu1: Student, stu2: Student) => Number(stu1.name >= stu2.name));
       setState(state => {
         return {
           students,
@@ -68,7 +70,7 @@ export default function MentorSection({
     });
     fetchJSON(`/sections/${id}/attendance`).then(data => {
       const attendances = groupBy(
-        data.flatMap(({ attendances }) =>
+        data.flatMap(({ attendances }: { attendances: ResponseAttendance[] }) =>
           attendances
             .map(({ id, presence, date, studentName, studentId }) => ({
               id,
@@ -76,11 +78,10 @@ export default function MentorSection({
               date,
               student: { name: studentName, id: studentId }
             }))
-            .sort((att1: Attendance, att2: Attendance) => att1.student.name >= att2.student.name)
+            .sort((att1, att2) => Number(att1.student.name >= att2.student.name))
         ),
         attendance => attendance.date
       );
-      console.log(attendances);
       setState(state => {
         return {
           students: state.students,
@@ -92,7 +93,7 @@ export default function MentorSection({
     });
   }, [id]);
 
-  const updateAttendance = (updatedDate: string, updatedDateAttendances: Attendance[]) => {
+  const updateAttendance = (updatedDate: string | undefined, updatedDateAttendances: Attendance[]) => {
     const updatedAttendances = Object.fromEntries(
       Object.entries(attendances).map(([date, dateAttendances]) => [
         date,

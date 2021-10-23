@@ -4,8 +4,8 @@ import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 
-import CheckCircle from "../../static/frontend/img/check_circle.svg";
-import ErrorCircle from "../../static/frontend/img/error_outline.svg";
+import CheckCircle from "../../../static/frontend/img/check_circle.svg";
+import ErrorCircle from "../../../static/frontend/img/error_outline.svg";
 
 enum CoordModalStates {
   INITIAL = "INITIAL",
@@ -20,6 +20,13 @@ interface CoordinatorAddStudentModalProps {
   sectionId: number;
 }
 
+interface RequestType {
+  emails: ActionType[];
+  actions: {
+    [action: string]: string;
+  };
+}
+
 interface ResponseType {
   errors?: {
     critical?: string;
@@ -28,11 +35,12 @@ interface ResponseType {
   progress?: Array<{
     email: string;
     status: string;
+    detail?: any;
   }>;
 }
 
 interface ActionType {
-  capacity?: string;
+  // capacity?: string;  // type error with below
   [email: string]: string;
 }
 
@@ -40,7 +48,7 @@ export function CoordinatorAddStudentModal({
   closeModal,
   userEmails,
   sectionId
-}: CoordinatorAddStudentModalProps): JSX.Element {
+}: CoordinatorAddStudentModalProps): React.ReactElement {
   const [emailsToAdd, setEmailsToAdd] = useState<string[]>([""]);
   const [response, setResponse] = useState<ResponseType>({} as ResponseType);
   /**
@@ -86,7 +94,7 @@ export function CoordinatorAddStudentModal({
     setEmailsToAdd(emailsToAdd.filter(item => item !== email));
     setResponse(lastResponse => ({
       ...lastResponse,
-      progress: lastResponse.progress.filter(email_obj => email_obj.email !== email)
+      progress: lastResponse.progress && lastResponse.progress.filter(email_obj => email_obj.email !== email)
     }));
   }
 
@@ -95,9 +103,9 @@ export function CoordinatorAddStudentModal({
     setAddStage(CoordModalStates.LOADING);
 
     const request_emails = emailsToAdd.map(email => {
-      let action = {};
+      let action: ActionType = {};
       if (responseActions.has(email)) {
-        action = responseActions.get(email);
+        action = responseActions.get(email) as ActionType;
       }
       return { email: email, ...action };
     });
@@ -108,9 +116,9 @@ export function CoordinatorAddStudentModal({
       return;
     }
 
-    const request = { emails: request_emails, actions: {} };
+    const request: RequestType = { emails: request_emails, actions: {} };
     if (responseActions.has("capacity")) {
-      request.actions["capacity"] = responseActions.get("capacity");
+      request.actions["capacity"] = responseActions.get("capacity") as string;
     }
 
     fetchWithMethod(`sections/${sectionId}/students/`, HTTP_METHODS.PUT, request).then(response => {
@@ -142,9 +150,9 @@ export function CoordinatorAddStudentModal({
   }
 
   function updateResponseAction(e: React.ChangeEvent<HTMLInputElement>, email: string, field: string): void {
-    let newAction = {};
+    let newAction: ActionType = {};
     if (responseActions.has(email)) {
-      newAction = responseActions.get(email);
+      newAction = responseActions.get(email) as ActionType;
     }
 
     if (e.target.checked) {
@@ -204,7 +212,7 @@ export function CoordinatorAddStudentModal({
         </button>
         {
           /* Firefox doesn't support clipboard reads from sites; readText would be undefined */
-          navigator.clipboard.readText && (
+          navigator.clipboard.readText != undefined && (
             <button className="coordinator-email-input-add" onClick={() => addEmailsFromClipboard()}>
               Add from clipboard
             </button>
@@ -269,7 +277,7 @@ export function CoordinatorAddStudentModal({
               </div>
               <div className="coordinator-email-response-item-container">
                 {conflict_arr.map(email_obj => {
-                  let conflictDetail: string | JSX.Element = "";
+                  let conflictDetail: React.ReactNode = "";
                   let drop_disabled = false;
                   if (!email_obj.detail.section) {
                     // look at reason

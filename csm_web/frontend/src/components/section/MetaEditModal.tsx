@@ -19,10 +19,12 @@ export default function MetaEditModal({
 }: MetaEditModalProps) {
   // use existing capacity and description as initial values
   const [formState, setFormState] = useState({ capacity: capacity, description: description });
-  function handleChange({ target: { name, value } }) {
+
+  function handleChange({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) {
     setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
   }
-  function handleSubmit(event) {
+
+  function handleSubmit(event: React.ChangeEvent<HTMLFormElement>) {
     event.preventDefault();
     //TODO: Handle API Failure
     fetchWithMethod(`/sections/${sectionId}/`, HTTP_METHODS.PATCH, formState).then(() => {
@@ -30,6 +32,7 @@ export default function MetaEditModal({
       reloadSection();
     });
   }
+
   return (
     <Modal closeModal={closeModal}>
       <form className="csm-form" onSubmit={handleSubmit}>

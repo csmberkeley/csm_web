@@ -13,7 +13,7 @@ const ResourceTopics = ({ topics }) => {
   ));
 };
 
-const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceRowRenderProps): JSX.Element => {
+const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceRowRenderProps): React.ReactNode => {
   /**
    * Deletion stages:
    * 0: initial; did not click delete button

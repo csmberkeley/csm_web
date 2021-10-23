@@ -54,11 +54,12 @@ export interface Course {
 export interface Student {
   id: number;
   name: string;
-  email?: string;
+  email: string;
 }
 
 export interface Attendance {
   id: number;
+  date: string;
   student: Student;
   presence: string;
 }

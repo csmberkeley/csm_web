@@ -1,10 +1,10 @@
 import React from "react";
 
 interface LoadingSpinnerProps {
-  id: string;
+  id?: string;
 }
 
-export default function LoadingSpinner({ id }: LoadingSpinnerProps): JSX.Element {
+export default function LoadingSpinner({ id }: LoadingSpinnerProps): React.ReactElement {
   return (
     <div className="sk-fading-circle" id={id}>
       {[...Array(12)].map((_, i) => (

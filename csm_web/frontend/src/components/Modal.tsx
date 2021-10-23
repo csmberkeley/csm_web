@@ -3,16 +3,16 @@ import React, { useContext } from "react";
 const ModalContext = React.createContext(Function.prototype);
 
 interface ModalProps {
-  children: JSX.Element | JSX.Element[];
+  children: React.ReactNode;
   closeModal: React.MouseEventHandler<Element>;
   className?: string;
 }
 
 interface ModalCloserProps {
-  children: JSX.Element | JSX.Element[];
+  children: React.ReactNode;
 }
 
-export default function Modal({ children, closeModal, className = "" }: ModalProps): JSX.Element {
+export default function Modal({ children, closeModal, className = "" }: ModalProps): React.ReactElement {
   return (
     <ModalContext.Provider value={closeModal}>
       <div className="modal-overlay" onClick={closeModal} />
@@ -30,7 +30,7 @@ export default function Modal({ children, closeModal, className = "" }: ModalPro
   );
 }
 
-export function ModalCloser({ children }: ModalCloserProps): JSX.Element {
+export function ModalCloser({ children }: ModalCloserProps): React.ReactElement {
   const closeModal = useContext(ModalContext) as React.MouseEventHandler<Element>;
   return (
     <div onClick={closeModal} className="modal-close">

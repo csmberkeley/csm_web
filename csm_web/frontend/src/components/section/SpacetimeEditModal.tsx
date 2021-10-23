@@ -37,19 +37,25 @@ export default class SpacetimeEditModal extends React.Component<SpacetimeEditMod
       isPermanent: false,
       changeDate: "",
       // Logic to determine whether or not the location is virtual or in person (same logic as backend to omit video call links)
-      mode: props.defaultSpacetime.location.startsWith("http") ? "virtual" : "inperson",
+      mode:
+        props.defaultSpacetime.location && props.defaultSpacetime.location.startsWith("http") ? "virtual" : "inperson",
       showSaveSpinner: false
     };
     this.handleChange = this.handleChange.bind(this);
+    this.handleChangeSelect = this.handleChangeSelect.bind(this);
     this.handleSubmit = this.handleSubmit.bind(this);
   }
 
-  handleChange({ target: { name, value } }) {
-    this.setState(state => ({ ...state, [name]: value }));
+  handleChange(e: React.ChangeEvent<HTMLInputElement>) {
+    this.setState(state => ({ ...state, [e.target.name]: e.target.value }));
   }
 
-  handleSubmit(event) {
-    event.preventDefault();
+  handleChangeSelect(e: React.ChangeEvent<HTMLSelectElement>) {
+    this.setState(state => ({ ...state, [e.target.name]: e.target.value }));
+  }
+
+  handleSubmit(e: React.ChangeEvent<HTMLFormElement>) {
+    e.preventDefault();
     const { closeModal, defaultSpacetime, reloadSection } = this.props;
     const spacetimeId = defaultSpacetime.id;
     const { location, day, time, isPermanent, changeDate } = this.state;
@@ -72,7 +78,7 @@ export default class SpacetimeEditModal extends React.Component<SpacetimeEditMod
     });
   }
 
-  render() {
+  render(): React.ReactElement {
     const { location, day, time, isPermanent, changeDate, mode, showSaveSpinner } = this.state;
     const now = new Date();
     const today = `${now.getFullYear()}-${zeroPadTwoDigit(now.getMonth() + 1)}-${zeroPadTwoDigit(now.getDate())}`;
@@ -124,13 +130,13 @@ export default class SpacetimeEditModal extends React.Component<SpacetimeEditMod
             <label>
               Day
               <select
-                onChange={this.handleChange}
+                onChange={this.handleChangeSelect}
                 required={isPermanent}
                 name="day"
                 disabled={!isPermanent}
                 value={isPermanent ? day : ""}
               >
-                {[["", "---"]].concat(Array.from(DAYS_OF_WEEK)).map(value => (
+                {["", "---"].concat(Array.from(DAYS_OF_WEEK)).map(value => (
                   <option key={value} value={value} disabled={!value}>
                     {value}
                   </option>

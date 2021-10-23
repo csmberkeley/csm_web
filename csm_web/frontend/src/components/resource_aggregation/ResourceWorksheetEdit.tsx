@@ -42,7 +42,7 @@ const ResourceWorksheetEdit = ({
   onBlur,
   formErrorsMap,
   index
-}: ResourceWorksheetEditProps): JSX.Element => {
+}: ResourceWorksheetEditProps): React.ReactElement => {
   const currentId = index == undefined ? worksheet.id : index;
   return (
     <div className="resourceWorksheet">

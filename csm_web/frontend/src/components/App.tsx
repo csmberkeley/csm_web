@@ -1,10 +1,10 @@
 import React, { useEffect } from "react";
-import { HashRouter as Router, Route, Switch, Link, match as RouterMatch } from "react-router-dom";
+import { HashRouter as Router, Route, Switch, Link, NavLinkProps } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 import ReactDOM from "react-dom";
 import CourseMenu from "./CourseMenu";
 import Home from "./Home";
-import Section from "./Section";
+import Section from "./section/Section";
 import { Resources } from "./resource_aggregation/Resources";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
@@ -18,7 +18,7 @@ interface ErrorType {
 }
 
 interface AppState {
-  error: ErrorType;
+  error: ErrorType | null;
 }
 
 interface ErrorPageProps {
@@ -37,7 +37,7 @@ export default class App extends React.Component {
     this.setState({ error: null });
   };
 
-  render(): JSX.Element {
+  render(): React.ReactNode {
     if (this.state.error) {
       return <ErrorPage error={this.state.error} clearError={this.clearError} />;
     }
@@ -59,14 +59,14 @@ export default class App extends React.Component {
   }
 }
 
-function Header(): JSX.Element {
+function Header(): React.ReactElement {
   /**
    * Helper function to determine whether or not "Scheduler" should be active.
    * That is, it should always be active unless we're in a location prefixed by /resources
    */
-  function schedulerActive(match: RouterMatch, location: { pathname: string }): boolean {
+  const schedulerActive: NavLinkProps["isActive"] = (match, location): boolean => {
     return !location.pathname.startsWith("/resources");
-  }
+  };
 
   return (
     <header>
@@ -120,5 +120,5 @@ function ErrorPage({ error: { message, stack }, clearError }: ErrorPageProps) {
   );
 }
 
-const wrapper: HTMLElement = document.getElementById("app");
+const wrapper: HTMLElement | null = document.getElementById("app");
 wrapper ? ReactDOM.render(<App />, wrapper) : null;

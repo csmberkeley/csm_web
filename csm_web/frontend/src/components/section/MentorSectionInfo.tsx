@@ -1,9 +1,8 @@
 import React, { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
 import { fetchJSON } from "../../utils/api";
 import { Mentor, Spacetime, Student } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
-import { InfoCard, SectionSpacetime } from "../Section";
+import { InfoCard, SectionSpacetime } from "./Section";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
@@ -24,8 +23,8 @@ interface MentorSectionInfoProps {
   reloadSection: () => void;
   isCoordinator: boolean;
   mentor: Mentor;
-  capacity?: number;
-  description?: string;
+  capacity: number;
+  description: string;
   id: number;
 }
 

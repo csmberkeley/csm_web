@@ -4,7 +4,7 @@ import { emptyRoles, getRoles } from "../../utils/user";
 import ResourceTable from "./ResourceTable";
 import { Resource } from "./ResourceTypes";
 
-export const Resources = (): JSX.Element => {
+export const Resources = (): React.ReactElement => {
   const [roles, setRoles] = useState(emptyRoles());
   const [selectedCourseID, setSelectedCourseID] = useState(1);
   const [courses, setCourses] = useState([]);

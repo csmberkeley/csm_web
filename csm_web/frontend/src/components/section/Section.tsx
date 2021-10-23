@@ -1,23 +1,40 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import PropTypes from "prop-types";
-import { fetchJSON } from "../utils/api";
-import { Spacetime } from "../utils/types";
+import { fetchJSON } from "../../utils/api";
 import StudentSection from "./StudentSection";
-import MentorSection from "./section/MentorSection";
+import MentorSection from "./MentorSection";
+import { Override, Section as SectionType, Spacetime } from "../../utils/types";
 
 export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
+
+interface SectionProps {
+  match: {
+    url: string;
+    params: {
+      id: string;
+    };
+  };
+}
+
+interface SectionState {
+  section: Omit<SectionType, "id">; // id specified by props
+  loaded: boolean;
+}
 
 export default function Section({
   match: {
     url,
     params: { id }
   }
-}) {
-  const [{ section, loaded }, setState] = useState({ section: null, loaded: false });
+}: SectionProps): React.ReactElement | null {
+  const [{ section, loaded }, setState] = useState<SectionState>({
+    section: (null as unknown) as SectionType, // type coersion to avoid future type errors
+    loaded: false
+  });
   const reloadSection = () => {
-    setState({ section: null, loaded: false });
-    fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
+    setState({ section: (null as unknown) as SectionType, loaded: false });
+    fetchJSON(`/sections/${id}`).then(({ id, section }) => setState({ section, loaded: true }));
   };
   useEffect(() => {
     fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
@@ -25,23 +42,25 @@ export default function Section({
   if (!loaded) {
     return null;
   }
-  switch (section.userRole) {
+  switch (
+    section!.userRole // section can't be null here because loaded would be false
+  ) {
     case ROLES.COORDINATOR:
     case ROLES.MENTOR:
       return <MentorSection reloadSection={reloadSection} url={url} id={Number(id)} {...section} />;
     case ROLES.STUDENT:
       return <StudentSection url={url} {...section} />;
   }
+  return null;
 }
 
-Section.propTypes = {
-  match: PropTypes.shape({
-    params: PropTypes.shape({ id: PropTypes.string.isRequired }).isRequired,
-    url: PropTypes.string.isRequired
-  }).isRequired
-};
+interface SectionHeaderProps {
+  course: string;
+  courseTitle: string;
+  userRole: string;
+}
 
-export function SectionHeader({ course, courseTitle, userRole }) {
+export function SectionHeader({ course, courseTitle, userRole }: SectionHeaderProps) {
   const relation = userRole.toLowerCase();
   return (
     <div className="section-detail-header">
@@ -56,13 +75,11 @@ export function SectionHeader({ course, courseTitle, userRole }) {
   );
 }
 
-SectionHeader.propTypes = {
-  course: PropTypes.string.isRequired,
-  courseTitle: PropTypes.string.isRequired,
-  userRole: PropTypes.string.isRequired
-};
+interface SectionSidebarProps {
+  links: string[][];
+}
 
-export function SectionSidebar({ links }) {
+export function SectionSidebar({ links }: SectionSidebarProps) {
   return (
     <nav id="section-detail-sidebar">
       {links.map(([label, href]) => (
@@ -74,20 +91,35 @@ export function SectionSidebar({ links }) {
   );
 }
 
-SectionSidebar.propTypes = { links: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)).isRequired };
+interface LocationProps {
+  location?: string;
+}
 
-const Location = ({ location }) =>
-  location.match(/^https?:\/\//) ? (
+function Location({ location }: LocationProps) {
+  return (location || "").match(/^https?:\/\//) ? (
     <a className="location-link" href={location}>
       Online
     </a>
   ) : (
     <h5>{location}</h5>
   );
+}
 
-Location.propTypes = { location: PropTypes.string.isRequired };
+interface SectionSpacetimeProps {
+  manySpacetimes: boolean;
+  index: number;
+  children?: React.ReactNode;
+  spacetime: Spacetime;
+  override?: Override;
+}
 
-export function SectionSpacetime({ manySpacetimes, index, spacetime: { location, time }, override, children }) {
+export function SectionSpacetime({
+  manySpacetimes,
+  index,
+  spacetime: { location, time },
+  override,
+  children
+}: SectionSpacetimeProps) {
   return (
     <InfoCard title={`Time and Location${manySpacetimes ? ` ${index + 1}` : ""}`}>
       {children}
@@ -105,15 +137,13 @@ export function SectionSpacetime({ manySpacetimes, index, spacetime: { location,
   );
 }
 
-SectionSpacetime.propTypes = {
-  spacetime: Spacetime,
-  override: PropTypes.shape({ spacetime: Spacetime, date: PropTypes.string.isRequired }),
-  children: PropTypes.node,
-  manySpacetimes: PropTypes.bool.isRequired,
-  index: PropTypes.number.isRequired // 0-indexed in code, displayed 1-indexed to user
-};
+interface InfoCardProps {
+  title: string;
+  children?: React.ReactNode;
+  showTitle?: boolean;
+}
 
-export function InfoCard({ title, children, showTitle = true }) {
+export function InfoCard({ title, children, showTitle = true }: InfoCardProps) {
   const cssClass = title.toLowerCase().replace(/ /g, "-");
   return (
     <div className={`section-detail-info-card ${cssClass}`}>
@@ -123,13 +153,15 @@ export function InfoCard({ title, children, showTitle = true }) {
   );
 }
 
-InfoCard.propTypes = {
-  title: PropTypes.string.isRequired,
-  children: PropTypes.node,
-  showTitle: PropTypes.bool
-};
+interface SectionDetailProps {
+  course: string;
+  courseTitle: string;
+  userRole: string;
+  links: string[][];
+  children?: React.ReactNode;
+}
 
-export function SectionDetail({ course, courseTitle, userRole, links, children }) {
+export function SectionDetail({ course, courseTitle, userRole, links, children }: SectionDetailProps) {
   return (
     <section>
       <SectionHeader course={course} courseTitle={courseTitle} userRole={userRole} />
@@ -141,16 +173,8 @@ export function SectionDetail({ course, courseTitle, userRole, links, children }
   );
 }
 
-SectionDetail.propTypes = {
-  course: PropTypes.string.isRequired,
-  courseTitle: PropTypes.string.isRequired,
-  userRole: PropTypes.string.isRequired,
-  links: PropTypes.arrayOf(PropTypes.arrayOf(PropTypes.string)).isRequired,
-  children: PropTypes.node.isRequired
-};
-
 // Values are [label, css class suffix]
-export const ATTENDANCE_LABELS = Object.freeze({
+export const ATTENDANCE_LABELS: Readonly<{ [label: string]: string[] }> = Object.freeze({
   UN: ["Unexcused Absence", "unexcused"],
   EX: ["Excused Absence", "excused"],
   PR: ["Present", "present"],

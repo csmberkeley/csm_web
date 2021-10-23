@@ -8,7 +8,12 @@ import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 /**
  * React component representing the entire resource table, managing all resource rows.
  */
-export const ResourceTable = ({ courseID, roles, getResources, updateResources }: ResourceTableProps): JSX.Element => {
+export const ResourceTable = ({
+  courseID,
+  roles,
+  getResources,
+  updateResources
+}: ResourceTableProps): React.ReactElement => {
   const [resources, setResources] = useState<Array<Resource>>([]);
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [viewEdit, setViewEdit] = useState<boolean>(false);

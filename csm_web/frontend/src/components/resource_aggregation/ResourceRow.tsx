@@ -13,7 +13,7 @@ export const ResourceRow = ({
   canEdit,
   addingResource,
   cancelOverride
-}: ResourceRowProps): JSX.Element => {
+}: ResourceRowProps): React.ReactElement => {
   const [edit, setEdit] = useState<boolean>(false);
   const [resource, setResource] = useState<Resource>({} as Resource);
 

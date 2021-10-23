@@ -9,14 +9,15 @@ function handleInvalid({ target }: React.ChangeEvent<HTMLInputElement>): void {
 }
 
 // A fully cross-browser compatible time input, providing a shim for browsers like Safari that don't have <input type="time">
-export default function TimeInput({ onChange, ...props }: React.HTMLProps<HTMLInputElement>): JSX.Element {
+export default function TimeInput(props: React.HTMLProps<HTMLInputElement>): React.ReactElement {
+  const { onChange, ...otherProps } = props;
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     if (event.target.type === "text") {
       // This is true if and only if the browser does not support HTML5's <input type="time">
       // We need to clear this because otherwise the field will be permanently considered invalid even if its contents have changed
       event.target.setCustomValidity("");
     }
-    onChange(event);
+    if (onChange) onChange(event);
   }
   return (
     <input
@@ -26,7 +27,7 @@ export default function TimeInput({ onChange, ...props }: React.HTMLProps<HTMLIn
       placeholder="hh:mm"
       onInvalid={handleInvalid}
       onChange={handleChange}
-      {...props}
+      {...otherProps}
     />
   );
 }
