@@ -158,7 +158,7 @@ export const ResourceTable = ({
    * Deletes a specified resource from the database
    * @param resourceId - numerical id of resource
    */
-  function handleDeleteResource(resourceId) {
+  function handleDeleteResource(resourceId: number) {
     fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.DELETE, { id: resourceId }, false).then(
       response => {
         if (response.status === 400) {
@@ -203,7 +203,7 @@ export const ResourceTable = ({
    *
    * @param e checkbox toggle event
    */
-  function handleToggleViewEdit(e) {
+  function handleToggleViewEdit(e: React.ChangeEvent<HTMLInputElement>) {
     setViewEdit(e.target.checked);
   }
 

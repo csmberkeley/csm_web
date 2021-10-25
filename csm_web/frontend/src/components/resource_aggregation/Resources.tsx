@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from "react";
 import { fetchJSON } from "../../utils/api";
-import { emptyRoles, getRoles } from "../../utils/user";
+import { Course } from "../../utils/types";
+import { emptyRoles, getRoles, Roles } from "../../utils/user";
 import ResourceTable from "./ResourceTable";
 import { Resource } from "./ResourceTypes";
 
 export const Resources = (): React.ReactElement => {
-  const [roles, setRoles] = useState(emptyRoles());
-  const [selectedCourseID, setSelectedCourseID] = useState(1);
-  const [courses, setCourses] = useState([]);
-  const [cache, setCache] = useState(new Map());
+  const [roles, setRoles] = useState<Roles>(emptyRoles());
+  const [selectedCourseID, setSelectedCourseID] = useState<number>(1);
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [cache, setCache] = useState<Map<number, any>>(new Map());
 
   useEffect(() => {
     getRoles().then(roles => setRoles(roles));

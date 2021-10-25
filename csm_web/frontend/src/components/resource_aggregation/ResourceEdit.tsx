@@ -4,17 +4,28 @@ import Modal from "../Modal";
 import {
   copyWorksheet,
   emptyWorksheet,
-  ResourceEditProps,
   Worksheet,
   FormErrors,
   Touched,
   emptyFormErrors,
   emptyTouched,
-  allTouched
+  allTouched,
+  Resource
 } from "./ResourceTypes";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCheckCircle, faExclamationCircle, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
+
+interface ResourceEditProps {
+  resource: Resource;
+  onChange: (e: ChangeEvent<HTMLInputElement>, field: string) => void;
+  onSubmit: (
+    e: MouseEvent<HTMLButtonElement>,
+    fileFormDataMap: Map<number, Worksheet>,
+    newWorksheets: Worksheet[]
+  ) => void;
+  onCancel: () => void;
+}
 
 /**
  * React component to handle editing of resources.
@@ -182,11 +193,12 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    * @param callback function to call on retrieved worksheet
    */
   function retrieveAndExecute(worksheetId: number, callback: (worksheet: Worksheet) => void) {
-    let worksheet;
+    let worksheet: Worksheet;
     if (existingWorksheetMap.has(worksheetId)) {
-      worksheet = existingWorksheetMap.get(worksheetId);
+      worksheet = existingWorksheetMap.get(worksheetId)!;
     } else {
-      console.error(`Worksheet not found: id ${worksheet.id}`);
+      console.error(`Worksheet not found: id ${worksheetId}`);
+      return;
     }
     callback(worksheet);
     // update state and render
@@ -204,19 +216,24 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   function handleExistingWorksheetChange(
     e: ChangeEvent<HTMLInputElement>,
     worksheetId: number,
-    field: string,
-    getFile: boolean
+    field: "worksheetFile" | "solutionFile" | "name",
+    getFile?: boolean
   ): void {
     // make sure the field is expected
     console.assert(
       field === "worksheetFile" || field === "solutionFile" || field === "name",
-      `handleFileChange() field must be "worksheetFile" or "solutionFile" or "name"; got ${field}`
+      `handleExistingWorksheetChange() field must be "worksheetFile" or "solutionFile" or "name"; got ${field}`
     );
     // retrieve worksheet FormData object
     retrieveAndExecute(worksheetId, worksheet => {
       // update field in worksheet FormData
       if (getFile) {
-        worksheet[field] = e.target.files[0];
+        console.assert(
+          field === "worksheetFile" || field === "solutionFile",
+          `handleExistingWorksheetChange() field must be "worksheetFile" or "solutionFile" if getFile is set; got ${field}`
+        );
+        const filefield = field as "worksheetFile" | "solutionFile"; // type coersion to avoid type error
+        worksheet[filefield] = e.target.files![0]; // e.target.files should not be null
       } else {
         worksheet[field] = e.target.value;
       }
@@ -258,7 +275,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    * @param worksheetId worksheet id
    * @param field field of file to delete
    */
-  function handleExistingWorksheetDeleteFile(worksheetId: number, field: string): void {
+  function handleExistingWorksheetDeleteFile(worksheetId: number, field: "worksheetFile" | "solutionFile"): void {
     console.assert(
       field === "worksheetFile" || field === "solutionFile",
       `Expected "workheetFile" or "solutionFile"; got ${field}`
@@ -284,12 +301,22 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   function handleNewWorksheetChange(
     e: ChangeEvent<HTMLInputElement>,
     index: number,
-    field: string,
-    getFile: boolean
+    field: "worksheetFile" | "solutionFile" | "name",
+    getFile?: boolean
   ): void {
+    // make sure the field is expected
+    console.assert(
+      field === "worksheetFile" || field === "solutionFile" || field === "name",
+      `handleNewWorksheetChange() field must be "worksheetFile" or "solutionFile" or "name"; got ${field}`
+    );
     const worksheet = newWorksheets[index];
     if (getFile) {
-      worksheet[field] = e.target.files[0];
+      console.assert(
+        field === "worksheetFile" || field === "solutionFile",
+        `handleNewWorksheetChange() field must be "worksheetFile" or "solutionFile" or "name"; got ${field}`
+      );
+      const fileField = field as "worksheetFile" | "solutionFile"; // type coersion to avoid type error
+      worksheet[fileField] = e.target.files![0]; // e.target.files should not be null
     } else {
       worksheet[field] = e.target.value;
     }
@@ -340,7 +367,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    * @param index worksheet index to delete from
    * @param field field of worksheet to delete
    */
-  function handleNewWorksheetDeleteFile(index: number, field: string): void {
+  function handleNewWorksheetDeleteFile(index: number, field: "worksheetFile" | "solutionFile"): void {
     console.assert(
       field === "worksheetFile" || field === "solutionFile",
       `Expected "workheetFile" or "solutionFile"; got ${field}`

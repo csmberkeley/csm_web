@@ -1,7 +1,20 @@
 import React, { useState, useEffect, ChangeEvent, MouseEvent } from "react";
 import ResourceEdit from "./ResourceEdit";
-import { Resource, ResourceRowProps, Worksheet } from "./ResourceTypes";
+import { Resource, Worksheet } from "./ResourceTypes";
 import ResourceRowRender from "./ResourceRowRender";
+
+interface ResourceRowProps {
+  initialResource: Resource;
+  onUpdateResource: (
+    newResource: Resource,
+    fileFormDataMap: Map<number, Worksheet>,
+    newWorksheets: Array<Worksheet>
+  ) => void;
+  canEdit: boolean;
+  onDeleteResource: (resourceId: number) => void;
+  addingResource: boolean;
+  cancelOverride: () => void;
+}
 
 /**
  * React component representing a row of the resource table.

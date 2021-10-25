@@ -1,7 +1,14 @@
 import React from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUpload, faExclamationCircle, faTimes, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
-import { ResourceFileFieldProps, ResourceWorksheetEditProps } from "./ResourceTypes";
+import { Worksheet } from "./ResourceTypes";
+
+interface ResourceFileFieldProps {
+  worksheet: Worksheet;
+  fileType: "worksheetFile" | "solutionFile";
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onDelete: (e: React.MouseEvent<HTMLButtonElement>) => void;
+}
 
 /**
  * Helper component for a file field, updating when the user uploads/deletes files.
@@ -12,10 +19,10 @@ const ResourceFileField = ({ worksheet, fileType, onChange, onDelete }: Resource
   if (worksheet[fileType] && !isDeleted) {
     if (typeof worksheet[fileType] === "string") {
       // already uploaded to S3; parse filename/type from URL
-      uploadLabel = worksheet[fileType].split("#").shift().split("?").shift().split("/").pop();
+      uploadLabel = (worksheet[fileType] as string).split("#").shift()!.split("?").shift()!.split("/").pop()!;
     } else {
       // newly uplaoded; name is in File object
-      uploadLabel = worksheet[fileType].name;
+      uploadLabel = (worksheet[fileType] as File).name;
     }
   }
   return (
@@ -33,6 +40,21 @@ const ResourceFileField = ({ worksheet, fileType, onChange, onDelete }: Resource
     </div>
   );
 };
+
+interface ResourceWorksheetEditProps {
+  worksheet: Worksheet;
+  onChange: (
+    e: React.ChangeEvent<HTMLInputElement>,
+    worksheetId: number,
+    field: "worksheetFile" | "solutionFile" | "name",
+    getFile?: boolean
+  ) => void;
+  onDelete: (worksheetId: number) => void;
+  onDeleteFile: (worksheetId: number, field: "worksheetFile" | "solutionFile") => void;
+  onBlur: () => void;
+  formErrorsMap: Map<number, string>;
+  index: number;
+}
 
 const ResourceWorksheetEdit = ({
   worksheet,
