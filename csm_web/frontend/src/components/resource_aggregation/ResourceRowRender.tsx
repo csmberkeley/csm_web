@@ -2,18 +2,29 @@ import React, { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faPencilAlt, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import Modal from "../Modal";
-import { ResourceRowRenderProps } from "./ResourceTypes";
+import { Resource } from "./ResourceTypes";
 
-const ResourceTopics = ({ topics }) => {
+interface ResourceRowRenderProps {
+  resource: Resource;
+  canEdit: boolean;
+  onSetEdit: () => void;
+  onDelete: (resourceId: number) => void;
+}
+
+const ResourceTopics = ({ topics }: { topics: string }): React.ReactElement => {
   if (topics === undefined) return <div></div>;
-  return topics.split(";").map((topic, index) => (
-    <div className="topic" key={index}>
-      {topic.trim()}
-    </div>
-  ));
+  return (
+    <React.Fragment>
+      {topics.split(";").map((topic, index) => (
+        <div className="topic" key={index}>
+          {topic.trim()}
+        </div>
+      ))}
+    </React.Fragment>
+  );
 };
 
-const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceRowRenderProps): React.ReactNode => {
+const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceRowRenderProps): React.ReactElement => {
   /**
    * Deletion stages:
    * 0: initial; did not click delete button
@@ -25,12 +36,12 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
    * Handles actual deletion of resource; sets deletion stage to 0 to close modal.
    */
   function handleDelete() {
-    onDelete(resource.id);
+    onDelete(resource.id!);
     setDeletionStage(0);
   }
 
   return (
-    <>
+    <React.Fragment>
       {deletionStage === 1 && (
         <Modal className="resourceDeleteConfirmation" closeModal={() => setDeletionStage(0)}>
           <div className="resourceDeleteText">
@@ -82,7 +93,7 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
           </div>
         )}
       </div>
-    </>
+    </React.Fragment>
   );
 };
 

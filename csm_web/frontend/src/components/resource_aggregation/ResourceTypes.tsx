@@ -1,4 +1,3 @@
-import { ChangeEvent, MouseEvent } from "react";
 import { Roles } from "../../utils/user";
 
 export interface Resource {
@@ -23,54 +22,6 @@ export interface ResourceTableProps {
   roles: Roles;
   getResources: () => Promise<Array<Resource>>;
   updateResources: () => Promise<Array<Resource>>;
-}
-
-export interface ResourceRowProps {
-  initialResource: Resource;
-  onUpdateResource: (
-    newResource: Resource,
-    fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Array<Worksheet>
-  ) => void;
-  canEdit: boolean;
-  onDeleteResource: (resourceId: number) => void;
-  addingResource: boolean;
-  cancelOverride: () => void;
-}
-
-export interface ResourceRowRenderProps {
-  resource: Resource;
-  canEdit: boolean;
-  onSetEdit: () => void;
-  onDelete: (resourceId: number) => void;
-}
-
-export interface ResourceFileFieldProps {
-  worksheet: Worksheet;
-  fileType: string;
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
-  onDelete: (e: MouseEvent<HTMLButtonElement>) => void;
-}
-
-export interface ResourceWorksheetEditProps {
-  worksheet: Worksheet;
-  onChange: (e: ChangeEvent<HTMLInputElement>, worksheetId: number, field: string, getFile?: boolean) => void;
-  onDelete: (worksheetId: number) => void;
-  onDeleteFile: (worksheetId: number, field: string) => void;
-  onBlur: () => void;
-  formErrorsMap: Map<number, string>;
-  index: number;
-}
-
-export interface ResourceEditProps {
-  resource: Resource;
-  onChange: (e: ChangeEvent<HTMLInputElement>, field: string) => void;
-  onSubmit: (
-    e: MouseEvent<HTMLButtonElement>,
-    fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Array<Worksheet>
-  ) => void;
-  onCancel: () => void;
 }
 
 export interface FormErrors {
@@ -111,8 +62,8 @@ export function emptyResource(): Resource {
  */
 export function emptyWorksheet(): Worksheet {
   return {
-    id: null,
-    resource: null,
+    id: (null as unknown) as number,
+    resource: (null as unknown) as number,
     name: "",
     worksheetFile: "",
     solutionFile: ""
