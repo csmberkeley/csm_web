@@ -1,5 +1,4 @@
 import React from "react";
-import PropTypes from "prop-types";
 
 function handleInvalid({ target }: React.ChangeEvent<HTMLInputElement>): void {
   if (target.type === "text") {
@@ -31,5 +30,3 @@ export default function TimeInput(props: React.HTMLProps<HTMLInputElement>): Rea
     />
   );
 }
-
-TimeInput.propTypes = { onChange: PropTypes.func.isRequired };

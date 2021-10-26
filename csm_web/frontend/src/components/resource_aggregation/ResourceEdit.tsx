@@ -12,9 +12,11 @@ import {
   allTouched,
   Resource
 } from "./ResourceTypes";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCheckCircle, faExclamationCircle, faPlusCircle } from "@fortawesome/free-solid-svg-icons";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
+
+import CheckCircle from "../../../static/frontend/img/check-circle-solid.svg";
+import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
+import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
 
 interface ResourceEditProps {
   resource: Resource;
@@ -435,7 +437,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                   onBlur={() => handleBlur("weekNum")}
                 />
                 <div className="resourceValidationError">
-                  {formErrors.weekNum && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+                  {formErrors.weekNum && <ExclamationCircle className="icon exclamationIcon" />}
                   {formErrors.weekNum}
                 </div>
               </div>
@@ -448,7 +450,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                   onBlur={() => handleBlur("date")}
                 />
                 <div className="resourceValidationError">
-                  {formErrors.date && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+                  {formErrors.date && <ExclamationCircle className="icon exclamationIcon" />}
                   {formErrors.date}
                 </div>
               </div>
@@ -462,7 +464,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                   onBlur={() => handleBlur("topics")}
                 />
                 <div className="resourceValidationError">
-                  {formErrors.topics && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+                  {formErrors.topics && <ExclamationCircle className="icon exclamationIcon" />}
                   {formErrors.topics}
                 </div>
               </div>
@@ -478,14 +480,14 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
               {existingDisplay}
               {newDisplay}
               <button onClick={handleAddWorksheet} id="addWorksheetButton">
-                <FontAwesomeIcon icon={faPlusCircle} id="plusIcon" />
+                <PlusCircle className="icon" id="plusIcon" />
                 Add Worksheet
               </button>
             </div>
           </div>
         </div>
         <button onClick={handleSubmit} id="resourceButtonSubmit" disabled={!checkValid()}>
-          <FontAwesomeIcon icon={faCheckCircle} id="saveIcon" /> SAVE
+          <CheckCircle className="icon" id="saveIcon" /> SAVE
         </button>
       </div>
     </Modal>

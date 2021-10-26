@@ -4,8 +4,9 @@ import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { Attendance, Mentor, Override, Spacetime } from "../../utils/types";
 import Modal from "../Modal";
-import XIcon from "../../../static/frontend/img/x.svg";
 import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime, ROLES } from "./Section";
+
+import XIcon from "../../../static/frontend/img/x.svg";
 
 interface StudentSectionType {
   course: string;

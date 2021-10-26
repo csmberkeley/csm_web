@@ -1,6 +1,5 @@
 import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
-import PropTypes from "prop-types";
 import { fetchJSON } from "../../utils/api";
 import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";

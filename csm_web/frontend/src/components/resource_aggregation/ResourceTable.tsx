@@ -1,9 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import ResourceRow from "./ResourceRow";
-import { emptyResource, Resource, ResourceTableProps, Worksheet } from "./ResourceTypes";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPlusCircle } from "@fortawesome/free-solid-svg-icons";
+import { emptyResource, Resource, Worksheet } from "./ResourceTypes";
+import { Roles } from "../../utils/user";
+
+import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
+
+interface ResourceTableProps {
+  courseID: number;
+  roles: Roles;
+  getResources: () => Promise<Array<Resource>>;
+  updateResources: () => Promise<Array<Resource>>;
+}
 
 /**
  * React component representing the entire resource table, managing all resource rows.
@@ -212,7 +220,7 @@ export const ResourceTable = ({
       {canEdit && (
         <div className="resourceTableOptions">
           <button onClick={handleSetAddingResource} id="addResourceButton">
-            <FontAwesomeIcon icon={faPlusCircle} id="plusIcon" />
+            <PlusCircle className="icon" id="plusIcon" />
             <div>Add Resource</div>
           </button>
           <div className="toggleViewEditContainer">

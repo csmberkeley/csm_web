@@ -1,8 +1,9 @@
 import React, { useState } from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faPencilAlt, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import Modal from "../Modal";
 import { Resource } from "./ResourceTypes";
+
+import Pencil from "../../../static/frontend/img/pencil.svg";
+import Trash from "../../../static/frontend/img/trash-alt.svg";
 
 interface ResourceRowRenderProps {
   resource: Resource;
@@ -85,10 +86,10 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
         {canEdit && (
           <div className="resourceButtonsContainer">
             <button onClick={onSetEdit} className="resourceButton">
-              <FontAwesomeIcon icon={faPencilAlt} id="editIcon" />
+              <Pencil className="icon" id="editIcon" />
             </button>
             <button onClick={() => setDeletionStage(1)} className="resourceButton">
-              <FontAwesomeIcon icon={faTrashAlt} id="deleteIcon" />
+              <Trash className="icon" id="deleteIcon" />
             </button>
           </div>
         )}

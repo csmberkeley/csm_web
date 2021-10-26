@@ -324,6 +324,7 @@ button.clearFile:hover {
 }
 
 .uploadIcon {
+	width: 1em;
 	margin-right: 5px !important;
 }
 
@@ -460,4 +461,12 @@ button.clearFile:hover {
 	justify-content: center;
 	align-items: center;
 	text-align: center;
+}
+
+.icon {
+	display: inline-block;
+	font-size: inherit;
+	height: 1em;
+	overflow: visible;
+	vertical-align: -0.125em;
 }

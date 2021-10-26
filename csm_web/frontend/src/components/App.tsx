@@ -6,11 +6,9 @@ import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Section from "./section/Section";
 import { Resources } from "./resource_aggregation/Resources";
+
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
-
-import { config } from "@fortawesome/fontawesome-svg-core";
-config.autoAddCss = false; // remove inline styling
 
 interface ErrorType {
   message: string;
