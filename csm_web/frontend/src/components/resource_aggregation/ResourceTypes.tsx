@@ -1,5 +1,3 @@
-import { Roles } from "../../utils/user";
-
 export interface Resource {
   id?: number;
   weekNum: number;
@@ -15,13 +13,6 @@ export interface Worksheet {
   worksheetFile: string | File;
   solutionFile: string | File;
   deleted?: string[];
-}
-
-export interface ResourceTableProps {
-  courseID: number;
-  roles: Roles;
-  getResources: () => Promise<Array<Resource>>;
-  updateResources: () => Promise<Array<Resource>>;
 }
 
 export interface FormErrors {

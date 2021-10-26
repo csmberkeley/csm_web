@@ -21,7 +21,10 @@ interface CourseMenuProps {
 }
 
 export default class CourseMenu extends React.Component<CourseMenuProps> {
-  state: CourseMenuState = { courses: null, loaded: false };
+  state: CourseMenuState = {
+    courses: (null as unknown) as Map<number, CourseType>, // type coersion for initial state value
+    loaded: false
+  };
 
   componentDidMount(): void {
     fetchJSON("/courses").then(courses => {
@@ -106,9 +109,12 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
         <Route
           path="/courses/:id"
           render={(routeProps: any) => {
-            const course = loaded && courses.get(Number(routeProps.match.params.id));
-            const isOpen = course && course.enrollmentOpen;
-            return <Course name={loaded && course.name} isOpen={isOpen} {...routeProps} />;
+            if (loaded) {
+              // only render if loaded
+              const course = courses.get(Number(routeProps.match.params.id))!;
+              const isOpen = course && course.enrollmentOpen;
+              return <Course name={loaded && course.name} isOpen={isOpen} {...routeProps} />;
+            }
           }}
         />
         <Route

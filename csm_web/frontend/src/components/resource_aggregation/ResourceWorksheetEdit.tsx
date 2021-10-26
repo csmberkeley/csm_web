@@ -1,7 +1,10 @@
 import React from "react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faUpload, faExclamationCircle, faTimes, faTrashAlt } from "@fortawesome/free-solid-svg-icons";
 import { Worksheet } from "./ResourceTypes";
+
+import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
+import Upload from "../../../static/frontend/img/upload.svg";
+import Times from "../../../static/frontend/img/x.svg";
+import Trash from "../../../static/frontend/img/trash-alt.svg";
 
 interface ResourceFileFieldProps {
   worksheet: Worksheet;
@@ -29,12 +32,12 @@ const ResourceFileField = ({ worksheet, fileType, onChange, onDelete }: Resource
     <div className="resourceWorksheetEditFile">
       <label className="fileUpload">
         <input type="file" onChange={onChange} />
-        <FontAwesomeIcon icon={faUpload} className="uploadIcon" />
+        <Upload className="icon uploadIcon" />
         <span className="fileUploadLabel">{uploadLabel}</span>
       </label>
       {worksheet[fileType] && !isDeleted && (
         <button onClick={onDelete} className="clearFile">
-          <FontAwesomeIcon icon={faTimes} />
+          <Times className="icon" />
         </button>
       )}
     </div>
@@ -77,7 +80,7 @@ const ResourceWorksheetEdit = ({
           onBlur={() => onBlur()}
         />
         <div className="resourceValidationError">
-          {formErrorsMap.get(currentId) && <FontAwesomeIcon icon={faExclamationCircle} className="exclamationIcon" />}
+          {formErrorsMap.get(currentId) && <ExclamationCircle className="icon exclamationIcon" />}
           {formErrorsMap.get(currentId)}
         </div>
       </div>
@@ -94,7 +97,7 @@ const ResourceWorksheetEdit = ({
         onDelete={() => onDeleteFile(currentId, "solutionFile")}
       />
       <button onClick={() => onDelete(currentId)} className="deleteWorksheet">
-        <FontAwesomeIcon icon={faTrashAlt} />
+        <Trash className="icon" />
       </button>
     </div>
   );
