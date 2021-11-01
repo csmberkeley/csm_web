@@ -98,8 +98,8 @@ function ErrorPage({ error: { message, stack }, clearError }: ErrorPageProps) {
         <h1>A fatal error has occurred!</h1>
         <h2 className="page-title">If you&apos;re a mentor:</h2>
         <p>
-          Please report this on the Slack channel #tech-ask. Include a screenshot of this page along with an explanation
-          of what you were trying to accomplish when you encountered this error
+          Please report this on the Slack channel #tech-bugs. Include a screenshot of this page along with an
+          explanation of what you were trying to accomplish when you encountered this error
         </p>
         <h2 className="page-title">If you&apos;re a student:</h2>
         <p>
