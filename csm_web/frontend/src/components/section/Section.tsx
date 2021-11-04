@@ -33,7 +33,7 @@ export default function Section({
   });
   const reloadSection = () => {
     setState({ section: (null as unknown) as SectionType, loaded: false });
-    fetchJSON(`/sections/${id}`).then(({ id, section }) => setState({ section, loaded: true }));
+    fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
   };
   useEffect(() => {
     fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
