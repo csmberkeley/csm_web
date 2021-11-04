@@ -131,13 +131,13 @@ export default class SpacetimeEditModal extends React.Component<SpacetimeEditMod
               Day
               <select
                 onChange={this.handleChangeSelect}
-                required={isPermanent}
+                required={!!isPermanent}
                 name="day"
                 disabled={!isPermanent}
-                value={isPermanent ? day : ""}
+                value={isPermanent ? day : "---"}
               >
-                {["", "---"].concat(Array.from(DAYS_OF_WEEK)).map(value => (
-                  <option key={value} value={value} disabled={!value}>
+                {["---"].concat(Array.from(DAYS_OF_WEEK)).map(value => (
+                  <option key={value} value={value} disabled={value === "---"}>
                     {value}
                   </option>
                 ))}
@@ -156,7 +156,7 @@ export default class SpacetimeEditModal extends React.Component<SpacetimeEditMod
                 required
                 type="radio"
                 name="isPermanent"
-                checked={isPermanent}
+                checked={!!isPermanent}
                 value="true"
               />
               All sections
@@ -177,7 +177,7 @@ export default class SpacetimeEditModal extends React.Component<SpacetimeEditMod
                 type="date"
                 min={today}
                 name="changeDate"
-                disabled={isPermanent}
+                disabled={!!isPermanent}
                 value={isPermanent ? "" : changeDate}
               />
             </label>
