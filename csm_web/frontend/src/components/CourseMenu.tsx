@@ -46,7 +46,7 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
 
     if (loaded) {
       for (const course of courses.values()) {
-        show_enrollment_times ||= !course.enrollmentOpen;
+        show_enrollment_times = show_enrollment_times || !course.enrollmentOpen;
         if (!course.enrollmentOpen) {
           enrollment_times_by_course.push({
             courseName: course.name,
