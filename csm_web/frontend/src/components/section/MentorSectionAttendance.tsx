@@ -30,12 +30,21 @@ export default class MentorSectionAttendance extends React.Component<
 
   constructor(props: MentorSectionAttendanceProps) {
     super(props);
-    this.state = {
+
+    const state: MentorSectionAttendanceState = {
       selectedDate: undefined,
       stagedAttendances: undefined,
       showAttendanceSaveSuccess: false,
       showSaveSpinner: false
     };
+
+    if (props.loaded) {
+      // update selected date if already loaded
+      state.selectedDate = Object.keys(props.attendances).sort(dateSort)[0];
+      state.stagedAttendances = props.attendances[state.selectedDate!];
+    }
+    this.state = state;
+
     this.handleAttendanceChange = this.handleAttendanceChange.bind(this);
     this.handleSaveAttendance = this.handleSaveAttendance.bind(this);
     this.handleMarkAllPresent = this.handleMarkAllPresent.bind(this);
@@ -57,6 +66,15 @@ export default class MentorSectionAttendance extends React.Component<
         )
       };
     });
+  }
+
+  componentDidUpdate(prevProps: MentorSectionAttendanceProps): void {
+    // if the attendances have now loaded, select the most recent attendance date
+    if (!prevProps.loaded && this.props.loaded) {
+      const selectedDate = Object.keys(this.props.attendances).sort(dateSort)[0];
+      const stagedAttendances = this.props.attendances[selectedDate];
+      this.setState({ selectedDate, stagedAttendances });
+    }
   }
 
   handleSaveAttendance() {
@@ -89,7 +107,8 @@ export default class MentorSectionAttendance extends React.Component<
 
   render() {
     const { attendances, loaded } = this.props;
-    const selectedDate = this.state.selectedDate || (loaded && Object.keys(attendances)[0]);
+    // use state selected date, or if undefined, use most recent date from props
+    const selectedDate = this.state.selectedDate || (loaded && Object.keys(attendances).sort(dateSort)[0]);
     const stagedAttendances = this.state.stagedAttendances || (selectedDate ? attendances[selectedDate] : []);
     const { showAttendanceSaveSuccess, showSaveSpinner } = this.state;
     return (
