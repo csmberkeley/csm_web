@@ -24,10 +24,10 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
     def get_queryset(self):
         banned_from = self.request.user.student_set.filter(banned=True).values_list(
-            "section__course__id", flat=True
+            "section__mentor__course__id", flat=True
         )
         return (
-            Section.objects.exclude(course__pk__in=banned_from)
+            Section.objects.exclude(mentor__course__pk__in=banned_from)
             .prefetch_related(
                 Prefetch(
                     "spacetimes",
@@ -37,7 +37,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             .filter(
                 Q(mentor__user=self.request.user)
                 | Q(students__user=self.request.user)
-                | Q(course__coordinator__user=self.request.user)
+                | Q(mentor__course__coordinator__user=self.request.user)
             )
             .distinct()
         )
@@ -60,7 +60,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 email=self.request.data["mentor_email"],
                 username=self.request.data["mentor_email"].split("@")[0],
             )
-            duration = course.section_set.first().spacetimes.first().duration
+            duration = course.mentor_set.first().section.spacetimes.first().duration
             spacetime_serializers = [
                 SpacetimeSerializer(data={**spacetime, "duration": str(duration)})
                 for spacetime in self.request.data["spacetimes"]
@@ -78,12 +78,11 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 spacetime_serializer.save()
                 for spacetime_serializer in spacetime_serializers
             ]
-            mentor = Mentor.objects.create(user=mentor_user)
+            mentor = Mentor.objects.create(user=mentor_user, course=course)
             section = Section.objects.create(
                 mentor=mentor,
                 description=self.request.data["description"],
-                capacity=self.request.data["capacity"],
-                course=course,
+                capacity=self.request.data["capacity"]
             )
             section.spacetimes.set(spacetimes)
             section.save()
@@ -91,7 +90,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
     def partial_update(self, request, pk=None):
         section = get_object_or_error(self.get_queryset(), pk=pk)
-        if not section.course.coordinator_set.filter(user=self.request.user).count():
+        if not section.mentor.course.coordinator_set.filter(user=self.request.user).count():
             raise PermissionDenied("Only coordinators can change section metadata")
         serializer = self.serializer_class(
             section,
@@ -142,9 +141,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             desired section. This allows us to assume that current_student_count is correct.
             """
             section = get_object_or_error(Section.objects, pk=pk)
-            section = Section.objects.select_for_update().get(pk=section.pk)
+            section = Section.objects.select_for_update().prefetch_related('mentor__course').get(pk=section.pk)
             is_coordinator = bool(
-                section.course.coordinator_set.filter(user=request.user).count()
+                section.mentor.course.coordinator_set.filter(user=request.user).count()
             )
 
             """
@@ -286,7 +285,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
         statuses = []  # status for each email
         # set of coord users (contains user ids)
-        course_coords = section.course.coordinator_set.values_list("user", flat=True)
+        course_coords = section.mentor.course.coordinator_set.values_list("user", flat=True)
 
         # Phase 1: go through emails and check for validity/conflicts
         for email_obj in emails:
@@ -296,7 +295,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
             # get all students with the email in the course
             student_queryset = Student.objects.filter(
-                section__course=section.course, user__email=email
+                section__mentor__course=section.mentor.course, user__email=email
             )
 
             if student_queryset.count() > 1:
@@ -317,7 +316,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 student_user = User.objects.get(email=email)
                 if (
                     student_user.id not in course_coords
-                    and student_user.can_enroll_in_course(section.course)
+                    and student_user.can_enroll_in_course(section.mentor.course)
                 ):
                     # student does not exist yet; we can always create it
                     db_actions.append(("create", email))
@@ -330,7 +329,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     if student_user.id in course_coords:
                         reason = "coordinator"
                     elif student_user.mentor_set.filter(
-                        section__course=section.course
+                        section__mentor__course=section.mentor.course
                     ).exists():
                         reason = "mentor"
                     curstatus["detail"] = {"reason": reason}
@@ -433,7 +432,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
         Adds a student to a section (initiated by a student)
         """
-        if not request.user.can_enroll_in_course(section.course):
+        if not request.user.can_enroll_in_course(section.mentor.course):
             logger.warn(
                 f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because they are already involved in this course"
             )
@@ -450,7 +449,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
 
         student_queryset = request.user.student_set.filter(
-            active=False, section__course=section.course
+            active=False, section__mentor__course=section.mentor.course
         )
         if student_queryset.count() > 1:
             logger.error(

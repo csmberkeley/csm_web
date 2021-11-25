@@ -86,7 +86,7 @@ class UserAdmin(CoordAdmin):
 
 @admin.register(Student)
 class StudentAdmin(CoordAdmin):
-    list_filter = ("active", "banned", "section__course")
+    list_filter = ("active", "banned", "section__mentor__course")
     list_display = ("name", "get_email", "get_course", "get_mentor", "section")
     search_fields = ("user__email", "user__first_name", "user__last_name")
     actions = ("drop_students", "undrop_students")
@@ -115,10 +115,10 @@ class StudentAdmin(CoordAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request).select_related("user", "section__course", "section__mentor")
+        queryset = super().get_queryset(request).select_related("user", "section__mentor__course", "section__mentor")
         if request.user.is_superuser:
             return queryset
-        return queryset.filter(section__course__in=get_visible_courses(request.user))
+        return queryset.filter(section__mentor__course__in=get_visible_courses(request.user))
 
     def drop_students(self, request, queryset):
         queryset.update(active=False)
@@ -147,7 +147,7 @@ class StudentAdmin(CoordAdmin):
 
     # TODO handle nullable section
     def get_course(self, obj):
-        return get_admin_link_for(obj.section.course, "admin:scheduler_course_change")
+        return get_admin_link_for(obj.section.mentor.course, "admin:scheduler_course_change")
 
     get_course.short_description = "Course"
 
@@ -173,10 +173,10 @@ class StudentAdmin(CoordAdmin):
 
 @admin.register(Mentor)
 class MentorAdmin(CoordAdmin):
-    fields = ("name", "get_email", "get_course", "user", "get_section", "get_students")
-    readonly_fields = ("get_course", "get_email", "get_section", "name", "get_students")
-    list_filter = ("section__course",)
-    list_display = ("name", "get_email", "get_course", "get_section")
+    fields = ("name", "get_email", "course", "user", "get_section", "get_students")
+    readonly_fields = ("get_email", "get_section", "name", "get_students")
+    list_filter = ("section__mentor__course",)
+    list_display = ("name", "get_email", "course", "get_section")
     search_fields = ("user__email", "user__first_name", "user__last_name")
     actions = ("deactivate_profiles", "activate_profiles")
     autocomplete_fields = ("user",)
@@ -188,12 +188,12 @@ class MentorAdmin(CoordAdmin):
         queryset = (
             super()
             .get_queryset(request)
-            .select_related("user", "section__course")
+            .select_related("user", "section__mentor__course")
             .prefetch_related("section__students")
         )
         if request.user.is_superuser:
             return queryset
-        return queryset.filter(section__course__in=get_visible_courses(request.user))
+        return queryset.filter(section__mentor__course__in=get_visible_courses(request.user))
 
     # Custom fields
 
@@ -212,11 +212,6 @@ class MentorAdmin(CoordAdmin):
         return get_admin_link_for(obj.section, "admin:scheduler_section_change")
 
     get_section.short_description = "Section"
-
-    def get_course(self, obj):
-        return get_admin_link_for(obj.section.course, "admin:scheduler_course_change")
-
-    get_course.short_description = "Course"
 
     def get_students(self, obj):
         student_links = sorted(
@@ -448,7 +443,7 @@ class CourseAdmin(CoordAdmin):
         return (
             # Filter by unique emails
             # (Don't need to do this for students since you can only be in one section per course)
-            Mentor.objects.filter(section__course=obj)
+            Mentor.objects.filter(course=obj)
             .values("user__email")
             .annotate(ct=Count("user__email"))
             .count()
@@ -556,7 +551,7 @@ class AttendanceAdmin(CoordAdmin):
         "presence",
     )
 
-    list_filter = ("presence", "student__section__course", DayStartFilter, DayEndFilter)
+    list_filter = ("presence", "student__section__mentor__course", DayStartFilter, DayEndFilter)
     search_fields = ("student__user__first_name", "student__user__last_name")
     #ordering = ("-date",)
 
@@ -609,7 +604,7 @@ class OverrideAdmin(admin.ModelAdmin):
     fields = ("date", "spacetime", "overriden_spacetime")
     ordering = ("-date",)
 
-    list_filter = ("spacetime__day_of_week", "spacetime__section__course")
+    list_filter = ("spacetime__day_of_week", "spacetime__section__mentor__course")
 
     def has_module_permission(self, request, obj=None):
         return request.user.is_superuser  # TODO remove when implemented as coord view

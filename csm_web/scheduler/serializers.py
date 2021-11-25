@@ -102,7 +102,7 @@ class ProfileSerializer(serializers.Serializer):
         def to_representation(self, value):
             if isinstance(value, Coordinator):
                 return getattr(value.course, self.target)
-            return getattr(value.section.course, self.target)
+            return getattr(value.section.mentor.course, self.target)
 
     id = serializers.IntegerField()
     section_id = serializers.IntegerField(source='section.id', required=False)
@@ -155,8 +155,8 @@ class SectionSerializer(serializers.ModelSerializer):
     spacetimes = SpacetimeSerializer(many=True)
     num_students_enrolled = serializers.SerializerMethodField()
     mentor = MentorSerializer()
-    course = serializers.CharField(source='course.name')
-    course_title = serializers.CharField(source='course.title')
+    course = serializers.CharField(source='mentor.course.name')
+    course_title = serializers.CharField(source='mentor.course.title')
     user_role = serializers.SerializerMethodField()
     associated_profile_id = serializers.SerializerMethodField()
 
@@ -170,7 +170,7 @@ class SectionSerializer(serializers.ModelSerializer):
         try:
             return obj.students.get(user=user)
         except Student.DoesNotExist:
-            coordinator = obj.course.coordinator_set.filter(user=user).first()
+            coordinator = obj.mentor.course.coordinator_set.filter(user=user).first()
             if coordinator:
                 return coordinator
             if obj.mentor and obj.mentor.user == user:

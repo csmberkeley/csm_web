@@ -9,7 +9,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 
 from .utils import get_object_or_error, viewset_with
-from ..models import Course, Student, Spacetime
+from ..models import Course, Student, Spacetime, Section
 from ..serializers import CourseSerializer, SectionSerializer
 
 
@@ -18,7 +18,7 @@ class CourseViewSet(*viewset_with("list")):
 
     def get_queryset(self):
         banned_from = self.request.user.student_set.filter(banned=True).values_list(
-            "section__course__id", flat=True
+            "section__mentor__course__id", flat=True
         )
         now = timezone.now()
         return (
@@ -33,7 +33,8 @@ class CourseViewSet(*viewset_with("list")):
 
     def get_sections_by_day(self, course):
         sections = (
-            course.section_set.all()
+            # get all mentor sections
+            Section.objects.select_related('mentor').filter(mentor__course=course)
             .annotate(
                 day_key=ArrayAgg(
                     "spacetimes__day_of_week",
@@ -105,8 +106,8 @@ class CourseViewSet(*viewset_with("list")):
         if id_str[-1] == "/":
             id_str = id_str[:-1]
         ids = id_str.split(",")
-        studs = Student.objects.select_related("user").filter(
-            active=True, section__course__in=ids
+        studs = Student.objects.select_related("user", "section__mentor").filter(
+            active=True, section__mentor__course__in=ids
         )
 
         response = HttpResponse(content_type="text/csv")

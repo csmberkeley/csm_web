@@ -20,14 +20,14 @@ class StudentViewSet(viewsets.GenericViewSet):
             section__mentor__user=self.request.user, active=True
         )
         coordinator_student_profiles = Student.objects.filter(
-            section__course__coordinator__user=self.request.user, active=True
+            section__mentor__course__coordinator__user=self.request.user, active=True
         )
         return (own_profiles | pupil_profiles | coordinator_student_profiles).distinct()
 
     @action(detail=True, methods=["patch"])
     def drop(self, request, pk=None):
         student = get_object_or_error(self.get_queryset(), pk=pk)
-        is_coordinator = student.section.course.coordinator_set.filter(
+        is_coordinator = student.section.mentor.course.coordinator_set.filter(
             user=request.user
         ).exists()
         if student.user != request.user and not is_coordinator:

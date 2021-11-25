@@ -35,8 +35,8 @@ def week_bounds(date):
 class User(AbstractUser):
     def can_enroll_in_course(self, course):
         return course.is_open() and (
-            not (self.student_set.filter(active=True, section__course=course).count() or
-                 self.mentor_set.filter(section__course=course).count())
+            not (self.student_set.filter(active=True, section__mentor__course=course).count() or
+                 self.mentor_set.filter(section__mentor__course=course).count())
         )
 
     class Meta:
@@ -135,7 +135,7 @@ class Profile(ValidatingModel):
 
     def __str__(self):
         if hasattr(self, "section") and self.section:
-            return f"{self.name} ({self.section.course.name})"
+            return f"{self.name} ({self.section.mentor.course.name})"
         return self.name
 
     class Meta:
@@ -164,7 +164,7 @@ class Student(Profile):
             section_day_num = day_to_number(spacetime.day_of_week)
             section_already_held = section_day_num < now.weekday() or (
                 section_day_num == now.weekday() and spacetime.start_time < now.time())
-            course = self.section.course
+            course = self.section.mentor.course
             if self.active and course.section_start <= now.date() < course.valid_until\
                     and not section_already_held and not self.attendance_set.filter(sectionOccurrence__date=week_start+datetime.timedelta(days=section_day_num)).exists():
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
@@ -190,7 +190,7 @@ class Mentor(Profile):
     Represents a given "instance" of a mentor. Every section a mentor teaches in every course should
     have a new Mentor profile.
     """
-    pass
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
 
 class Coordinator(Profile):
@@ -212,7 +212,7 @@ class Coordinator(Profile):
 
 
 class Section(ValidatingModel):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
     mentor = models.OneToOneField(Mentor, on_delete=models.CASCADE, blank=True, null=True)
     description = models.CharField(
@@ -221,6 +221,10 @@ class Section(ValidatingModel):
         help_text='A brief note to add some extra information about the section, e.g. "EOP" or '
         '"early start".'
     )
+
+    # @functional.cached_property
+    # def course(self):
+    #     return self.mentor.course
 
     @functional.cached_property
     def current_student_count(self):
@@ -244,7 +248,7 @@ class Section(ValidatingModel):
 
     def __str__(self):
         return "{course} section ({enrolled}/{cap}, {mentor}, {spacetimes})".format(
-            course=self.course.name,
+            course=self.mentor.course.name,
             mentor="(no mentor)" if not self.mentor else self.mentor.name,
             enrolled=self.current_student_count,
             cap=self.capacity,
