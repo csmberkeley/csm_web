@@ -29,9 +29,9 @@ def log_str(obj) -> str:
         if isinstance(obj, User):
             return log_format("pk", "email")
         if isinstance(obj, Section):
-            return log_format("pk", "course.name", "spacetimes.all")
+            return log_format("pk", "mentor.course.name", "spacetimes.all")
         if isinstance(obj, Spacetime):
-            return log_format("pk", "section.course.name", "location", "start_time")
+            return log_format("pk", "section.mentor.course.name", "location", "start_time")
         if isinstance(obj, Override):
             return log_format("pk", "date", "spacetime.pk")
         if isinstance(obj, Attendance):

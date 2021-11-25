@@ -115,7 +115,6 @@ class SectionFactory(factory.django.DjangoModelFactory):
         model = Section
 
     capacity = factory.LazyFunction(lambda: random.randint(3, 6))
-    mentor = factory.SubFactory(MentorFactory)
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
@@ -154,8 +153,8 @@ class OverrideFactory(factory.django.DjangoModelFactory):
     def date(obj):
         date = evaluate_faker(factory.Faker(
             "date_between_dates",
-            date_start=obj.overriden_spacetime.section.course.enrollment_start.date(),
-            date_end=obj.overriden_spacetime.section.course.valid_until,
+            date_start=obj.overriden_spacetime.section.mentor.course.enrollment_start.date(),
+            date_end=obj.overriden_spacetime.section.mentor.course.valid_until,
         ))
         return date + timedelta(days=(day_to_number(obj.spacetime.day_of_week) - date.weekday()))
 
@@ -170,11 +169,11 @@ class ResourceFactory(factory.django.DjangoModelFactory):
 
 def create_attendances_for(student):
     today = timezone.datetime.today().date()
-    current_date = week_bounds(student.section.course.section_start)[0]
+    current_date = week_bounds(student.section.mentor.course.section_start)[0]
     spacetime_days = [day_to_number(day_of_week)
                       for day_of_week in student.section.spacetimes.values_list("day_of_week", flat=True)]
     existing_attendance_dates = set(student.attendance_set.values_list("sectionOccurrence__date", flat=True))
-    while current_date < student.section.course.valid_until:
+    while current_date < student.section.mentor.course.valid_until:
         for spacetime_day in spacetime_days:
             date = current_date + timedelta(days=spacetime_day)
             if date not in existing_attendance_dates:
@@ -205,16 +204,16 @@ def create_demo_account():
     demo_mentor = random.choice(Mentor.objects.annotate(
         Count('section__spacetimes')).filter(section__spacetimes__count=2))
     second_section = random.choice(Section.objects.filter(
-        course=demo_mentor.section.course).exclude(pk=demo_mentor.section.pk))
+        mentor__course=demo_mentor.course).exclude(pk=demo_mentor.section.pk))
     demo_mentor_2 = second_section.mentor
     demo_mentor_2.user = demo_mentor.user
     demo_mentor_2.save()
     demoify_user(demo_mentor.user, "demo_user")
-    demo_student = random.choice(Student.objects.exclude(section__course=demo_mentor.section.course))
+    demo_student = random.choice(Student.objects.exclude(section__mentor__course=demo_mentor.course))
     demo_student.user = demo_mentor.user
     demo_student.save()
     Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
-        Course.objects.exclude(pk__in=(demo_mentor.section.course.pk, demo_student.section.course.pk))))
+        Course.objects.exclude(pk__in=(demo_mentor.course.pk, demo_student.section.mentor.course.pk))))
     print("""
     A demo account has been created with username 'demo_user' and password 'pass'
     Log in at localhost:8000/admin/
@@ -256,12 +255,13 @@ def generate_test_data(preconfirm=False):
                                       valid_until=valid_until)
         print(course_name + "...", end=" ")
         for _ in range(random.randint(5, 10)):
-            section = SectionFactory.create(course=course)
+            mentor = MentorFactory.create(course=course)
+            section = SectionFactory.create(mentor=mentor)
 
-            current_date = week_bounds(section.course.section_start)[0]
+            current_date = week_bounds(section.mentor.course.section_start)[0]
             spacetime_days = [day_to_number(day_of_week)
                               for day_of_week in section.spacetimes.values_list("day_of_week", flat=True)]
-            while current_date < section.course.valid_until:
+            while current_date < section.mentor.course.valid_until:
                 for spacetime_day in spacetime_days:
                     date = current_date + timedelta(days=spacetime_day)
                     SectionOccurrenceFactory.create(section=section, date=date)
