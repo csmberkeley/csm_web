@@ -9,7 +9,10 @@
         {
           "url": "heroku/python"
         }
-      ]
+      ],
+      "scripts": {
+        "postdeploy": "python3 csm_web/manage.py migrate && python3 csm_web/manage.py createtestdata --yes"
+      }
     }
   }
 }
