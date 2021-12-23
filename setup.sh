@@ -27,6 +27,7 @@ WEB_CONCURRENCY=4" > .env
 
 # Get a new key
 echo "Generating Django secret key..."
+export SECRET_KEY='temp'  # set temporary secret key
 export SECRET_KEY=$(python3 csm_web/manage.py shell -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
 echo "SECRET_KEY='$SECRET_KEY'" >> .env
 
