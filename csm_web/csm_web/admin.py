@@ -11,7 +11,7 @@ class AdminSite(DefaultAdminSite):
 
     @never_cache
     def login(self, request, extra_context=None):
-        if settings.DJANGO_ENV != settings.DEVELOPMENT:
+        if settings.DJANGO_ENV not in (settings.DEVELOPMENT, settings.STAGING):
             """
             Disable Django's built-in admin login page outside of development
             because it's a security liability
