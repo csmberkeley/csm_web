@@ -11,6 +11,7 @@ router.register(r'profiles', views.ProfileViewSet, basename='profile')
 router.register(r'spacetimes', views.SpacetimeViewSet, basename='spacetime')
 router.register(r'users', views.UserViewSet, basename='user')
 router.register(r'resources', views.ResourceViewSet, basename='resource')
+router.register(r'matcher', views.MatcherViewSet, basename='matcher')
 
 urlpatterns = router.urls
 urlpatterns += [

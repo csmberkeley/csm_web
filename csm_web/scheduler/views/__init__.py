@@ -1,4 +1,5 @@
 from .course import CourseViewSet
+from .matcher import MatcherViewSet
 from .profile import ProfileViewSet
 from .resource import ResourceViewSet
 from .section import SectionViewSet

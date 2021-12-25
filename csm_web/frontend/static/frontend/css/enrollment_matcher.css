@@ -1,0 +1,28 @@
+#matcher-contents {
+	display: flex;
+}
+
+#matcher-sidebar {
+	display: flex;
+	flex-wrap: wrap;
+	flex-direction: column;
+	padding: 20px;
+	width: fit-content;
+	padding-top: 40px;
+}
+
+#matcher-header {
+}
+
+#matcher-body {
+}
+
+.matcher-link {
+	text-decoration: none;
+	color: #000;
+	padding: 10px 0;
+}
+
+.matcher-link.active {
+	color: var(--csm-green);
+}
