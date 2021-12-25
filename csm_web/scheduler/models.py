@@ -1,6 +1,8 @@
 import datetime
 import re
 from django.db import models
+from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
+from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.dispatch import receiver
@@ -64,6 +66,21 @@ class ValidatingModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class ReverseOneToOneOrNoneDescriptor(ReverseOneToOneDescriptor):
+    def __get__(self, *args, **kwargs):
+        try:
+            return super().__get__(*args, **kwargs)
+        except ObjectDoesNotExist:
+            return None
+
+
+class OneToOneOrNoneField(models.OneToOneField):
+    """
+    A OneToOneField that returns None if the related object does not exist
+    """
+    related_accessor_class = ReverseOneToOneOrNoneDescriptor
 
 
 class Attendance(ValidatingModel):
@@ -229,7 +246,7 @@ class Coordinator(Profile):
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
-    mentor = models.OneToOneField(Mentor, on_delete=models.CASCADE, blank=True, null=True)
+    mentor = OneToOneOrNoneField(Mentor, on_delete=models.CASCADE, blank=True, null=True)
     description = models.CharField(
         max_length=100,
         blank=True,
@@ -400,3 +417,19 @@ class Override(ValidatingModel):
 
     def __str__(self):
         return f"Override for {self.overriden_spacetime.section} : {self.spacetime}"
+
+
+class MatcherSlot(ValidatingModel):
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    """
+    Serialized times of the form:
+    [{"day", "start_time", "end_time"}, ...]
+    """
+    times = models.TextField()
+    num_mentors = models.PositiveSmallIntegerField()
+
+
+class MatcherPreference(ValidatingModel):
+    slot = models.ForeignKey(MatcherSlot, on_delete=models.CASCADE)
+    mentor = models.ForeignKey(Mentor, on_delete=models.CASCADE)
+    preference = models.PositiveSmallIntegerField()

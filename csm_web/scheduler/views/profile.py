@@ -15,7 +15,7 @@ class ProfileViewSet(*viewset_with("list")):
             ProfileSerializer(
                 [
                     *request.user.student_set.filter(active=True, banned=False),
-                    *request.user.mentor_set.exclude(section=None),
+                    *request.user.mentor_set.all(),  # .exclude(section=None),
                     *request.user.coordinator_set.all(),
                 ],
                 many=True,

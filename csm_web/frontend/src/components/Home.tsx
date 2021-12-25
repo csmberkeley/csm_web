@@ -27,9 +27,13 @@ const Home = () => {
       {profilesLoaded && (
         <div className="course-cards-container">
           {Object.entries(groupBy(profiles, (profile: Profile) => [profile.course, profile.role])).map(
-            ([course, courseProfiles]) => (
-              <CourseCard key={course} profiles={courseProfiles} />
-            )
+            ([course, courseProfiles]) => {
+              if (courseProfiles[0].role === ROLES.MENTOR && courseProfiles[0].sectionId === undefined) {
+                // mentor with no section; do not show the course card
+              } else {
+                return <CourseCard key={course} profiles={courseProfiles} />;
+              }
+            }
           )}
         </div>
       )}
