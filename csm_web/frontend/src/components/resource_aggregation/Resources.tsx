@@ -12,7 +12,15 @@ export const Resources = (): React.ReactElement => {
   const [cache, setCache] = useState<Map<number, any>>(new Map());
 
   useEffect(() => {
-    getRoles().then(roles => setRoles(roles));
+    getRoles().then(roles => {
+      setRoles(roles);
+      // initialize with the first course in order
+      const associatedCourses = [...roles.COORDINATOR, ...roles.MENTOR, ...roles.STUDENT].sort();
+      if (associatedCourses.length > 0) {
+        console.log(associatedCourses);
+        setSelectedCourseID(associatedCourses[0]);
+      }
+    });
     fetchJSON("courses").then(data => {
       setCourses(data);
     });
