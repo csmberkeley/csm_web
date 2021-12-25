@@ -38,7 +38,7 @@ export function CoordinatorEnrollmentForm({ profile }: CoordinatorEnrollmentForm
     };
 
     // check if all fields are filled
-    if (!timeSlot.numMentors) {
+    if (!timeSlot.num_mentors) {
       return;
     }
     setValidSlots([...validSlots, timeSlot]);
@@ -75,7 +75,7 @@ export function CoordinatorEnrollmentForm({ profile }: CoordinatorEnrollmentForm
         <label>
           Num. Intervals:
           <input
-            name="numTimes"
+            name="num_times"
             type="number"
             defaultValue="1"
             min="1"
