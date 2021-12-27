@@ -30,7 +30,7 @@ export function EnrollmentMatcher(): JSX.Element {
         if (existing_profile == undefined || existing_profile.role !== "COORDINATOR") {
           new_profile_map.set(profile.courseId, profile);
         }
-        if (profile.role === "COORDINATOR" || profile.role === "MENTOR") {
+        if (profile.role === "COORDINATOR" || (profile.role === "MENTOR" && profile.sectionId == null)) {
           new_courses.push({
             courseId: profile.courseId,
             courseName: profile.course,

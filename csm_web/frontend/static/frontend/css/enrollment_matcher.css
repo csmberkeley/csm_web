@@ -26,3 +26,61 @@
 .matcher-link.active {
 	color: var(--csm-green);
 }
+
+.mentor-pref-body {
+	display: flex;
+	flex-direction: row;
+	width: 80vw;
+}
+
+.mentor-pref-sidebar-left {
+	flex: 1;
+
+	display: flex;
+	flex-direction: column;
+}
+
+.mentor-pref-sidebar-left-top {
+	flex: 1;
+	background-color: #f5f5f5;
+	border-radius: 5px;
+	padding: 15px;
+}
+
+.mentor-pref-sidebar-left-bottom {
+	padding: 15px;
+	text-align: center;
+}
+
+.mentor-pref-detail-time {
+	font-size: 90%;
+}
+
+.mentor-pref-detail {
+	font-size: 90%;
+}
+
+.mentor-pref-selected-times {
+	font-size: 95%;
+	margin-bottom: 10px;
+	padding-left: 10px;
+	min-height: 50px;
+}
+
+.mentor-pref-input {
+	width: 40px;
+	margin-left: 5px;
+	outline: none;
+}
+
+.mentor-pref-submit-btn {
+	border: none;
+	padding: 8px 15px !important;
+	background-color: var(--csm-green);
+	color: white;
+	border-radius: 10px;
+}
+
+.mentor-pref-submit-btn:hover {
+	background-color: var(--csm-green-darkened);
+}
