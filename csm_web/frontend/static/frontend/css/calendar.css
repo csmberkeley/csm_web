@@ -19,7 +19,7 @@ Hierarchy:
 
 .calendar-container {
 	box-sizing: border-box;
-	width: 60vw;
+	/* width: 55vw; */
 }
 
 .calendar-header {
@@ -48,6 +48,8 @@ Hierarchy:
 	flex-direction: row;
 	justify-content: space-around;
 	align-items: center;
+	overflow: hidden;
+	touch-action: none;
 }
 
 .calendar-day-container {
@@ -117,28 +119,43 @@ Hierarchy:
 	width: 100%;
 }
 
-.calendar-event-container {
+.calendar-event-container,
+.calendar-transparent-event-container {
 	position: relative;
 	width: 100%;
 	height: 0;
 }
 
-.calendar-event {
+.calendar-event,
+.calendar-transparent-event,
+.calendar-creating-event {
 	box-sizing: border-box;
 	position: relative;
 	padding: 0 3px 3px 0;
+}
+
+.calendar-transparent-event-container {
+	pointer-events: none;
 }
 
 .calendar-event-detail {
 	width: 100%;
 	height: 100%;
 	background-color: lightblue;
-	-webkit-transition: background-color ease 100ms;
-	-o-transition: background-color ease 100ms;
-	transition: background-color ease 100ms;
+	-webkit-transition: background-color ease 100ms, box-shadow ease 100ms;
+	-o-transition: background-color ease 100ms, box-shadow ease 100ms;
+	transition: background-color ease 100ms, box-shadow ease 100ms;
 	user-select: none;
 	box-sizing: border-box;
 	padding-top: 3px;
+}
+
+.calendar-transparent-event .calendar-event-detail {
+	background-color: #ffd6dd;
+}
+
+.calendar-creating-event .calendar-event-detail {
+	background-color: lightpink;
 }
 
 .calendar-event-hover .calendar-event-detail {

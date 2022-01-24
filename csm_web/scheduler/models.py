@@ -136,6 +136,8 @@ class Course(ValidatingModel):
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
 
+    matcher_open = models.BooleanField(default=False)
+
     def __str__(self):
         return self.name
 
@@ -423,9 +425,9 @@ class MatcherSlot(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     """
     Serialized times of the form:
-    [{"day", "start_time", "end_time"}, ...]
+    [{"day", "startTime", "endTime"}, ...]
     """
-    times = models.TextField()
+    times = models.JSONField()
     num_mentors = models.PositiveSmallIntegerField()
 
 
@@ -433,3 +435,6 @@ class MatcherPreference(ValidatingModel):
     slot = models.ForeignKey(MatcherSlot, on_delete=models.CASCADE)
     mentor = models.ForeignKey(Mentor, on_delete=models.CASCADE)
     preference = models.PositiveSmallIntegerField()
+
+    class Meta:
+        unique_together = ("slot", "mentor")
