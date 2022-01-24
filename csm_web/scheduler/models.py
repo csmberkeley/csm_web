@@ -129,14 +129,15 @@ class Course(ValidatingModel):
 class Profile(ValidatingModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
+    # all students, mentors, and coords should have a field for course
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+
     @property
     def name(self):
         return self.user.get_full_name()
 
     def __str__(self):
-        if hasattr(self, "section") and self.section:
-            return f"{self.name} ({self.section.mentor.course.name})"
-        return self.name
+        return f"{self.name} ({self.course.name})"
 
     class Meta:
         abstract = True
@@ -164,7 +165,7 @@ class Student(Profile):
             section_day_num = day_to_number(spacetime.day_of_week)
             section_already_held = section_day_num < now.weekday() or (
                 section_day_num == now.weekday() and spacetime.start_time < now.time())
-            course = self.section.mentor.course
+            course = self.course
             if self.active and course.section_start <= now.date() < course.valid_until\
                     and not section_already_held and not self.attendance_set.filter(sectionOccurrence__date=week_start+datetime.timedelta(days=section_day_num)).exists():
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
@@ -181,6 +182,12 @@ class Student(Profile):
                     so = so_qs.get()
                 Attendance.objects.create(student=self, sectionOccurrence=so)
 
+    def clean(self):
+        super().clean()
+        # ensure consistency with two course fields
+        if self.section.mentor.course != self.course:
+            raise ValidationError("Student must be associated with the same course as the section they are in.")
+
     class Meta:
         unique_together = ("user", "section")
 
@@ -190,14 +197,12 @@ class Mentor(Profile):
     Represents a given "instance" of a mentor. Every section a mentor teaches in every course should
     have a new Mentor profile.
     """
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
 
 class Coordinator(Profile):
     """
     This profile is used to allow coordinators to acess the admin page.
     """
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
     def save(self, *args, **kwargs):
         self.user.is_staff = True

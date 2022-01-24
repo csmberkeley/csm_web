@@ -27,7 +27,7 @@ class StudentViewSet(viewsets.GenericViewSet):
     @action(detail=True, methods=["patch"])
     def drop(self, request, pk=None):
         student = get_object_or_error(self.get_queryset(), pk=pk)
-        is_coordinator = student.section.mentor.course.coordinator_set.filter(
+        is_coordinator = student.course.coordinator_set.filter(
             user=request.user
         ).exists()
         if student.user != request.user and not is_coordinator:

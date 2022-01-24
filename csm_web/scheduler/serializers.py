@@ -100,9 +100,7 @@ class ProfileSerializer(serializers.Serializer):
             super().__init__(self, *args, **kwargs)
 
         def to_representation(self, value):
-            if isinstance(value, Coordinator):
-                return getattr(value.course, self.target)
-            return getattr(value.section.mentor.course, self.target)
+            return getattr(value.course, self.target)
 
     id = serializers.IntegerField()
     section_id = serializers.IntegerField(source='section.id', required=False)

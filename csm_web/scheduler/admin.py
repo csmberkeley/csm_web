@@ -115,10 +115,10 @@ class StudentAdmin(CoordAdmin):
         return super().formfield_for_foreignkey(db_field, request, **kwargs)
 
     def get_queryset(self, request):
-        queryset = super().get_queryset(request).select_related("user", "section__mentor__course", "section__mentor")
+        queryset = super().get_queryset(request).select_related("user", "course", "section__mentor")
         if request.user.is_superuser:
             return queryset
-        return queryset.filter(section__mentor__course__in=get_visible_courses(request.user))
+        return queryset.filter(course__in=get_visible_courses(request.user))
 
     def drop_students(self, request, queryset):
         queryset.update(active=False)
@@ -147,7 +147,7 @@ class StudentAdmin(CoordAdmin):
 
     # TODO handle nullable section
     def get_course(self, obj):
-        return get_admin_link_for(obj.section.mentor.course, "admin:scheduler_course_change")
+        return get_admin_link_for(obj.course, "admin:scheduler_course_change")
 
     get_course.short_description = "Course"
 
@@ -175,7 +175,7 @@ class StudentAdmin(CoordAdmin):
 class MentorAdmin(CoordAdmin):
     fields = ("name", "get_email", "course", "user", "get_section", "get_students")
     readonly_fields = ("get_email", "get_section", "name", "get_students")
-    list_filter = ("section__mentor__course",)
+    list_filter = ("course",)
     list_display = ("name", "get_email", "course", "get_section")
     search_fields = ("user__email", "user__first_name", "user__last_name")
     actions = ("deactivate_profiles", "activate_profiles")
@@ -188,12 +188,12 @@ class MentorAdmin(CoordAdmin):
         queryset = (
             super()
             .get_queryset(request)
-            .select_related("user", "section__mentor__course")
+            .select_related("user", "course")
             .prefetch_related("section__students")
         )
         if request.user.is_superuser:
             return queryset
-        return queryset.filter(section__mentor__course__in=get_visible_courses(request.user))
+        return queryset.filter(course__in=get_visible_courses(request.user))
 
     # Custom fields
 
@@ -431,19 +431,19 @@ class CourseAdmin(CoordAdmin):
     )
 
     def get_queryset(self, request):
-        return super().get_queryset(request).prefetch_related("section_set")
+        return super().get_queryset(request).prefetch_related("mentor_set")
 
     def number_of_sections(self, obj):
-        return obj.section_set.count()
+        return obj.mentor_set.count()  # one-to-one between mentor objects and sections
 
     def number_of_students(self, obj):
-        return Student.objects.filter(active=True, section__course=obj).count()
+        return Student.objects.filter(active=True, course=obj).count()
 
     def number_of_mentors(self, obj):
         return (
             # Filter by unique emails
             # (Don't need to do this for students since you can only be in one section per course)
-            Mentor.objects.filter(course=obj)
+            obj.mentor_set
             .values("user__email")
             .annotate(ct=Count("user__email"))
             .count()
