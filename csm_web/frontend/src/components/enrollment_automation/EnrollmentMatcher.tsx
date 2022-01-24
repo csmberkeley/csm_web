@@ -4,7 +4,7 @@ import { fetchJSON } from "../../utils/api";
 import { Profile } from "../../utils/types";
 
 import { emptyRoles, Roles } from "../../utils/user";
-import { CoordinatorEnrollmentForm } from "./CoordinatorEnrollmentForm";
+import { CoordinatorMatcherForm } from "./coordinator/CoordinatorMatcherForm";
 import { MentorSectionPreferences } from "./MentorSectionPreferences";
 
 export interface MatcherProfile {
@@ -70,7 +70,7 @@ export function EnrollmentMatcher(): JSX.Element {
                 if (profile == undefined) {
                   return <div></div>;
                 } else if (roles["COORDINATOR"].has(courseId)) {
-                  return <CoordinatorEnrollmentForm profile={profileMap.get(courseId)!} />;
+                  return <CoordinatorMatcherForm profile={profileMap.get(courseId)!} />;
                 } else if (roles["MENTOR"].has(courseId)) {
                   return <MentorSectionPreferences profile={profileMap.get(courseId)!} />;
                 }
