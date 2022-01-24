@@ -169,11 +169,11 @@ class ResourceFactory(factory.django.DjangoModelFactory):
 
 def create_attendances_for(student):
     today = timezone.datetime.today().date()
-    current_date = week_bounds(student.section.mentor.course.section_start)[0]
+    current_date = week_bounds(student.course.section_start)[0]
     spacetime_days = [day_to_number(day_of_week)
                       for day_of_week in student.section.spacetimes.values_list("day_of_week", flat=True)]
     existing_attendance_dates = set(student.attendance_set.values_list("sectionOccurrence__date", flat=True))
-    while current_date < student.section.mentor.course.valid_until:
+    while current_date < student.course.valid_until:
         for spacetime_day in spacetime_days:
             date = current_date + timedelta(days=spacetime_day)
             if date not in existing_attendance_dates:
@@ -213,7 +213,7 @@ def create_demo_account():
     demo_student.user = demo_mentor.user
     demo_student.save()
     Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
-        Course.objects.exclude(pk__in=(demo_mentor.course.pk, demo_student.section.mentor.course.pk))))
+        Course.objects.exclude(pk__in=(demo_mentor.course.pk, demo_student.course.pk))))
     print("""
     A demo account has been created with username 'demo_user' and password 'pass'
     Log in at localhost:8000/admin/

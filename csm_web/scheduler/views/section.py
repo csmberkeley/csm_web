@@ -295,7 +295,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
             # get all students with the email in the course
             student_queryset = Student.objects.filter(
-                section__mentor__course=section.mentor.course, user__email=email
+                course=section.mentor.course, user__email=email
             )
 
             if student_queryset.count() > 1:
@@ -329,7 +329,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     if student_user.id in course_coords:
                         reason = "coordinator"
                     elif student_user.mentor_set.filter(
-                        section__mentor__course=section.mentor.course
+                        course=section.mentor.course
                     ).exists():
                         reason = "mentor"
                     curstatus["detail"] = {"reason": reason}
@@ -385,7 +385,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 user, _ = User.objects.get_or_create(
                     email=email, username=email.split("@")[0]
                 )
-                student = Student.objects.create(user=user, section=section)
+                student = Student.objects.create(user=user, section=section, course=section.mentor.course)
                 logger.info(
                     f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}"
                 )
@@ -449,7 +449,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
 
         student_queryset = request.user.student_set.filter(
-            active=False, section__mentor__course=section.mentor.course
+            active=False, course=section.mentor.course
         )
         if student_queryset.count() > 1:
             logger.error(
@@ -481,7 +481,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
             return Response(status=status.HTTP_204_NO_CONTENT)
         else:
-            student = Student.objects.create(user=request.user, section=section)
+            student = Student.objects.create(user=request.user, section=section, course=section.mentor.course)
             logger.info(
                 f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}"
             )
