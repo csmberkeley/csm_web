@@ -209,7 +209,7 @@ def create_demo_account():
     demo_mentor_2.user = demo_mentor.user
     demo_mentor_2.save()
     demoify_user(demo_mentor.user, "demo_user")
-    demo_student = random.choice(Student.objects.exclude(section__mentor__course=demo_mentor.course))
+    demo_student = random.choice(Student.objects.exclude(course=demo_mentor.course))
     demo_student.user = demo_mentor.user
     demo_student.save()
     Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
@@ -267,7 +267,7 @@ def generate_test_data(preconfirm=False):
                     SectionOccurrenceFactory.create(section=section, date=date)
                 current_date += timedelta(weeks=1)
 
-            students = StudentFactory.create_batch(random.randint(0, section.capacity), section=section)
+            students = StudentFactory.create_batch(random.randint(0, section.capacity), section=section, course=course)
             for student in students:
                 create_attendances_for(student)
             section.students.set(students)
