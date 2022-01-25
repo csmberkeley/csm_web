@@ -70,13 +70,13 @@ class Command(BaseCommand):
         for row in reader:
             row = {key: value.strip() for key, value in row.items()}
             user, _ = User.objects.get_or_create(email=row['mentor_email'], username=row['mentor_email'].split('@')[0])
-            mentor = Mentor.objects.create(user=user)
+            mentor = Mentor.objects.create(user=user, course=course)
             spacetimes = [Spacetime.objects.create(location='Online', day_of_week=row['day1'], start_time=self.parse_time(
                 row['time1']), duration=self.SECTION_DURATIONS[course.name], section=None), ]
             if row['day2'] and row['time2']:
                 spacetimes.append(Spacetime.objects.create(location='Online', day_of_week=row['day2'], start_time=self.parse_time(
                     row['time2']), duration=self.SECTION_DURATIONS[course.name], section=None))
-            section = Section.objects.create(course=course, capacity=int(row['capacity']),
+            section = Section.objects.create(capacity=int(row['capacity']),
                                              mentor=mentor, description=row['description'])
             section.spacetimes.set(spacetimes)
             section.save()
