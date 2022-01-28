@@ -113,7 +113,8 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
               // only render if loaded
               const course = courses.get(Number(routeProps.match.params.id))!;
               const isOpen = course && course.enrollmentOpen;
-              return <Course name={loaded && course.name} isOpen={isOpen} {...routeProps} />;
+              // use key to rerender when manually changing URL
+              return <Course key={course.id} name={loaded && course.name} isOpen={isOpen} {...routeProps} />;
             }
           }}
         />

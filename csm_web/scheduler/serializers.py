@@ -82,7 +82,11 @@ class CourseSerializer(serializers.ModelSerializer):
     user_can_enroll = serializers.SerializerMethodField()
 
     def get_enrollment_open(self, obj):
-        return obj.enrollment_start < timezone.now() < obj.enrollment_end
+        user = self.context.get('request') and self.context.get('request').user
+        if user and user.priority_enrollment:
+            return user.priority_enrollment < timezone.now() < obj.enrollment_end
+        else:
+            return obj.is_open()
 
     def get_user_can_enroll(self, obj):
         user = self.context.get('request') and self.context.get('request').user
