@@ -33,11 +33,13 @@ def week_bounds(date):
 
 
 class User(AbstractUser):
-    def can_enroll_in_course(self, course):
-        return course.is_open() and (
-            not (self.student_set.filter(active=True, section__mentor__course=course).count() or
-                 self.mentor_set.filter(section__mentor__course=course).count())
-        )
+    def can_enroll_in_course(self, course, bypass_enrollment_time=False):
+        is_associated = (self.student_set.filter(active=True, section__mentor__course=course).count() or
+                         self.mentor_set.filter(section__mentor__course=course).count())
+        if bypass_enrollment_time:
+            return not is_associated
+        else:
+            return course.is_open() and not is_associated
 
     class Meta:
         indexes = (models.Index(fields=("email",)),)
