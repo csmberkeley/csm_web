@@ -1,4 +1,5 @@
 from rest_framework.routers import DefaultRouter
+from django.urls import path
 
 from . import views
 
@@ -12,3 +13,6 @@ router.register(r'users', views.UserViewSet, basename='user')
 router.register(r'resources', views.ResourceViewSet, basename='resource')
 
 urlpatterns = router.urls
+urlpatterns += [
+    path('userinfo/', views.userinfo, name='userinfo'),
+]

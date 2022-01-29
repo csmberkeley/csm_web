@@ -11,8 +11,17 @@ interface CourseType {
   enrollmentStart: string;
 }
 
+interface UserInfo {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  priorityEnrollment?: Date;
+}
+
 interface CourseMenuState {
   courses: Map<number, CourseType>;
+  userInfo: UserInfo;
   loaded: boolean;
 }
 
@@ -23,6 +32,7 @@ interface CourseMenuProps {
 export default class CourseMenu extends React.Component<CourseMenuProps> {
   state: CourseMenuState = {
     courses: (null as unknown) as Map<number, CourseType>, // type coersion for initial state value
+    userInfo: (null as unknown) as UserInfo,
     loaded: false
   };
 
@@ -35,6 +45,17 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
         coursesById.set(course.id, course);
       }
       this.setState({ courses: coursesById, loaded: true });
+    });
+    fetchJSON("/userinfo").then(userInfo => {
+      let priorityEnrollment = null;
+      if (userInfo.priorityEnrollment) {
+        priorityEnrollment = new Date(Date.parse(userInfo.priorityEnrollment));
+      }
+      const convertedUserInfo: UserInfo = {
+        ...userInfo,
+        priorityEnrollment
+      };
+      this.setState({ userInfo: convertedUserInfo });
     });
   }
 
@@ -91,6 +112,19 @@ export default class CourseMenu extends React.Component<CourseMenuProps> {
       <React.Fragment>
         <h3 className="page-title center-title">Enrollment Times:</h3>
         <div className="enrollment-container">
+          {this.state.userInfo && this.state.userInfo.priorityEnrollment && (
+            <div className="enrollment-row">
+              <div className="enrollment-course">
+                <em>Priority</em>
+              </div>
+              <div className="enrollment-time">
+                <em>{`${this.state.userInfo.priorityEnrollment.toLocaleDateString(
+                  "en-US",
+                  date_locale_string_options
+                )}`}</em>
+              </div>
+            </div>
+          )}
           {enrollment_times_by_course.map(({ courseName, enrollmentDate }) => (
             <div className="enrollment-row" key={courseName}>
               <div className="enrollment-course">{courseName}</div>
