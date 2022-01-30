@@ -11,7 +11,7 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("csv_path", type=str, help="path to the csv file")
-        parser.add_argument("priority_enrollment_date")
+        parser.add_argument("priority_enrollment_date", type=str, help="date in the form 'mm-dd-yyyy hh:mm:ss'")
 
     def handle(self, *args, **options):
         filename = options["csv_path"]
@@ -28,12 +28,10 @@ class Command(BaseCommand):
                             raise Exception("Malformed email: {}".format(email))
                         if chunks[1] != "berkeley.edu":
                             raise Exception("Non-Berkeley email found: {}".format(email))
-                        print(email, chunks[0])
                         u, status = User.objects.get_or_create(
                             email=email,
                             username=chunks[0],
                         )
-                        print(status)
                         u.priority_enrollment = enrollment_date
                         u.save()
                         print(u.username, u.email, u.priority_enrollment)
