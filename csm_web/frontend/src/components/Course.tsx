@@ -131,16 +131,6 @@ export default class Course extends React.Component<CourseProps, CourseState> {
 
     return !(name && sectionsLoaded) ? null : (
       <div id="course-section-selector">
-        <div id="course-left-col">
-          {userIsCoordinator && (
-            <button
-              className="csm-btn export-data-btn"
-              onClick={() => this.setState({ showModal: true, whichModal: COURSE_MODAL_TYPE.exportData })}
-            >
-              Export Data
-            </button>
-          )}
-        </div>
         <div id="course-section-controls">
           <h2 className="course-title">{name}</h2>
           <div id="day-selector">
@@ -169,12 +159,20 @@ export default class Course extends React.Component<CourseProps, CourseState> {
             Show unavailable
           </label>
           {userIsCoordinator && (
-            <button
-              className="csm-btn create-section-btn"
-              onClick={() => this.setState({ showModal: true, whichModal: COURSE_MODAL_TYPE.createSection })}
-            >
-              <span className="inline-plus-sign">+ </span>Create Section
-            </button>
+            <div id="course-coord-buttons">
+              <button
+                className="csm-btn create-section-btn"
+                onClick={() => this.setState({ showModal: true, whichModal: COURSE_MODAL_TYPE.createSection })}
+              >
+                <span className="inline-plus-sign">+ </span>Create Section
+              </button>
+              <button
+                className="csm-btn export-data-btn"
+                onClick={() => this.setState({ showModal: true, whichModal: COURSE_MODAL_TYPE.exportData })}
+              >
+                Export Data
+              </button>
+            </div>
           )}
         </div>
         <div id="course-section-list">
