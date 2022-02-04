@@ -118,6 +118,7 @@ class SectionOccurrence(ValidatingModel):
     """
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
+    word_of_the_day = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
         return f"SectionOccurrence for {self.section} at {self.date}"

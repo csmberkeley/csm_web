@@ -1,6 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.utils import timezone
+from csm_web.scheduler.models import SectionOccurrence, Attendance
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -91,3 +92,20 @@ class StudentViewSet(viewsets.GenericViewSet):
             f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, errors: {serializer.errors}"
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    @action(detail=True, methods=["post"])
+    def submitAttendance(self, request, pk=None):
+        # I think I only need the student and not if it has other profiles attached to it?
+        student = get_object_or_error(self.get_queryset(), pk=pk)
+
+        # Here I should verify that the secret word is correct
+
+
+        # So does the front end send which section occurence it is associated with?
+        section_occurrence = SectionOccurrence.objects.filter(pk=request.data['sectionOccurence'])
+
+        if section_occurrence.word_of_the_day != request.data['password'].lower():
+            #Not sure which type of Http response to send, mayb permission denied?
+            return Response()
+
+        attendance = Attendance.objects.create(presence='PR', student=student, SectionOccurrence=section_occurrence)

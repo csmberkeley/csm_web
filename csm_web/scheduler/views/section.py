@@ -496,3 +496,5 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}"
             )
             return Response({"id": student.id}, status=status.HTTP_201_CREATED)
+
+    
