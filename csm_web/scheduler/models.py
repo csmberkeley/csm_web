@@ -43,6 +43,11 @@ class User(AbstractUser):
         indexes = (models.Index(fields=("email",)),)
 
 
+class MyModelManager(models.Manager):
+    def get_queryset(self):
+        return super(MyModelManager, self).get_queryset().filter(active=True)
+
+
 class ValidatingModel(models.Model):
     """
     By default, Django models do not validate on save!
@@ -55,6 +60,21 @@ class ValidatingModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class Semester(ValidatingModel):
+    class Season(models.TextChoices):
+        FALL = "FA", "Fall"
+        SPRING = "SP", "Spring"
+
+    season = models.CharField(max_length=2, choices=Season.choices, blank=True)
+    id = models.PositiveSmallIntegerField(primary_key=True)
+
+    def __str__(self):
+        return f"{self.season} {self.id}"
+
+    class Meta:
+        ordering = ['-id']
 
 
 class Attendance(ValidatingModel):
@@ -101,6 +121,11 @@ class SectionOccurrence(ValidatingModel):
         ordering = ("date",)
 
 
+class CourseModelManager(models.Manager):
+    def get_queryset(self):
+        return super(CourseModelManager, self).get_queryset().filter(current_semester=True)
+
+
 class Course(ValidatingModel):
     name = models.SlugField(max_length=16, unique_for_month="enrollment_start")
     title = models.CharField(max_length=100)
@@ -109,6 +134,9 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
+    semester = models.ForeignKey("Semester", on_delete=models.CASCADE)
+
+    objects = CourseModelManager()
 
     def __str__(self):
         return self.name
@@ -124,6 +152,10 @@ class Course(ValidatingModel):
 
     def is_open(self):
         return self.enrollment_start < timezone.now() < self.enrollment_end
+
+    @cached_property
+    def current_semester(self):
+        return semester is Semester.objects.all().first()
 
 
 class Profile(ValidatingModel):
