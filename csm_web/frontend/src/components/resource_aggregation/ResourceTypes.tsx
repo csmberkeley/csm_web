@@ -4,6 +4,7 @@ export interface Resource {
   date: string;
   topics: string;
   worksheets: Worksheet[];
+  links: Link[];
 }
 
 export interface Worksheet {
@@ -15,12 +16,21 @@ export interface Worksheet {
   deleted?: string[];
 }
 
+export interface Link {
+  id: number;
+  resource: number;
+  name: string;
+  url: URL;
+}
+
 export interface FormErrors {
   weekNum: string;
   date: string;
   topics: string;
   existingWorksheets: Map<number, string>;
   newWorksheets: Map<number, string>;
+  existingLinks: Map<number, string>;
+  newLinks: Map<number, string>;
 }
 
 export interface Touched {
@@ -30,6 +40,8 @@ export interface Touched {
   // set of ids/indices of touched worksheets
   existingWorksheets: Set<number>;
   newWorksheets: Set<number>;
+  existingLinks: Set<number>;
+  newLinks: Set<number>;
 }
 
 /**
@@ -42,7 +54,8 @@ export function emptyResource(): Resource {
     weekNum: ("" as unknown) as number, // to trick typescript in accepting an empty string
     date: "",
     topics: "",
-    worksheets: []
+    worksheets: [],
+    links: []
   };
 }
 
@@ -89,7 +102,9 @@ export function emptyFormErrors(): FormErrors {
     topics: "",
     // mapping of worksheet id/index to error string
     existingWorksheets: new Map(),
-    newWorksheets: new Map()
+    newWorksheets: new Map(),
+    existingLinks: new Map(),
+    newLinks: new Map()
   };
 }
 
@@ -105,7 +120,9 @@ export function emptyTouched(): Touched {
     topics: false,
     // set of ids/indices of touched worksheets
     existingWorksheets: new Set(),
-    newWorksheets: new Set()
+    newWorksheets: new Set(),
+    existingLinks: new Set(),
+    newLinks: new Set()
   };
 }
 
@@ -121,6 +138,8 @@ export function allTouched(): Touched {
     topics: true,
     // set of ids/indices of touched worksheets
     existingWorksheets: new Set(),
-    newWorksheets: new Set()
+    newWorksheets: new Set(),
+    existingLinks: new Set(),
+    newLinks: new Set()
   };
 }

@@ -219,7 +219,7 @@ export const ResourceTable = ({
     <div className="resourceWrapperContainer">
       {canEdit && (
         <div className="resourceTableOptions">
-          <button onClick={handleSetAddingResource} id="addResourceButton">
+          <button onClick={handleSetAddingResource} className="addResourceButton" id="addResourceButton">
             <PlusCircle className="icon" id="plusIcon" />
             <div>Add Resource</div>
           </button>
@@ -237,7 +237,8 @@ export const ResourceTable = ({
             <div className="weekNum">Week</div>
             <div className="dateCell">Date</div>
             <div className="resourceTopics">Topics</div>
-            <div className="resourceWkst">Worksheet and Solutions</div>
+            <div className="resourceWkst">Worksheets</div>
+            <div className="resourceLinks">Links</div>
           </div>
           {addingResource && (
             <ResourceRow
