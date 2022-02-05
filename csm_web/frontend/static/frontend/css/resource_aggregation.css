@@ -56,7 +56,7 @@
 .resourceWrapperHeader {
 	grid-column: 1 / -1;
 	display: grid;
-	grid-template-columns: repeat(2, minmax(50px, 1fr)) 2fr 2fr 40px;
+	grid-template-columns: repeat(2, minmax(50px, 1fr)) 2fr 2fr 2fr 40px;
 	column-gap: 10px;
 	text-align: center;
 	width: 100%;

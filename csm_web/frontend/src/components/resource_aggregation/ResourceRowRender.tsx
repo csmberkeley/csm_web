@@ -83,6 +83,18 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
               </div>
             ))}
         </div>
+        <div className="resourceLinksContainer">
+          {resource.links &&
+            resource.links.map(link => (
+              <div key={link.id} className="resourceLink">
+                <div className="resourceLink">
+                  <a href={link.url.href} target="_blank" rel="noreferrer">
+                    {link.name}
+                  </a>
+                </div>
+              </div>
+            ))}
+        </div>
         {canEdit && (
           <div className="resourceButtonsContainer">
             <button onClick={onSetEdit} className="resourceButton">
