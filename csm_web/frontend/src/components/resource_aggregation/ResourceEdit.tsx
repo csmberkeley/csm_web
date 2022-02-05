@@ -10,7 +10,8 @@ import {
   emptyFormErrors,
   emptyTouched,
   allTouched,
-  Resource
+  Resource,
+  Link
 } from "./ResourceTypes";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
 
@@ -39,6 +40,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    * and on upload/edit of worksheet fields, the FormData object should be updated to reflect changes.
    */
   const [newWorksheets, setNewWorksheets] = useState<Array<Worksheet>>([]);
+  const [newLinks, setNewLinks] = useState<Array<Link>>([]);
   const [formErrors, setFormErrors] = useState<FormErrors>(emptyFormErrors());
   const [touched, setTouched] = useState<Touched>(emptyTouched());
 
@@ -67,6 +69,8 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     const newFormErrors = { ...formErrors };
     newFormErrors["newWorksheets"] = new Map(newFormErrors["newWorksheets"]);
     newFormErrors["existingWorksheets"] = new Map(newFormErrors["existingWorksheets"]);
+    newFormErrors["newLinks"] = new Map(newFormErrors["newLinks"]);
+    newFormErrors["existingLinks"] = new Map(newFormErrors["existingLinks"]);
     if (validateAll || touched.weekNum) {
       let weekNumError = "";
       if (!weekNum) {
@@ -84,16 +88,27 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     }
 
     // handle worksheet validation
-    let anyWorksheetsInvalid = false;
+    let anyWorksheetsOrLinksInvalid = false;
     const allTouchedIndices = new Set();
     const allTouchedIds = new Set();
     for (const [index, worksheet] of newWorksheets.entries()) {
       if (validateAll || touched.newWorksheets.has(index)) {
         if (!worksheet.name) {
           newFormErrors["newWorksheets"].set(index, "Worksheet name is required");
-          anyWorksheetsInvalid = true;
+          anyWorksheetsOrLinksInvalid = true;
         } else {
           newFormErrors["newWorksheets"].delete(index);
+        }
+        allTouchedIndices.add(index);
+      }
+    }
+    for (const [index, link] of newLinks.entries()) {
+      if (validateAll || touched.newLinks.has(index)) {
+        if (!link.name || !link.url) {
+          newFormErrors["newLinks"].set(index, "link name and url are required");
+          anyWorksheetsOrLinksInvalid = true;
+        } else {
+          newFormErrors["newLinks"].delete(index);
         }
         allTouchedIndices.add(index);
       }
@@ -107,7 +122,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
         }
         if (!worksheet.name) {
           newFormErrors["existingWorksheets"].set(worksheetId, "Worksheet name is required");
-          anyWorksheetsInvalid = true;
+          anyWorksheetsOrLinksInvalid = true;
         } else {
           newFormErrors["existingWorksheets"].delete(worksheetId);
         }
@@ -116,7 +131,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     }
     setFormErrors({ ...newFormErrors });
     setTouched(_.merge(touched, { newWorksheets: allTouchedIndices, existingWorksheets: allTouchedIds }));
-    return !newFormErrors.weekNum && !newFormErrors.date && !newFormErrors.topics && !anyWorksheetsInvalid;
+    return !newFormErrors.weekNum && !newFormErrors.date && !newFormErrors.topics && !anyWorksheetsOrLinksInvalid;
   }
 
   /**
@@ -134,6 +149,12 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       if (errorMsg) return false;
     }
     for (const errorMsg of formErrors.existingWorksheets) {
+      if (errorMsg) return false;
+    }
+    for (const errorMsg of formErrors.newLinks) {
+      if (errorMsg) return false;
+    }
+    for (const errorMsg of formErrors.existingLinks) {
       if (errorMsg) return false;
     }
     return true;
