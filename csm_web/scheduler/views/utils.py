@@ -11,7 +11,7 @@ from rest_framework import mixins, viewsets
 from ..models import User, Section, Spacetime, Override, Attendance
 
 logger = logging.getLogger(__name__)
-logger.info = logger.warn
+logger.info = logger.warning
 
 
 def log_str(obj) -> str:
