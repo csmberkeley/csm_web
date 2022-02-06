@@ -10,7 +10,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-logger.info = logger.warn
+logger.info = logger.warning
 
 
 class DayOfWeekField(models.Field):

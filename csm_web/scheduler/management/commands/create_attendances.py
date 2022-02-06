@@ -9,7 +9,7 @@ from django.db import transaction, Error
 
 
 logger = logging.getLogger(__name__)
-logger.info = logger.warn
+logger.info = logger.warning
 
 
 class Command(BaseCommand):
