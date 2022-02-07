@@ -69,7 +69,7 @@ class CoordAdmin(admin.ModelAdmin):
 
 @admin.register(User)
 class UserAdmin(CoordAdmin):
-    fields = ("username", "email", "first_name", "last_name")
+    fields = ("username", "email", "first_name", "last_name", "priority_enrollment")
     search_fields = ("email",)
     list_display = ("name", "email")
     list_filter = ("is_active",)

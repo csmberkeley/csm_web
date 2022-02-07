@@ -6,6 +6,7 @@ import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Section from "./section/Section";
 import { Resources } from "./resource_aggregation/Resources";
+import Policies from "./Policies";
 
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
@@ -49,6 +50,7 @@ export default class App extends React.Component {
               <Route path="/sections/:id" component={Section} />
               <Route path="/courses" component={CourseMenu} />
               <Route path="/resources" component={Resources} />
+              <Route path="/policies" component={Policies} />
             </Switch>
           </main>
         </React.Fragment>
@@ -63,7 +65,7 @@ function Header(): React.ReactElement {
    * That is, it should always be active unless we're in a location prefixed by /resources
    */
   const schedulerActive: NavLinkProps["isActive"] = (match, location): boolean => {
-    return !location.pathname.startsWith("/resources");
+    return !(location.pathname.startsWith("/resources") || location.pathname.startsWith("/policies"));
   };
 
   return (
@@ -77,6 +79,13 @@ function Header(): React.ReactElement {
       <NavLink to="/resources" className="site-title-link" activeClassName="is-active">
         <h3 className="site-title">Resources</h3>
       </NavLink>
+
+      <NavLink to="/policies" className="site-title-link" id="site-subtitle-link" activeClassName="is-active">
+        <h3 className="site-title" id="site-subtitle-link">
+          Policies
+        </h3>
+      </NavLink>
+
       <a id="logout-btn" href="/logout" title="Log out">
         <LogOutIcon width="1.25em" height="1.25em" />
       </a>

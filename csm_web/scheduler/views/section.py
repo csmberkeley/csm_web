@@ -316,7 +316,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 student_user = User.objects.get(email=email)
                 if (
                     student_user.id not in course_coords
-                    and student_user.can_enroll_in_course(section.mentor.course)
+                    and student_user.can_enroll_in_course(section.mentor.course, bypass_enrollment_time=True)
                 ):
                     # student does not exist yet; we can always create it
                     db_actions.append(("create", email))
