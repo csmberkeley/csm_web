@@ -1,6 +1,7 @@
 @import url("./resource_aggregation.css");
 @import url("./student_dropper.css");
 @import url("./fontawesome-styles.css");
+@import url("./policies-styles.css");
 
 html,
 body {
@@ -92,7 +93,7 @@ header {
 }
 
 #logout-btn {
-	margin: auto 5px auto 50px;
+	margin: auto 5px auto 30px;
 }
 
 #logout-btn * {
@@ -124,6 +125,14 @@ header {
 		margin-right: 0;
 	}
 
+	#site-subtitle-link {
+		font-size: 18px;
+		margin-top: auto;
+		margin-bottom: auto;
+		margin-left: auto;
+		margin-right: auto;
+		padding-top: 5px;
+	}
 	#logout-btn {
 		margin: 10px auto auto auto;
 	}

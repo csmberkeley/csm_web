@@ -1,0 +1,14 @@
+.sections {
+	margin: auto;
+	width: 60%;
+	font-size: 1.05em;
+	line-height: 1.5em;
+}
+
+.sections div {
+	padding-bottom: 0.5rem;
+}
+
+.sections h1 {
+	color: #646464;
+}
