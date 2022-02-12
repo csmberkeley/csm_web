@@ -107,6 +107,11 @@ class Attendance(ValidatingModel):
         #indexes = (models.Index(fields=("date",)),)
 
 
+class SectionOccurenceModelManager(models.Manager):
+    def get_queryset(self):
+        return super(SectionOccurenceModelManager, self).get_queryset().filter(current_semester=True)
+
+
 class SectionOccurrence(ValidatingModel):
     """
     SectionOccurrence represents an occurrence of a section and acts as an
@@ -116,8 +121,14 @@ class SectionOccurrence(ValidatingModel):
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
 
+    objects = SectionOccurenceModelManager()
+
     def __str__(self):
         return f"SectionOccurrence for {self.section} at {self.date}"
+
+    @cached_property
+    def current_semester(self):
+        return section__mentor__course is Semesters.objects.all().first()
 
     class Meta:
         unique_together = ("section", "date")
