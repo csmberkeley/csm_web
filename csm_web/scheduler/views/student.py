@@ -1,7 +1,7 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.utils import timezone
-from csm_web.scheduler.models import SectionOccurrence, Attendance
+from scheduler.models import Attendance, SectionOccurrence
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
@@ -93,22 +93,23 @@ class StudentViewSet(viewsets.GenericViewSet):
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    @action(detail=True, methods=["put"])
-    def submit_attendance(self, request, pk=None):
-        """
-        Format of request.
+    # @action(detail=True, methods=["put"])
+    # def submit_attendance(self, request, pk=None):
+    #     """
+    #     Format of request.
+    #         request.data is a dictionary with
+    #             'attempt': string of attempt for word of the day    
+    #             '
+    #     """
+    #     # I think I only need the student and not if it has other profiles attached to it?
+    #     student = get_object_or_error(self.get_queryset(), pk=pk)
 
-        
-        """
-        # I think I only need the student and not if it has other profiles attached to it?
-        student = get_object_or_error(self.get_queryset(), pk=pk)
+    #     # So does the front end send which section occurence it is associated with?
+    #     section_occurrence = SectionOccurrence.objects.filter(pk=request.data['sectionOccurence'])
 
-        # So does the front end send which section occurence it is associated with?
-        section_occurrence = SectionOccurrence.objects.filter(pk=request.data['sectionOccurence'])
+    #     if section_occurrence.word_of_the_day != request.data['password'].lower():
+    #         #Not sure which type of Http response to send, mayb permission denied?
+    #         return Response()
 
-        if section_occurrence.word_of_the_day != request.data['password'].lower():
-            #Not sure which type of Http response to send, mayb permission denied?
-            return Response()
-
-        #I don't actually want to create a new attendance but rather update the already existing attendance.
-        attendance = Attendance.objects.create(presence='PR', student=student, SectionOccurrence=section_occurrence)
+    #     #I don't actually want to create a new attendance but rather update the already existing attendance.
+    #     attendance = Attendance.objects.create(presence='PR', student=student, SectionOccurrence=section_occurrence)
