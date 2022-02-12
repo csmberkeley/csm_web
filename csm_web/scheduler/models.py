@@ -43,11 +43,6 @@ class User(AbstractUser):
         indexes = (models.Index(fields=("email",)),)
 
 
-class MyModelManager(models.Manager):
-    def get_queryset(self):
-        return super(MyModelManager, self).get_queryset().filter(active=True)
-
-
 class ValidatingModel(models.Model):
     """
     By default, Django models do not validate on save!
