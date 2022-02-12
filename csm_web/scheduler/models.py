@@ -51,11 +51,21 @@ class User(AbstractUser):
         indexes = (models.Index(fields=("email",)),)
 
 
+class SemesterModelManager(models.Manager):
+    def get_queryset(self):
+        # return super(SemesterModelManager, self).get_queryset().filter(current_semester=True) won't work because you cannot filter by a property
+        all_objects = super(SemesterModelManager, self).get_queryset()
+        # temporary, won't work because returning list not queryset
+        return [obj for obj in all_objects if obj.current_semester()]
+
+
 class ValidatingModel(models.Model):
     """
     By default, Django models do not validate on save!
     This abstract class fixes that insanity
     """
+
+    objects = SemesterModelManager()
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -101,15 +111,14 @@ class Attendance(ValidatingModel):
     def week_start(self):
         return week_bounds(self.sectionOccurrence.date)[0]
 
+    @functional.cached_property
+    def current_semester(self):
+        return self.student.course.semester is Semesters.objects.all().first()
+
     class Meta:
         unique_together = ("sectionOccurrence", "student")
         ordering = ("sectionOccurrence",)
         #indexes = (models.Index(fields=("date",)),)
-
-
-class SectionOccurenceModelManager(models.Manager):
-    def get_queryset(self):
-        return super(SectionOccurenceModelManager, self).get_queryset().filter(current_semester=True)
 
 
 class SectionOccurrence(ValidatingModel):
@@ -121,23 +130,16 @@ class SectionOccurrence(ValidatingModel):
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
 
-    objects = SectionOccurenceModelManager()
-
     def __str__(self):
         return f"SectionOccurrence for {self.section} at {self.date}"
 
-    @cached_property
+    @functional.cached_property
     def current_semester(self):
-        return section__mentor__course is Semesters.objects.all().first()
+        return self.section.mentor.course.semester is Semesters.objects.all().first()
 
     class Meta:
         unique_together = ("section", "date")
         ordering = ("date",)
-
-
-class CourseModelManager(models.Manager):
-    def get_queryset(self):
-        return super(CourseModelManager, self).get_queryset().filter(current_semester=True)
 
 
 class Course(ValidatingModel):
@@ -149,8 +151,6 @@ class Course(ValidatingModel):
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
     semester = models.ForeignKey("Semester", on_delete=models.CASCADE)
-
-    objects = CourseModelManager()
 
     def __str__(self):
         return self.name
@@ -167,9 +167,9 @@ class Course(ValidatingModel):
     def is_open(self):
         return self.enrollment_start < timezone.now() < self.enrollment_end
 
-    @cached_property
+    @functional.cached_property
     def current_semester(self):
-        return semester is Semester.objects.all().first()
+        return self.semester is Semester.objects.all().first()
 
 
 class Profile(ValidatingModel):
@@ -184,6 +184,10 @@ class Profile(ValidatingModel):
 
     def __str__(self):
         return f"{self.name} ({self.course.name})"
+
+    @functional.cached_property
+    def current_semester(self):
+        return self.course.semester is Semester.objects.all().first()
 
     class Meta:
         abstract = True
@@ -234,6 +238,10 @@ class Student(Profile):
         if self.section.mentor.course != self.course:
             raise ValidationError("Student must be associated with the same course as the section they are in.")
 
+    @functional.cached_property
+    def current_semester(self):
+        return self.course.semester is Semester.objects.all().first()
+
     class Meta:
         unique_together = ("user", "section")
 
@@ -243,6 +251,10 @@ class Mentor(Profile):
     Represents a given "instance" of a mentor. Every section a mentor teaches in every course should
     have a new Mentor profile.
     """
+
+    @functional.cached_property
+    def current_semester(self):
+        return self.course.semester is Semester.objects.all().first()
 
 
 class Coordinator(Profile):
@@ -257,6 +269,10 @@ class Coordinator(Profile):
 
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.course.name})"
+
+    @functional.cached_property
+    def current_semester(self):
+        return self.course.semester is Semester.objects.all().first()
 
     class Meta:
         unique_together = ("user", "course")
@@ -306,6 +322,10 @@ class Section(ValidatingModel):
             spacetimes="|".join(map(str, self.spacetimes.all()))
         )
 
+    @functional.cached_property
+    def current_semester(self):
+        return self.mentor.course.semester is Semester.objects.all().first()
+
 
 def worksheet_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/<course_name>/<filename>
@@ -319,6 +339,10 @@ class Resource(ValidatingModel):
     date = models.DateField()
     topics = models.CharField(blank=True, max_length=100)
 
+    @functional.cached_property
+    def current_semester(self):
+        return self.course.semester is Semester.objects.all().first()
+
     class Meta:
         ordering = ['week_num']
 
@@ -328,6 +352,10 @@ class Worksheet(ValidatingModel):
     name = models.CharField(max_length=100)
     worksheet_file = models.FileField(blank=True, upload_to=worksheet_path)
     solution_file = models.FileField(blank=True, upload_to=worksheet_path)
+
+    @functional.cached_property
+    def current_semester(self):
+        return self.semester is Semester.objects.all().first()
 
 
 @receiver(models.signals.post_delete, sender=Worksheet)
