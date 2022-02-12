@@ -42,7 +42,8 @@ class User(AbstractUser):
             return not is_associated
         else:
             if self.priority_enrollment:
-                is_valid_enrollment_time = self.priority_enrollment < timezone.now() < course.enrollment_end
+                now = timezone.now().astimezone(timezone.get_default_timezone())
+                is_valid_enrollment_time = self.priority_enrollment < now < course.enrollment_end
             else:
                 is_valid_enrollment_time = course.is_open()
             return is_valid_enrollment_time and not is_associated
@@ -131,7 +132,8 @@ class Course(ValidatingModel):
             raise ValidationError("valid_until must be after enrollment_end")
 
     def is_open(self):
-        return self.enrollment_start < timezone.now() < self.enrollment_end
+        now = timezone.now().astimezone(timezone.get_default_timezone())
+        return self.enrollment_start < now < self.enrollment_end
 
 
 class Profile(ValidatingModel):
@@ -167,7 +169,7 @@ class Student(Profile):
         Create an attendance for this week for the student if their section hasn't already been held this week
         and no attendance for this week already exists.
         """
-        now = timezone.now()
+        now = timezone.now().astimezone(timezone.get_default_timezone())
         week_start = week_bounds(now.date())[0]
         for spacetime in self.section.spacetimes.all():
             section_day_num = day_to_number(spacetime.day_of_week)
@@ -387,7 +389,8 @@ class Override(ValidatingModel):
             raise ValidationError("Day of week of spacetime and day of week of date do not match")
 
     def is_expired(self):
-        return self.date < timezone.now().date()
+        now = timezone.now().astimezone(timezone.get_default_timezone())
+        return self.date < now.date()
 
     def __str__(self):
         return f"Override for {self.overriden_spacetime.section} : {self.spacetime}"

@@ -398,8 +398,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 student.section = section
                 student.active = True
                 # generate new attendance objects for this student in all section occurrences past this date
+                now = timezone.now().astimezone(timezone.get_default_timezone())
                 future_sectionOccurrences = section.sectionoccurrence_set.filter(
-                    Q(date__gte=timezone.now())
+                    Q(date__gte=now.date())
                 )
                 for sectionOccurrence in future_sectionOccurrences:
                     Attendance(
@@ -465,8 +466,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             student.section = section
             student.active = True
             # generate new attendance objects for this student in all section occurrences past this date
+            now = timezone.now().astimezone(timezone.get_default_timezone())
             future_sectionOccurrences = section.sectionoccurrence_set.filter(
-                Q(date__gte=timezone.now())
+                Q(date__gte=now.date())
             )
             for sectionOccurrence in future_sectionOccurrences:
                 Attendance(

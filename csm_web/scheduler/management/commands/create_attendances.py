@@ -16,7 +16,8 @@ class Command(BaseCommand):
     help = "Creates attendances for the current week"
 
     def handle(self, *args, **options):
-        week_start, _ = week_bounds(timezone.now().date())
+        now = timezone.now().astimezone(timezone.get_default_timezone())
+        week_start, _ = week_bounds(now.date())
         sections = Section.objects.all()
         logger.info(f"Updating attendance for week of {week_start}")
         with transaction.atomic():
