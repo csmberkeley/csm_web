@@ -43,6 +43,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   const [newLinks, setNewLinks] = useState<Array<Link>>([]);
   const [formErrors, setFormErrors] = useState<FormErrors>(emptyFormErrors());
   const [touched, setTouched] = useState<Touched>(emptyTouched());
+  const [isEditingLinks, setIsEditingLinks] = useState<boolean>(false);
 
   const resourceWorksheetMap = new Map();
   if (resource) {
@@ -409,7 +410,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setNewWorksheets([...newWorksheets, emptyWorksheet()]);
   }
 
-  const existingDisplay =
+  const existingWorksheetDisplay =
     existingWorksheetMap &&
     [...existingWorksheetMap.values()].map(worksheet =>
       worksheet.deleted && worksheet.deleted.includes("worksheet") ? undefined : (
@@ -425,7 +426,9 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       )
     );
 
-  const newDisplay =
+  const existingLinkDisplay = <></>;
+
+  const newWorksheetDisplay =
     newWorksheets &&
     newWorksheets.map((worksheet, index) => (
       <ResourceWorksheetEdit
@@ -440,13 +443,37 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       ></ResourceWorksheetEdit>
     ));
 
-  const hasWorksheets = existingWorksheetMap && newWorksheets && (existingDisplay.length > 0 || newDisplay.length > 0);
+  const newLinkDisplay = <></>;
+
+  const hasWorksheets =
+    existingWorksheetMap && newWorksheets && (existingWorksheetDisplay.length > 0 || newWorksheetDisplay.length > 0);
+  const hasLinks = false;
 
   return (
     <Modal closeModal={onCancel} className="resourceEditModal">
       <div className="resourceEditContainer">
         <div className="resourceEditContentWrapper">
           <div className="resourceEditContent">
+            <div className="resourceEditTabContainer">
+              <button
+                onClick={() => {
+                  setIsEditingLinks(false);
+                }}
+                className="resourceEditTab"
+                disabled={!isEditingLinks}
+              >
+                Edit Worksheets
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditingLinks(true);
+                }}
+                className="resourceEditTab"
+                disabled={isEditingLinks}
+              >
+                Edit Links
+              </button>
+            </div>
             <div id="resourceEditInner">
               <div className="resourceInfoEdit">
                 <div className="resourceEditHeadItem">Week Number</div>
@@ -490,21 +517,39 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                 </div>
               </div>
             </div>
-            <div className="resourceWorksheetContainer">
-              {hasWorksheets && (
-                <div className="resourceWorksheetHead">
-                  <div className="resourceWorksheetHeadItem">Name</div>
-                  <div className="resourceWorksheetHeadItem">Worksheet File</div>
-                  <div className="resourceWorksheetHeadItem">Solution File</div>
-                </div>
-              )}
-              {existingDisplay}
-              {newDisplay}
-              <button onClick={handleAddWorksheet} id="addWorksheetButton">
-                <PlusCircle className="icon" id="plusIcon" />
-                Add Worksheet
-              </button>
-            </div>
+            {!isEditingLinks && (
+              <div className="resourceWorksheetContainer">
+                {hasWorksheets && (
+                  <div className="resourceWorksheetHead">
+                    <div className="resourceWorksheetHeadItem">Name</div>
+                    <div className="resourceWorksheetHeadItem">Worksheet File</div>
+                    <div className="resourceWorksheetHeadItem">Solution File</div>
+                  </div>
+                )}
+                {existingWorksheetDisplay}
+                {newWorksheetDisplay}
+                <button onClick={handleAddWorksheet} className="addResourceButton" id="addWorksheetButton">
+                  <PlusCircle className="icon" id="plusIcon" />
+                  Add Worksheet
+                </button>
+              </div>
+            )}
+            {isEditingLinks && (
+              <div className="resourceWorksheetContainer">
+                {hasLinks && (
+                  <div className="resourceWorksheetHead">
+                    <div className="resourceWorksheetHeadItem">Name</div>
+                    <div className="resourceWorksheetHeadItem">URL</div>
+                  </div>
+                )}
+                {existingLinkDisplay}
+                {newLinkDisplay}
+                <button id="addLinkButton" className="addResourceButton">
+                  <PlusCircle className="icon" id="plusIcon" />
+                  Add Link
+                </button>
+              </div>
+            )}
           </div>
         </div>
         <button onClick={handleSubmit} id="resourceButtonSubmit" disabled={!checkValid()}>
