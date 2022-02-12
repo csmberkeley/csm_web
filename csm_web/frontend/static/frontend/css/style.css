@@ -404,6 +404,8 @@ header {
 	box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.15);
 	border-radius: 20px;
 	margin: 0 auto 50px;
+	display: flex;
+	flex-direction: column;
 }
 
 .section-card.full {
@@ -413,6 +415,7 @@ header {
 .section-card-contents {
 	position: relative;
 	padding: 10px 20px 0;
+	flex: 1;
 }
 
 .section-card-contents p {
@@ -472,19 +475,13 @@ header {
 	justify-content: center;
 }
 
-#course-left-col {
-	top: 0;
-	align-self: flex-start;
-	margin-top: 5%;
-}
-
 .export-data-btn {
 	font-size: 18px;
 	border: none;
 	cursor: pointer;
-	margin: 0 auto !important;
 	display: block;
 	padding: 8px;
+	margin-left: 5px;
 }
 
 .data-export-modal {
@@ -542,6 +539,12 @@ header {
 	margin: 0 0 10px;
 }
 
+#course-coord-buttons {
+	display: flex;
+	width: max-content;
+	margin: 0 auto;
+}
+
 .course-title {
 	color: #6d6d6d;
 	font-size: 2.5em;
@@ -583,19 +586,16 @@ header {
 }
 
 #course-section-list {
-	height: 50vh;
+	width: 75vw;
+	margin: 0 auto;
+	display: grid;
+	grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+	grid-gap: 10px;
 }
 
 #course-section-list-empty {
-	width: 300px; /* Match width of section card so day selector stays stationary */
 	color: #646464;
 	text-align: center;
-}
-
-#course-section-selector {
-	display: flex;
-	flex-wrap: wrap;
-	justify-content: center;
 }
 
 #course-section-selector .modal h3 {

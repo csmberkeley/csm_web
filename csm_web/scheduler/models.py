@@ -33,11 +33,19 @@ def week_bounds(date):
 
 
 class User(AbstractUser):
-    def can_enroll_in_course(self, course):
-        return course.is_open() and (
-            not (self.student_set.filter(active=True, section__mentor__course=course).count() or
-                 self.mentor_set.filter(section__mentor__course=course).count())
-        )
+    priority_enrollment = models.DateTimeField(null=True, blank=True)
+
+    def can_enroll_in_course(self, course, bypass_enrollment_time=False):
+        is_associated = (self.student_set.filter(active=True, section__mentor__course=course).count() or
+                         self.mentor_set.filter(section__mentor__course=course).count())
+        if bypass_enrollment_time:
+            return not is_associated
+        else:
+            if self.priority_enrollment:
+                is_valid_enrollment_time = self.priority_enrollment < timezone.now() < course.enrollment_end
+            else:
+                is_valid_enrollment_time = course.is_open()
+            return is_valid_enrollment_time and not is_associated
 
     class Meta:
         indexes = (models.Index(fields=("email",)),)
