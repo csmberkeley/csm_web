@@ -9,7 +9,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from .utils import log_str, logger, get_object_or_error, viewset_with
-from ..models import Course, Section, Student, Spacetime, User, Attendance, Mentor
+from ..models import Course, Section, Student, Spacetime, User, Attendance, Mentor, SectionOccurrence
 from ..serializers import (
     SectionOccurrenceSerializer,
     SectionSerializer,
@@ -497,4 +497,24 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
             return Response({"id": student.id}, status=status.HTTP_201_CREATED)
 
-    
+
+    @action(detail=True, methods=['put'])
+    def change_word_of_day(self, request, pk=None):
+        #Maybe I can j take in a pk here for the sectionOccurrence to change it for?
+        
+        sectionOccurrence = get_object_or_error(SectionOccurrence, pk=pk)
+
+        if request.data['word_of_the_day'] != '':
+            sectionOccurrence.word_of_the_day = request.data['word_of_the_day']
+            sectionOccurrence.save()
+
+            #Unsure which http repsonse is correct.
+            return Response()
+
+        else:
+            #Return an error response
+            return Response()
+
+        #Filter for the correct sectionOccurrence and then change it to have new word of the day.
+
+
