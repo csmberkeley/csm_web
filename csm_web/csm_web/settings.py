@@ -111,8 +111,8 @@ if DEBUG:
         'default': {
             'ENGINE': 'psqlextra.backend',
             'NAME': 'csm_web_dev',
-            'USER': 'postgres',
-            'HOST': 'localhost',
+            'USER': 'turtle',
+            # 'HOST': 'localhost',
             'PORT': '5432',
         }
     }
