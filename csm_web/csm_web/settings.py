@@ -112,6 +112,7 @@ if DEBUG:
             'ENGINE': 'psqlextra.backend',
             'NAME': 'csm_web_dev',
             'USER': 'postgres',
+            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
             'HOST': 'localhost',
             'PORT': '5432',
         }

@@ -20,7 +20,7 @@ class CourseViewSet(*viewset_with("list")):
         banned_from = self.request.user.student_set.filter(banned=True).values_list(
             "section__mentor__course__id", flat=True
         )
-        now = timezone.now()
+        now = timezone.now().astimezone(timezone.get_default_timezone())
         return (
             Course.objects.exclude(pk__in=banned_from)
             .order_by("name")

@@ -42,14 +42,15 @@ class StudentViewSet(viewsets.GenericViewSet):
             f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)} for Student user {log_str(student.user)}"
         )
         # filter attendances and delete future attendances
+        now = timezone.now().astimezone(timezone.get_default_timezone())
         num_deleted, _ = student.attendance_set.filter(
             Q(
-                sectionOccurrence__date__gte=timezone.now(),
+                sectionOccurrence__date__gte=now.date(),
                 sectionOccurrence__section=student.section,
             )
         ).delete()
         logger.info(
-            f"<Drop> Deleted {num_deleted} attendances for user {log_str(student.user)} in Section {log_str(student.section)} after {timezone.now()}"
+            f"<Drop> Deleted {num_deleted} attendances for user {log_str(student.user)} in Section {log_str(student.section)} after {now.date()}"
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
