@@ -93,23 +93,29 @@ class StudentViewSet(viewsets.GenericViewSet):
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    # @action(detail=True, methods=["put"])
-    # def submit_attendance(self, request, pk=None):
-    #     """
-    #     Format of request.
-    #         request.data is a dictionary with
-    #             'attempt': string of attempt for word of the day    
-    #             '
-    #     """
-    #     # I think I only need the student and not if it has other profiles attached to it?
-    #     student = get_object_or_error(self.get_queryset(), pk=pk)
+    @action(detail=True, methods=["put"])
+    def submit_attendance(self, request, pk=None):
+        """
+        Attempts to change the attendance object associated with the 
 
-    #     # So does the front end send which section occurence it is associated with?
-    #     section_occurrence = SectionOccurrence.objects.filter(pk=request.data['sectionOccurence'])
+        Format of request.
+            request.data is a dictionary with
+                'attempt': string of attempt for word of the day    
+                '
+        """
+        # I think I only need the student and not if it has other profiles attached to it?
+        student = get_object_or_error(self.get_queryset(), pk=pk)
 
-    #     if section_occurrence.word_of_the_day != request.data['password'].lower():
-    #         #Not sure which type of Http response to send, mayb permission denied?
-    #         return Response()
+        # So does the front end send which section occurence it is associated with?
+        section_occurrence = SectionOccurrence.objects.filter(pk=request.data['sectionOccurence'])
 
-    #     #I don't actually want to create a new attendance but rather update the already existing attendance.
-    #     attendance = Attendance.objects.create(presence='PR', student=student, SectionOccurrence=section_occurrence)
+        if section_occurrence.word_of_the_day != request.data['password'].lower():
+            #Not sure which type of Http response to send, mayb permission denied?
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        #I don't actually want to create a new attendance but rather update the already existing attendance.
+        attendance = Attendance.objects.filter(student_id=student.pk).filter(sectionOccurrence_id=section_occurrence.pk)
+        attendance.presence = "PR"
+        attendance.save()
+
+        return Response(status=status.HTTP_200_OK)

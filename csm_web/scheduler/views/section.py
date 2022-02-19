@@ -509,11 +509,11 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             sectionOccurrence.save()
 
             #Unsure which http repsonse is correct.
-            return Response()
+            return Response(status = status.HTTP_200_OK)
 
         else:
             #Return an error response
-            return Response()
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         #Filter for the correct sectionOccurrence and then change it to have new word of the day.
 
