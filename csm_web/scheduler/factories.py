@@ -144,6 +144,8 @@ class SectionOccurrenceFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = SectionOccurrence
 
+    word_of_the_day = factory.LazyFunction(lambda: evaluate_faker(factory.Faker("faker_music")))
+
 
 class AttendanceFactory(factory.django.DjangoModelFactory):
     class Meta:
