@@ -74,6 +74,15 @@ export function emptyWorksheet(): Worksheet {
   };
 }
 
+export function emptyLink(): Link {
+  return {
+    id: (null as unknown) as number,
+    resource: (null as unknown) as number,
+    name: "",
+    url: new URL("https://scheduler.csmentors.org")
+  };
+}
+
 /**
  * Creates a shallow copy of a worksheet object.
  *
@@ -87,6 +96,20 @@ export function copyWorksheet(worksheet: Worksheet): Worksheet {
     name: worksheet.name,
     worksheetFile: worksheet.worksheetFile,
     solutionFile: worksheet.solutionFile
+  };
+}
+/**
+ * Creates a shallow copy of a link object.
+ *
+ * @param link link object to copy from
+ * @returns copy of specified link object
+ */
+export function copyLink(link: Link): Link {
+  return {
+    id: link.id,
+    resource: link.resource,
+    name: link.name,
+    url: link.url
   };
 }
 
