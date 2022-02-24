@@ -406,9 +406,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 student.section = section
                 student.active = True
                 # generate new attendance objects for this student in all section occurrences past this date
-                now = timezone.now().astimezone(timezone.get_default_timezone())
                 future_sectionOccurrences = section.sectionoccurrence_set.filter(
-                    Q(date__gte=now.date())
+                    Q(date__gte=timezone.now())
                 )
                 for sectionOccurrence in future_sectionOccurrences:
                     Attendance(
@@ -442,7 +441,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         Adds a student to a section (initiated by a student)
         """
         if not request.user.can_enroll_in_course(section.mentor.course):
-            logger.warning(
+            logger.warn(
                 f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because they are already involved in this course"
             )
             raise PermissionDenied(
@@ -450,7 +449,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         if section.current_student_count >= section.capacity:
-            logger.warning(
+            logger.warn(
                 f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because it was full"
             )
             raise PermissionDenied(
@@ -474,9 +473,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             student.section = section
             student.active = True
             # generate new attendance objects for this student in all section occurrences past this date
-            now = timezone.now().astimezone(timezone.get_default_timezone())
             future_sectionOccurrences = section.sectionoccurrence_set.filter(
-                Q(date__gte=now.date())
+                Q(date__gte=timezone.now())
             )
             for sectionOccurrence in future_sectionOccurrences:
                 Attendance(
@@ -500,6 +498,12 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
     @action(detail=True, methods=['put'])
     def change_word_of_day(self, request, pk=None):
+        """
+        Request
+            data = {
+                'word_of_the_day': {new word of the day}
+            }
+        """
         #Maybe I can j take in a pk here for the sectionOccurrence to change it for?
         
         sectionOccurrence = get_object_or_error(SectionOccurrence, pk=pk)
@@ -510,10 +514,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
             #Unsure which http repsonse is correct.
             return Response(status = status.HTTP_200_OK)
+            
 
-        else:
-            #Return an error response
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        return Response(status=status.HTTP_403_FORBIDDEN)
 
         #Filter for the correct sectionOccurrence and then change it to have new word of the day.
 
