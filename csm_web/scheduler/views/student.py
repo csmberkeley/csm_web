@@ -101,7 +101,7 @@ class StudentViewSet(viewsets.GenericViewSet):
         Format of request.
             request.data is a dictionary with
                 'attempt': string of attempt for word of the day    
-                '
+                'sectionOccurrence': pk for section occurrence for that week
         """
         # I think I only need the student and not if it has other profiles attached to it?
         student = get_object_or_error(self.get_queryset(), pk=pk)

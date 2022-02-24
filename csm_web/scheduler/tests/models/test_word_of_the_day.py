@@ -73,7 +73,7 @@ def setup_section(db):
 
 @pytest.mark.django_db
 def test_update_word_of_the_day(
-    client, setup_section, day, num_attendances_added
+    client, setup_section
 ):
     mentor, student_user, course, section = setup_section
 
@@ -81,8 +81,52 @@ def test_update_word_of_the_day(
                                             date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ), 
                                             word_of_the_day = 'default'))
     client.force_login(mentor)
-    enroll_url = reverse("change-word-of-day", kwargs={"pk": sectionOccurrence.pk})
-    client.put(enroll_url, data = {'word_of_the_day': 'changed'})
+    change_word_of_day_url = reverse("change-word-of-day", kwargs={"pk": sectionOccurrence.pk})
+    client.put(change_word_of_day_url, data = {'word_of_the_day': 'changed'})
 
-    assert sectionOccurrence.word_of_the_day.equals('changed')
+    assert sectionOccurrence.word_of_the_day == 'changed'
 
+
+@pytest.mark.django_db
+def test_submit_attendance_failure(
+    client, setup_section
+):
+    mentor, student_user, course, section = setup_section
+    enroll_url = reverse("section-students", kwargs={"pk": section.pk})
+    client.put(enroll_url)
+
+    sectionOccurrence = (SectionOccurrence(section=section, 
+                                            date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ), 
+                                            word_of_the_day = 'test'))
+    client.force_login(student_user)
+    submit_attendance_url = reverse("submit-attendance", kwargs={"pk": student_user.pk})
+    client.put(submit_attendance_url, data={'attempt': 'wrong password', 'sectionOccurrence': sectionOccurrence.pk})
+
+    # Still one attendance object
+    assert Attendance.objects.all().count() == 1
+
+    # Did not change the attendance.
+    assert Attendance.objects.get(0).presence == ''
+
+@pytest.mark.django_db
+def test_submit_attendance_failure(
+    client, setup_section
+):
+    mentor, student_user, course, section = setup_section
+    enroll_url = reverse("section-students", kwargs={"pk": section.pk})
+    client.put(enroll_url)
+
+    sectionOccurrence = (SectionOccurrence(section=section, 
+                                            date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ), 
+                                            word_of_the_day = 'test'))
+    client.force_login(student_user)
+    submit_attendance_url = reverse("submit-attendance", kwargs={"pk": student_user.pk})
+    client.put(submit_attendance_url, data={'attempt': 'test', 'sectionOccurrence': sectionOccurrence.pk})
+
+    # Still one attendance object
+    assert Attendance.objects.all().count() == 1
+
+    # Did not change the attendance.
+    assert Attendance.objects.get(0).presence == 'PR'
+    
+    
