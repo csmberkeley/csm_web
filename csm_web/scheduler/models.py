@@ -56,21 +56,12 @@ class User(AbstractUser):
         indexes = (models.Index(fields=("email",)),)
 
 
-# class SemesterModelManager(models.Manager):
-#     def get_queryset(self):
-#         # won't work because you cannot filter by a property
-#         return super(SemesterModelManager, self).get_queryset().filter(current_semester=True)
-
-#         # add way to specify another semester to filter, or maybe even a semester range, or all of one season, etc.
-#         # default can still be current semester, but shouldn't be locked out of the rest.
-
 class ValidatingModel(models.Model):
     """
     By default, Django models do not validate on save!
     This abstract class fixes that insanity
     """
 
-    #objects = SemesterModelManager()
     past_objects_included = models.Manager()
 
     def save(self, *args, **kwargs):
@@ -86,6 +77,7 @@ class Semester(ValidatingModel):
         FALL = "FA", "Fall"
         SPRING = "SP", "Spring"
 
+    # do we even need this? especially if we're not keeping track of the year of a semester, only an arbitrary primary key sid
     season = models.CharField(max_length=2, choices=Season.choices, blank=True)
     sid = models.PositiveSmallIntegerField(primary_key=True)
 
@@ -110,7 +102,6 @@ class Attendance(ValidatingModel):
     presence = models.CharField(max_length=2, choices=Presence.choices, blank=True)
     student = models.ForeignKey("Student", on_delete=models.CASCADE)
     sectionOccurrence = models.ForeignKey("SectionOccurrence", on_delete=models.CASCADE)
-
     objects = AttendanceModelManager()
 
     def __str__(self):
@@ -143,7 +134,6 @@ class SectionOccurrence(ValidatingModel):
     """
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
-
     objects = SectionOccurrenceModelManager()
 
     def __str__(self):
@@ -168,7 +158,6 @@ class Course(ValidatingModel):
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
     semester = models.ForeignKey("Semester", on_delete=models.CASCADE)
-
     objects = CourseModelManager()
 
     def __str__(self):
@@ -198,7 +187,6 @@ class Profile(ValidatingModel):
 
     # all students, mentors, and coords should have a field for course
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
-
     objects = ProfileModelManager()
 
     @property
@@ -300,7 +288,6 @@ class Section(ValidatingModel):
         help_text='A brief note to add some extra information about the section, e.g. "EOP" or '
         '"early start".'
     )
-
     objects = SectionModelManager()
 
     # @functional.cached_property
@@ -353,7 +340,6 @@ class Resource(ValidatingModel):
     week_num = models.PositiveSmallIntegerField()
     date = models.DateField()
     topics = models.CharField(blank=True, max_length=100)
-
     objects = ResourceModelManager()
 
     class Meta:
@@ -370,7 +356,6 @@ class Worksheet(ValidatingModel):
     name = models.CharField(max_length=100)
     worksheet_file = models.FileField(blank=True, upload_to=worksheet_path)
     solution_file = models.FileField(blank=True, upload_to=worksheet_path)
-
     objects = WorksheetModelManager()
 
 
