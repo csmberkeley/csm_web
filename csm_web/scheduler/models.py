@@ -32,8 +32,8 @@ def week_bounds(date):
     return week_start, week_end
 
 
-def current_semester_id():
-    return Semester.objects.all().first().id
+def current_semester_sid():
+    return Semester.objects.all().first().sid
 
 
 class User(AbstractUser):
@@ -71,6 +71,7 @@ class ValidatingModel(models.Model):
     """
 
     #objects = SemesterModelManager()
+    past_objects_included = models.Manager()
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -86,18 +87,18 @@ class Semester(ValidatingModel):
         SPRING = "SP", "Spring"
 
     season = models.CharField(max_length=2, choices=Season.choices, blank=True)
-    id = models.PositiveSmallIntegerField(primary_key=True)
+    sid = models.PositiveSmallIntegerField(primary_key=True)
 
     def __str__(self):
-        return f"{self.season} {self.id}"
+        return f"{self.season} {self.sid}"
 
     class Meta:
-        ordering = ['-id']
+        ordering = ['-sid']
 
 
 class AttendanceModelManager(models.Manager):
     def get_queryset(self):
-        return super(AttendanceModelManager, self).get_queryset().filter(student__course__semester__id=current_semester_id())
+        return super(AttendanceModelManager, self).get_queryset().filter(student__course__semester__sid=current_semester_sid())
 
 
 class Attendance(ValidatingModel):
@@ -131,7 +132,7 @@ class Attendance(ValidatingModel):
 
 class SectionOccurrenceModelManager(models.Manager):
     def get_queryset(self):
-        return super(SectionOccurrenceModelManager, self).get_queryset().filter(section__mentor__course__semester__id=current_semester_id())
+        return super(SectionOccurrenceModelManager, self).get_queryset().filter(section__mentor__course__semester__sid=current_semester_sid())
 
 
 class SectionOccurrence(ValidatingModel):
@@ -155,7 +156,7 @@ class SectionOccurrence(ValidatingModel):
 
 class CourseModelManager(models.Manager):
     def get_queryset(self):
-        return super(CourseModelManager, self).get_queryset().filter(semester__id=current_semester_id())
+        return super(CourseModelManager, self).get_queryset().filter(semester__sid=current_semester_sid())
 
 
 class Course(ValidatingModel):
@@ -189,7 +190,7 @@ class Course(ValidatingModel):
 
 class ProfileModelManager(models.Manager):
     def get_queryset(self):
-        return super(ProfileModelManager, self).get_queryset().filter(course__semester__id=current_semester_id())
+        return super(ProfileModelManager, self).get_queryset().filter(course__semester__sid=current_semester_sid())
 
 
 class Profile(ValidatingModel):
@@ -286,7 +287,7 @@ class Coordinator(Profile):
 
 class SectionModelManager(models.Manager):
     def get_queryset(self):
-        return super(SectionModelManager, self).get_queryset().filter(mentor__course__semester__id=current_semester_id())
+        return super(SectionModelManager, self).get_queryset().filter(mentor__course__semester__sid=current_semester_sid())
 
 
 class Section(ValidatingModel):
@@ -344,7 +345,7 @@ def worksheet_path(instance, filename):
 
 class ResourceModelManager(models.Manager):
     def get_queryset(self):
-        return super(ResourceModelManager, self).get_queryset().filter(course__semester__id=current_semester_id())
+        return super(ResourceModelManager, self).get_queryset().filter(course__semester__sid=current_semester_sid())
 
 
 class Resource(ValidatingModel):
@@ -361,7 +362,7 @@ class Resource(ValidatingModel):
 
 class WorksheetModelManager(models.Manager):
     def get_queryset(self):
-        return super(WorksheetModelManager, self).get_queryset().filter(resource__course__semester__id=current_semester_id())
+        return super(WorksheetModelManager, self).get_queryset().filter(resource__course__semester__sid=current_semester_sid())
 
 
 class Worksheet(ValidatingModel):
