@@ -25,6 +25,10 @@ from scheduler.factories import (
     SpacetimeFactory,
 )
 
+import zoneinfo
+
+DEFAULT_TZ = zoneinfo.ZoneInfo(timezone.get_default_timezone().zone)
+
 @pytest.fixture
 def setup_section(db):
     mentor_user = UserFactory(
@@ -68,23 +72,41 @@ def setup_section(db):
             ),
         ],
     )
-    return mentor, student_user, course, section
+    return mentor_user, student_user, course, section
 
 
 @pytest.mark.django_db
 def test_update_word_of_the_day(
     client, setup_section
 ):
-    mentor, student_user, course, section = setup_section
+    mentor_user, student_user, course, section = setup_section
 
     sectionOccurrence = (SectionOccurrence(section=section, 
                                             date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ), 
                                             word_of_the_day = 'default'))
-    client.force_login(mentor)
-    change_word_of_day_url = reverse("change-word-of-day", kwargs={"pk": sectionOccurrence.pk})
+    sectionOccurrence.save()
+    client.force_login(mentor_user)
+    
+    change_word_of_day_url = reverse("section-change-word-of-day", kwargs={"pk": sectionOccurrence.pk})
     client.put(change_word_of_day_url, data = {'word_of_the_day': 'changed'})
 
     assert sectionOccurrence.word_of_the_day == 'changed'
+
+@pytest.mark.django_db
+def test_update_word_of_the_day_failure(
+    client, setup_section
+):
+    mentor_user, student_user, course, section = setup_section
+
+    sectionOccurrence = (SectionOccurrence(section=section, 
+                                            date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ), 
+                                            word_of_the_day = 'default'))
+    client.force_login(mentor_user)
+    change_word_of_day_url = reverse("section-change-word-of-day", kwargs={"pk": sectionOccurrence.pk})
+    client.put(change_word_of_day_url,data = {'word_of_the_day': ''})
+
+    #Check to make sure that the word of the day does not change when provided an empty string
+    assert sectionOccurrence.word_of_the_day == 'default'
 
 
 @pytest.mark.django_db
@@ -98,6 +120,7 @@ def test_submit_attendance_failure(
     sectionOccurrence = (SectionOccurrence(section=section, 
                                             date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ), 
                                             word_of_the_day = 'test'))
+    sectionOccurrence.save()
     client.force_login(student_user)
     submit_attendance_url = reverse("submit-attendance", kwargs={"pk": student_user.pk})
     client.put(submit_attendance_url, data={'attempt': 'wrong password', 'sectionOccurrence': sectionOccurrence.pk})
@@ -128,5 +151,9 @@ def test_submit_attendance_failure(
 
     # Did not change the attendance.
     assert Attendance.objects.get(0).presence == 'PR'
+
+
+
+    #Check to make sure that another student can not change someone else's attendance.
     
     

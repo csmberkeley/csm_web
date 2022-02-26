@@ -162,7 +162,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
             - coordinator add:
                 request.user: coordinator that wants to add students
-                pk: primary key of section to enroll into
+                pk: primary key of 
+                section to enroll into
                 request.data['emails']: array of objects with keys:
                     - 'email': email of student
                     - 'conflict_action': whether or not the coord has confirmed to drop this user from their existing section
@@ -504,20 +505,21 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 'word_of_the_day': {new word of the day}
             }
         """
-        #Maybe I can j take in a pk here for the sectionOccurrence to change it for?
-        
-        sectionOccurrence = get_object_or_error(SectionOccurrence, pk=pk)
 
+        sectionOccurrence = get_object_or_error(SectionOccurrence.objects.all(), pk=pk)
+
+        #Checks to make sure the user trying to change the word of the day is actually the mentor
+        if not sectionOccurrence.section.mentor.user == self.request.user:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        #Do not allow for empty word of the days, if not empty then updates the word of the day for the section Occurrence
         if request.data['word_of_the_day'] != '':
             sectionOccurrence.word_of_the_day = request.data['word_of_the_day']
             sectionOccurrence.save()
 
-            #Unsure which http repsonse is correct.
             return Response(status = status.HTTP_200_OK)
             
-
         return Response(status=status.HTTP_403_FORBIDDEN)
 
-        #Filter for the correct sectionOccurrence and then change it to have new word of the day.
 
 

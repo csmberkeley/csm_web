@@ -96,7 +96,7 @@ class StudentViewSet(viewsets.GenericViewSet):
     @action(detail=True, methods=["put"])
     def submit_attendance(self, request, pk=None):
         """
-        Attempts to change the attendance object associated with the 
+        Attempts to change the attendance object associated with the given student.
 
         Format of request.
             request.data is a dictionary with
