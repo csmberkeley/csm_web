@@ -24,13 +24,13 @@ const ResourceLinkEdit = ({
   const currentId = index == undefined ? link.id : index;
   return (
     <div className="resourceWorksheet">
-      <div className="resourceWorksheetEditItem">
+      {/* <div className="resourceWorksheetEditItem">
         <input type="text" defaultValue={link.name} placeholder="Link Name" onBlur={() => onBlur()} />
         <div className="resourceValidationError">
           {formErrorsMap.get(currentId) && <ExclamationCircle className="icon exclamationIcon" />}
           {formErrorsMap.get(currentId)}
         </div>
-      </div>
+      </div> */}
       <input
         type="text"
         defaultValue={link.name}
