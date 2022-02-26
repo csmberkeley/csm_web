@@ -32,6 +32,10 @@ def week_bounds(date):
     return week_start, week_end
 
 
+def current_semester_id():
+    return Semester.objects.all().first().id
+
+
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
@@ -52,13 +56,13 @@ class User(AbstractUser):
         indexes = (models.Index(fields=("email",)),)
 
 
-class SemesterModelManager(models.Manager):
-    def get_queryset(self):
-        # return super(SemesterModelManager, self).get_queryset().filter(current_semester=True) won't work because you cannot filter by a property
-        all_objects = super(SemesterModelManager, self).get_queryset()
-        # temporary, won't work because returning list not queryset
-        return [obj for obj in all_objects if obj.current_semester()]
+# class SemesterModelManager(models.Manager):
+#     def get_queryset(self):
+#         # won't work because you cannot filter by a property
+#         return super(SemesterModelManager, self).get_queryset().filter(current_semester=True)
 
+#         # add way to specify another semester to filter, or maybe even a semester range, or all of one season, etc.
+#         # default can still be current semester, but shouldn't be locked out of the rest.
 
 class ValidatingModel(models.Model):
     """
@@ -66,7 +70,7 @@ class ValidatingModel(models.Model):
     This abstract class fixes that insanity
     """
 
-    objects = SemesterModelManager()
+    #objects = SemesterModelManager()
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -91,6 +95,11 @@ class Semester(ValidatingModel):
         ordering = ['-id']
 
 
+class AttendanceModelManager(models.Manager):
+    def get_queryset(self):
+        return super(AttendanceModelManager, self).get_queryset().filter(student__course__semester__id=current_semester_id())
+
+
 class Attendance(ValidatingModel):
     class Presence(models.TextChoices):
         PRESENT = "PR", "Present"
@@ -100,6 +109,8 @@ class Attendance(ValidatingModel):
     presence = models.CharField(max_length=2, choices=Presence.choices, blank=True)
     student = models.ForeignKey("Student", on_delete=models.CASCADE)
     sectionOccurrence = models.ForeignKey("SectionOccurrence", on_delete=models.CASCADE)
+
+    objects = AttendanceModelManager()
 
     def __str__(self):
         return f"{self.sectionOccurrence.date} {self.presence} {self.student.name}"
@@ -112,14 +123,15 @@ class Attendance(ValidatingModel):
     def week_start(self):
         return week_bounds(self.sectionOccurrence.date)[0]
 
-    @functional.cached_property
-    def current_semester(self):
-        return self.student.course.semester is Semesters.objects.all().first()
-
     class Meta:
         unique_together = ("sectionOccurrence", "student")
         ordering = ("sectionOccurrence",)
         #indexes = (models.Index(fields=("date",)),)
+
+
+class SectionOccurrenceModelManager(models.Manager):
+    def get_queryset(self):
+        return super(SectionOccurrenceModelManager, self).get_queryset().filter(section__mentor__course__semester__id=current_semester_id())
 
 
 class SectionOccurrence(ValidatingModel):
@@ -131,16 +143,19 @@ class SectionOccurrence(ValidatingModel):
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
 
+    objects = SectionOccurrenceModelManager()
+
     def __str__(self):
         return f"SectionOccurrence for {self.section} at {self.date}"
-
-    @functional.cached_property
-    def current_semester(self):
-        return self.section.mentor.course.semester is Semesters.objects.all().first()
 
     class Meta:
         unique_together = ("section", "date")
         ordering = ("date",)
+
+
+class CourseModelManager(models.Manager):
+    def get_queryset(self):
+        return super(CourseModelManager, self).get_queryset().filter(semester__id=current_semester_id())
 
 
 class Course(ValidatingModel):
@@ -152,6 +167,8 @@ class Course(ValidatingModel):
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
     semester = models.ForeignKey("Semester", on_delete=models.CASCADE)
+
+    objects = CourseModelManager()
 
     def __str__(self):
         return self.name
@@ -169,9 +186,10 @@ class Course(ValidatingModel):
         now = timezone.now().astimezone(timezone.get_default_timezone())
         return self.enrollment_start < now < self.enrollment_end
 
-    @functional.cached_property
-    def current_semester(self):
-        return self.semester is Semester.objects.all().first()
+
+class ProfileModelManager(models.Manager):
+    def get_queryset(self):
+        return super(ProfileModelManager, self).get_queryset().filter(course__semester__id=current_semester_id())
 
 
 class Profile(ValidatingModel):
@@ -180,16 +198,14 @@ class Profile(ValidatingModel):
     # all students, mentors, and coords should have a field for course
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
 
+    objects = ProfileModelManager()
+
     @property
     def name(self):
         return self.user.get_full_name()
 
     def __str__(self):
         return f"{self.name} ({self.course.name})"
-
-    @functional.cached_property
-    def current_semester(self):
-        return self.course.semester is Semester.objects.all().first()
 
     class Meta:
         abstract = True
@@ -240,10 +256,6 @@ class Student(Profile):
         if self.section.mentor.course != self.course:
             raise ValidationError("Student must be associated with the same course as the section they are in.")
 
-    @functional.cached_property
-    def current_semester(self):
-        return self.course.semester is Semester.objects.all().first()
-
     class Meta:
         unique_together = ("user", "section")
 
@@ -253,10 +265,6 @@ class Mentor(Profile):
     Represents a given "instance" of a mentor. Every section a mentor teaches in every course should
     have a new Mentor profile.
     """
-
-    @functional.cached_property
-    def current_semester(self):
-        return self.course.semester is Semester.objects.all().first()
 
 
 class Coordinator(Profile):
@@ -272,12 +280,13 @@ class Coordinator(Profile):
     def __str__(self):
         return f"{self.user.get_full_name()} ({self.course.name})"
 
-    @functional.cached_property
-    def current_semester(self):
-        return self.course.semester is Semester.objects.all().first()
-
     class Meta:
         unique_together = ("user", "course")
+
+
+class SectionModelManager(models.Manager):
+    def get_queryset(self):
+        return super(SectionModelManager, self).get_queryset().filter(mentor__course__semester__id=current_semester_id())
 
 
 class Section(ValidatingModel):
@@ -290,6 +299,8 @@ class Section(ValidatingModel):
         help_text='A brief note to add some extra information about the section, e.g. "EOP" or '
         '"early start".'
     )
+
+    objects = SectionModelManager()
 
     # @functional.cached_property
     # def course(self):
@@ -324,15 +335,16 @@ class Section(ValidatingModel):
             spacetimes="|".join(map(str, self.spacetimes.all()))
         )
 
-    @functional.cached_property
-    def current_semester(self):
-        return self.mentor.course.semester is Semester.objects.all().first()
-
 
 def worksheet_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/<course_name>/<filename>
     course_name = str(instance.resource.course.name).replace(" ", "")
     return f'resources/{course_name}/{filename}'
+
+
+class ResourceModelManager(models.Manager):
+    def get_queryset(self):
+        return super(ResourceModelManager, self).get_queryset().filter(course__semester__id=current_semester_id())
 
 
 class Resource(ValidatingModel):
@@ -341,12 +353,15 @@ class Resource(ValidatingModel):
     date = models.DateField()
     topics = models.CharField(blank=True, max_length=100)
 
-    @functional.cached_property
-    def current_semester(self):
-        return self.course.semester is Semester.objects.all().first()
+    objects = ResourceModelManager()
 
     class Meta:
         ordering = ['week_num']
+
+
+class WorksheetModelManager(models.Manager):
+    def get_queryset(self):
+        return super(WorksheetModelManager, self).get_queryset().filter(resource__course__semester__id=current_semester_id())
 
 
 class Worksheet(ValidatingModel):
@@ -355,9 +370,7 @@ class Worksheet(ValidatingModel):
     worksheet_file = models.FileField(blank=True, upload_to=worksheet_path)
     solution_file = models.FileField(blank=True, upload_to=worksheet_path)
 
-    @functional.cached_property
-    def current_semester(self):
-        return self.semester is Semester.objects.all().first()
+    objects = WorksheetModelManager()
 
 
 @receiver(models.signals.post_delete, sender=Worksheet)
