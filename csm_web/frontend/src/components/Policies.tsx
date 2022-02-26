@@ -2,6 +2,7 @@ import React from "react";
 
 export default class Policies extends React.Component {
   render(): React.ReactNode {
+    // see SECTIONS doc below to understand what is going on here
     const intro = SECTIONS.introduction;
     const htsu = SECTIONS.howToSignUp;
     const guides = SECTIONS.guidelines;
@@ -21,6 +22,8 @@ export default class Policies extends React.Component {
             <p>{intro.body.p2}</p>
           </div>
 
+          <div className="divider"></div>
+
           <div>
             <h1>{htsu.title}</h1>
             <p>
@@ -33,6 +36,8 @@ export default class Policies extends React.Component {
             <p>{htsu.body.p2}</p>
             <p>{htsu.body.p3}</p>
           </div>
+
+          <div className="divider"></div>
 
           <div>
             <h1> {guides.title} </h1>
@@ -52,19 +57,23 @@ export default class Policies extends React.Component {
             </ol>
           </div>
 
+          <div className="divider"></div>
+
           <div>
             <h1> {comms.title} </h1>
             <p>
               {comms.body.p1_1}
-              <a href={comms.body.p1_a.link}> {comms.body.p1_a.text}</a>
+              <a href={comms.body.p1_a.link}>{comms.body.p1_a.text}</a>
               {comms.body.p1_2}
             </p>
             <p>
               {comms.body.p2_1}
-              <a href={comms.body.p2_a.link}> {comms.body.p2_a.text} </a>
+              <a href={comms.body.p2_a.link}>{comms.body.p2_a.text}</a>
               {comms.body.p2_2}
             </p>
           </div>
+
+          <div className="divider"></div>
 
           <div>
             <h1> {aff.title}</h1>
@@ -90,6 +99,8 @@ export default class Policies extends React.Component {
             {aff.body.p2}
           </div>
 
+          <div className="divider"></div>
+
           <div>
             <h1> {forUnit.title} </h1>
             <p>
@@ -113,12 +124,12 @@ export default class Policies extends React.Component {
             </p>
             <p>
               {forUnit.body.p4_1}
-              <b> {forUnit.body.p4_b} </b>
+              <b>{forUnit.body.p4_b}</b>
               {forUnit.body.p4_2}
             </p>
             <p>
               {forUnit.body.p5_1}
-              <a href={forUnit.body.p5_a.link}> {forUnit.body.p5_a.text} </a>
+              <a href={forUnit.body.p5_a.link}>{forUnit.body.p5_a.text}</a>
               {forUnit.body.p5_2}
             </p>
             <p> {forUnit.body.p6}</p>
@@ -129,7 +140,7 @@ export default class Policies extends React.Component {
                 <ul>
                   <li>
                     {forUnit.body.li2_2.subbull_1}
-                    <b> {forUnit.body.li2_2.subbull_b} </b>
+                    <b>{forUnit.body.li2_2.subbull_b}</b>
                     {forUnit.body.li2_2.subbull_2}
                   </li>
                 </ul>
@@ -138,13 +149,15 @@ export default class Policies extends React.Component {
                 {forUnit.body.li2_3.bullet}
                 <ul>
                   <li>
-                    <b> {forUnit.body.li2_3.subbull_b} </b>
+                    <b>{forUnit.body.li2_3.subbull_b}</b>
                     {forUnit.body.li2_3.subbull_2}
                   </li>
                 </ul>
               </li>
             </ul>
           </div>
+
+          <div className="divider"></div>
 
           <div>
             <h1> {faq.title} </h1>
@@ -191,6 +204,50 @@ export default class Policies extends React.Component {
   }
 }
 
+/*
+--SECTIONS OBJECT DOC--
+
+Format:
+  section
+  |    title
+  |    body
+  |    |  enumerated HTML content elements
+
+  anchor tag (object)
+  |   text
+  |   link
+
+Naming schema for HTML content elements:
+For a series of elements in the body, each tag type is enumerated as follows
+-Example:
+  <p> ..1.. </p>
+  <p> ..2.. </p>
+  <a> ..3.. </a>
+
+  Turns into...
+
+  body: {
+    p1: "..1..",
+    p2: "..2..",
+    a1: "..3.."
+  }
+
+In order to accommodate in-element modifications (bolding, linking, etc),
+each element with inline mods is split up into respective parts
+-Example:
+  <p> The quick brown <b>fox</b> jumps...</p>
+
+  Turns into...
+
+  body: {
+    p1_1: "The quick brown ",
+    p1_b: "fox",
+    p1_2: " jumps..."
+  }
+
+  This is then encoded into the HTML through the JS injection with React.
+*/
+
 const SECTIONS = {
   introduction: {
     title: "Introduction",
@@ -201,10 +258,11 @@ const SECTIONS = {
       },
       p1:
         "is a student group with the goal of creating a community feeling among " +
-        "the lower-division CS courses. We are offering small, hour-long sections " +
-        ", each led by a mentor that you regularly attend to review the past week’s " +
-        "material. You should sign up for a section if you’d like to work with others " +
-        "and receive extra practice and guidance with the course material for the entire semester.",
+        "the lower-division CS courses. We are offering small, hour-long sections, " +
+        "each led by a mentor that you regularly attend to review the past week’s " +
+        "material. You should sign up for a section if you’d like to work with " +
+        "others and receive extra practice and guidance with the course material " +
+        "for the entire semester.",
       p2:
         "If you are interested in enrolling in a CSM section, you are responsible " +
         "for reading this document in full before you enroll, as it contains " +
@@ -272,7 +330,8 @@ const SECTIONS = {
         "on your mentor and your experience with CSM. We want to become " +
         "better and better with each passing semester, and we can only do " +
         "that with your assistance. These surveys are mandatory if you are " +
-        "enrolled in a CSM section (see below), but we promise they will not take long to fill out."
+        "enrolled in a CSM section (see below), but we promise they will not " +
+        "take long to fill out."
     }
   },
   communications: {
@@ -330,7 +389,8 @@ const SECTIONS = {
       p2:
         "Affinity section offerings will vary by course, as they depend on " +
         "the availability of mentors interested in teaching these sections. " +
-        "These sections will be clearly marked on the Scheduler website when you enroll."
+        "These sections will be clearly marked on the Scheduler website when " +
+        "you enroll."
     }
   },
   csmForUnit: {
@@ -392,7 +452,8 @@ const SECTIONS = {
       li2_3: {
         bullet:
           "Fill out both the mid-semester feedback survey and " +
-          'end-of-semester feedback survey, which are sent via email (see "Guidelines")',
+          "end-of-semester feedback survey, which are sent via email " +
+          '"(see "Guidelines")',
         subbull_b: "Even if you are not taking CSM for a unit",
         subbull_2:
           ", failure to fill out either feedback form may affect " +
