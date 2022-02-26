@@ -28,7 +28,8 @@ interface ResourceEditProps {
   onSubmit: (
     e: MouseEvent<HTMLButtonElement>,
     fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Worksheet[]
+    newWorksheets: Worksheet[],
+    newLinks: Link[]
   ) => void;
   onCancel: () => void;
 }
@@ -56,6 +57,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       // add copy of existing resource worksheet to map
       resourceWorksheetMap.set(worksheet.id, copyWorksheet(worksheet));
     }
+    console.log(resource);
     for (const link of resource.links) {
       // add copy of existing resource link to map
       resourceLinkMap.set(link.id, copyLink(link));
@@ -200,6 +202,18 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setTouched({ ..._.merge(touched, { newWorksheets: updatedNewWorksheets }) });
   }
 
+  function handleBlurExistingLink(linkId: number) {
+    const updatedExistingLinks = new Set(touched.existingLinks);
+    updatedExistingLinks.add(linkId);
+    setTouched({ ..._.merge(touched, { existingLinks: updatedExistingLinks }) });
+  }
+
+  function handleBlurNewLink(index: number) {
+    const updatedNewLinks = new Set(touched.newLinks);
+    updatedNewLinks.add(index);
+    setTouched({ ..._.merge(touched, { newLinks: updatedNewLinks }) });
+  }
+
   useEffect(() => {
     validate();
   }, [touched]);
@@ -215,7 +229,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
     // validate all fields
     if (validate(true)) {
-      onSubmit(e, existingWorksheetMap, newWorksheets);
+      onSubmit(e, existingWorksheetMap, newWorksheets, newLinks);
     }
   }
 
@@ -393,6 +407,16 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setNewWorksheets([...newWorksheets]);
   }
 
+  function handleNewLinkChange(e: ChangeEvent<HTMLInputElement>, index: number, field: "name" | "url"): void {
+    const link = newLinks[index];
+    if (field === "name") {
+      link[field] = e.target.value;
+    } else {
+      link[field] = new URL(e.target.value);
+    }
+    setNewLinks([...newLinks]);
+  }
+
   /**
    * Removes the new worksheet from the list.
    *
@@ -428,6 +452,26 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       }
     }
     setFormErrors(updatedFormErrors);
+  }
+
+  function handleNewLinkDelete(index: number): void {
+    const updated = [...newLinks];
+    updated.splice(index, 1);
+    setNewLinks([...updated]);
+
+    // update touched and formErrors
+    const updatedTouched = { ...touched };
+    const oldLinks: Set<number> = updatedTouched.newLinks;
+    updatedTouched.newLinks = new Set();
+    for (const idx of oldLinks) {
+      if (idx < index) {
+        updatedTouched.newLinks.add(idx);
+      } else if (idx > index) {
+        // shift indices after deleted worksheet
+        updatedTouched.newLinks.add(idx - 1);
+      }
+    }
+    setTouched(updatedTouched);
   }
 
   /**
@@ -507,6 +551,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     newLinks.map((link, index) => (
       <ResourceLinkEdit
         key={index}
+        index={index}
         link={link}
         onChange={handleNewLinkChange}
         onDelete={handleNewLinkDelete}

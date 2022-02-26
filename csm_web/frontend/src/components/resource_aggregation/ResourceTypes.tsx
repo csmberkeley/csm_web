@@ -21,6 +21,7 @@ export interface Link {
   resource: number;
   name: string;
   url: URL;
+  deleted: boolean;
 }
 
 export interface FormErrors {
@@ -79,7 +80,8 @@ export function emptyLink(): Link {
     id: (null as unknown) as number,
     resource: (null as unknown) as number,
     name: "",
-    url: new URL("https://scheduler.csmentors.org")
+    url: new URL("https://link.here"),
+    deleted: false
   };
 }
 
@@ -109,7 +111,8 @@ export function copyLink(link: Link): Link {
     id: link.id,
     resource: link.resource,
     name: link.name,
-    url: link.url
+    url: link.url,
+    deleted: false
   };
 }
 
