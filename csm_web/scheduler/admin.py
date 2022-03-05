@@ -1,3 +1,4 @@
+import django.urls.base
 from django.db.models import Count, Q
 from django.contrib import admin
 from django.core.exceptions import ValidationError
@@ -82,6 +83,7 @@ class UserAdmin(CoordAdmin):
 
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
+
 
 
 @admin.register(Student)

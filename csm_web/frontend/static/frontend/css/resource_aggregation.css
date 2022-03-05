@@ -264,6 +264,12 @@
 	column-gap: 10px;
 }
 
+.resourceLink {
+	display: grid;
+	grid-template-columns: 2fr 2fr 1fr;
+	column-gap: 10px;
+}
+
 .resourceWorksheetEditFile {
 	display: flex;
 	margin: auto 0;
