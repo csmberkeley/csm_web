@@ -60,6 +60,8 @@ export function emptyResource(): Resource {
   };
 }
 
+
+
 /**
  * Creates an empty Worksheet object.
  *
