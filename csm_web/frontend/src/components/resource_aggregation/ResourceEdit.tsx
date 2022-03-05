@@ -57,7 +57,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       // add copy of existing resource worksheet to map
       resourceWorksheetMap.set(worksheet.id, copyWorksheet(worksheet));
     }
-    console.log(resource);
     for (const link of resource.links) {
       // add copy of existing resource link to map
       resourceLinkMap.set(link.id, copyLink(link));
