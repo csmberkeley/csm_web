@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import ResourceRow from "./ResourceRow";
-import { emptyResource, Resource, Worksheet } from "./ResourceTypes";
+import { emptyResource, Link, Resource, Worksheet } from "./ResourceTypes";
 import { Roles } from "../../utils/user";
 
 import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
@@ -59,7 +59,8 @@ export const ResourceTable = ({
   function getResourceFormData(
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Array<Worksheet>
+    newWorksheets: Array<Worksheet>,
+    newLinks: Array<Link>
   ) {
     const resourceFormData = new FormData();
     for (const [key, value] of Object.entries(newResource)) {
@@ -93,6 +94,17 @@ export const ResourceTable = ({
       }
       idx++;
     }
+    for (const link of newLinks) {
+      for (const [key, value] of Object.entries(link)) {
+        let updatedValue = value;
+        // add each nested FormData entry
+        if (value instanceof Array) {
+          updatedValue = JSON.stringify(value);
+        }
+        resourceFormData.append(`links[${idx}][${key}]`, updatedValue);
+      }
+      idx++;
+    }
     return resourceFormData;
   }
 
@@ -112,13 +124,15 @@ export const ResourceTable = ({
    * @param newResource new resource to add
    * @param fileFormDataMap FormData object for any files to add
    * @param newWorksheets list of worksheets to add to resource
+   * @param newLinks list of links to add to resource
    */
   function handleAddResource(
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Array<Worksheet>
+    newWorksheets: Array<Worksheet>,
+    newLinks: Array<Link>
   ) {
-    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
+    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets, newLinks);
     fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.POST, resourceFormData, true).then(response => {
       if (response.status === 400) {
         // Bad request; input invalid
@@ -146,9 +160,10 @@ export const ResourceTable = ({
   function handleUpdateResource(
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Array<Worksheet>
+    newWorksheets: Array<Worksheet>,
+    newLinks: Array<Link>
   ) {
-    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
+    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets, newLinks);
     fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then(response => {
       if (response.status === 400) {
         // Bad request; input invalid
