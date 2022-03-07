@@ -26,7 +26,7 @@ class Command(BaseCommand):
                 try:
                     student = Student.objects.get(user__email=email, section__mentor__course__name=course)
                 except Student.DoesNotExist:
-                    print("doing nothing")
+                    continue
                 student.active = False
                 now = timezone.now().astimezone(timezone.get_default_timezone())
                 student.attendance_set.filter(
