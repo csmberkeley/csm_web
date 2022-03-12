@@ -287,7 +287,7 @@ class Resource(ValidatingModel):
         ordering = ['week_num']
 
 class ResourceLink(ValidatingModel):
-    resource = models.ForeignKey(Resource, on_delete = models.CASCADE())
+    resource = models.ForeignKey(Resource, on_delete = models.CASCADE)
     name = models.CharField(max_length=200)
     link_to_resource = models.URLField(max_length=255)
 
