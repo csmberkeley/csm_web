@@ -8,7 +8,7 @@ from rest_framework.parsers import FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..models import Course, Resource, Worksheet
+from ..models import Course, Resource, ResourceLink, Worksheet
 from ..serializers import ResourceSerializer
 
 
