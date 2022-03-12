@@ -79,6 +79,20 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                 return JsonResponse(e.message_dict, status=status.HTTP_400_BAD_REQUEST)
             resource_obj.save()
 
+            if "link" in resource:
+                if (resource_query is None or not resource_query.exists()) and request.method == "POST":  # create new resource
+                    resource_obj = Resource()
+                    resource_obj.course = course
+                    resource_obj.topics = resource.get("topics", "")  # default to empty string
+                    if not resource_obj.date:  # if empty string, set blank field to get a better validation detail
+                        resource_obj.date = None
+                    resource_obj.week_num = resource.get("weekNum", None)  # invalid if blank
+                resource_link_obj = ResourceLink()
+                resource_link_obj.resource = Resource
+                resource_link_obj.name = resource.get("name", "") # default to empty string.
+                resource_link_obj.link_to_resource = resource.get("url", "") # TODO: Error checking for invalid link? regex?
+                resource_link_obj.save()
+
             if "worksheets" in resource:
                 # has edited worksheets
                 for worksheet in resource["worksheets"]:
