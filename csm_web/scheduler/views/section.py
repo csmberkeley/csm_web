@@ -497,7 +497,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             return Response({"id": student.id}, status=status.HTTP_201_CREATED)
 
 
-    @action(detail=True, methods=['put'])
+    @action(detail=True, methods=["put"])
     def change_word_of_day(self, request, pk=None):
         """
         Request
@@ -507,6 +507,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
 
         sectionOccurrence = get_object_or_error(SectionOccurrence.objects.all(), pk=pk)
+        print(sectionOccurrence)
 
         #Checks to make sure the user trying to change the word of the day is actually the mentor
         if not sectionOccurrence.section.mentor.user == self.request.user:
