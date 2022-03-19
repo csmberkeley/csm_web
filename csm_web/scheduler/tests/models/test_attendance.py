@@ -113,13 +113,13 @@ def setup_section(db):
     ],
 )
 def test_attendance_add_student_on_day(
-    client, setup_section, day, num_attendances_added
+    api_client, setup_section, day, num_attendances_added
 ):
     mentor, student_user, course, section = setup_section
     with freeze_time(day):
-        client.force_login(student_user)
+        api_client.force_login(student_user)
         enroll_url = reverse("section-students", kwargs={"pk": section.pk})
-        client.put(enroll_url)
+        api_client.put(enroll_url)
 
         student = Student.objects.get(user=student_user)
 
@@ -179,22 +179,22 @@ def test_attendance_add_student_on_day(
     ],
 )
 def test_attendance_drop_student_on_day(
-    client, setup_section, day, num_attendances_left
+    api_client, setup_section, day, num_attendances_left
 ):
     mentor, student_user, course, section = setup_section
 
     # enroll student first
     with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):
-        client.force_login(student_user)
+        api_client.force_login(student_user)
         enroll_url = reverse("section-students", kwargs={"pk": section.pk})
-        client.put(enroll_url)
+        api_client.put(enroll_url)
 
     # now drop the student
     with freeze_time(day):
-        client.force_login(student_user)
+        api_client.force_login(student_user)
         student = Student.objects.get(user=student_user)
         drop_url = reverse("student-drop", kwargs={"pk": student.pk})
-        client.patch(drop_url)
+        api_client.patch(drop_url)
 
         # refresh student object
         student.refresh_from_db()
