@@ -107,14 +107,15 @@ class StudentViewSet(viewsets.GenericViewSet):
         student = get_object_or_error(self.get_queryset(), pk=pk)
 
         # So does the front end send which section occurence it is associated with?
-        section_occurrence = SectionOccurrence.objects.filter(pk=request.data['sectionOccurence'])
+        section_occurrence = SectionOccurrence.objects.filter(pk=request.data['sectionOccurrence']).first()
 
-        if section_occurrence.word_of_the_day != request.data['password'].lower():
-            #Not sure which type of Http response to send, mayb permission denied?
-            return Response(status=status.HTTP_403_FORBIDDEN)
+        # if section_occurrence.word_of_the_day != request.data['attempt'].lower():
+        #     #Not sure which type of Http response to send, mayb permission denied?
+        #     return Response(status=status.HTTP_403_FORBIDDEN)
 
         #I don't actually want to create a new attendance but rather update the already existing attendance.
-        attendance = Attendance.objects.filter(student_id=student.pk).filter(sectionOccurrence_id=section_occurrence.pk)
+        attendance = Attendance.objects.filter(student=student).filter(sectionOccurrence=section_occurrence)
+
         attendance.presence = "PR"
         attendance.save()
 

@@ -507,7 +507,6 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
 
         sectionOccurrence = get_object_or_error(SectionOccurrence.objects.all(), pk=pk)
-        print(sectionOccurrence)
 
         #Checks to make sure the user trying to change the word of the day is actually the mentor
         if not sectionOccurrence.section.mentor.user == self.request.user:

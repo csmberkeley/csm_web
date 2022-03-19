@@ -115,33 +115,36 @@ def test_update_word_of_the_day_failure(
     assert sectionOccurrence.word_of_the_day == 'default'
 
 
+    #Check to make sure that a student can not change the word of the day for a sectionOccurrence
+
 @pytest.mark.django_db
 def test_submit_attendance_failure(
     client, setup_section
 ):
     mentor, student_user, course, section = setup_section
-    with freeze_time(day):
+    with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):
         client.force_login(student_user)
         enroll_url = reverse("section-students", kwargs={"pk": section.pk})
         client.put(enroll_url)
 
-    sectionOccurrence = SectionOccurrence.objects.all()
+    client.force_login(student_user)
+    sectionOccurrence = SectionOccurrence.objects.all().first()
+    sectionOccurrence.word_of_the_day = 'password'
+    sectionOccurrence.save()
 
-    attendance = Attendance(student=student, presence='', sectionOccurrence = sectionOccurrence)
-    attendance.save()
+    attendances = Attendance.objects.all().count()
 
     submit_attendance_url = reverse("student-submit-attendance", kwargs={"pk": student_user.pk})
     client.put(submit_attendance_url, {'attempt': 'wrong password', 'sectionOccurrence': sectionOccurrence.pk}, content_type='application/json')
 
 
-    Attendance.objects.all().first().refresh_from_db()
+    Attendance.objects.filter(sectionOccurrence=sectionOccurrence).first().refresh_from_db()
     
-    # Still one attendance object
-    assert Attendance.objects.all().count() == 1
+    # Still same num of attendance objects 
+    assert Attendance.objects.all().count() == attendances
 
     # Did not change the attendance.
-    attendance = Attendance.objects.filter(sectionOccurrence=sectionOccurrence)
-    assert Attendance.objects.all() == 1
+    attendance = Attendance.objects.filter(sectionOccurrence=sectionOccurrence).first()
     assert attendance.presence == ''
 
 @pytest.mark.django_db
@@ -154,21 +157,30 @@ def test_submit_attendance_success(
         enroll_url = reverse("section-students", kwargs={"pk": section.pk})
         client.put(enroll_url)
 
-    sectionOccurrence = (SectionOccurrence(section=section, 
-                                            date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ), 
-                                            word_of_the_day = 'test'))
+    client.force_login(student_user)
+    sectionOccurrence = SectionOccurrence.objects.all().first()
+    sectionOccurrence.word_of_the_day = 'correct'
     sectionOccurrence.save()
+    sectionOccurrence.refresh_from_db()
 
-    submit_attendance_url = reverse("submit-attendance", kwargs={"pk": student_user.pk})
-    client.put(submit_attendance_url, {'attempt': 'test', 'sectionOccurrence': sectionOccurrence.pk})
+    attendances = Attendance.objects.all().count()
+    attendance = Attendance.objects.filter(sectionOccurrence=sectionOccurrence).first()
 
-    # Still one attendance object
-    assert Attendance.objects.all().count() == 1
+    # MAYBE HAVE TO PASS STUDENT PK AND NOT THE STUDENT_USER PK?
 
-    # Did not change the attendance.
-    assert Attendance.objects.get(0).presence == 'PR'
+    submit_attendance_url = reverse("student-submit-attendance", kwargs={"pk": student_user.pk})
+    response = client.put(submit_attendance_url, {'attempt': 'correct', 'sectionOccurrence': sectionOccurrence.pk}, content_type='application/json')
 
+    # Still same num of attendance objects
+    assert Attendance.objects.all().count() == attendances
 
+    assert response == status.HTTP_200_OK
+    # Correctly changes the attendance
+    attendance.refresh_from_db()
+    assert attendance.presence == 'PR'
+
+    # Does not affect other attendances 
+    
 
     #Check to make sure that another student can not change someone else's attendance.
     
