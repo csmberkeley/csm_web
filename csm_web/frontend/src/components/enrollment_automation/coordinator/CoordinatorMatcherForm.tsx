@@ -7,6 +7,7 @@ import { MentorPreference, SlotPreference, Slot, Time } from "../EnrollmentAutom
 import { Switch } from "react-router-dom";
 import { CreateStage } from "./CreateStage";
 import { ReleaseStage } from "./ReleaseStage";
+import { ConfigureStage } from "./ConfigureStage";
 import { fetchJSON } from "../../../utils/api";
 
 interface CoordinatorMatcherFormProps {
@@ -26,6 +27,7 @@ interface Assignment {
 enum Stage {
   CREATE,
   RELEASE,
+  CONFIGURE,
   EDIT,
   FINALIZE
 }
@@ -139,11 +141,6 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
     });
   };
 
-  // fetch data on first load
-  useEffect(() => {
-    fetchData();
-  }, []);
-
   /*
 
   Determining current stage:
@@ -160,9 +157,10 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
         - perhaps have a back button that will close the form and delete all responses to make any last minute changes
     - Next: closes form
 
-  STAGE 3: Configure -- REMOVE STAGE
+  STAGE 3: Configure
     - When: Form closed AND exists responses
-    - Now: able to configure the LP
+    - Now: able to configure min/max # of mentors per slot
+        - perhaps also give choices of cost function
     - Next: Runs LP
 
   before running the ILP, modal for students that haven't filled out the form
@@ -182,39 +180,36 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
     further updates should be done through coordinator interface
   */
 
-  if (!loaded) {
-    return <div>Loading...</div>;
-  }
-
   /**
    * Refetch data and recompute current stage
    */
-  const refreshStage = (): void => {
-    fetchData().then(() => {
-      if (!formIsOpen && slots.length === 0) {
-        setCurStage(Stage.CREATE);
-      } else if (formIsOpen) {
-        setCurStage(Stage.RELEASE);
-      } else if (assignments.length > 0) {
-        setCurStage(Stage.EDIT);
-      } else {
-        // default is create
-        setCurStage(Stage.CREATE);
-      }
-    });
+  const refreshStage = async () => {
+    return fetchData();
   };
 
-  let curStageComponent: React.ReactNode = null;
+  useEffect(() => {
+    // update stage if anything has been updated
+    if (!formIsOpen && slots.length === 0) {
+      setCurStage(Stage.CREATE);
+    } else if (formIsOpen) {
+      setCurStage(Stage.RELEASE);
+    } else if (!formIsOpen && prefByMentor.size > 0) {
+      setCurStage(Stage.CONFIGURE);
+    } else if (assignments.length > 0) {
+      setCurStage(Stage.EDIT);
+    } else {
+      // default is create
+      setCurStage(Stage.CREATE);
+    }
+  }, [formIsOpen, slots, prefByMentor, assignments]);
 
-  switch (curStage) {
-    case Stage.CREATE:
-      curStageComponent = <CreateStage profile={profile} initialSlots={slots} refreshStage={refreshStage} />;
-      break;
-    case Stage.RELEASE:
-      curStageComponent = (
-        <ReleaseStage profile={profile} slots={slots} prefBySlot={prefBySlot} prefByMentor={prefByMentor} />
-      );
-      break;
+  // fetch data on first load
+  useEffect(() => {
+    refreshStage();
+  }, []);
+
+  if (!loaded) {
+    return <div>Loading...</div>;
   }
 
   // TODO: remove the onclicks after finished; they're only here for debug purposes
@@ -237,6 +232,12 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
         >
           <div className="matcher-stages-stage-title">Release</div>
         </div>
+        <div
+          className={`matcher-stages-stage ${curStage === Stage.CONFIGURE ? "active-stage" : ""}`}
+          onClick={() => setCurStage(Stage.CONFIGURE)}
+        >
+          <div className="matcher-stages-stage-title">Configure</div>
+        </div>
         <div className={`matcher-stages-stage ${curStage === Stage.EDIT ? "active-stage" : ""}`}>
           <div className="matcher-stages-stage-title">Edit</div>
         </div>
@@ -244,7 +245,53 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
           <div className="matcher-stages-stage-title">Finalize</div>
         </div>
       </div>
-      <div className="matcher-content">{curStageComponent}</div>
+      <div className="matcher-content">
+        <CoordinatorMatcherFormSwitch
+          stage={curStage}
+          profile={profile}
+          slots={slots}
+          refreshStage={refreshStage}
+          prefByMentor={prefByMentor}
+          prefBySlot={prefBySlot}
+        />
+      </div>
     </div>
   );
 }
+
+interface CoordinatorMatcherFormSwitchProps {
+  stage: Stage;
+  profile: Profile;
+  slots: Slot[];
+  prefBySlot: Map<number, MentorPreference[]>;
+  prefByMentor: Map<number, SlotPreference[]>;
+  refreshStage: () => Promise<void>;
+}
+
+const CoordinatorMatcherFormSwitch = ({
+  stage,
+  profile,
+  slots,
+  refreshStage,
+  prefBySlot,
+  prefByMentor
+}: CoordinatorMatcherFormSwitchProps) => {
+  switch (stage) {
+    case Stage.CREATE:
+      return <CreateStage profile={profile} initialSlots={slots} refreshStage={refreshStage} />;
+    case Stage.RELEASE:
+      return (
+        <ReleaseStage
+          profile={profile}
+          slots={slots}
+          prefBySlot={prefBySlot}
+          prefByMentor={prefByMentor}
+          refreshStage={refreshStage}
+        />
+      );
+    case Stage.CONFIGURE:
+      return <ConfigureStage profile={profile} slots={slots} prefByMentor={prefByMentor} prefBySlot={prefBySlot} />;
+    default:
+      return <div>Invalid stage</div>;
+  }
+};

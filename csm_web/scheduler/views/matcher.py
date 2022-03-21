@@ -29,6 +29,9 @@ def slots(request, pk=None):
         - delete all existing slots when receiving this POST request
         - maybe update with a PUT request?
         - format: [{"times": [{"day": str, "startTime": str, "endTime": str}], "numMentors": int}]
+
+        - to release/close preference submissions:
+            {"release": bool}
     """
     course = get_object_or_error(Course.objects.all(), pk=pk)
     is_coordinator = course.coordinator_set.filter(user=request.user).exists()
@@ -55,20 +58,28 @@ def slots(request, pk=None):
         [{"times": [{"day": str, "startTime": str, "endTime": str}], "numMentors": int}]
         """
 
-        MatcherSlot.objects.filter(course=course).delete()
+        if "slots" in request.data:
+            MatcherSlot.objects.filter(course=course).delete()
 
-        for slot_json in request.data["slots"]:
-            times = slot_json["times"]
-            num_mentors = (
-                slot_json["numMentors"] if "numMentors" in slot_json else 0
-            )
-            curslot = MatcherSlot(
-                course=course,
-                times=times,
-                num_mentors=num_mentors,
-            )
-            curslot.save()
-    return Response(status=status.HTTP_200_OK)
+            for slot_json in request.data["slots"]:
+                times = slot_json["times"]
+                num_mentors = (
+                    slot_json["numMentors"] if "numMentors" in slot_json else 0
+                )
+                curslot = MatcherSlot(
+                    course=course,
+                    times=times,
+                    num_mentors=num_mentors,
+                )
+                curslot.save()
+
+        if "release" in request.data:
+            course.matcher_open = bool(request.data["release"])
+            course.save()
+
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+    return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 @api_view(["GET", "POST"])
@@ -80,15 +91,17 @@ def preferences(request, pk=None):
         - coordinators only
         - return format: {
             "open": bool,
-            "preferences": [
+            "responses": [
                 {"slot": int, "mentor": int, "preference": int},
             ...]
         }
     GET: Returns all mentor preferences for a single mentor associated with a given course.
         - mentors only
-        - format: {"preferences": [{"slot": int, "mentor": int, "preference": int}, ...]}
+        - format: {"responses": [{"slot": int, "mentor": int, "preference": int}, ...]}
     POST: Updates the mentor preferences associated with a given course.
         - mentors only
+        - format: [{"id": int, "preference": int}]
+            where id is the slot id
     """
     course = get_object_or_error(Course.objects.all(), pk=pk)
     is_coordinator = course.coordinator_set.filter(user=request.user).exists()
@@ -105,7 +118,10 @@ def preferences(request, pk=None):
             # filter only this mentor's preferences
             preferences = preferences.filter(mentor__user=request.user)
         serializer = MatcherPreferenceSerializer(preferences, many=True)
-        return Response({"responses": serializer.data}, status=status.HTTP_200_OK)
+        return Response(
+            {"responses": serializer.data, "open": course.matcher_open},
+            status=status.HTTP_200_OK,
+        )
     elif request.method == "POST":
         # update mentor preferences
         if not is_mentor:
@@ -179,9 +195,7 @@ def mentors(request, pk=None):
             created = Mentor.objects.create(user=user, course=course)
             print("created", created)
         print(skipped)
-        return Response(
-            {"skipped": skipped}, status=status.HTTP_200_OK
-        )
+        return Response({"skipped": skipped}, status=status.HTTP_200_OK)
     elif request.method == "DELETE":
         # delete mentors from course
         skipped = []
@@ -195,9 +209,7 @@ def mentors(request, pk=None):
             except Mentor.DoesNotExist:
                 skipped.append(email)
         skipped_serializer = MentorSerializer(skipped, many=True)
-        return Response(
-            {"skipped": skipped_serializer.data}, status=status.HTTP_200_OK
-        )
+        return Response({"skipped": skipped_serializer.data}, status=status.HTTP_200_OK)
 
     raise PermissionDenied()
 

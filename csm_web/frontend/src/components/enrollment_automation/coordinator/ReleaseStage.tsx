@@ -18,6 +18,7 @@ interface ReleaseStageProps {
    * Map from mentor id to their slot preferences
    */
   prefByMentor: Map<number, SlotPreference[]>;
+  refreshStage: () => void;
 }
 
 enum Tabs {
@@ -30,7 +31,13 @@ enum Tabs {
  * - Add mentors to fill out the preference form
  * - View current submitted preferences from mentors
  */
-export function ReleaseStage({ profile, slots, prefBySlot, prefByMentor }: ReleaseStageProps): React.ReactElement {
+export function ReleaseStage({
+  profile,
+  slots,
+  prefBySlot,
+  prefByMentor,
+  refreshStage
+}: ReleaseStageProps): React.ReactElement {
   const [curTab, setCurTab] = useState(Tabs.MENTOR_LIST);
 
   let innerComponent = null;
@@ -40,24 +47,40 @@ export function ReleaseStage({ profile, slots, prefBySlot, prefByMentor }: Relea
     innerComponent = <PreferenceStatus profile={profile} slots={slots} prefByMentor={prefByMentor} />;
   }
 
+  const closeForm = () => {
+    // send POST request to close form for mentors
+    fetchWithMethod(`matcher/${profile.courseId}/slots`, HTTP_METHODS.POST, { release: false }).then(() => {
+      // recompute stage
+      refreshStage();
+    });
+  };
+
   return (
-    <div className="release-container">
-      <div className="release-tablist">
-        <a
-          className={`release-tab ${curTab === Tabs.MENTOR_LIST ? "active" : ""}`}
-          onClick={() => curTab === Tabs.PREFERENCE_STATUS && setCurTab(Tabs.MENTOR_LIST)}
-        >
-          Mentors
-        </a>
-        <a
-          className={`release-tab ${curTab === Tabs.PREFERENCE_STATUS ? "active" : ""}`}
-          onClick={() => curTab === Tabs.MENTOR_LIST && setCurTab(Tabs.PREFERENCE_STATUS)}
-        >
-          Preferences
-        </a>
+    <React.Fragment>
+      <div className="release-container">
+        <div className="release-tablist">
+          <a
+            className={`release-tab ${curTab === Tabs.MENTOR_LIST ? "active" : ""}`}
+            onClick={() => curTab === Tabs.PREFERENCE_STATUS && setCurTab(Tabs.MENTOR_LIST)}
+          >
+            Mentors
+          </a>
+          <a
+            className={`release-tab ${curTab === Tabs.PREFERENCE_STATUS ? "active" : ""}`}
+            onClick={() => curTab === Tabs.MENTOR_LIST && setCurTab(Tabs.PREFERENCE_STATUS)}
+          >
+            Preferences
+          </a>
+        </div>
+        <div className="release-body">{innerComponent}</div>
       </div>
-      <div className="release-body">{innerComponent}</div>
-    </div>
+
+      <div className="matcher-body-footer">
+        <button className="matcher-submit-btn" onClick={closeForm}>
+          Close Form
+        </button>
+      </div>
+    </React.Fragment>
   );
 }
 
@@ -92,7 +115,13 @@ function MentorList({ profile, prefByMentor }: MentorListProps): React.ReactElem
    */
   const [removedMentorList, setRemovedMentorList] = useState<string[]>([]);
 
+  /**
+   * Reference to the search bar input field
+   */
   const searchBar = useRef<HTMLInputElement>(null);
+  /**
+   * Reference to the add mentor text area field
+   */
   const addMentorTextArea = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {

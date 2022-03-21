@@ -73,16 +73,10 @@
 .coordinator-sidebar-left {
 	display: flex;
 	flex-direction: column;
-}
-
-.mentor-sidebar-left {
-	flex: 1;
-}
-
-.coordinator-sidebar-left {
 	width: 30vw;
 }
 
+.mentor-sidebar-right,
 .coordinator-sidebar-right {
 	/* width: 40vw; */
 	width: 100%;
