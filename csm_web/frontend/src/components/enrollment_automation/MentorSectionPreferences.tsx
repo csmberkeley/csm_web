@@ -24,14 +24,13 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
     fetchJSON(`matcher/${profile.courseId}/slots`)
       .then(data => {
         const newSlots: Slot[] = [];
-        for (const slot of data) {
-          const parsed_times = JSON.parse(slot.times.replace(/'/g, '"'));
+        for (const slot of data.slots) {
           const times = [];
-          for (const time of parsed_times) {
+          for (const time of slot.times) {
             times.push({
               day: time.day,
-              start_time: parseTime(time.start_time),
-              end_time: parseTime(time.end_time)
+              startTime: parseTime(time.startTime),
+              endTime: parseTime(time.endTime)
             });
           }
           const parsed_slot: Slot = {
@@ -47,7 +46,7 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
       .then(newSlots => {
         // also fetch existing mentor preferences
         fetchJSON(`matcher/${profile.courseId}/preferences`).then(data => {
-          for (const pref of data) {
+          for (const pref of data.responses) {
             const slotIndex = newSlots.findIndex(slot => slot.id === pref.slot);
             if (slotIndex !== -1) {
               newSlots[slotIndex].preference = pref.preference;
