@@ -22,17 +22,9 @@ const ResourceLinkEdit = ({
   index
 }: ResourceLinkEditProps): React.ReactElement => {
   const currentId = index == undefined ? link.id : index;
-  console.log(formErrorsMap);
   return (
     <>
       <div className="resourceLinkEdit">
-        {/* <div className="resourceWorksheetEditItem">
-          <input type="text" defaultValue={link.name} placeholder="Link Name" onBlur={() => onBlur()} />
-          <div className="resourceValidationError">
-            {formErrorsMap.get(currentId) && <ExclamationCircle className="icon exclamationIcon" />}
-            {formErrorsMap.get(currentId)}
-          </div>
-        </div> */}
         <input
           type="text"
           defaultValue={link.name}
