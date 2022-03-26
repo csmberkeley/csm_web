@@ -23,7 +23,7 @@ const ResourceLinkEdit = ({
 }: ResourceLinkEditProps): React.ReactElement => {
   const currentId = index == undefined ? link.id : index;
   return (
-    <div className="resourceLink">
+    <div className="resourceLinkEdit">
       {/* <div className="resourceWorksheetEditItem">
         <input type="text" defaultValue={link.name} placeholder="Link Name" onBlur={() => onBlur()} />
         <div className="resourceValidationError">

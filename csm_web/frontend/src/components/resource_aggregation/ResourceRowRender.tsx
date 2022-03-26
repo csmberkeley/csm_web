@@ -40,7 +40,6 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
     onDelete(resource.id!);
     setDeletionStage(0);
   }
-
   return (
     <React.Fragment>
       {deletionStage === 1 && (
@@ -88,7 +87,7 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
             resource.links.map(link => (
               <div key={link.id} className="resourceLink">
                 <div className="resourceLink">
-                  <a href={link.url.href} target="_blank" rel="noreferrer">
+                  <a href={link.url} target="_blank" rel="noreferrer">
                     {link.name}
                   </a>
                 </div>
