@@ -114,8 +114,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
         allTouchedIndices.add(index);
       }
     }
+    console.log("TOUCHED", touched);
     for (const [index, link] of newLinks.entries()) {
       if (validateAll || touched.newLinks.has(index)) {
+        console.log("NEWLINK" + link);
         if (!link.name || !link.url) {
           newFormErrors["newLinks"].set(index, "link name and url are required");
           anyWorksheetsOrLinksInvalid = true;
@@ -141,6 +143,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
         allTouchedIds.add(worksheetId);
       }
     }
+    console.log(newFormErrors);
     setFormErrors({ ...newFormErrors });
     setTouched(_.merge(touched, { newWorksheets: allTouchedIndices, existingWorksheets: allTouchedIds }));
     return !newFormErrors.weekNum && !newFormErrors.date && !newFormErrors.topics && !anyWorksheetsOrLinksInvalid;
@@ -554,14 +557,14 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
         link={link}
         onChange={handleNewLinkChange}
         onDelete={handleNewLinkDelete}
-        onBlur={() => handleBlurExistingLink(link.id)}
-        formErrorsMap={formErrors.existingLinks}
+        onBlur={() => handleBlurNewLink(index)}
+        formErrorsMap={formErrors.newLinks}
       ></ResourceLinkEdit>
     ));
 
   const hasWorksheets =
     existingWorksheetMap && newWorksheets && (existingWorksheetDisplay.length > 0 || newWorksheetDisplay.length > 0);
-  const hasLinks = false;
+  const hasLinks = existingLinkMap && newLinks && (existingLinkDisplay.length > 0 || newLinkDisplay.length > 0);
 
   return (
     <Modal closeModal={onCancel} className="resourceEditModal">
