@@ -258,7 +258,7 @@
 .resourceWorksheetHead {
 	display: grid;
 	/* name, worksheet, solution, delete */
-	grid-template-columns: repeat(3, 1fr) 20px;
+	grid-template-columns: 2fr 2fr 1fr 20px;
 	column-gap: 10px;
 	text-align: center;
 }

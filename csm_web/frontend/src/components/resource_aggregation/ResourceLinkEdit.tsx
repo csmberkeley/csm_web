@@ -22,33 +22,41 @@ const ResourceLinkEdit = ({
   index
 }: ResourceLinkEditProps): React.ReactElement => {
   const currentId = index == undefined ? link.id : index;
+  console.log(formErrorsMap);
   return (
-    <div className="resourceLinkEdit">
-      {/* <div className="resourceWorksheetEditItem">
-        <input type="text" defaultValue={link.name} placeholder="Link Name" onBlur={() => onBlur()} />
-        <div className="resourceValidationError">
-          {formErrorsMap.get(currentId) && <ExclamationCircle className="icon exclamationIcon" />}
-          {formErrorsMap.get(currentId)}
-        </div>
-      </div> */}
-      <input
-        type="text"
-        defaultValue={link.name}
-        placeholder="Link Name"
-        onChange={e => onChange(e, currentId, "name")}
-        onBlur={() => onBlur()}
-      />
-      <input
-        type="text"
-        defaultValue={link.url.href}
-        placeholder="Link URL"
-        onChange={e => onChange(e, currentId, "url")}
-        onBlur={() => onBlur()}
-      />
-      <button onClick={() => onDelete(currentId)} className="deleteWorksheet">
-        <Trash className="icon" />
-      </button>
-    </div>
+    <>
+      <div className="resourceLinkEdit">
+        {/* <div className="resourceWorksheetEditItem">
+          <input type="text" defaultValue={link.name} placeholder="Link Name" onBlur={() => onBlur()} />
+          <div className="resourceValidationError">
+            {formErrorsMap.get(currentId) && <ExclamationCircle className="icon exclamationIcon" />}
+            {formErrorsMap.get(currentId)}
+          </div>
+        </div> */}
+        <input
+          type="text"
+          defaultValue={link.name}
+          placeholder="Link Name"
+          onChange={e => onChange(e, currentId, "name")}
+          onBlur={() => onBlur()}
+        />
+        <input
+          type="text"
+          defaultValue={link.url.href}
+          placeholder="Link URL"
+          onChange={e => onChange(e, currentId, "url")}
+          onBlur={() => onBlur()}
+        />
+
+        <button onClick={() => onDelete(currentId)} className="deleteWorksheet">
+          <Trash className="icon" />
+        </button>
+      </div>
+      <div className="resourceValidationError">
+        {formErrorsMap.get(currentId) && <ExclamationCircle className="icon exclamationIcon" />}
+        {formErrorsMap.get(currentId)}
+      </div>
+    </>
   );
 };
 
