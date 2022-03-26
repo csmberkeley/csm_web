@@ -8,6 +8,7 @@ interface ResourceRowProps {
   onUpdateResource: (
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
+    linkMap: Map<number, Link>,
     newWorksheets: Array<Worksheet>,
     newLinks: Array<Link>
   ) => void;
@@ -57,16 +58,18 @@ export const ResourceRow = ({
    *
    * @param e - onSubmit event
    * @param fileFormDataMap - form data object containing file info
+   * @param linkMap - form data object containing link info
    * @param newWorksheets - new worksheets
    */
   function handleSubmit(
     e: MouseEvent<HTMLButtonElement>,
     fileFormDataMap: Map<number, Worksheet>,
+    linkMap: Map<number, Link>,
     newWorksheets: Array<Worksheet>,
     newLinks: Array<Link>
   ): void {
     e.preventDefault();
-    onUpdateResource(resource, fileFormDataMap, newWorksheets, newLinks);
+    onUpdateResource(resource, fileFormDataMap, linkMap, newWorksheets, newLinks);
     setEdit(false);
   }
 

@@ -28,6 +28,7 @@ interface ResourceEditProps {
   onSubmit: (
     e: MouseEvent<HTMLButtonElement>,
     fileFormDataMap: Map<number, Worksheet>,
+    linkMap: Map<number, Link>,
     newWorksheets: Worksheet[],
     newLinks: Link[]
   ) => void;
@@ -228,7 +229,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
     // validate all fields
     if (validate(true)) {
-      onSubmit(e, existingWorksheetMap, newWorksheets, newLinks);
+      onSubmit(e, existingWorksheetMap, existingLinkMap, newWorksheets, newLinks);
     }
   }
 
