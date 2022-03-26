@@ -64,7 +64,7 @@ export const ResourceTable = ({
   ) {
     const resourceFormData = new FormData();
     for (const [key, value] of Object.entries(newResource)) {
-      if (key !== "worksheets") {
+      if (key !== "worksheets" && key !== "links") {
         resourceFormData.set(key, value);
       }
     }

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, SectionOccurrence, User, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet
+from .models import Attendance, Course, Link, SectionOccurrence, User, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet
 
 
 class Role(Enum):
@@ -208,12 +208,19 @@ class WorksheetSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'resource', 'worksheet_file', 'solution_file']
 
 
+class LinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Link
+        fields = ['id', 'name', 'resource', 'url']
+
+
 class ResourceSerializer(serializers.ModelSerializer):
     worksheets = WorksheetSerializer(source='worksheet_set', many=True)
+    links = LinkSerializer(source='link_set', many=True)
 
     class Meta:
         model = Resource
-        fields = ['id', 'course', 'week_num', 'date', 'topics', 'worksheets']
+        fields = ['id', 'course', 'week_num', 'date', 'topics', 'worksheets', 'links']
 
 
 class SectionOccurrenceSerializer(serializers.ModelSerializer):

@@ -157,11 +157,15 @@
 .resourceWkstFile a:link,
 .resourceSoln a:link,
 .resourceWkstFile a:visited,
-.resourceSoln a:visited {
+.resourceSoln a:visited,
+.resourceLink,
+.resourceLink a:link,
+.resourceLink a:visited {
 	color: var(--csm-green-darkened);
 }
 
-.resourceSoln a {
+.resourceSoln a,
+.resourceLink a {
 	text-decoration: none;
 }
 
@@ -187,7 +191,8 @@
 }
 
 .resourceWkstFile a:hover,
-.resourceSoln a:hover {
+.resourceSoln a:hover,
+.resourceLink a:hover {
 	border-color: #4e7a5d;
 	color: #4e7a5d;
 	cursor: pointer;
@@ -264,10 +269,19 @@
 	column-gap: 10px;
 }
 
-.resourceLink {
+.resourceLink,
+.resourceLinkEdit {
 	display: grid;
-	grid-template-columns: 2fr 2fr 1fr;
 	column-gap: 10px;
+}
+
+.resourceLinkEdit {
+	grid-template-columns: 2fr 2fr 1fr;
+}
+
+.resourceLinksContainer {
+	display: grid;
+	align-content: center;
 }
 
 .resourceWorksheetEditFile {
