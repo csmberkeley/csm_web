@@ -312,7 +312,7 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")
     CSP_CONNECT_SRC = ("'self'",)
     CSP_IMG_SRC = ("'self'", "data:")
-    CSP_FONT_SRC = ("https://fonts.gstatic.com",)
+    CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com", "https://db.onlinewebfonts.com")
     CSP_FRAME_ANCESTORS = ("'none'",)
     CSP_BLOCK_ALL_MIXED_CONTENT = True
 

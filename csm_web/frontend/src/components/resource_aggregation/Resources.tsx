@@ -40,6 +40,7 @@ export const Resources = (): React.ReactElement => {
     <>
       <div className="tab-list">
         {courses
+          .sort(_ => Math.random() - 0.5)
           .filter(course => !course.isRestricted)
           .map(course => (
             <button
