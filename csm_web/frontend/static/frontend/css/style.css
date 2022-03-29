@@ -2,11 +2,17 @@
 @import url("./student_dropper.css");
 @import url("./fontawesome-styles.css");
 
+/* The best font ever. In case someone doesn't have it installed. */
+@font-face {
+	font-family: "Comic Sans Fallback";
+	src: url("../ComicSansMS3.ttf");
+}
+
 html,
 body {
 	height: 100%;
 	width: 100%;
-	font-family: "Montserrat", sans-serif;
+	font-family: "Comic Sans MS", "Comic Sans", "Comic Sans Fallback", Arial, sans-serif;
 }
 
 body {
