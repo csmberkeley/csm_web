@@ -20,7 +20,7 @@ export interface Link {
   id: number;
   resource: number;
   name: string;
-  url: URL;
+  url: string;
   deleted: boolean;
 }
 
@@ -60,8 +60,6 @@ export function emptyResource(): Resource {
   };
 }
 
-
-
 /**
  * Creates an empty Worksheet object.
  *
@@ -82,7 +80,7 @@ export function emptyLink(): Link {
     id: (null as unknown) as number,
     resource: (null as unknown) as number,
     name: "",
-    url: new URL("https://link.here"),
+    url: "",
     deleted: false
   };
 }

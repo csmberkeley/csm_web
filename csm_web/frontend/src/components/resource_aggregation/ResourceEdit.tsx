@@ -115,17 +115,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
         allTouchedIndices.add(index);
       }
     }
-    for (const [index, link] of newLinks.entries()) {
-      if (validateAll || touched.newLinks.has(index)) {
-        if (!link.name || !link.url) {
-          newFormErrors["newLinks"].set(index, "link name and url are required");
-          anyWorksheetsOrLinksInvalid = true;
-        } else {
-          newFormErrors["newLinks"].delete(index);
-        }
-        allTouchedIndices.add(index);
-      }
-    }
     for (const worksheetId of existingWorksheetMap.keys()) {
       const worksheet = existingWorksheetMap.get(worksheetId)!;
       if (validateAll || touched.existingWorksheets.has(worksheetId)) {
@@ -140,6 +129,51 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
           newFormErrors["existingWorksheets"].delete(worksheetId);
         }
         allTouchedIds.add(worksheetId);
+      }
+    }
+
+    // Link validation
+    const isValidURL = (url: string) => {
+      let urlTest;
+      try {
+        urlTest = new URL(url);
+      } catch (_) {
+        return false;
+      }
+      return urlTest.protocol === "http:" || urlTest.protocol === "https:";
+    };
+
+    for (const [index, link] of newLinks.entries()) {
+      if (validateAll || touched.newLinks.has(index)) {
+        if (!link.name) {
+          newFormErrors["newLinks"].set(index, "link name is required");
+          anyWorksheetsOrLinksInvalid = true;
+        } else if (!isValidURL(link.url)) {
+          newFormErrors["newLinks"].set(index, "link url is invalid");
+        } else {
+          newFormErrors["newLinks"].delete(index);
+        }
+        allTouchedIndices.add(index);
+      }
+    }
+    for (const linkId of existingLinkMap.keys()) {
+      const link = existingLinkMap.get(linkId);
+      console.log(link);
+      if (link && (validateAll || touched.existingLinks.has(linkId))) {
+        if (link.deleted) {
+          newFormErrors["existingLinks"].delete(linkId);
+          continue;
+        }
+        if (!link.name || !link.url) {
+          newFormErrors["existingLinks"].set(linkId, "link name and url required");
+          anyWorksheetsOrLinksInvalid = true;
+        } else if (!isValidURL(link.url)) {
+          newFormErrors["existingLinks"].set(linkId, "link url is invalid");
+          anyWorksheetsOrLinksInvalid = true;
+        } else {
+          newFormErrors["existingLinks"].delete(linkId);
+        }
+        allTouchedIds.add(linkId);
       }
     }
     setFormErrors({ ...newFormErrors });
@@ -312,7 +346,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   ): void {
     retrieveAndExecuteLink(linkId, link => {
       if (field == "name") link[field] = e.target.value;
-      else link[field].href = e.target.value;
+      else link[field] = e.target.value;
     });
   }
 
@@ -409,11 +443,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
   function handleNewLinkChange(e: ChangeEvent<HTMLInputElement>, index: number, field: "name" | "url"): void {
     const link = newLinks[index];
-    if (field === "name") {
-      link[field] = e.target.value;
-    } else {
-      link[field] = new URL(e.target.value);
-    }
+    link[field] = e.target.value;
     setNewLinks([...newLinks]);
   }
 

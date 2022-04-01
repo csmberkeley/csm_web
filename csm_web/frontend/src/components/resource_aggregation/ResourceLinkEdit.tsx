@@ -22,6 +22,7 @@ const ResourceLinkEdit = ({
   index
 }: ResourceLinkEditProps): React.ReactElement => {
   const currentId = index == undefined ? link.id : index;
+  console.log(formErrorsMap);
   return (
     <>
       <div className="resourceLinkEdit">
@@ -34,7 +35,7 @@ const ResourceLinkEdit = ({
         />
         <input
           type="text"
-          defaultValue={link.url.href}
+          defaultValue={link.url}
           placeholder="Link URL"
           onChange={e => onChange(e, currentId, "url")}
           onBlur={() => onBlur()}
