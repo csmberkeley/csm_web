@@ -13,6 +13,58 @@ body {
 	height: 100%;
 	width: 100%;
 	font-family: "Comic Sans MS", "Comic Sans", "Comic Sans Fallback", Arial, sans-serif;
+	animation: backgroundCycle 10s linear infinite;
+	backdrop-filter: saturate(0);
+	-webkit-backdrop-filter: saturate(0);
+}
+
+header {
+	animation: marquee 20s linear infinite;
+}
+
+@keyframes backgroundCycle {
+	0% {
+		background-color: #ffe2e2;
+	}
+	10% {
+		background-color: #fffbe9;
+	}
+	20% {
+		background-color: #f6ffea;
+	}
+	30% {
+		background-color: #e7ffea;
+	}
+	40% {
+		background-color: #dffff0;
+	}
+	50% {
+		background-color: #e0f6ff;
+	}
+	60% {
+		background-color: #e0ebff;
+	}
+	70% {
+		background-color: #d7d9ff;
+	}
+	80% {
+		background-color: #ece8ff;
+	}
+	90% {
+		background-color: #f1e1ff;
+	}
+	100% {
+		background-color: #ffe2e2;
+	}
+}
+
+@keyframes marquee {
+	0% {
+		transform: translateX(100%);
+	}
+	100% {
+		transform: translateX(-100%);
+	}
 }
 
 body {
