@@ -51,7 +51,7 @@ export const Resources = (): React.ReactElement => {
       const updatedCache = new Map(cache);
       updatedCache.set(courseID, data);
       setCache(updatedCache);
-      return data;
+      return data.sort(() => Math.random() - 0.5);
     });
   }
 

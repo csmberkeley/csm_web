@@ -13,7 +13,7 @@ body {
 	height: 100%;
 	width: 100%;
 	font-family: "Comic Sans MS", "Comic Sans", "Comic Sans Fallback", Arial, sans-serif;
-	animation: backgroundCycle 10s linear infinite;
+	animation: backgroundCycle 30s linear infinite;
 	backdrop-filter: saturate(0);
 	-webkit-backdrop-filter: saturate(0);
 }
@@ -85,13 +85,13 @@ button {
 :root {
 	--csm-green: #9ae0b3;
 	--csm-green-darkened: #75b38a;
-	--csm-theme-cs61a: var(--csm-green);
+	--csm-theme-cs70: var(--csm-green);
 	--csm-theme-cs61b: #63c5ff;
-	--csm-theme-cs61c: #797c99;
-	--csm-theme-cs70: #ff7070;
-	--csm-theme-cs88: #e46495;
-	--csm-theme-ee16a: #707eff;
-	--csm-theme-eecs16a: var(--csm-theme-ee16a);
+	--csm-theme-cs61a: #797c99;
+	--csm-theme-cs61c: #ff7070;
+	--csm-theme-eecs16a: #e46495;
+	--csm-theme-cs88: #707eff;
+	--csm-theme-ee16a: var(--csm-theme-ee16a);
 	--csm-theme-ee16b: #ffe070;
 	--csm-theme-eecs16b: var(--csm-theme-ee16b);
 	--csm-mentor: var(--csm-green);
