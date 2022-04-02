@@ -217,6 +217,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   }
 
   /**
+   * Runs when existing worksheet input field is blurred (clicked away from).
    *
    * @param worksheetId numerical ID of worksheet
    */
@@ -227,6 +228,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   }
 
   /**
+   * Runs when new worksheet input field is blurred (clicked away from).
    *
    * @param index position of worksheet in resource's worksheet array
    */
@@ -236,12 +238,22 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setTouched({ ..._.merge(touched, { newWorksheets: updatedNewWorksheets }) });
   }
 
+  /**
+   * Runs when existing link input field is blurred (clicked away from).
+   *
+   * @param linkId ID of link in existingLinkMap
+   */
   function handleBlurExistingLink(linkId: number) {
     const updatedExistingLinks = new Set(touched.existingLinks);
     updatedExistingLinks.add(linkId);
     setTouched({ ..._.merge(touched, { existingLinks: updatedExistingLinks }) });
   }
 
+  /**
+   * Runs when new link input field is blurred (clicked away from).
+   *
+   * @param index position of worksheet in resource's newLinks array
+   */
   function handleBlurNewLink(index: number) {
     const updatedNewLinks = new Set(touched.newLinks);
     updatedNewLinks.add(index);
@@ -287,6 +299,13 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setExistingWorksheetMap(new Map(existingWorksheetMap));
   }
 
+  /**
+   * Retrieves a link from the link map,
+   * and calls the callback function on the link.
+   *
+   * @param linkId Id of link to retrieve
+   * @param callback function to call on retrieved link
+   */
   function retrieveAndExecuteLink(linkId: number, callback: (link: Link) => void) {
     let link: Link;
     if (existingLinkMap.has(linkId)) {
@@ -339,6 +358,14 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     });
   }
 
+  /**
+   * Modifies a specified link field of the current resource.
+   *
+   * @param e - onChange event
+   * @param linkId - id of link that was changed
+   * @param field - resource field to change
+   * @param getFile - whether file should be retrieved
+   */
   function handleExistingLinkChange(
     e: React.ChangeEvent<HTMLInputElement>,
     linkId: number,
@@ -375,6 +402,11 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     });
   }
 
+  /**
+   * Sets 'deleted' attribute to true to mark the link as deleted.
+   *
+   * @param linkId id of link that was deleted
+   */
   function handleExistingLinkDelete(linkId: number): void {
     const updatedFormErrors = { ...formErrors };
     updatedFormErrors.existingLinks = new Map(updatedFormErrors.existingLinks);
@@ -441,6 +473,13 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setNewWorksheets([...newWorksheets]);
   }
 
+  /**
+   * Handles updating newly created links.
+   *
+   * @param e event object
+   * @param index new link index in array
+   * @param field changed field in link
+   */
   function handleNewLinkChange(e: ChangeEvent<HTMLInputElement>, index: number, field: "name" | "url"): void {
     const link = newLinks[index];
     link[field] = e.target.value;
@@ -484,6 +523,11 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     setFormErrors(updatedFormErrors);
   }
 
+  /**
+   * Removes the new link from the list.
+   *
+   * @param index index in newLinks
+   */
   function handleNewLinkDelete(index: number): void {
     const updated = [...newLinks];
     updated.splice(index, 1);
@@ -528,6 +572,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   function handleAddWorksheet(): void {
     setNewWorksheets([...newWorksheets, emptyWorksheet()]);
   }
+
+  /**
+   * Add a new empty link with null id to the local state.
+   */
   function handleAddLink(): void {
     setNewLinks([...newLinks, emptyLink()]);
   }
