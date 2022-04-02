@@ -88,14 +88,15 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                             num_deleted, _ = link_obj.delete()
                             if num_deleted == 0:
                                 raise ValueError(
-                                    f"Worksheet was unable to be deleted: {request.data}; {worksheet_obj}"
+                                    f"Link was unable to be deleted: {request.data}; {worksheet_obj}"
                                 )
                     else:
                         # create new link
                         link_obj = Link(resource=resource_obj)
 
-                    link_obj.name = link.get("name", None)
-                    link_obj.url = link.get("url", None)
+                    if not ("deleted" in link and link["deleted"]):
+                        link_obj.name = link.get("name", None)
+                        link_obj.url = link.get("url", None)
 
                     try:  # validate
                         link_obj.full_clean()

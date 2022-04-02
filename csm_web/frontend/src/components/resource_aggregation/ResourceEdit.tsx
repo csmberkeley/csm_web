@@ -550,16 +550,21 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
   const existingLinkDisplay =
     existingLinkMap &&
-    [...existingLinkMap.values()].map(link => (
-      <ResourceLinkEdit
-        key={link.id}
-        link={link}
-        onChange={handleExistingLinkChange}
-        onDelete={handleExistingLinkDelete}
-        onBlur={() => handleBlurExistingLink(link.id)}
-        formErrorsMap={formErrors.existingLinks}
-      ></ResourceLinkEdit>
-    ));
+    [...existingLinkMap.values()].map(
+      link =>
+        !link.deleted && (
+          <ResourceLinkEdit
+            key={link.id}
+            link={link}
+            onChange={handleExistingLinkChange}
+            onDelete={handleExistingLinkDelete}
+            onBlur={() => handleBlurExistingLink(link.id)}
+            formErrorsMap={formErrors.existingLinks}
+          ></ResourceLinkEdit>
+        )
+    );
+
+  console.log(existingLinkMap);
 
   const newWorksheetDisplay =
     newWorksheets &&
