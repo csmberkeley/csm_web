@@ -51,10 +51,11 @@ export const ResourceTable = ({
    *    ]
    * }
    *
-   * @param newResource
-   * @param fileFormDataMap
+   * @param newResource - the resource being edited
+   * @param fileFormDataMap - form data object containing worksheet info
    * @param linkMap - form data object containing link info
-   * @param newWorksheets
+   * @param newWorksheets - list of new worksheets to add
+   * @param newLinks - list of new links to add
    * @returns
    */
   function getResourceFormData(
@@ -140,7 +141,7 @@ export const ResourceTable = ({
    *
    * @param newResource new resource to add
    * @param fileFormDataMap FormData object for any files to add
-   * @param linkMap - form data object containing link info
+   * @param linkMap form data object containing link info
    * @param newWorksheets list of worksheets to add to resource
    * @param newLinks list of links to add to resource
    */
@@ -174,7 +175,7 @@ export const ResourceTable = ({
    * Save and PUT request the updated resource
    * @param newResource new resource to add
    * @param fileFormDataMap FormData object for any files to add
-   * @param linkMap - form data object containing link info
+   * @param linkMap form data object containing link info
    * @param newWorksheets list of worksheets to add to resource
    */
   function handleUpdateResource(
