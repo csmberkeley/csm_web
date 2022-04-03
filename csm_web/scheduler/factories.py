@@ -212,13 +212,22 @@ def create_demo_account():
     demo_student = random.choice(Student.objects.exclude(course=demo_mentor.course))
     demo_student.user = demo_mentor.user
     demo_student.save()
-    Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
+    demo_coord = Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
         Course.objects.exclude(pk__in=(demo_mentor.course.pk, demo_student.course.pk))))
     print("""
     A demo account has been created with username 'demo_user' and password 'pass'
     Log in at localhost:8000/admin/
     """
           )
+    # create new mentors associated with demo coord's course
+    mentors = [MentorFactory.create(course=demo_coord.course) for _ in range(5)]
+
+    # allow one mentor to login through admin menu
+    demoify_user(mentors[0].user, "demo_mentor")
+    print("""
+    A demo mentor has been created with username 'demo_mentor' and password 'pass'
+    Log in at localhost:8000/admin/
+    """)
 
 
 def confirm_run():
