@@ -1,27 +1,77 @@
 <!doctype html>
 <html lang="en-US">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta
-      name="description"
-      content="Scheduler manages enrollment and attendance for UC Berkeley Computer Science Mentors' (CSM) 300+ tutoring sections for lower-division EECS courses."
-    />
-    <meta name="google-site-verification" content="DSGGNcQKdAlxIOPXTPQlXy_f0GcCndxmYZAWyakAW5w" />
-    <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
-    <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600&display=swap" rel="stylesheet" />
-    <meta http-equiv="Content-Security-Policy" content="font-src *">
-    {% load static %} {% if DJANGO_ENV == 'prod' %}
-    <title>CSM Scheduler</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'frontend/img/favicon-32x32.png' %}" />
-    <link rel="icon" type="image/png" sizes="16x16" href="{% static 'frontend/img/favicon-16x16.png' %}" />
-    {% else %}
-    <title>Development: CSM Scheduler</title>
-    <link rel="icon" type="image/png" sizes="32x32" href="{% static 'frontend/img/favicon-dev-32x32.png' %}" />
-    {% endif %} {% block extra_head %} {% endblock %}
-  </head>
-  <body>
-    {% block body %} {% endblock %}
-  </body>
-  {% block after_body %} {% endblock %}
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="description"
+    content="Scheduler manages enrollment and attendance for UC Berkeley Computer Science Mentors' (CSM) 300+ tutoring sections for lower-division EECS courses." />
+  <meta name="google-site-verification" content="DSGGNcQKdAlxIOPXTPQlXy_f0GcCndxmYZAWyakAW5w" />
+  <link rel="preconnect" href="https://fonts.gstatic.com/" crossorigin />
+  <link href="https://fonts.googleapis.com/css?family=Montserrat:400,600&display=swap" rel="stylesheet" />
+  <meta http-equiv="Content-Security-Policy" content="font-src *">
+  {% load static %} {% if DJANGO_ENV == 'prod' %}
+  <title>CSM Scheduler</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'frontend/img/favicon-32x32.png' %}" />
+  <link rel="icon" type="image/png" sizes="16x16" href="{% static 'frontend/img/favicon-16x16.png' %}" />
+  {% else %}
+  <title>Development: CSM Scheduler</title>
+  <link rel="icon" type="image/png" sizes="32x32" href="{% static 'frontend/img/favicon-dev-32x32.png' %}" />
+  {% endif %} {% block extra_head %} {% endblock %}
+</head>
+
+<body>
+  {% block body %} {% endblock %}
+</body>
+{% block after_body %} {% endblock %}
+
+<script type="text/javascript">
+  let APRIL_FOOLS_ACTIVE = true;
+  // move all buttons away from cursor when it gets close
+  const mouseMove = (e) => {
+    if (!APRIL_FOOLS_ACTIVE) return;
+    const buttons = document.querySelectorAll("a, button");
+    const x = e.x;
+    const y = e.y;
+    for (let i = 0; i < buttons.length; i++) {
+      const button = buttons[i];
+      const rect = button.getBoundingClientRect();
+
+      // get signed distance from center of rectangle
+      const dx = (rect.left + rect.right) / 2 - x;
+      const dy = (rect.top + rect.bottom) / 2 - y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+
+      // get distance from nearest edge
+      const edgedistX = Math.min(Math.abs(x - rect.left), Math.abs(x - rect.right));
+      const edgedistY = Math.min(Math.abs(y - rect.top), Math.abs(y - rect.bottom));
+      const edgedist = Math.sqrt(edgedistX * edgedistX + edgedistY * edgedistY);
+
+      if (edgedist < 100) {
+        // move button away from cursor
+        const x_offset = dx / dist * 5;
+        const y_offset = dy / dist * 5;
+        const t = button.style.transform;
+        const match = t.match(/translate\((-?\d+\.?\d*)px, (-?\d+\.?\d*)px\)/);
+        if (match) {
+          const x_translate = parseFloat(match[1]) + x_offset;
+          const y_translate = parseFloat(match[2]) + y_offset;
+          // clamp to screen edges
+          const x_clamped = Math.max(0, Math.min(window.innerWidth - rect.width, rect.x + x_translate)) - rect.x;
+          const y_clamped = Math.max(0, Math.min(window.innerHeight - rect.height, rect.y + y_translate)) - rect.y;
+          button.style.transform = `translate(${x_clamped}px, ${y_clamped}px)`;
+        } else {
+          button.style.transform = `translate(${x_offset}px, ${y_offset}px)`;
+        }
+      }
+    }
+  }
+  document.addEventListener("mousemove", mouseMove);
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") {
+      APRIL_FOOLS_ACTIVE = false;
+    }
+  });
+</script>
+
 </html>
