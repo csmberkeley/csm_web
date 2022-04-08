@@ -110,7 +110,7 @@ export const ResourceTable = ({
         } else {
           let updatedValue = value;
           // Handle urls
-          if (key == "url") {
+          if (key === "url") {
             if (!value.includes("http")) {
               updatedValue = "https://" + value;
             }

@@ -23,7 +23,7 @@ const ResourceLinkEdit = ({
 }: ResourceLinkEditProps): React.ReactElement => {
   const currentId = index == undefined ? link.id : index;
   return (
-    <>
+    <React.Fragment>
       <div className="resourceLinkEdit">
         <input
           type="text"
@@ -48,7 +48,7 @@ const ResourceLinkEdit = ({
         {formErrorsMap.get(currentId) && <ExclamationCircle className="icon exclamationIcon" />}
         {formErrorsMap.get(currentId)}
       </div>
-    </>
+    </React.Fragment>
   );
 };
 

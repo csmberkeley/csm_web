@@ -154,7 +154,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
           newFormErrors["newLinks"].set(index, "link name is required");
           anyWorksheetsOrLinksInvalid = true;
         } else if (!isValidURL(link.url)) {
-          newFormErrors["newLinks"].set(index, "link url is invalid");
+          newFormErrors["newLinks"].set(index, "link URL is invalid");
         } else {
           newFormErrors["newLinks"].delete(index);
         }
@@ -169,10 +169,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
           continue;
         }
         if (!link.name || !link.url) {
-          newFormErrors["existingLinks"].set(linkId, "link name and url required");
+          newFormErrors["existingLinks"].set(linkId, "Link name is required");
           anyWorksheetsOrLinksInvalid = true;
         } else if (!isValidURL(link.url)) {
-          newFormErrors["existingLinks"].set(linkId, "link url is invalid");
+          newFormErrors["existingLinks"].set(linkId, "Link URL is invalid");
           anyWorksheetsOrLinksInvalid = true;
         } else {
           newFormErrors["existingLinks"].delete(linkId);
@@ -376,8 +376,11 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     field: "name" | "url"
   ): void {
     retrieveAndExecuteLink(linkId, link => {
-      if (field == "name") link[field] = e.target.value;
-      else link[field] = e.target.value;
+      if (field === "name") {
+        link[field] = e.target.value;
+      } else {
+        link[field] = e.target.value;
+      }
     });
   }
 
@@ -654,26 +657,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       <div className="resourceEditContainer">
         <div className="resourceEditContentWrapper">
           <div className="resourceEditContent">
-            <div className="resourceEditTabContainer">
-              <button
-                onClick={() => {
-                  setIsEditingLinks(false);
-                }}
-                className="resourceEditTab"
-                disabled={!isEditingLinks}
-              >
-                Edit Worksheets
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditingLinks(true);
-                }}
-                className="resourceEditTab"
-                disabled={isEditingLinks}
-              >
-                Edit Links
-              </button>
-            </div>
             <div id="resourceEditInner">
               <div className="resourceInfoEdit">
                 <div className="resourceEditHeadItem">Week Number</div>
@@ -717,6 +700,26 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                 </div>
               </div>
             </div>
+            <div className="resourceEditTabContainer">
+              <button
+                onClick={() => {
+                  setIsEditingLinks(false);
+                }}
+                className="resourceEditTab"
+                disabled={!isEditingLinks}
+              >
+                Edit Worksheets
+              </button>
+              <button
+                onClick={() => {
+                  setIsEditingLinks(true);
+                }}
+                className="resourceEditTab"
+                disabled={isEditingLinks}
+              >
+                Edit Links
+              </button>
+            </div>
             {!isEditingLinks && (
               <div className="resourceWorksheetContainer">
                 {hasWorksheets && (
@@ -737,7 +740,7 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
             {isEditingLinks && (
               <div className="resourceWorksheetContainer">
                 {hasLinks && (
-                  <div className="resourceWorksheetHead">
+                  <div className="resourceLinkHead">
                     <div className="resourceWorksheetHeadItem">Name</div>
                     <div className="resourceWorksheetHeadItem">URL</div>
                   </div>
