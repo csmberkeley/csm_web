@@ -90,6 +90,7 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                                 raise ValueError(
                                     f"Link was unable to be deleted: {request.data}; {worksheet_obj}"
                                 )
+                            continue
                     else:
                         # create new link
                         link_obj = Link(resource=resource_obj)
