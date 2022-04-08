@@ -5,6 +5,7 @@ import { emptyResource, Link, Resource, Worksheet } from "./ResourceTypes";
 import { Roles } from "../../utils/user";
 
 import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
+import { url } from "inspector";
 
 interface ResourceTableProps {
   courseID: number;
@@ -89,6 +90,7 @@ export const ResourceTable = ({
     for (const worksheet of newWorksheets) {
       for (const [key, value] of Object.entries(worksheet)) {
         let updatedValue = value;
+
         // add each nested FormData entry
         if (value instanceof Array) {
           updatedValue = JSON.stringify(value);
@@ -106,8 +108,16 @@ export const ResourceTable = ({
             resourceFormData.append(`links[${idx}][${key}][${itemIdx}]`, item);
           }
         } else {
+          let updatedValue = value;
+          // Handle urls
+          if (key == "url") {
+            if (!value.includes("http")) {
+              updatedValue = "https://" + value;
+            }
+          }
+
           // add each nested FormData entry
-          resourceFormData.append(`links[${idx}][${key}]`, value);
+          resourceFormData.append(`links[${idx}][${key}]`, updatedValue);
         }
       }
       idx++;
