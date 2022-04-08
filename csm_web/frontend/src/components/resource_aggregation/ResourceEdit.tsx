@@ -132,15 +132,20 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       }
     }
 
-    // Link validation
+    // Link validation: returns 0 if not valid, 1 if valid, 2 if valid when https:// appended
     const isValidURL = (url: string) => {
       let urlTest;
       try {
         urlTest = new URL(url);
-      } catch (_) {
-        return false;
+      } catch {
+        try {
+          urlTest = new URL("https://" + url);
+          return urlTest.protocol === "http:" || urlTest.protocol === "https:" ? 2 : 0;
+        } catch {
+          return 0;
+        }
       }
-      return urlTest.protocol === "http:" || urlTest.protocol === "https:";
+      return urlTest.protocol === "http:" || urlTest.protocol === "https:" ? 1 : 0;
     };
 
     for (const [index, link] of newLinks.entries()) {
@@ -158,7 +163,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     }
     for (const linkId of existingLinkMap.keys()) {
       const link = existingLinkMap.get(linkId);
-      console.log(link);
       if (link && (validateAll || touched.existingLinks.has(linkId))) {
         if (link.deleted) {
           newFormErrors["existingLinks"].delete(linkId);
@@ -611,8 +615,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
           ></ResourceLinkEdit>
         )
     );
-
-  console.log(existingLinkMap);
 
   const newWorksheetDisplay =
     newWorksheets &&

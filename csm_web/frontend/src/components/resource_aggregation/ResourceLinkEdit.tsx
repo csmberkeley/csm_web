@@ -22,7 +22,6 @@ const ResourceLinkEdit = ({
   index
 }: ResourceLinkEditProps): React.ReactElement => {
   const currentId = index == undefined ? link.id : index;
-  console.log(formErrorsMap);
   return (
     <>
       <div className="resourceLinkEdit">
