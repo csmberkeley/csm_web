@@ -56,7 +56,7 @@
 .resourceWrapperHeader {
 	grid-column: 1 / -1;
 	display: grid;
-	grid-template-columns: repeat(2, minmax(50px, 1fr)) 2fr 2fr 2fr 40px;
+	grid-template-columns: repeat(2, minmax(50px, 1fr)) 2fr 2fr 1fr 40px;
 	column-gap: 10px;
 	text-align: center;
 	width: 100%;
@@ -95,6 +95,7 @@
 	flex-direction: row;
 	align-content: space-between;
 	justify-content: center;
+	margin-bottom: 20px;
 }
 
 .resourceEditTab {
@@ -106,8 +107,12 @@
 	font-size: 16px;
 	font-weight: 600;
 	justify-content: space-evenly;
-	padding: 16px;
+	padding: 8px;
 	width: 200px;
+}
+
+.resourceEditTab:hover {
+	background-color: var(--csm-neutral-darkened);
 }
 
 .resourceEditTab:disabled {
@@ -258,7 +263,15 @@
 .resourceWorksheetHead {
 	display: grid;
 	/* name, worksheet, solution, delete */
-	grid-template-columns: 2fr 2fr 1fr 20px;
+	grid-template-columns: repeat(3, 1fr) 20px;
+	column-gap: 10px;
+	text-align: center;
+}
+
+.resourceLinkHead {
+	display: grid;
+	/* name, url, delete */
+	grid-template-columns: 1fr 1fr 20px;
 	column-gap: 10px;
 	text-align: center;
 }
@@ -276,12 +289,13 @@
 }
 
 .resourceLinkEdit {
-	grid-template-columns: 2fr 2fr 1fr;
+	grid-template-columns: 1fr 1fr 20px;
 }
 
 .resourceLinksContainer {
 	display: grid;
 	align-content: center;
+	row-gap: 10px;
 }
 
 .resourceWorksheetEditFile {
