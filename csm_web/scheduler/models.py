@@ -80,6 +80,7 @@ class Semester(ValidatingModel):
     # do we even need this? especially if we're not keeping track of the year of a semester, only an arbitrary primary key sid
     season = models.CharField(max_length=2, choices=Season.choices, blank=True)
     sid = models.PositiveSmallIntegerField(primary_key=True)
+    objects = models.Manager()
 
     def __str__(self):
         return f"{self.season} {self.sid}"
