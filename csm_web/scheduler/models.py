@@ -158,7 +158,7 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
-    semester = models.ForeignKey("Semester", on_delete=models.CASCADE)
+    semester = models.ForeignKey("Semester", on_delete=models.CASCADE, null=True)
     objects = CourseModelManager()
 
     def __str__(self):
