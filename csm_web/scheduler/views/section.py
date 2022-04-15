@@ -500,10 +500,11 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
     @action(detail=True, methods=["put"])
     def change_word_of_day(self, request, pk=None):
         """
-        Request
-            data = {
-                'word_of_the_day': {new word of the day}
-            }
+        Updates the word of the day for a section occurrence
+
+        Format of request.
+            request.data is a dictionary with 
+                'word_of_the_day': new word of the day
         """
 
         sectionOccurrence = get_object_or_error(SectionOccurrence.objects.all(), pk=pk)
@@ -514,7 +515,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
         #Do not allow for empty word of the days, if not empty then updates the word of the day for the section Occurrence
         if request.data['word_of_the_day'] != '':
-            sectionOccurrence.word_of_the_day = request.data['word_of_the_day']
+            sectionOccurrence.word_of_the_day = request.data['word_of_the_day'].lower()
             sectionOccurrence.save()
 
             return Response(status = status.HTTP_200_OK)

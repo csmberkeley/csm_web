@@ -104,20 +104,22 @@ class StudentViewSet(viewsets.GenericViewSet):
                 'section_occurrence': pk for section occurrence for that week
         """
       
-        # I think I only need the student and not if it has other profiles attached to it?
         student = get_object_or_error(self.get_queryset(), pk=pk)
 
+        # Internal server error
         if student.user != request.user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-        # So does the front end send which section occurence it is associated with?
+            print("Correct response")
+            return Response(status=status.HTTP_404_BAD_REQUEST)
+
         section_occurrence = SectionOccurrence.objects.filter(pk=request.data['section_occurrence']).first()
-        if section_occurrence.word_of_the_day != request.data['attempt'].lower():
+
+        # If the attempt at the word of the day is incorrect, deny request
+        if section_occurrence.word_of_the_day.lower() != request.data['attempt'].lower():
             #Not sure which type of Http response to send, mayb permission denied?
-            return Response(status=status.HTTP_403_FORBIDDEN)
+            return Response(status=status.REQUEST_DENIED)
 
-        #I don't actually want to create a new attendance but rather update the already existing attendance.
-        attendance = Attendance.objects.filter(student=student).filter(sectionOccurrence=section_occurrence).first()
-
+        # Otherwise update the attendance to be present.
+        attendance = Attendance.objects.filter(student=student, sectionOccurrence=section_occurrence).first()
         attendance.presence = "PR"
         attendance.save()
 
