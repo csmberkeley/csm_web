@@ -65,7 +65,14 @@ function Header(): React.ReactElement {
    * That is, it should always be active unless we're in a location prefixed by /resources
    */
   const schedulerActive: NavLinkProps["isActive"] = (match, location): boolean => {
-    return !(location.pathname.startsWith("/resources") || location.pathname.startsWith("/policies"));
+    const links = ["/resources", "/policies"];
+    for (let i = 0; i < links.length; i++) {
+      if (location.pathname.startsWith(links[i])) {
+        return false;
+      }
+    }
+    return true;
+    // return !(location.pathname.startsWith("/resources") || location.pathname.startsWith("/policies"));
   };
 
   return (
@@ -80,10 +87,8 @@ function Header(): React.ReactElement {
         <h3 className="site-title">Resources</h3>
       </NavLink>
 
-      <NavLink to="/policies" className="site-title-link" id="site-subtitle-link" activeClassName="is-active">
-        <h3 className="site-title" id="site-subtitle-link">
-          Policies
-        </h3>
+      <NavLink to="/policies" className="site-subtitle-link" activeClassName="is-active">
+        <h3 className="site-subtitle">Policies</h3>
       </NavLink>
 
       <a id="logout-btn" href="/logout" title="Log out">

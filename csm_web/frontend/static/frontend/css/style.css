@@ -45,6 +45,7 @@ button {
 	--csm-neutral: #c0c0c0;
 	--csm-neutral-darkened: #b6b6b6;
 	--csm-resources: #ededed;
+	--csm-link-blue: #039be5;
 }
 
 /* Header */
@@ -73,8 +74,9 @@ header {
 	color: #bbbbbb;
 }
 
-#site-subtitle-link {
-	font-size: 18px;
+.site-subtitle-link {
+	color: #bbbbbb;
+	text-decoration: none;
 	margin-top: auto;
 	margin-bottom: auto;
 	margin-left: auto;
@@ -82,6 +84,9 @@ header {
 }
 
 .site-title-link.is-active {
+	color: #808080;
+}
+.site-subtitle-link.is-active {
 	color: #808080;
 }
 
@@ -125,14 +130,6 @@ header {
 		margin-right: 0;
 	}
 
-	#site-subtitle-link {
-		font-size: 18px;
-		margin-top: auto;
-		margin-bottom: auto;
-		margin-left: auto;
-		margin-right: auto;
-		padding-top: 5px;
-	}
 	#logout-btn {
 		margin: 10px auto auto auto;
 	}

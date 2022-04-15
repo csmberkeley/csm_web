@@ -1,31 +1,31 @@
-.sections {
+.policy-sections {
 	margin: auto;
 	width: 60%;
 	font-size: 1.05em;
 	line-height: 1.5em;
 }
 
-.sections div {
+.policy-sections div {
 	padding-bottom: 0.5rem;
 }
 
-.sections h1 {
-	color: #9ae0b3;
+.policy-sections h1 {
+	color: var(--csm-green);
 	/*
 		CSM green, but IDK if I can import vars from other CSS files lol.
 		OG color was: #646464 (feel free to change back, just trying out green!)
 	*/
 }
 
-.sections a {
-	color: #039be5;
+.policy-sections a {
+	color: var(--csm-link-blue);
 	/*
 		Blue, sampled from CSM website!
 	*/
 	text-decoration: none;
 }
 
-.sections .divider {
+.policy-sections .divider {
 	height: 1px;
 	background-color: #e0e0e0;
 	padding: 0;
