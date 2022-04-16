@@ -6,6 +6,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+import datetime
 
 from .utils import log_str, logger, get_object_or_error
 from ..models import Student
@@ -103,15 +104,22 @@ class StudentViewSet(viewsets.GenericViewSet):
                 'attempt': string of attempt for word of the day    
                 'section_occurrence': pk for section occurrence for that week
         """
-      
+        request_time = timezone.now()
+
         student = get_object_or_error(self.get_queryset(), pk=pk)
 
         # Internal server error
         if student.user != request.user:
-            print("Correct response")
             return Response(status=status.HTTP_404_BAD_REQUEST)
 
         section_occurrence = SectionOccurrence.objects.filter(pk=request.data['section_occurrence']).first()
+
+        section_occurrence_time = section_occurrence.date
+        section_occurrence_time_limit = section_occurrence_time + datetime.timedelta(days=1)
+
+        # Reject any requests made after the deadline (midnight the next day)
+        if request_time > section_occurrence_time_limit:
+            return Response(status=status.REQUEST_DENIED)
 
         # If the attempt at the word of the day is incorrect, deny request
         if section_occurrence.word_of_the_day.lower() != request.data['attempt'].lower():
