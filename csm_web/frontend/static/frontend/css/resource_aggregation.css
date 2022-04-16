@@ -437,6 +437,16 @@ button.clearFile:hover {
 	cursor: not-allowed;
 }
 
+.resourceTabErrorText {
+	text-align: center;
+	color: red;
+}
+
+.resourceTabErrorText .icon {
+	display: inline-block;
+	padding: 0 3px;
+}
+
 #saveIcon {
 	margin: 0 !important;
 }

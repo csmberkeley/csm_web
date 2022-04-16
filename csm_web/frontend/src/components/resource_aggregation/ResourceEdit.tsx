@@ -652,6 +652,12 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     existingWorksheetMap && newWorksheets && (existingWorksheetDisplay.length > 0 || newWorksheetDisplay.length > 0);
   const hasLinks = existingLinkMap && newLinks && (existingLinkDisplay.length > 0 || newLinkDisplay.length > 0);
 
+  const tabErrorDisplay = (
+    <div className="resourceTabErrorText">
+      <ExclamationCircle className="icon exclamationIcon" /> Errors present in {isEditingLinks ? "worksheets" : "links"}
+    </div>
+  );
+
   return (
     <Modal closeModal={onCancel} className="resourceEditModal">
       <div className="resourceEditContainer">
@@ -758,6 +764,9 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
         <button onClick={handleSubmit} id="resourceButtonSubmit" disabled={!checkValid()}>
           <CheckCircle className="icon" id="saveIcon" /> SAVE
         </button>
+        {!(!isEditingLinks && formErrors["existingLinks"].size == 0 && formErrors["newLinks"].size == 0) &&
+          !(isEditingLinks && formErrors["existingWorksheets"].size == 0 && formErrors["newWorksheets"].size == 0) &&
+          tabErrorDisplay}
       </div>
     </Modal>
   );
