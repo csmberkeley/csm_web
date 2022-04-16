@@ -36,13 +36,6 @@ def current_semester_sid():
     return Semester.objects.all().first().sid
 
 
-def default_semester():
-    if Semester.objects.exists():
-        return Semester.objects.all().first()
-    else:
-        return Semester(1)
-
-
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
@@ -159,9 +152,7 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
-    semester = models.ForeignKey("Semester", on_delete=models.CASCADE, default=default_semester())
-    # replaced null=True with default=default_semester() and made semester serializer.
-    # current issue is ValueError: Cannot serialize: <Semester: 1>.
+    semester = models.ForeignKey("Semester", on_delete=models.CASCADE, null=True)
     objects = CourseModelManager()
 
     def __str__(self):

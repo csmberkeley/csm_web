@@ -5,6 +5,18 @@ import django.db.models.deletion
 import django.db.models.manager
 
 
+def initiate_semester(apps, schema_editor):
+    Course = apps.get_model("scheduler", "Course")
+    Semester = apps.get_model("scheduler", "Semester")
+    initial_semester = Semester()
+    initial_semester.sid = 1
+    initial_semester.save()
+    for course in Course.objects.all():
+        course.semester = initial_semester
+        course.save()
+    assert Course.objects.filter(semester__isnull=True).count() == 0
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -37,5 +49,13 @@ class Migration(migrations.Migration):
             model_name='course',
             name='semester',
             field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.CASCADE, to='scheduler.semester'),
+        ),
+        migrations.RunPython(
+            initiate_semester, reverse_code=migrations.RunPython.noop
+        ),
+        migrations.AlterField(
+            model_name='course',
+            name='semester',
+            field=models.ForeignKey(null=False, on_delete=django.db.models.deletion.CASCADE, to='scheduler.semester'),
         ),
     ]

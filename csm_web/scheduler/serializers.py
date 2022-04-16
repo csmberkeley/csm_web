@@ -77,12 +77,6 @@ class SpacetimeSerializer(serializers.ModelSerializer):
         read_only_fields = ("time", "id", "override")
 
 
-class SemesterSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Semester
-        fields = ['sid']
-
-
 class CourseSerializer(serializers.ModelSerializer):
     enrollment_open = serializers.SerializerMethodField()
     user_can_enroll = serializers.SerializerMethodField()
