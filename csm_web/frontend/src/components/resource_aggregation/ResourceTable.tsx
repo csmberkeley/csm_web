@@ -111,7 +111,7 @@ export const ResourceTable = ({
           let updatedValue = value;
           // Handle urls
           if (key === "url") {
-            if (!value.includes("http")) {
+            if (!value.startsWith("http")) {
               updatedValue = "https://" + value;
             }
           }
@@ -129,6 +129,14 @@ export const ResourceTable = ({
         if (value instanceof Array) {
           updatedValue = JSON.stringify(value);
         }
+
+        // Handle urls
+        if (key === "url") {
+          if (!value.startsWith("http")) {
+            updatedValue = "https://" + value;
+          }
+        }
+
         resourceFormData.append(`links[${idx}][${key}]`, updatedValue);
       }
       idx++;
