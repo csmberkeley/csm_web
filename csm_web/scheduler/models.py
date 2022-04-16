@@ -159,8 +159,9 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
-    # could replace null=True with default=default_semester()
     semester = models.ForeignKey("Semester", on_delete=models.CASCADE, default=default_semester())
+    # replaced null=True with default=default_semester() and made semester serializer.
+    # current issue is ValueError: Cannot serialize: <Semester: 1>.
     objects = CourseModelManager()
 
     def __str__(self):
