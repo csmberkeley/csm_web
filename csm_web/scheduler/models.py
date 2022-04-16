@@ -32,6 +32,10 @@ def week_bounds(date):
     return week_start, week_end
 
 
+def current_semester_sid():
+    return Semester.objects.all().first().sid
+
+
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
@@ -58,12 +62,30 @@ class ValidatingModel(models.Model):
     This abstract class fixes that insanity
     """
 
+    past_objects_included = models.Manager()
+
     def save(self, *args, **kwargs):
         self.full_clean()
         super().save(*args, **kwargs)
 
     class Meta:
         abstract = True
+
+
+class Semester(ValidatingModel):
+    sid = models.PositiveSmallIntegerField(primary_key=True)
+    objects = models.Manager()
+
+    def __str__(self):
+        return f"{self.sid}"
+
+    class Meta:
+        ordering = ['-sid']
+
+
+class AttendanceModelManager(models.Manager):
+    def get_queryset(self):
+        return super(AttendanceModelManager, self).get_queryset().filter(student__course__semester__sid=current_semester_sid())
 
 
 class Attendance(ValidatingModel):
@@ -75,6 +97,7 @@ class Attendance(ValidatingModel):
     presence = models.CharField(max_length=2, choices=Presence.choices, blank=True)
     student = models.ForeignKey("Student", on_delete=models.CASCADE)
     sectionOccurrence = models.ForeignKey("SectionOccurrence", on_delete=models.CASCADE)
+    objects = AttendanceModelManager()
 
     def __str__(self):
         return f"{self.sectionOccurrence.date} {self.presence} {self.student.name}"
@@ -93,6 +116,11 @@ class Attendance(ValidatingModel):
         #indexes = (models.Index(fields=("date",)),)
 
 
+class SectionOccurrenceModelManager(models.Manager):
+    def get_queryset(self):
+        return super(SectionOccurrenceModelManager, self).get_queryset().filter(section__mentor__course__semester__sid=current_semester_sid())
+
+
 class SectionOccurrence(ValidatingModel):
     """
     SectionOccurrence represents an occurrence of a section and acts as an
@@ -101,6 +129,7 @@ class SectionOccurrence(ValidatingModel):
     """
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
+    objects = SectionOccurrenceModelManager()
 
     def __str__(self):
         return f"SectionOccurrence for {self.section} at {self.date}"
@@ -108,6 +137,11 @@ class SectionOccurrence(ValidatingModel):
     class Meta:
         unique_together = ("section", "date")
         ordering = ("date",)
+
+
+class CourseModelManager(models.Manager):
+    def get_queryset(self):
+        return super(CourseModelManager, self).get_queryset().filter(semester__sid=current_semester_sid())
 
 
 class Course(ValidatingModel):
@@ -118,6 +152,8 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
+    semester = models.ForeignKey("Semester", on_delete=models.CASCADE, null=False)
+    objects = CourseModelManager()
 
     def __str__(self):
         return self.name
@@ -136,11 +172,17 @@ class Course(ValidatingModel):
         return self.enrollment_start < now < self.enrollment_end
 
 
+class ProfileModelManager(models.Manager):
+    def get_queryset(self):
+        return super(ProfileModelManager, self).get_queryset().filter(course__semester__sid=current_semester_sid())
+
+
 class Profile(ValidatingModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
 
     # all students, mentors, and coords should have a field for course
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    objects = ProfileModelManager()
 
     @property
     def name(self):
@@ -226,6 +268,11 @@ class Coordinator(Profile):
         unique_together = ("user", "course")
 
 
+class SectionModelManager(models.Manager):
+    def get_queryset(self):
+        return super(SectionModelManager, self).get_queryset().filter(mentor__course__semester__sid=current_semester_sid())
+
+
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
@@ -236,6 +283,7 @@ class Section(ValidatingModel):
         help_text='A brief note to add some extra information about the section, e.g. "EOP" or '
         '"early start".'
     )
+    objects = SectionModelManager()
 
     # @functional.cached_property
     # def course(self):
@@ -277,14 +325,25 @@ def worksheet_path(instance, filename):
     return f'resources/{course_name}/{filename}'
 
 
+class ResourceModelManager(models.Manager):
+    def get_queryset(self):
+        return super(ResourceModelManager, self).get_queryset().filter(course__semester__sid=current_semester_sid())
+
+
 class Resource(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     week_num = models.PositiveSmallIntegerField()
     date = models.DateField()
     topics = models.CharField(blank=True, max_length=100)
+    objects = ResourceModelManager()
 
     class Meta:
         ordering = ['week_num']
+
+
+class WorksheetModelManager(models.Manager):
+    def get_queryset(self):
+        return super(WorksheetModelManager, self).get_queryset().filter(resource__course__semester__sid=current_semester_sid())
 
 
 class Worksheet(ValidatingModel):
@@ -292,6 +351,7 @@ class Worksheet(ValidatingModel):
     name = models.CharField(max_length=100)
     worksheet_file = models.FileField(blank=True, upload_to=worksheet_path)
     solution_file = models.FileField(blank=True, upload_to=worksheet_path)
+    objects = WorksheetModelManager()
 
 
 @receiver(models.signals.post_delete, sender=Worksheet)

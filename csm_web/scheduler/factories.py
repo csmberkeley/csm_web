@@ -278,4 +278,5 @@ def generate_test_data(preconfirm=False):
             val = random.randint(1, 100)
             ResourceFactory.create(course=course, week_num=i+1, date=date, topics=f"Topic {val}")
         print("Done generating resources")
+
     create_demo_account()
