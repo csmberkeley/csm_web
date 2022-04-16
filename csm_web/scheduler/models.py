@@ -40,7 +40,7 @@ def default_semester():
     if Semester.objects.exists():
         return Semester.objects.all().first()
     else:
-        return Semester(1)
+        return Semester(7)
 
 
 class User(AbstractUser):
