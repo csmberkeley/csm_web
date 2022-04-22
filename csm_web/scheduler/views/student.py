@@ -114,17 +114,15 @@ class StudentViewSet(viewsets.GenericViewSet):
 
         section_occurrence = SectionOccurrence.objects.filter(pk=request.data['section_occurrence']).first()
 
-        section_occurrence_time = section_occurrence.date
-        section_occurrence_time_limit = section_occurrence_time + datetime.timedelta(days=1)
-
+        section_occurrence_time_limit = datetime.datetime.combine(section_occurrence.date, datetime.datetime.min.time(), tzinfo=timezone.now().tzinfo) + datetime.timedelta(days=1)
+        
         # Reject any requests made after the deadline (midnight the next day)
         if request_time > section_occurrence_time_limit:
-            return Response(status=status.REQUEST_DENIED)
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         # If the attempt at the word of the day is incorrect, deny request
         if section_occurrence.word_of_the_day.lower() != request.data['attempt'].lower():
-            #Not sure which type of Http response to send, mayb permission denied?
-            return Response(status=status.REQUEST_DENIED)
+            return Response(status=status.HTTP_403_FORBIDDEN)
 
         # Otherwise update the attendance to be present.
         attendance = Attendance.objects.filter(student=student, sectionOccurrence=section_occurrence).first()
