@@ -62,7 +62,7 @@ class ValidatingModel(models.Model):
     This abstract class fixes that insanity
     """
 
-    past_objects_included = models.Manager()
+    all_objects = models.Manager()
 
     def save(self, *args, **kwargs):
         self.full_clean()
@@ -73,7 +73,7 @@ class ValidatingModel(models.Model):
 
 
 class Semester(ValidatingModel):
-    sid = models.PositiveSmallIntegerField(primary_key=True)
+    sid = models.AutoField(primary_key=True)
     objects = models.Manager()
 
     def __str__(self):

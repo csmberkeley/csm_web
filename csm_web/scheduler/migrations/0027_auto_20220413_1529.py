@@ -9,7 +9,6 @@ def initiate_semester(apps, schema_editor):
     Course = apps.get_model("scheduler", "Course")
     Semester = apps.get_model("scheduler", "Semester")
     initial_semester = Semester()
-    initial_semester.sid = 1
     initial_semester.save()
     for course in Course.objects.all():
         course.semester = initial_semester
@@ -27,7 +26,7 @@ class Migration(migrations.Migration):
         migrations.CreateModel(
             name='Semester',
             fields=[
-                ('sid', models.PositiveSmallIntegerField(primary_key=True, serialize=False)),
+                ('sid', models.AutoField(primary_key=True, serialize=False)),
             ],
             options={
                 'ordering': ['-sid'],
@@ -36,13 +35,13 @@ class Migration(migrations.Migration):
         migrations.AlterModelManagers(
             name='override',
             managers=[
-                ('past_objects_included', django.db.models.manager.Manager()),
+                ('all_objects', django.db.models.manager.Manager()),
             ],
         ),
         migrations.AlterModelManagers(
             name='spacetime',
             managers=[
-                ('past_objects_included', django.db.models.manager.Manager()),
+                ('all_objects', django.db.models.manager.Manager()),
             ],
         ),
         migrations.AddField(

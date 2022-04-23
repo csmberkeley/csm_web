@@ -21,7 +21,9 @@ from .models import (
     Coordinator,
     DayOfWeekField,
     day_to_number,
-    week_bounds
+    week_bounds,
+    Semester,
+    current_semester_sid
 )
 
 
@@ -31,6 +33,11 @@ def evaluate_faker(faker):
 
 COMPSCI_WORDS = ('Algorithms', 'Systems', 'Distributed', 'Efficient', 'Tractable', 'Programming',
                  'Languages', 'Machine Learning', 'AI', 'Blockchain', 'Parallel', 'Architecture')
+
+
+class SemesterFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Semester
 
 
 class CourseFactory(factory.django.DjangoModelFactory):
@@ -64,6 +71,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
         )
     )
     permitted_absences = factory.LazyFunction(lambda: random.randint(1, 4))
+    semester = factory.SubFactory(SemesterFactory)
 
     @factory.lazy_attribute
     def title(self):
@@ -250,9 +258,10 @@ def generate_test_data(preconfirm=False):
     enrollment_start = timezone.now() - timedelta(days=14)
     enrollment_end = timezone.now() + timedelta(days=50)
     valid_until = timezone.now() + timedelta(days=100)
+    semester = SemesterFactory.create()
     for course_name, course_title in zip(course_names, course_titles):
         course = CourseFactory.create(name=course_name, title=course_title, enrollment_start=enrollment_start, enrollment_end=enrollment_end,
-                                      valid_until=valid_until)
+                                      valid_until=valid_until, semester=semester)
         print(course_name + "...", end=" ")
         for _ in range(random.randint(5, 10)):
             mentor = MentorFactory.create(course=course)
@@ -278,5 +287,4 @@ def generate_test_data(preconfirm=False):
             val = random.randint(1, 100)
             ResourceFactory.create(course=course, week_num=i+1, date=date, topics=f"Topic {val}")
         print("Done generating resources")
-
     create_demo_account()
