@@ -497,30 +497,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             return Response({"id": student.id}, status=status.HTTP_201_CREATED)
 
 
-    @action(detail=True, methods=["put"])
-    def change_word_of_day(self, request, pk=None):
-        """
-        Updates the word of the day for a section occurrence
 
-        Format of request.
-            request.data is a dictionary with 
-                'word_of_the_day': new word of the day
-        """
-
-        sectionOccurrence = get_object_or_error(SectionOccurrence.objects.all(), pk=pk)
-
-        #Checks to make sure the user trying to change the word of the day is actually the mentor
-        if not sectionOccurrence.section.mentor.user == self.request.user:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        #Do not allow for empty word of the days, if not empty then updates the word of the day for the section Occurrence
-        if request.data['word_of_the_day'] != '':
-            sectionOccurrence.word_of_the_day = request.data['word_of_the_day'].lower()
-            sectionOccurrence.save()
-
-            return Response(status = status.HTTP_200_OK)
-            
-        return Response(status=status.HTTP_403_FORBIDDEN)
 
 
 

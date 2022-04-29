@@ -93,7 +93,7 @@ def test_update_word_of_the_day(
     client.force_login(mentor_user)
     
     # Change word of the day
-    change_word_of_day_url = reverse("section-change-word-of-day", kwargs={"pk": sectionOccurrence.pk})
+    change_word_of_day_url = reverse("api-wordoftheday-submit", kwargs={"pk": sectionOccurrence.pk})
     client.put(change_word_of_day_url, {'word_of_the_day': 'changed'}, content_type='application/json')
 
     sectionOccurrence.refresh_from_db()
@@ -115,7 +115,7 @@ def test_update_word_of_the_day_failure(
 
     # Mentor attempts to submit empty string word of the day.
     client.force_login(mentor_user)
-    change_word_of_day_url = reverse("section-change-word-of-day", kwargs={"pk": sectionOccurrence.pk})
+    change_word_of_day_url = reverse("api-wordoftheday-submit", kwargs={"pk": sectionOccurrence.pk})
     client.put(change_word_of_day_url, {'word_of_the_day': ''}, content_type='application/json')
 
     sectionOccurrence.refresh_from_db()
@@ -125,7 +125,7 @@ def test_update_word_of_the_day_failure(
 
     # Check to make sure that a student can not change the word of the day for a sectionOccurrence
     client.force_login(student_user)
-    change_word_of_day_url = reverse("section-change-word-of-day", kwargs={"pk": sectionOccurrence.pk})
+    change_word_of_day_url = reverse("wordoftheday-submit", kwargs={"pk": sectionOccurrence.pk})
     client.put(change_word_of_day_url, {'word_of_the_day': 'invalid'}, content_type='application/json')
 
     sectionOccurrence.refresh_from_db()
@@ -154,7 +154,7 @@ def test_submit_attendance_failure(
     attendances = Attendance.objects.all().count()
 
     # Student submits incorrect word of the day
-    submit_attendance_url = reverse("student-submit-attendance", kwargs={"pk": student.pk})
+    submit_attendance_url = reverse("wordoftheday-submit", kwargs={"pk": student.pk})
     response = client.put(submit_attendance_url, {'attempt': 'wrong password', 'section_occurrence': sectionOccurrence.pk}, content_type='application/json')
     Attendance.objects.filter(sectionOccurrence=sectionOccurrence).first().refresh_from_db()
     
@@ -208,7 +208,7 @@ def test_submit_attendance_failure(
     client.force_login(student_user2)
 
     # Other student user attempts to change attendance for original student user
-    submit_attendance_url = reverse("student-submit-attendance", kwargs={"pk": student.pk})
+    submit_attendance_url = reverse("wordoftheday-submit", kwargs={"pk": student.pk})
     with freeze_time(sectionOccurrence.date):
         client.put(submit_attendance_url, {'attempt': 'password', 'sectionOccurrence': sectionOccurrence.pk}, content_type='application/json')
     attendance.refresh_from_db()

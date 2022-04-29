@@ -94,39 +94,3 @@ class StudentViewSet(viewsets.GenericViewSet):
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    @action(detail=True, methods=["put"])
-    def submit_attendance(self, request, pk=None):
-        """
-        Attempts to change the attendance object associated with the given student.
-
-        Format of request.
-            request.data is a dictionary with
-                'attempt': string of attempt for word of the day    
-                'section_occurrence': pk for section occurrence for that week
-        """
-        request_time = timezone.now()
-
-        student = get_object_or_error(self.get_queryset(), pk=pk)
-
-        # Internal server error
-        if student.user != request.user:
-            return Response(status=status.HTTP_404_BAD_REQUEST)
-
-        section_occurrence = SectionOccurrence.objects.filter(pk=request.data['section_occurrence']).first()
-
-        section_occurrence_time_limit = datetime.datetime.combine(section_occurrence.date, datetime.datetime.min.time(), tzinfo=timezone.now().tzinfo) + datetime.timedelta(days=1)
-        
-        # Reject any requests made after the deadline (midnight the next day)
-        if request_time > section_occurrence_time_limit:
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        # If the attempt at the word of the day is incorrect, deny request
-        if section_occurrence.word_of_the_day.lower() != request.data['attempt'].lower():
-            return Response(status=status.HTTP_403_FORBIDDEN)
-
-        # Otherwise update the attendance to be present.
-        attendance = Attendance.objects.filter(student=student, sectionOccurrence=section_occurrence).first()
-        attendance.presence = "PR"
-        attendance.save()
-
-        return Response(status=status.HTTP_200_OK)
