@@ -6,3 +6,4 @@ from .section import SectionViewSet
 from .spacetime import SpacetimeViewSet
 from .student import StudentViewSet
 from .user import UserViewSet, userinfo
+from .wordoftheday import submit

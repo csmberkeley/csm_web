@@ -1,6 +1,7 @@
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework.decorators import api_view
+from rest_framework import status
 from django.utils import timezone
 import datetime
 import re
@@ -26,7 +27,7 @@ def submit(request, section_occurrence_pk):
     section_occurrence = get_object_or_error(SectionOccurrence.objects.all(), pk=section_occurrence_pk)
     student = Student.objects.filter(user=request.user, active=True, section=section_occurrence.section)
     is_mentor = section_occurrence.section.mentor.user == request.user
-    is_coordinator = student.course.coordinator_set.filter(
+    is_coordinator = section_occurrence.section.mentor.course.coordinator_set.filter(
             user=request.user
         ).exists()
 
@@ -37,6 +38,7 @@ def submit(request, section_occurrence_pk):
     if student.exists():
         request_time = timezone.now()
 
+        student = student.first()
         section_occurrence_time_limit = datetime.datetime.combine(section_occurrence.date, datetime.datetime.min.time(), tzinfo=timezone.now().tzinfo) + datetime.timedelta(days=1)
         
         # Reject any requests made after the deadline (midnight the next day)
