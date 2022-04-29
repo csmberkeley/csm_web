@@ -32,6 +32,7 @@ import zoneinfo
 
 DEFAULT_TZ = zoneinfo.ZoneInfo(timezone.get_default_timezone().zone)
 
+
 @pytest.fixture
 def setup_section(db):
     mentor_user = UserFactory(
@@ -79,65 +80,102 @@ def setup_section(db):
 
 
 @pytest.mark.django_db
-def test_update_word_of_the_day(
-    client, setup_section
-):
+def test_update_word_of_the_day(client, setup_section):
     mentor_user, student_user, course, section = setup_section
 
-    sectionOccurrence = (SectionOccurrence(section=section, 
-                                            date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ), 
-                                            word_of_the_day = 'default'))
+    sectionOccurrence = SectionOccurrence(
+        section=section,
+        date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ),
+        word_of_the_day="default",
+    )
     sectionOccurrence.save()
-    assert sectionOccurrence.word_of_the_day == 'default'
+    assert sectionOccurrence.word_of_the_day == "default"
 
     client.force_login(mentor_user)
-    
+
     # Change word of the day
-    change_word_of_day_url = reverse("submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk})
-    client.put(change_word_of_day_url, {'word_of_the_day': 'changed'}, content_type='application/json')
+    change_word_of_day_url = reverse(
+        "submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk}
+    )
+    client.put(
+        change_word_of_day_url,
+        {"word_of_the_day": "changed"},
+        content_type="application/json",
+    )
 
     sectionOccurrence.refresh_from_db()
 
     # Word of the day is changed for the section occurrence
-    assert sectionOccurrence.word_of_the_day == 'changed'
+    assert sectionOccurrence.word_of_the_day == "changed"
+
+    # Strips whitespace at start and end of string.
+    client.put(
+        change_word_of_day_url,
+        {"word_of_the_day": " valid "},
+        content_type="application/json",
+    )
+    sectionOccurrence.refresh_from_db()
+
+    # Word of the day is changed
+    assert sectionOccurrence.word_of_the_day == "valid"
+
 
 @pytest.mark.django_db
-def test_update_word_of_the_day_failure(
-    client, setup_section
-):
+def test_update_word_of_the_day_failure(client, setup_section):
     mentor_user, student_user, course, section = setup_section
 
-    sectionOccurrence = (SectionOccurrence(section=section, 
-                                            date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ), 
-                                            word_of_the_day = 'default'))
+    sectionOccurrence = SectionOccurrence(
+        section=section,
+        date=datetime.datetime(2020, 1, 1, tzinfo=DEFAULT_TZ),
+        word_of_the_day="default",
+    )
     sectionOccurrence.save()
-    assert sectionOccurrence.word_of_the_day == 'default'
+    assert sectionOccurrence.word_of_the_day == "default"
 
     # Mentor attempts to submit empty string word of the day.
     client.force_login(mentor_user)
-    change_word_of_day_url = reverse("submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk})
-    client.put(change_word_of_day_url, {'word_of_the_day': ''}, content_type='application/json')
+    change_word_of_day_url = reverse(
+        "submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk}
+    )
+    client.put(
+        change_word_of_day_url, {"word_of_the_day": ""}, content_type="application/json"
+    )
 
     sectionOccurrence.refresh_from_db()
 
     # Word of the day unchanged
-    assert sectionOccurrence.word_of_the_day == 'default'
+    assert sectionOccurrence.word_of_the_day == "default"
+
+    # Mentor attempts to submit string with white space.
+    client.put(
+        change_word_of_day_url,
+        {"word_of_the_day": "invalid word"},
+        content_type="application/json",
+    )
+    sectionOccurrence.refresh_from_db()
+
+    # Word of the day unchanged
+    assert sectionOccurrence.word_of_the_day == "default"
 
     # Check to make sure that a student can not change the word of the day for a sectionOccurrence
     client.force_login(student_user)
-    change_word_of_day_url = reverse("submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk})
-    client.put(change_word_of_day_url, {'word_of_the_day': 'invalid'}, content_type='application/json')
+    change_word_of_day_url = reverse(
+        "submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk}
+    )
+    client.put(
+        change_word_of_day_url,
+        {"word_of_the_day": "invalid"},
+        content_type="application/json",
+    )
 
     sectionOccurrence.refresh_from_db()
 
     # Word of the day unchanged
-    assert sectionOccurrence.word_of_the_day == 'default'
+    assert sectionOccurrence.word_of_the_day == "default"
 
 
 @pytest.mark.django_db
-def test_submit_attendance_failure(
-    client, setup_section
-):
+def test_submit_attendance_failure(client, setup_section):
     mentor, student_user, course, section = setup_section
     with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):
         client.force_login(student_user)
@@ -146,36 +184,51 @@ def test_submit_attendance_failure(
 
     # Set word of the day to password
     sectionOccurrence = SectionOccurrence.objects.all().first()
-    sectionOccurrence.word_of_the_day = 'password'
+    sectionOccurrence.word_of_the_day = "password"
     sectionOccurrence.save()
-    assert sectionOccurrence.word_of_the_day == 'password'
+    assert sectionOccurrence.word_of_the_day == "password"
 
     student = Student.objects.get(user=student_user)
     attendances = Attendance.objects.all().count()
 
     # Student submits incorrect word of the day
-    submit_attendance_url = reverse("submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk})
-    response = client.put(submit_attendance_url, {'attempt': 'wrong password'}, content_type='application/json')
-    Attendance.objects.filter(sectionOccurrence=sectionOccurrence).first().refresh_from_db()
-    
-    # Still same num of attendance objects 
+    submit_attendance_url = reverse(
+        "submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk}
+    )
+    response = client.put(
+        submit_attendance_url,
+        {"attempt": "wrong password"},
+        content_type="application/json",
+    )
+    Attendance.objects.filter(
+        sectionOccurrence=sectionOccurrence
+    ).first().refresh_from_db()
+
+    # Still same num of attendance objects
     assert Attendance.objects.all().count() == attendances
 
     # Did not change the attendance
     attendance = Attendance.objects.filter(sectionOccurrence=sectionOccurrence).first()
     attendance.refresh_from_db()
-    assert attendance.presence == ''
-
+    assert attendance.presence == ""
 
     # Can not change attendance outside of next day after section at midnight.
     client.force_login(student_user)
-    with freeze_time(datetime.datetime.combine(sectionOccurrence.date, datetime.datetime.min.time() ,tzinfo=DEFAULT_TZ) + datetime.timedelta(days=1, seconds=1)):
-        client.put(submit_attendance_url, {'attempt': 'password'}, content_type='application/json')
+    with freeze_time(
+        datetime.datetime.combine(
+            sectionOccurrence.date, datetime.datetime.min.time(), tzinfo=DEFAULT_TZ
+        )
+        + datetime.timedelta(days=1, seconds=1)
+    ):
+        client.put(
+            submit_attendance_url,
+            {"attempt": "password"},
+            content_type="application/json",
+        )
     attendance.refresh_from_db()
-    assert attendance.presence == ''
-    
+    assert attendance.presence == ""
 
-    #Check to make sure that another student can not change someone else's attendance.
+    # Check to make sure that another student can not change someone else's attendance.
     student_user2 = UserFactory(
         username="student_user2", first_name="student", last_name="user"
     )
@@ -208,22 +261,23 @@ def test_submit_attendance_failure(
     client.force_login(student_user2)
 
     # Other student user attempts to change attendance for original student user
-    submit_attendance_url = reverse("submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk})
+    submit_attendance_url = reverse(
+        "submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk}
+    )
     with freeze_time(sectionOccurrence.date):
-        client.put(submit_attendance_url, {'attempt': 'password'}, content_type='application/json')
+        client.put(
+            submit_attendance_url,
+            {"attempt": "password"},
+            content_type="application/json",
+        )
     attendance.refresh_from_db()
 
     # Attendance does not change.
-    assert attendance.presence == ''
-    
-
-
+    assert attendance.presence == ""
 
 
 @pytest.mark.django_db
-def test_submit_attendance_success(
-    client, setup_section
-):
+def test_submit_attendance_success(client, setup_section):
     mentor, student_user, course, section = setup_section
     with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):
         client.force_login(student_user)
@@ -232,35 +286,37 @@ def test_submit_attendance_success(
 
     client.force_login(student_user)
     sectionOccurrence = SectionOccurrence.objects.all().first()
-    sectionOccurrence.word_of_the_day = 'correct'
+    sectionOccurrence.word_of_the_day = "correct"
     sectionOccurrence.save()
-
 
     attendances = Attendance.objects.all().count()
     attendance = Attendance.objects.filter(sectionOccurrence=sectionOccurrence).first()
 
+    submit_attendance_url = reverse(
+        "submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk}
+    )
 
-    submit_attendance_url = reverse("submit", kwargs={"section_occurrence_pk": sectionOccurrence.pk})
-
-    # Can only change attendance within 24 hours after section.
+    # Can only change attendance within 24 hours after section, and correctly strips whitespace.
     latest_time = sectionOccurrence.date + datetime.timedelta(days=1)
     with freeze_time(latest_time):
-        client.put(submit_attendance_url, {'attempt': 'correct'}, content_type='application/json')
+        client.put(
+            submit_attendance_url,
+            {"attempt": " correct "},
+            content_type="application/json",
+        )
 
     # Still same num of attendance objects
     assert Attendance.objects.all().count() == attendances
 
     # Correctly changes the attendance
     attendance.refresh_from_db()
-    assert attendance.presence == 'PR'
+    assert attendance.presence == "PR"
 
-    # Does not affect other attendances 
-    Attendance.objects.exclude(sectionOccurrence=sectionOccurrence).first().refresh_from_db()
-    assert Attendance.objects.exclude(sectionOccurrence=sectionOccurrence).first().presence == ''
-
-
-    
-
-
-    
-    
+    # Does not affect other attendances
+    Attendance.objects.exclude(
+        sectionOccurrence=sectionOccurrence
+    ).first().refresh_from_db()
+    assert (
+        Attendance.objects.exclude(sectionOccurrence=sectionOccurrence).first().presence
+        == ""
+    )

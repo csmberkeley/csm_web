@@ -162,8 +162,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
             - coordinator add:
                 request.user: coordinator that wants to add students
-                pk: primary key of 
-                section to enroll into
+                pk: primary key of section to enroll into
                 request.data['emails']: array of objects with keys:
                     - 'email': email of student
                     - 'conflict_action': whether or not the coord has confirmed to drop this user from their existing section
@@ -495,9 +494,6 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}"
             )
             return Response({"id": student.id}, status=status.HTTP_201_CREATED)
-
-
-
 
 
 
