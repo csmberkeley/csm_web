@@ -9,7 +9,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from .utils import log_str, logger, get_object_or_error, viewset_with
-from ..models import Course, Section, Student, Spacetime, User, Attendance, Mentor, SectionOccurrence
+from ..models import Course, Section, Student, Spacetime, User, Attendance, Mentor
 from ..serializers import (
     SectionOccurrenceSerializer,
     SectionSerializer,
@@ -441,7 +441,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         Adds a student to a section (initiated by a student)
         """
         if not request.user.can_enroll_in_course(section.mentor.course):
-            logger.warn(
+            logger.warning(
                 f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because they are already involved in this course"
             )
             raise PermissionDenied(
@@ -449,7 +449,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         if section.current_student_count >= section.capacity:
-            logger.warn(
+            logger.warning(
                 f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because it was full"
             )
             raise PermissionDenied(
@@ -494,6 +494,3 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}"
             )
             return Response({"id": student.id}, status=status.HTTP_201_CREATED)
-
-
-
