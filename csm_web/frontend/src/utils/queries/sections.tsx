@@ -165,6 +165,32 @@ export const useUpdateStudentAttendancesMutation = (
   return mutationResult;
 };
 
+interface UpdateWordOfTheDayMutationBody {
+  wordOfTheDay: string;
+}
+
+export const useUpdateWordOfTheDayMutation = (
+  sectionId: number
+): UseMutationResult<void, ServerError, UpdateWordOfTheDayMutationBody> => {
+  const mutationResult = useMutation<void, Error, UpdateWordOfTheDayMutationBody>(
+    async (body: UpdateWordOfTheDayMutationBody) => {
+      if (isNaN(sectionId)) {
+        throw new PermissionError("Invalid section id");
+      }
+      const response = await fetchWithMethod(`sections/${sectionId}/change_word_of_the_day`, HTTP_METHODS.PUT, body);
+      if (response.ok) {
+        return;
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to update word of the day for section ${sectionId}`);
+      }
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
+
 export interface StudentDropMutationBody {
   banned: boolean;
 }

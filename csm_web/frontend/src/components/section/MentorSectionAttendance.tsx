@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { useUpdateStudentAttendancesMutation } from "../../utils/queries/sections";
+import { useUpdateStudentAttendancesMutation, useUpdateWordOfTheDayMutation } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import { ATTENDANCE_LABELS } from "./Section";
 import { dateSort, formatDate } from "./utils";
 import { Attendance } from "../../utils/types";
+import randomWords from "random-words";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 
@@ -28,6 +29,8 @@ const MentorSectionAttendance = ({
   const [showSaveSpinner, setShowSaveSpinner] = useState(false);
 
   const updateStudentAttendancesMutation = useUpdateStudentAttendancesMutation(sectionId);
+  const updateWordOfTheDayMutation = useUpdateWordOfTheDayMutation(sectionId);
+  const [wordOfTheDay, setWordOfTheDay] = useState("");
 
   useEffect(() => {
     if (loaded) {
@@ -78,6 +81,16 @@ const MentorSectionAttendance = ({
       setStagedAttendances(newStagedAttendances);
     }
     setStagedAttendances(stagedAttendances!.map(attendance => ({ ...attendance, presence: "PR" })));
+  }
+
+  function handleGenerateWord() {
+    if (selectedDate && wordOfTheDay) {
+      updateWordOfTheDayMutation.mutate({ wordOfTheDay });
+    }
+  }
+
+  function handlePickRandomWord() {
+    setWordOfTheDay(randomWords());
   }
 
   return (
@@ -143,6 +156,30 @@ const MentorSectionAttendance = ({
         </React.Fragment>
       )}
       {!loaded && <LoadingSpinner />}
+      <div id="word-of-the-day-container">
+        <h3 className="section-detail-page-title">Word of the Day</h3>
+        <h4>Create a word of the day or use a random one!</h4>
+        <h4 className="word-of-the-day-text">
+          <span className="word-of-the-day-date">{selectedDate && formatDate(selectedDate)}</span>
+          {"   "}Status:{"   "}
+          <span className="word-of-the-day-status">Not Chosen</span>
+        </h4>
+        <input
+          className="word-of-the-day-input"
+          type="text"
+          placeholder="Word of the Day"
+          value={wordOfTheDay}
+          onChange={e => {
+            setWordOfTheDay(e.target.value);
+          }}
+        ></input>
+        <button className="random-word-picker-btn" onClick={handlePickRandomWord}>
+          Random Word
+        </button>
+        <button className="csm-btn generate-word-btn" onClick={handleGenerateWord}>
+          Submit
+        </button>
+      </div>
     </div>
   );
 };

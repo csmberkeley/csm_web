@@ -4,6 +4,7 @@ import { useDropUserMutation, useStudentAttendances } from "../../utils/queries/
 import { Mentor, Override, Spacetime } from "../../utils/types";
 import Modal from "../Modal";
 import { ATTENDANCE_LABELS, InfoCard, ROLES, SectionDetail, SectionSpacetime } from "./Section";
+import { dateSort } from "./utils";
 
 import XIcon from "../../../static/frontend/img/x.svg";
 import LoadingSpinner from "../LoadingSpinner";
@@ -146,28 +147,60 @@ function StudentSectionAttendance({ associatedProfileId }: StudentSectionAttenda
     isError: attendancesLoadError
   } = useStudentAttendances(associatedProfileId);
 
+  const [selectedDate, setSelectedDate] = useState();
+
+  function handleSelectedDateChange() {
+    // setSelectedDate();
+  }
+  function handleSubmitWord() {
+    // send word to backend
+  }
+
   return attendancesLoaded ? (
-    <table id="attendance-table" className="standalone-table">
-      <thead>
-        <tr>
-          <th>Date</th>
-          <th>Status</th>
-        </tr>
-      </thead>
-      <tbody>
-        {attendances.map(({ presence, date }) => {
-          const [label, cssSuffix] = ATTENDANCE_LABELS[presence];
-          return (
-            <tr key={date}>
-              <td>{date}</td>
-              <td className="status">
-                <div style={{ backgroundColor: `var(--csm-attendance-${cssSuffix})` }}>{label}</div>
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
+    <React.Fragment>
+      <table id="attendance-table" className="standalone-table">
+        <thead>
+          <tr>
+            <th>Date</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {attendances.map(({ presence, date }) => {
+            const [label, cssSuffix] = ATTENDANCE_LABELS[presence];
+            return (
+              <tr key={date}>
+                <td>{date}</td>
+                <td className="status">
+                  <div style={{ backgroundColor: `var(--csm-attendance-${cssSuffix})` }}>{label}</div>
+                </td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+      <h3 className="section-detail-page-title">Submit Word of the Day</h3>
+      <div id="submit-word-of-the-day">
+        <select
+          value={selectedDate}
+          className="select-css"
+          // style={{
+          //   backgroundColor: `var(--csm-attendance-${ATTENDANCE_LABELS[presence][1]})`
+          // }}
+          onChange={handleSelectedDateChange}
+        >
+          {Object.keys(attendances)
+            .sort(dateSort)
+            .map((date, idx) => (
+              <option key={idx} value={date}></option>
+            ))}
+        </select>
+        <input className="word-of-the-day-input" type="text" placeholder="Word of the Day"></input>
+        <button className="csm-btn submit-word-btn" onClick={handleSubmitWord}>
+          Submit
+        </button>
+      </div>
+    </React.Fragment>
   ) : attendancesLoadError ? (
     <h3>Attendances could not be loaded</h3>
   ) : (
