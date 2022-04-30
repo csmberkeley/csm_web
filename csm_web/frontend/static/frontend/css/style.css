@@ -1706,7 +1706,9 @@ table tbody tr:last-child > td {
 	margin-right: 0;
 }
 
-.save-attendance-btn {
+.save-attendance-btn,
+.generate-word-btn,
+.submit-word-btn {
 	font-size: 14px;
 	border: none;
 	border-radius: 6px;
@@ -1714,7 +1716,8 @@ table tbody tr:last-child > td {
 	cursor: pointer;
 }
 
-.mark-all-present-btn {
+.mark-all-present-btn,
+.random-word-picker-btn {
 	background-color: inherit;
 	border: none;
 	outline: none;
@@ -1724,8 +1727,48 @@ table tbody tr:last-child > td {
 	cursor: pointer;
 }
 
-.mark-all-present-btn:hover {
+.mark-all-present-btn:hover,
+.random-word-picker-btn:hover {
 	color: var(--csm-green-darkened);
+}
+
+.mentor-attendance-page {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
+#word-of-the-day-container {
+	border: 2px solid #e7e7e7;
+	box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
+	border-radius: 20px;
+	padding: 30px;
+	margin-left: 3vw;
+}
+
+.word-of-the-day-input {
+	border-radius: 6px;
+	font-size: 14px;
+	font-weight: 600;
+	font-family: "Montserrat";
+	border: none;
+	background-color: #ededed;
+	padding: 10px 20px;
+}
+
+.word-of-the-day-input::placeholder {
+	opacity: 0.65;
+}
+
+.word-of-the-day-status {
+	color: #eb6060;
+}
+.word-of-the-day-date {
+	color: var(---csm-green-darkened);
+	margin-right: 10px;
+}
+.word-of-the-day-text {
+	color: #646464;
 }
 
 /* Loading Spinner */
