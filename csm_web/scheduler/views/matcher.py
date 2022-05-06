@@ -5,8 +5,9 @@ from rest_framework import status
 
 from django.db.models.query import EmptyQuerySet
 from django.views.decorators.http import require_http_methods
+from django.db import transaction
 
-from scheduler.models import User, Course, Mentor, MatcherPreference, MatcherSlot
+from scheduler.models import User, Course, Mentor, Matcher, MatcherPreference, MatcherSlot
 from scheduler.serializers import (
     MatcherPreferenceSerializer,
     MatcherSlotSerializer,
@@ -33,7 +34,8 @@ def slots(request, pk=None):
         - to release/close preference submissions:
             {"release": bool}
     """
-    course = get_object_or_error(Course.objects.all(), pk=pk)
+    course = get_object_or_error(Course.objects, pk=pk)
+    matcher = course.matcher
     is_coordinator = course.coordinator_set.filter(user=request.user).exists()
     if request.method == "GET":
         # get all slots
@@ -42,7 +44,11 @@ def slots(request, pk=None):
             raise PermissionDenied(
                 "You must be a mentor for the course to submit this form."
             )
-        slots = MatcherSlot.objects.filter(course=course)
+        if matcher is None:
+            # haven't set up the matcher yet
+            return Response({"slots": []}, status=status.HTTP_200_OK)
+
+        slots = MatcherSlot.objects.filter(matcher=matcher)
         serializer = MatcherSlotSerializer(slots, many=True)
         print(serializer.data)
         return Response({"slots": serializer.data}, status=status.HTTP_200_OK)
@@ -53,29 +59,34 @@ def slots(request, pk=None):
                 "You must be a coordinator for the course to submit this form."
             )
 
+        if matcher is None:
+            # create matcher
+            matcher = Matcher(course=course)
+            matcher.save()
+
         """
         Request data:
         [{"times": [{"day": str, "startTime": str, "endTime": str}], "numMentors": int}]
         """
 
         if "slots" in request.data:
-            MatcherSlot.objects.filter(course=course).delete()
+            MatcherSlot.objects.filter(matcher=matcher).delete()
 
             for slot_json in request.data["slots"]:
                 times = slot_json["times"]
-                num_mentors = (
-                    slot_json["numMentors"] if "numMentors" in slot_json else 0
+                min_mentors = (
+                    slot_json["minMentors"] if "minMentors" in slot_json else 0
+                )
+                max_mentors = (
+                    slot_json["maxMentors"] if "maxMentors" in slot_json else 1000
                 )
                 curslot = MatcherSlot(
-                    course=course,
+                    matcher=matcher,
                     times=times,
-                    num_mentors=num_mentors,
+                    min_mentors=min_mentors,
+                    max_mentors=max_mentors,
                 )
                 curslot.save()
-
-        if "release" in request.data:
-            course.matcher_open = bool(request.data["release"])
-            course.save()
 
         return Response(status=status.HTTP_202_ACCEPTED)
 
@@ -104,6 +115,7 @@ def preferences(request, pk=None):
             where id is the slot id
     """
     course = get_object_or_error(Course.objects.all(), pk=pk)
+    matcher = course.matcher
     is_coordinator = course.coordinator_set.filter(user=request.user).exists()
     is_mentor = course.mentor_set.filter(user=request.user).exists()
     if request.method == "GET":
@@ -113,13 +125,17 @@ def preferences(request, pk=None):
                 "You must be a coordinator or mentor for the course to submit this form."
             )
 
-        preferences = MatcherPreference.objects.filter(slot__course=course)
+        if matcher is None:
+            # haven't set up the matcher yet
+            return Response({"responses": []}, status=status.HTTP_200_OK)
+
+        preferences = MatcherPreference.objects.filter(slot__matcher=matcher)
         if is_mentor:
             # filter only this mentor's preferences
             preferences = preferences.filter(mentor__user=request.user)
         serializer = MatcherPreferenceSerializer(preferences, many=True)
         return Response(
-            {"responses": serializer.data, "open": course.matcher_open},
+            {"responses": serializer.data, "open": matcher.is_open},
             status=status.HTTP_200_OK,
         )
     elif request.method == "POST":
@@ -210,6 +226,47 @@ def mentors(request, pk=None):
                 skipped.append(email)
         skipped_serializer = MentorSerializer(skipped, many=True)
         return Response({"skipped": skipped_serializer.data}, status=status.HTTP_200_OK)
+
+    raise PermissionDenied()
+
+
+@api_view(["POST"])
+def configure(request, pk=None):
+    """
+    Endpoint: /api/matcher/<course_pk>/configure
+
+    POST: Update the matcher configuration
+        - coordinators only
+        - open/close form:
+            - format: {"open": bool}
+        - update slot mentor count:
+            - format: {"slots": [{"slot": int, "minMentors": int, "maxMentors": int}, ...]}
+    """
+    course = get_object_or_error(Course.objects.all(), pk=pk)
+    matcher = course.matcher
+    is_coordinator = course.coordinator_set.filter(user=request.user).exists()
+    if request.method == "POST":
+        if not is_coordinator:
+            raise PermissionDenied(
+                "You must be a coordinator to modify the matcher configuration."
+            )
+
+        if "slots" in request.data:
+            # update slot configuration
+            with transaction.atomic():
+                for slot in request.data:
+                    curslot = MatcherSlot.objects.get(pk=slot["slot"])
+                    if "minMentors" in slot:
+                        curslot.min_mentors = slot["minMentors"]
+                    if "maxMentors" in slot:
+                        curslot.max_mentors = slot["maxMentors"]
+                    curslot.save()
+
+        if "open" in request.data:
+            matcher.is_open = request.data["open"]
+            matcher.save()
+
+        return Response(status=status.HTTP_200_OK)
 
     raise PermissionDenied()
 

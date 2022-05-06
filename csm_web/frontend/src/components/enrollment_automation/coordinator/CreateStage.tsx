@@ -91,7 +91,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
 
   const openForm = (): void => {
     // send POST request to release form for mentors
-    fetchWithMethod(`matcher/${profile.courseId}/slots`, HTTP_METHODS.POST, { release: true }).then(() => {
+    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { open: true }).then(() => {
       // recompute stage
       refreshStage();
     });

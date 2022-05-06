@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, Link, SectionOccurrence, User, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet, MatcherSlot, MatcherPreference
+from .models import Attendance, Course, Link, SectionOccurrence, User, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet, Matcher, MatcherSlot, MatcherPreference
 
 
 class Role(Enum):
@@ -260,10 +260,16 @@ class OverrideSerializer(serializers.ModelSerializer):
         extra_kwargs = {"overriden_spacetime": {'required': False}}
 
 
+class MatcherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Matcher
+        fields = ('id', 'course', 'assignment', 'is_open')
+
+
 class MatcherSlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = MatcherSlot
-        fields = ['id', 'course', 'times']
+        fields = ['id', 'matcher', 'times']
 
 
 class MatcherPreferenceSerializer(serializers.ModelSerializer):

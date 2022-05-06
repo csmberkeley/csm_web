@@ -136,8 +136,6 @@ class Course(ValidatingModel):
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
 
-    matcher_open = models.BooleanField(default=False)
-
     def __str__(self):
         return self.name
 
@@ -421,14 +419,30 @@ class Override(ValidatingModel):
         return f"Override for {self.overriden_spacetime.section} : {self.spacetime}"
 
 
+class Matcher(ValidatingModel):
+    course = OneToOneOrNoneField(Course, on_delete=models.CASCADE, blank=True, null=True)
+    """
+    Serialized assignment of mentors to times.
+    [{"mentor": int, "slot" int}, ...]
+    """
+    assignment = models.JSONField(default=list, blank=True)
+    is_open = models.BooleanField(default=False)
+
+
 class MatcherSlot(ValidatingModel):
-    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    matcher = models.ForeignKey(Matcher, on_delete=models.CASCADE)
     """
     Serialized times of the form:
     [{"day", "startTime", "endTime"}, ...]
     """
     times = models.JSONField()
-    num_mentors = models.PositiveSmallIntegerField()
+    min_mentors = models.PositiveSmallIntegerField()
+    max_mentors = models.PositiveSmallIntegerField()
+
+    def clean(self):
+        super().clean()
+        if self.min_mentors > self.max_mentors:
+            raise ValidationError("Min mentors cannot be greater than max mentors")
 
 
 class MatcherPreference(ValidatingModel):
