@@ -21,4 +21,5 @@ urlpatterns += [
     path("matcher/<int:pk>/preferences/", views.matcher.preferences),
     path("matcher/<int:pk>/assignment/", views.matcher.assignment),
     path("matcher/<int:pk>/mentors/", views.matcher.mentors),
+    path("matcher/<int:pk>/configure/", views.matcher.configure),
 ]

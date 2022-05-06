@@ -2,7 +2,7 @@ import random
 
 from django.core.management import BaseCommand
 from django.core.exceptions import ValidationError
-from scheduler.models import MatcherSlot, MatcherPreference, Mentor
+from scheduler.models import Course, MatcherSlot, MatcherPreference, Mentor
 
 
 class Command(BaseCommand):
@@ -15,9 +15,10 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         course = options["course"]
+        matcher = Course.objects.get(name=course).matcher
 
-        slots = MatcherSlot.objects.filter(course__name=course)
-        mentors = Mentor.objects.filter(course__name=course, section=None)
+        slots = MatcherSlot.objects.filter(matcher=matcher)
+        mentors = Mentor.objects.filter(course__matcher=matcher, section=None)
 
         for mentor in mentors:
             for slot in slots:

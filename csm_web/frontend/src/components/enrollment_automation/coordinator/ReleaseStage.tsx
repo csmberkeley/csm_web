@@ -49,7 +49,7 @@ export function ReleaseStage({
 
   const closeForm = () => {
     // send POST request to close form for mentors
-    fetchWithMethod(`matcher/${profile.courseId}/slots`, HTTP_METHODS.POST, { release: false }).then(() => {
+    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { open: false }).then(() => {
       // recompute stage
       refreshStage();
     });
