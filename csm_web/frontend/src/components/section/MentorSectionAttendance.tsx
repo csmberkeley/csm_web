@@ -160,8 +160,7 @@ const MentorSectionAttendance = ({
         <h3 className="section-detail-page-title">Word of the Day</h3>
         <h4>Create a word of the day or use a random one!</h4>
         <h4 className="word-of-the-day-text">
-          <span className="word-of-the-day-date">{selectedDate && formatDate(selectedDate)}</span>
-          {"   "}Status:{"   "}
+          <span className="word-of-the-day-date">{selectedDate && formatDate(selectedDate)}</span> Status:{" "}
           <span className="word-of-the-day-status">Not Chosen</span>
         </h4>
         <input
