@@ -25,3 +25,11 @@ export interface MentorPreference {
   mentor: number;
   preference: number;
 }
+
+/**
+ * Assignment of a mentor to a slot
+ */
+export interface Assignment {
+  slot: number;
+  mentor: number;
+}

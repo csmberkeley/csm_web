@@ -7,7 +7,14 @@ from django.db.models.query import EmptyQuerySet
 from django.views.decorators.http import require_http_methods
 from django.db import transaction
 
-from scheduler.models import User, Course, Mentor, Matcher, MatcherPreference, MatcherSlot
+from scheduler.models import (
+    User,
+    Course,
+    Mentor,
+    Matcher,
+    MatcherPreference,
+    MatcherSlot,
+)
 from scheduler.serializers import (
     MatcherPreferenceSerializer,
     MatcherSlotSerializer,
@@ -15,6 +22,8 @@ from scheduler.serializers import (
     ProfileSerializer,
 )
 from .utils import viewset_with, get_object_or_error
+
+from scheduler.utils.match_solver import get_matches
 
 
 @api_view(["GET", "POST"])
@@ -78,7 +87,7 @@ def slots(request, pk=None):
                     slot_json["minMentors"] if "minMentors" in slot_json else 0
                 )
                 max_mentors = (
-                    slot_json["maxMentors"] if "maxMentors" in slot_json else 1000
+                    slot_json["maxMentors"] if "maxMentors" in slot_json else 10
                 )
                 curslot = MatcherSlot(
                     matcher=matcher,
@@ -230,27 +239,45 @@ def mentors(request, pk=None):
     raise PermissionDenied()
 
 
-@api_view(["POST"])
+@api_view(["GET", "POST"])
 def configure(request, pk=None):
     """
     Endpoint: /api/matcher/<course_pk>/configure
 
+    GET: Get the matcher configuration
+        - coordinators only
+        - return format:
+            {
+                "open": bool,
+                "slots": [{"id": int, "minMentors": int, "maxMentors": int}, ...]
+            }
     POST: Update the matcher configuration
         - coordinators only
         - open/close form:
             - format: {"open": bool}
         - update slot mentor count:
-            - format: {"slots": [{"slot": int, "minMentors": int, "maxMentors": int}, ...]}
+            - format: {"slots": [{"id": int, "minMentors": int, "maxMentors": int}, ...]}
+        - run the matcher:
+            - format: {"run": true}
     """
     course = get_object_or_error(Course.objects.all(), pk=pk)
     matcher = course.matcher
     is_coordinator = course.coordinator_set.filter(user=request.user).exists()
-    if request.method == "POST":
-        if not is_coordinator:
-            raise PermissionDenied(
-                "You must be a coordinator to modify the matcher configuration."
-            )
+    if not is_coordinator:
+        raise PermissionDenied(
+            "You must be a coordinator to modify the matcher configuration."
+        )
 
+    if request.method == "GET":
+        slots = MatcherSlot.objects.filter(matcher=matcher)
+        return Response(
+            {
+                "open": matcher.is_open,
+                "slots": slots.values("id", "min_mentors", "max_mentors"),
+            },
+            status=status.HTTP_200_OK,
+        )
+    elif request.method == "POST":
         if "slots" in request.data:
             # update slot configuration
             with transaction.atomic():
@@ -266,6 +293,18 @@ def configure(request, pk=None):
             matcher.is_open = request.data["open"]
             matcher.save()
 
+        if "run" in request.data:
+            # run the matcher
+            assignment, unmatched = run_matcher(course)
+            # update the assignment
+            matcher.assignment = assignment
+            matcher.save()
+
+            return Response(
+                {"assignment": assignment, "unmatched": unmatched},
+                status=status.HTTP_200_OK,
+            )
+
         return Response(status=status.HTTP_200_OK)
 
     raise PermissionDenied()
@@ -273,4 +312,55 @@ def configure(request, pk=None):
 
 @api_view(["GET", "PUT"])
 def assignment(request, pk=None):
+    """
+    Endpoint: /api/matcher/<course_pk>/assignment
+
+    GET: Get the current assignment
+        - coordinators only
+        - return format: list of slot/mentor matching and list of unmatched mentor ids
+            {
+                "assignment": [{"slot": int, "mentor": int}, ...],
+                "unmatched": [int, ...]
+            }
+    """
+    course = get_object_or_error(Course.objects.all(), pk=pk)
+    matcher = course.matcher
+    is_coordinator = course.coordinator_set.filter(user=request.user).exists()
+    if not is_coordinator:
+        raise PermissionDenied(
+            "You must be a coordinator to view the matcher assignment."
+        )
+
+    if request.method == "GET":
+        # restructure assignments
+        assignments = [{"slot": slot, "mentor": int(mentor)} for (mentor, slot) in matcher.assignment.items()]
+        return Response(
+            {"assignment": assignments},
+            status=status.HTTP_200_OK,
+        )
+
     return Response([], status=status.HTTP_200_OK)
+
+
+def run_matcher(course: Course):
+    """
+    Run the matcher for the given course.
+    """
+    # get slot information
+    slots = MatcherSlot.objects.filter(matcher=course.matcher)
+    # get preference information
+    preferences = MatcherPreference.objects.filter(slot__matcher=course.matcher)
+
+    # list of all mentor ids
+    mentor_list = preferences.values_list("mentor", flat=True)
+    # remove duplicates
+    mentor_list = list(set(mentor_list))
+
+    # list of all slot ids
+    slot_list = slots.values_list("id", flat=True)
+
+    # list of preferences (mentor_id, slot_id, preference)
+    preference_list = preferences.values_list("mentor", "slot", "preference")
+
+    # run the matcher
+    return get_matches(mentor_list, slot_list, preference_list)
