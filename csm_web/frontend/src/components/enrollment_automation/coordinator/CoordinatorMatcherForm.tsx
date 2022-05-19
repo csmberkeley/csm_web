@@ -3,11 +3,12 @@ import React, { useEffect, useState } from "react";
 import { Profile } from "../../../utils/types";
 import { parseTime } from "../utils";
 
-import { MentorPreference, SlotPreference, Slot, Time } from "../EnrollmentAutomationTypes";
+import { MentorPreference, SlotPreference, Slot, Time, Assignment } from "../EnrollmentAutomationTypes";
 import { Switch } from "react-router-dom";
 import { CreateStage } from "./CreateStage";
 import { ReleaseStage } from "./ReleaseStage";
 import { ConfigureStage } from "./ConfigureStage";
+import { EditStage } from "./EditStage";
 import { fetchJSON } from "../../../utils/api";
 
 interface CoordinatorMatcherFormProps {
@@ -17,11 +18,6 @@ interface CoordinatorMatcherFormProps {
 interface Response {
   slot: number;
   preference: number;
-}
-
-interface Assignment {
-  slot: number;
-  mentor: number;
 }
 
 enum Stage {
@@ -133,7 +129,8 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
          * }
          */
         console.log(data);
-        return data;
+        const assignment = data.assignment;
+        setAssignments(assignment);
       })
     ]).then(values => {
       console.log(values);
@@ -238,7 +235,10 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
         >
           <div className="matcher-stages-stage-title">Configure</div>
         </div>
-        <div className={`matcher-stages-stage ${curStage === Stage.EDIT ? "active-stage" : ""}`}>
+        <div
+          className={`matcher-stages-stage ${curStage === Stage.EDIT ? "active-stage" : ""}`}
+          onClick={() => setCurStage(Stage.EDIT)}
+        >
           <div className="matcher-stages-stage-title">Edit</div>
         </div>
         <div className={`matcher-stages-stage ${curStage === Stage.FINALIZE ? "active-stage" : ""}`}>
@@ -251,6 +251,7 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
           profile={profile}
           slots={slots}
           refreshStage={refreshStage}
+          assignments={assignments}
           prefByMentor={prefByMentor}
           prefBySlot={prefBySlot}
         />
@@ -265,6 +266,7 @@ interface CoordinatorMatcherFormSwitchProps {
   slots: Slot[];
   prefBySlot: Map<number, MentorPreference[]>;
   prefByMentor: Map<number, SlotPreference[]>;
+  assignments: Assignment[];
   refreshStage: () => Promise<void>;
 }
 
@@ -273,6 +275,7 @@ const CoordinatorMatcherFormSwitch = ({
   profile,
   slots,
   refreshStage,
+  assignments,
   prefBySlot,
   prefByMentor
 }: CoordinatorMatcherFormSwitchProps) => {
@@ -284,13 +287,24 @@ const CoordinatorMatcherFormSwitch = ({
         <ReleaseStage
           profile={profile}
           slots={slots}
-          prefBySlot={prefBySlot}
           prefByMentor={prefByMentor}
+          prefBySlot={prefBySlot}
           refreshStage={refreshStage}
         />
       );
     case Stage.CONFIGURE:
-      return <ConfigureStage profile={profile} slots={slots} prefByMentor={prefByMentor} prefBySlot={prefBySlot} />;
+      return (
+        <ConfigureStage
+          profile={profile}
+          slots={slots}
+          prefByMentor={prefByMentor}
+          prefBySlot={prefBySlot}
+          refreshStage={refreshStage}
+        />
+      );
+    case Stage.EDIT:
+      console.log(assignments);
+      return <EditStage profile={profile} slots={slots} assignments={assignments} refreshStage={refreshStage} />;
     default:
       return <div>Invalid stage</div>;
   }
