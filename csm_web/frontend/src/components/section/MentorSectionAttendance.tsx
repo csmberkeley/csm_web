@@ -95,67 +95,68 @@ const MentorSectionAttendance = ({
 
   return (
     <div className="mentor-attendance-page">
-      <h3 className="section-detail-page-title">Attendance</h3>
-      {loaded && (
-        <React.Fragment>
-          <div id="mentor-attendance">
-            <div id="attendance-date-tabs-container">
-              {Object.keys(attendances)
-                .sort(dateSort)
-                .map(date => (
-                  <div
-                    key={date}
-                    className={date === selectedDate ? "active" : ""}
-                    onClick={() => {
-                      setSelectedDate(date);
-                      setStagedAttendances(attendances[date]);
-                    }}
-                  >
-                    {formatDate(date)}
-                  </div>
-                ))}
-            </div>
-            <table id="mentor-attendance-table">
-              <tbody>
-                {selectedDate &&
-                  stagedAttendances!.map(({ id, student, presence }) => (
-                    <tr key={id}>
-                      <td>{student.name}</td>
-                      <td>
-                        <select
-                          value={presence}
-                          name={String(id)}
-                          className="select-css"
-                          style={{
-                            backgroundColor: `var(--csm-attendance-${ATTENDANCE_LABELS[presence][1]})`
-                          }}
-                          onChange={handleAttendanceChange}
-                        >
-                          {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
-                            <option key={value} value={value} disabled={!value}>
-                              {label}
-                            </option>
-                          ))}
-                        </select>
-                      </td>
-                    </tr>
+      <div>
+        <h3 className="section-detail-page-title">Attendance</h3>
+        {loaded && (
+          <React.Fragment>
+            <div id="mentor-attendance">
+              <div id="attendance-date-tabs-container">
+                {Object.keys(attendances)
+                  .sort(dateSort)
+                  .map(date => (
+                    <div
+                      key={date}
+                      className={date === selectedDate ? "active" : ""}
+                      onClick={() => {
+                        setSelectedDate(date);
+                        setStagedAttendances(attendances[date]);
+                      }}
+                    >
+                      {formatDate(date)}
+                    </div>
                   ))}
-              </tbody>
-            </table>
-            <div id="mentor-attendance-controls">
-              <button className="csm-btn save-attendance-btn" onClick={handleSaveAttendance}>
-                Save
-              </button>
-              <button className="mark-all-present-btn" onClick={handleMarkAllPresent}>
-                Mark All As Present
-              </button>
-              {showSaveSpinner && <LoadingSpinner />}
-              {showAttendanceSaveSuccess && <CheckCircle height="2em" width="2em" />}
+              </div>
+              <table id="mentor-attendance-table">
+                <tbody>
+                  {selectedDate &&
+                    stagedAttendances!.map(({ id, student, presence }) => (
+                      <tr key={id}>
+                        <td>{student.name}</td>
+                        <td>
+                          <select
+                            value={presence}
+                            name={String(id)}
+                            className="select-css"
+                            style={{
+                              backgroundColor: `var(--csm-attendance-${ATTENDANCE_LABELS[presence][1]})`
+                            }}
+                            onChange={handleAttendanceChange}
+                          >
+                            {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
+                              <option key={value} value={value} disabled={!value}>
+                                {label}
+                              </option>
+                            ))}
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                </tbody>
+              </table>
+              <div id="mentor-attendance-controls">
+                <button className="csm-btn save-attendance-btn" onClick={handleSaveAttendance}>
+                  Save
+                </button>
+                <button className="mark-all-present-btn" onClick={handleMarkAllPresent}>
+                  Mark All As Present
+                </button>
+                {showSaveSpinner && <LoadingSpinner />}
+                {showAttendanceSaveSuccess && <CheckCircle height="2em" width="2em" />}
+              </div>
             </div>
-          </div>
-        </React.Fragment>
-      )}
-      {!loaded && <LoadingSpinner />}
+          </React.Fragment>
+        )}
+      </div>
       <div id="word-of-the-day-container">
         <h3 className="section-detail-page-title">Word of the Day</h3>
         <h4>Create a word of the day or use a random one!</h4>
@@ -179,6 +180,7 @@ const MentorSectionAttendance = ({
           Submit
         </button>
       </div>
+      {!loaded && <LoadingSpinner />}
     </div>
   );
 };

@@ -1272,6 +1272,7 @@ table tbody tr:last-child > td {
 
 #section-detail-body * {
 	max-width: 90vw;
+	margin-bottom: 20px;
 }
 
 .modal.drop-confirmation {
@@ -1633,8 +1634,9 @@ table tbody tr:last-child > td {
 }
 
 #mentor-attendance {
-	max-width: 700px;
+	max-width: 500px;
 	padding-top: 0;
+	padding-bottom: 5px;
 	overflow: hidden;
 	border-top: none;
 }
