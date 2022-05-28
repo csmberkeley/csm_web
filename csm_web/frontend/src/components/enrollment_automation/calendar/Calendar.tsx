@@ -1,7 +1,6 @@
 import React, { Ref, useEffect, useRef, useState } from "react";
 import { CalendarDay, CalendarDayHeader } from "./CalendarDay";
-
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
+import { CalendarEvent, CalendarEventSingleTime, DAYS } from "./CalendarTypes";
 
 // default start and end times for calendar
 const START = 8 * 60 + 0; // 8:00 AM
@@ -29,16 +28,6 @@ interface Time {
   day: string;
   startTime: number;
   endTime: number;
-}
-
-export interface CalendarEvent {
-  times: Time[];
-  [key: string]: any;
-}
-
-export interface CalendarEventSingleTime {
-  time: Time;
-  [key: string]: any;
 }
 
 interface CalendarProps {

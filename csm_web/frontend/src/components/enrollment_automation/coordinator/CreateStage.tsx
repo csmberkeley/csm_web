@@ -1,13 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { fetchWithMethod, fetchJSON, HTTP_METHODS } from "../../../utils/api";
 import { Profile } from "../../../utils/types";
-import { Calendar, CalendarEvent, CalendarEventSingleTime } from "../calendar/Calendar";
+import { Calendar } from "../calendar/Calendar";
+import { CalendarEvent, CalendarEventSingleTime, DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
 import { Slot, Time } from "../EnrollmentAutomationTypes";
 import { formatTime, parseTime, serializeTime } from "../utils";
 
 import XIcon from "../../../../static/frontend/img/x.svg";
-
-const DAYS = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
 
 interface TileDetails {
   days: string[];
@@ -425,7 +424,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
               >
                 {DAYS.map(day => (
                   <option key={day} value={day}>
-                    {day.slice(0, 3)}
+                    {DAYS_ABBREV[day]}
                   </option>
                 ))}
               </select>
