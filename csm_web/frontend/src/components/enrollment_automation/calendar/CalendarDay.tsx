@@ -1,6 +1,6 @@
 import React from "react";
 import { formatTime } from "../utils";
-import { CalendarEventSingleTime } from "./Calendar";
+import { CalendarEventSingleTime } from "./CalendarTypes";
 
 interface NumberTime {
   day: string;

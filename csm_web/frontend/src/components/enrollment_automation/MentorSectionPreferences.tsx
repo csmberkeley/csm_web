@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { Profile } from "../../utils/types";
-import { Calendar, CalendarEvent, CalendarEventSingleTime } from "./calendar/Calendar";
+import { Calendar } from "./calendar/Calendar";
+import { CalendarEvent, CalendarEventSingleTime } from "./calendar/CalendarTypes";
 import { Slot } from "./EnrollmentAutomationTypes";
 import { formatTime, parseTime } from "./utils";
 
