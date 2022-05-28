@@ -4,7 +4,8 @@ import { Mentor, Profile } from "../../../utils/types";
 
 import XIcon from "../../../../static/frontend/img/x.svg";
 import { Slot, MentorPreference, SlotPreference } from "../EnrollmentAutomationTypes";
-import { Calendar, CalendarEventSingleTime } from "../calendar/Calendar";
+import { Calendar } from "../calendar/Calendar";
+import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
 import { formatTime } from "../utils";
 
 interface ReleaseStageProps {
