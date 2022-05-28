@@ -13,32 +13,36 @@ interface EditStageProps {
 
 export const EditStage = ({ profile, slots, assignments, refreshStage }: EditStageProps) => {
   const [mentorsById, setMentorsById] = useState<Map<number, Mentor>>(new Map());
+  const [sortedSlots, setSortedSlots] = useState<Slot[]>(slots);
+  const [assignmentBySlot, setAssignmentBySlot] = useState<Map<number, number[]>>(new Map());
 
+  /* Fetch mentor data */
   useEffect(() => {
     fetchJSON(`/matcher/${profile.courseId}/mentors`).then((data: any) => {
       setMentorsById(new Map(data.mentors.map((mentor: any) => [mentor.id, mentor])));
     });
   }, []);
 
-  console.log(slots);
+  /* Sort slots */
+  useEffect(() => {
+    setSortedSlots(
+      slots.sort((a, b) => Math.min(...a.times.map(t => t.startTime)) - Math.min(...b.times.map(t => t.startTime)))
+    );
+  }, [slots]);
 
-  const sortedSlots = slots.sort(
-    (a, b) => Math.min(...a.times.map(t => t.startTime)) - Math.min(...b.times.map(t => t.startTime))
-  );
-  const assignment_by_slot = new Map<number, number[]>();
-  assignments.forEach((assignment: Assignment) => {
-    const slot_id = assignment.slot;
-    const mentor_id = assignment.mentor;
-    if (!assignment_by_slot.has(slot_id)) {
-      assignment_by_slot.set(slot_id, []);
-    }
-    assignment_by_slot.get(slot_id)!.push(mentor_id);
-  });
-
-  console.log(assignment_by_slot);
-  console.log(sortedSlots);
-  console.log(assignment_by_slot.get(sortedSlots[0].id!));
-  console.log(mentorsById);
+  /* Organize assignments by slot */
+  useEffect(() => {
+    const newAssignmentBySlot = new Map<number, number[]>();
+    assignments.forEach((assignment: Assignment) => {
+      const slot_id = assignment.slot;
+      const mentor_id = assignment.mentor;
+      if (!newAssignmentBySlot.has(slot_id)) {
+        newAssignmentBySlot.set(slot_id, []);
+      }
+      newAssignmentBySlot.get(slot_id)!.push(mentor_id);
+    });
+    setAssignmentBySlot(newAssignmentBySlot);
+  }, [assignments]);
 
   return (
     <div>
@@ -46,19 +50,22 @@ export const EditStage = ({ profile, slots, assignments, refreshStage }: EditSta
         <div className="matcher-assignment-slot" key={`slot-${idx}`}>
           <div className="matcher-assignment-slot-head">
             {slot.times.map((time, timeidx) => (
-              <div key={`slot-time-${timeidx}`}>
-                <span>{time.day}</span>
-                <span>{formatTime(time.startTime)}</span>&#8211;<span>{formatTime(time.endTime)}</span>
+              <React.Fragment key={`slot-time-${timeidx}`}>
+                <div className="matcher-assignment-time">
+                  {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
+                </div>
+                {timeidx < slot.times.length - 1 && <div className="matcher-assignment-time-divider">/</div>}
+              </React.Fragment>
+            ))}
+          </div>
+          <div className="matcher-assignment-slot-body">
+            {assignmentBySlot.get(slot.id!)?.map((mentor_id, idx) => (
+              <div className="matcher-assignment-mentor" key={`slot-${idx}-mentor-${mentor_id}`}>
+                <div className="matcher-assignment-mentor-name">{mentorsById.get(mentor_id)?.name}</div>
+                <div className="matcher-assignment-mentor-email">{mentorsById.get(mentor_id)?.email}</div>
               </div>
             ))}
           </div>
-          {assignment_by_slot.get(slot.id!)?.map((mentor_id, idx) => (
-            <div className="matcher-assignment-mentor" key={`slot-${idx}-mentor-${mentor_id}`}>
-              Name: <span>{mentorsById.get(mentor_id)?.name}</span>
-              <br />
-              Email: <span>{mentorsById.get(mentor_id)?.email}</span>
-            </div>
-          ))}
           <br />
         </div>
       ))}
