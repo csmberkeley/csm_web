@@ -425,7 +425,7 @@ class Matcher(ValidatingModel):
     Serialized assignment of mentors to times.
     [{"mentor": int, "slot" int}, ...]
     """
-    assignment = models.JSONField(default=list, blank=True)
+    assignment = models.JSONField(default=dict, blank=True)
     is_open = models.BooleanField(default=False)
 
 

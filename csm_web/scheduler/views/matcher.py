@@ -70,8 +70,7 @@ def slots(request, pk=None):
 
         if matcher is None:
             # create matcher
-            matcher = Matcher(course=course)
-            matcher.save()
+            matcher = Matcher.objects.create(course=course)
 
         """
         Request data:
@@ -153,6 +152,9 @@ def preferences(request, pk=None):
             raise PermissionDenied(
                 "You must be a mentor for the course to submit this form."
             )
+
+        if matcher is None or matcher.is_open is False:
+            raise PermissionDenied("Form is not open for reponses.")
 
         mentor = Mentor.objects.get(
             user=request.user, course=course, section__isnull=True
@@ -246,11 +248,18 @@ def configure(request, pk=None):
 
     GET: Get the matcher configuration
         - coordinators only
+        - returns all configuration options
         - return format:
             {
                 "open": bool,
                 "slots": [{"id": int, "minMentors": int, "maxMentors": int}, ...]
             }
+    GET: Get the matcher configuration
+        - mentors only
+        - only returns configuration options relevant to the mentor:
+            - whether the matcher is open
+        - return format:
+            { "open": bool }
     POST: Update the matcher configuration
         - coordinators only
         - open/close form:
@@ -263,21 +272,36 @@ def configure(request, pk=None):
     course = get_object_or_error(Course.objects.all(), pk=pk)
     matcher = course.matcher
     is_coordinator = course.coordinator_set.filter(user=request.user).exists()
-    if not is_coordinator:
-        raise PermissionDenied(
-            "You must be a coordinator to modify the matcher configuration."
-        )
 
     if request.method == "GET":
-        slots = MatcherSlot.objects.filter(matcher=matcher)
-        return Response(
-            {
-                "open": matcher.is_open,
-                "slots": slots.values("id", "min_mentors", "max_mentors"),
-            },
-            status=status.HTTP_200_OK,
-        )
+        if is_coordinator:
+            if matcher is None:
+                # haven't set up the matcher yet
+                return Response([], status=status.HTTP_200_OK)
+
+            slots = MatcherSlot.objects.filter(matcher=matcher)
+            return Response(
+                {
+                    "open": matcher.is_open,
+                    "slots": slots.values("id", "min_mentors", "max_mentors"),
+                },
+                status=status.HTTP_200_OK,
+            )
+        else:
+            if matcher is None or matcher.is_open is False:
+                return Response({"open": False}, status=status.HTTP_200_OK)
+            else:
+                return Response({"open": True}, status=status.HTTP_200_OK)
     elif request.method == "POST":
+        if not is_coordinator:
+            raise PermissionDenied(
+                "You must be a coordinator to modify the matcher configuration."
+            )
+
+        if matcher is None:
+            # create matcher
+            matcher = Matcher.objects.create(course=course)
+
         if "slots" in request.data:
             # update slot configuration
             with transaction.atomic():
@@ -332,8 +356,15 @@ def assignment(request, pk=None):
         )
 
     if request.method == "GET":
+        if matcher is None:
+            # haven't set up the matcher yet
+            return Response({"assignment": []}, status=status.HTTP_200_OK)
+
         # restructure assignments
-        assignments = [{"slot": slot, "mentor": int(mentor)} for (mentor, slot) in matcher.assignment.items()]
+        assignments = [
+            {"slot": slot, "mentor": int(mentor)}
+            for (mentor, slot) in matcher.assignment.items()
+        ]
         return Response(
             {"assignment": assignments},
             status=status.HTTP_200_OK,

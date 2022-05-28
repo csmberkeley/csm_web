@@ -305,3 +305,39 @@
 	flex-direction: row;
 	margin: 2px 0;
 }
+
+/* EditStage.tsx */
+
+.matcher-assignment-slot {
+	display: flex;
+	flex-direction: column;
+	margin: 2px 0;
+}
+
+.matcher-assignment-slot-head {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	margin-bottom: 5px;
+	background-color: var(--csm-green);
+	padding: 3px;
+}
+
+.matcher-assignment-time {
+	padding: 5px;
+}
+
+.matcher-assignment-slot-body {
+	display: grid;
+	grid-template-columns: 1fr 1fr;
+}
+
+.matcher-assignment-mentor {
+	display: contents;
+	margin-bottom: 5px;
+}
+
+.matcher-assignment-mentor-name {
+	display: inline-block;
+	margin-right: 5px;
+}

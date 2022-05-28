@@ -16,9 +16,11 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
   const [selectedEventIdx, setSelectedEventIdx] = useState<number>(-1);
+  const [matcherOpen, setMatcherOpen] = useState<boolean>(false);
 
   useEffect(() => {
     getSlots();
+    getMatcherOpen();
   }, [profile]);
 
   const getSlots = () => {
@@ -59,6 +61,12 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
       });
   };
 
+  const getMatcherOpen = () => {
+    fetchJSON(`matcher/${profile.courseId}/configure`).then(data => {
+      setMatcherOpen(data.open);
+    });
+  };
+
   const setPreference = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPreference = parseInt(e.target.value);
     if (isNaN(newPreference)) {
@@ -81,20 +89,23 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
   const postPreferences = () => {
     const cleaned_preferences: { id: number; preference: number }[] = [];
     for (const slot of slots) {
-      if (slot.preference !== 0) {
-        const cleaned_slot = {
-          id: slot.id!,
-          preference: slot.preference
-        };
-        cleaned_preferences.push(cleaned_slot);
-      }
+      const cleaned_slot = {
+        id: slot.id!,
+        preference: slot.preference
+      };
+      cleaned_preferences.push(cleaned_slot);
     }
     fetchWithMethod(`matcher/${profile.courseId}/preferences`, HTTP_METHODS.POST, cleaned_preferences);
   };
 
   const setSelectedEventIdxWrapper = (idx: number) => {
-    setSelectedEventIdx(idx);
-    setSelectedEvent(slots[idx]);
+    if (matcherOpen) {
+      setSelectedEventIdx(idx);
+      setSelectedEvent(slots[idx]);
+    } else {
+      setSelectedEventIdx(-1);
+      setSelectedEvent(null);
+    }
   };
 
   // const showSidebar = (event_idx: number) => {
@@ -121,34 +132,41 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
       <div className="matcher-body">
         <div className="mentor-sidebar-left">
           <div className="matcher-sidebar-left-top">
-            {selectedEvent ? (
-              <div>
-                Section Time{selectedEvent.times.length > 1 ? "s" : ""}:
-                <div className="matcher-selected-times">
-                  {selectedEvent.times.map((time, time_idx) => (
-                    <div key={time_idx}>
-                      {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
-                    </div>
-                  ))}
+            {matcherOpen ? (
+              selectedEvent ? (
+                // matcher open, event selected; show details
+                <div>
+                  Section Time{selectedEvent.times.length > 1 ? "s" : ""}:
+                  <div className="matcher-selected-times">
+                    {selectedEvent.times.map((time, time_idx) => (
+                      <div key={time_idx}>
+                        {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
+                      </div>
+                    ))}
+                  </div>
+                  <label>
+                    Preference:
+                    <input
+                      className="matcher-input"
+                      type="number"
+                      key={selectedEvent.id}
+                      defaultValue={selectedEvent.preference}
+                      onChange={setPreference}
+                      autoFocus={true}
+                    />
+                  </label>
                 </div>
-                <label>
-                  Preference:
-                  <input
-                    className="matcher-input"
-                    type="number"
-                    key={selectedEvent.id}
-                    defaultValue={selectedEvent.preference}
-                    onChange={setPreference}
-                    autoFocus={true}
-                  />
-                </label>
-              </div>
+              ) : (
+                // matcher open, no selected event
+                <div>Click on a section to edit preferences.</div>
+              )
             ) : (
-              <div>Click on a section to edit preferences.</div>
+              // matcher closed
+              <div>The matcher is not currently open for preference submission.</div>
             )}
           </div>
           <div className="matcher-sidebar-left-bottom">
-            <button className="matcher-submit-btn" onClick={postPreferences}>
+            <button className="matcher-submit-btn" onClick={postPreferences} disabled={!matcherOpen}>
               Submit
             </button>
           </div>

@@ -190,7 +190,7 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
       setCurStage(Stage.CREATE);
     } else if (formIsOpen) {
       setCurStage(Stage.RELEASE);
-    } else if (!formIsOpen && prefByMentor.size > 0) {
+    } else if (!formIsOpen && prefByMentor.size > 0 && assignments.length == 0) {
       setCurStage(Stage.CONFIGURE);
     } else if (assignments.length > 0) {
       setCurStage(Stage.EDIT);
@@ -303,7 +303,6 @@ const CoordinatorMatcherFormSwitch = ({
         />
       );
     case Stage.EDIT:
-      console.log(assignments);
       return <EditStage profile={profile} slots={slots} assignments={assignments} refreshStage={refreshStage} />;
     default:
       return <div>Invalid stage</div>;
