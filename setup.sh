@@ -65,7 +65,7 @@ sleep 1
 pwd > "$VIRTUAL_ENV/.project_dir"
 
 # Add env variables to virutalenv activate script so that not everything needs to be run with 'heroku local'
-sed 's/^/export /' .env >> "$VIRTUAL_ENV/bin/activate"
+echo 'set -a; source $(cat $VIRTUAL_ENV/.project_dir)/.env; set +a' >> "$VIRTUAL_ENV/bin/activate"
 
 # Setup postgres DB if needed
 if ! psql -lt | grep -q '^ *csm_web_dev *'
