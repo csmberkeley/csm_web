@@ -1,15 +1,13 @@
 import React, { useEffect, useState } from "react";
-// import { fetchJSON } from "../../../utils/api";
+import { fetchJSON } from "../../../utils/api";
 import { Profile } from "../../../utils/types";
 import { parseTime } from "../utils";
 
 import { MentorPreference, SlotPreference, Slot, Time, Assignment } from "../EnrollmentAutomationTypes";
-import { Switch } from "react-router-dom";
 import { CreateStage } from "./CreateStage";
 import { ReleaseStage } from "./ReleaseStage";
 import { ConfigureStage } from "./ConfigureStage";
 import { EditStage } from "./EditStage";
-import { fetchJSON } from "../../../utils/api";
 
 interface CoordinatorMatcherFormProps {
   profile: Profile;
@@ -33,10 +31,6 @@ interface StrTime {
   startTime: string;
   endTime: string;
 }
-
-// const fetchJSON = (url: string): Promise<any> => {
-//   return new Promise((resolve, reject) => resolve(1));
-// };
 
 export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps): JSX.Element {
   const relation = profile.role.toLowerCase();
@@ -118,23 +112,27 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
       }),
 
       // fetch assignment
-      fetchJSON(`matcher/${profile.courseId}/assignment`).then(data => {
-        /**
-         * Data format:
-         * {
-         *   "assignment": [  // list of assignments by id
-         *      {"slot": number, "mentor": number},
-         *      ...,
-         *   ]
-         * }
-         */
-        console.log(data);
-        const assignment = data.assignment;
-        setAssignments(assignment);
-      })
+      refreshAssignments()
     ]).then(values => {
       console.log(values);
       setLoaded(true);
+    });
+  };
+
+  const refreshAssignments = () => {
+    return fetchJSON(`matcher/${profile.courseId}/assignment`).then(data => {
+      /**
+       * Data format:
+       * {
+       *   "assignment": [  // list of assignments by id
+       *      {"slot": number, "mentor": number,
+       *       "section": {"capacity": number, "description": string}},
+       *      ...,
+       *   ]
+       * }
+       */
+      const assignment = data.assignment;
+      setAssignments(assignment);
     });
   };
 
@@ -250,10 +248,11 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
           stage={curStage}
           profile={profile}
           slots={slots}
-          refreshStage={refreshStage}
-          assignments={assignments}
           prefByMentor={prefByMentor}
           prefBySlot={prefBySlot}
+          assignments={assignments}
+          refreshStage={refreshStage}
+          refreshAssignments={refreshAssignments}
         />
       </div>
     </div>
@@ -268,16 +267,18 @@ interface CoordinatorMatcherFormSwitchProps {
   prefByMentor: Map<number, SlotPreference[]>;
   assignments: Assignment[];
   refreshStage: () => Promise<void>;
+  refreshAssignments: () => Promise<void>;
 }
 
 const CoordinatorMatcherFormSwitch = ({
   stage,
   profile,
   slots,
-  refreshStage,
-  assignments,
   prefBySlot,
-  prefByMentor
+  prefByMentor,
+  assignments,
+  refreshStage,
+  refreshAssignments
 }: CoordinatorMatcherFormSwitchProps) => {
   switch (stage) {
     case Stage.CREATE:
@@ -303,7 +304,16 @@ const CoordinatorMatcherFormSwitch = ({
         />
       );
     case Stage.EDIT:
-      return <EditStage profile={profile} slots={slots} assignments={assignments} refreshStage={refreshStage} />;
+      return (
+        <EditStage
+          profile={profile}
+          slots={slots}
+          assignments={assignments}
+          prefByMentor={prefByMentor}
+          refreshStage={refreshStage}
+          refreshAssignments={refreshAssignments}
+        />
+      );
     default:
       return <div>Invalid stage</div>;
   }

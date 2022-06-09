@@ -29,6 +29,7 @@ button {
 :root {
 	--csm-green: #9ae0b3;
 	--csm-green-darkened: #75b38a;
+	--csm-green-lightened: #d7ffe5;
 	--csm-theme-cs61a: var(--csm-green);
 	--csm-theme-cs61b: #63c5ff;
 	--csm-theme-cs61c: #797c99;

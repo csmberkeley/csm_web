@@ -26,6 +26,9 @@ from .utils import viewset_with, get_object_or_error
 from scheduler.utils.match_solver import get_matches
 
 
+DEFAULT_CAPACITY = 5
+
+
 @api_view(["GET", "POST"])
 def slots(request, pk=None):
     """
@@ -320,8 +323,18 @@ def configure(request, pk=None):
         if "run" in request.data:
             # run the matcher
             assignment, unmatched = run_matcher(course)
+            # assignment is of the form {"mentor", "capacity"};
+            # add a "section" key with default values of capacity and description
+            updated_assignment = [
+                {
+                    "slot": int(slot),
+                    "mentor": int(mentor),
+                    "section": {"capacity": DEFAULT_CAPACITY, "description": ""},
+                }
+                for (mentor, slot) in assignment.items()
+            ]
             # update the assignment
-            matcher.assignment = assignment
+            matcher.assignment = updated_assignment
             matcher.save()
 
             return Response(
@@ -343,8 +356,23 @@ def assignment(request, pk=None):
         - coordinators only
         - return format: list of slot/mentor matching and list of unmatched mentor ids
             {
-                "assignment": [{"slot": int, "mentor": int}, ...],
+                "assignment": [
+                    {"slot": int, "mentor": int,
+                     "section": {"capacity": int, "description": str}},
+                    ...
+                ],
                 "unmatched": [int, ...]
+            }
+
+    PUT: Update the current assignment
+        - coordinators only
+        - input format: list of slot/mentor/section matching
+            {
+                "assignment: [
+                    {"slot": int, "mentor": int,
+                     "section": {"capacity": int, "description": str}},
+                    ...
+                ]
             }
     """
     course = get_object_or_error(Course.objects.all(), pk=pk)
@@ -362,13 +390,29 @@ def assignment(request, pk=None):
 
         # restructure assignments
         assignments = [
-            {"slot": slot, "mentor": int(mentor)}
-            for (mentor, slot) in matcher.assignment.items()
+            {"slot": int(cur["slot"]), "mentor": int(cur["mentor"]), "section": cur["section"]}
+            for cur in matcher.assignment
         ]
         return Response(
             {"assignment": assignments},
             status=status.HTTP_200_OK,
         )
+    elif request.method == "PUT":
+        assignments = []
+        for cur in request.data["assignment"]:
+            if "slot" not in cur or "mentor" not in cur or "section" not in cur:
+                return Response(
+                    {"error": f"Invalid assignment {cur}"},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+            assignments.append({
+                "slot": cur["slot"],
+                "mentor": cur["mentor"],
+                "section": cur["section"]
+            })
+        matcher.assignment = assignments
+        matcher.save()
+        return Response([], status=status.HTTP_202_ACCEPTED)
 
     return Response([], status=status.HTTP_200_OK)
 
@@ -376,6 +420,9 @@ def assignment(request, pk=None):
 def run_matcher(course: Course):
     """
     Run the matcher for the given course.
+    Return format: tuple of (assignments, unmatched)
+        - assignments: {mentor: slot, mentor: slot, ...}
+        - unmatched: [int, int, ...] of mentor ids
     """
     # get slot information
     slots = MatcherSlot.objects.filter(matcher=course.matcher)

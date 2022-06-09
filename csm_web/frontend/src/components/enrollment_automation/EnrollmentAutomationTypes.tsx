@@ -27,9 +27,19 @@ export interface MentorPreference {
 }
 
 /**
+ * Basic version of a Section object;
+ * many fields are stripped from the Section object
+ */
+export interface BasicSection {
+  capacity: number;
+  description: string;
+}
+
+/**
  * Assignment of a mentor to a slot
  */
 export interface Assignment {
   slot: number;
   mentor: number;
+  section: BasicSection;
 }

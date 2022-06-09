@@ -423,7 +423,7 @@ class Matcher(ValidatingModel):
     course = OneToOneOrNoneField(Course, on_delete=models.CASCADE, blank=True, null=True)
     """
     Serialized assignment of mentors to times.
-    [{"mentor": int, "slot" int}, ...]
+    [{mentor: int, slot: int, section: {capacity: int, description: str}}, ...]
     """
     assignment = models.JSONField(default=dict, blank=True)
     is_open = models.BooleanField(default=False)
