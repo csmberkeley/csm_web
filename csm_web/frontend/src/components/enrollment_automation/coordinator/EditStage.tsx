@@ -1,242 +1,567 @@
 import React, { useEffect, useRef, useState } from "react";
-import { fetchJSON } from "../../../utils/api";
+import { fetchJSON, fetchWithMethod } from "../../../utils/api";
 import { Mentor, Profile } from "../../../utils/types";
 import { formatTime } from "../utils";
-import { Assignment, Slot } from "../EnrollmentAutomationTypes";
-import { DAYS } from "../calendar/CalendarTypes";
+import { Assignment, Slot, Time, SlotPreference } from "../EnrollmentAutomationTypes";
+import { DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
 
-import MenuBurger from "../../../../static/frontend/img/menu-burger.svg";
+import Pencil from "../../../../static/frontend/img/pencil.svg";
+import InfoIcon from "../../../../static/frontend/img/info.svg";
+
+interface EditTableRow {
+  mentorId: number; // need mentor id for identification
+  slotId: number; // need slot id for identification
+  name: string;
+  email: string;
+  times: Time[];
+  capacity: number;
+  description: string;
+}
+
+/**
+ * Map of custom sort functions for table columns.
+ * If not specified, defaults to the `<` and `>` operators.
+ */
+const SORT_FUNCTIONS: Record<string, (a: any, b: any) => number> = {
+  times: (a: Time[], b: Time[]): number => {
+    const aDays = a.map(t => DAYS.indexOf(t.day));
+    const bDays = b.map(t => DAYS.indexOf(t.day));
+    if (Math.min(...aDays) != Math.min(...bDays)) {
+      return Math.min(...aDays) - Math.min(...bDays);
+    } else {
+      const aTimes = a.map(t => t.startTime);
+      const bTimes = b.map(t => t.startTime);
+      return Math.min(...aTimes) - Math.min(...bTimes);
+    }
+  }
+};
 
 interface EditStageProps {
   profile: Profile;
   slots: Slot[];
   assignments: Assignment[];
+  prefByMentor: Map<number, SlotPreference[]>;
   refreshStage: () => void;
+  refreshAssignments: () => void;
 }
 
-export const EditStage = ({ profile, slots, assignments, refreshStage }: EditStageProps): React.ReactElement => {
+export const EditStage = ({
+  profile,
+  slots,
+  assignments,
+  prefByMentor,
+  refreshStage,
+  refreshAssignments
+}: EditStageProps): React.ReactElement => {
+  /**
+   * Table of mentor information and section metadata for editing.
+   */
+  const [editTable, setEditTable] = useState<EditTableRow[]>([]);
+  /**
+   * Attribute to sort the table by,
+   * specified in the form `{attr: key, dir: -1 | 1}`.
+   *
+   * -1 means descending, 1 means ascending.
+   *
+   * By default, sorts by time in descending order.
+   */
+  const [tableSortBy, setTableSortBy] = useState<{ attr: keyof EditTableRow; dir: -1 | 1 }>({ attr: "times", dir: 1 });
+
+  /**
+   * Map from mentor ids to the respective mentor objects.
+   * Fetched on mount; contains all mentors in the system
+   * to be matched for the course.
+   */
   const [mentorsById, setMentorsById] = useState<Map<number, Mentor>>(new Map());
+  /**
+   * Map from slot ids to the respective slot objects.
+   * Fetched on mount; contains all slots in the system
+   * to be matched for the course.
+   */
+  const [slotsById, setSlotsById] = useState<Map<number, Slot>>(new Map());
+  /**
+   * List of all slots, sorted by day, and then by start time.
+   */
   const [sortedSlots, setSortedSlots] = useState<Slot[]>(slots);
-  const [assignmentBySlot, setAssignmentBySlot] = useState<Map<number, number[]>>(new Map());
 
-  // mentor dragging
-  const [draggingSlot, setDraggingSlot] = useState<Slot | null>(null);
-  const [draggingMentor, setDraggingMentor] = useState<number>(-1);
+  /**
+   * Set of all selected mentor ids.
+   */
+  const [selectedMentors, setSelectedMentors] = useState<Set<number>>(new Set());
 
-  const hoverDiv = useRef<HTMLDivElement>(null);
+  /**
+   * State of the header checkbox;
+   * 0 = unchecked, 1 = checked, 2 = indeterminate.
+   *
+   * We have to add this state, since React doesn't rerender
+   * if we update the ref directly.
+   */
+  const [headerCheckboxState, setHeaderCheckboxState] = useState<number>(0);
+  /**
+   * Reference to the header checkbox element;
+   * used to set indeterminate state.
+   */
+  const headerCheckbox = useRef<HTMLInputElement>(null);
 
+  /* Fetch mentor data */
   useEffect(() => {
-    // fetch mentor data
     fetchJSON(`/matcher/${profile.courseId}/mentors`).then((data: any) => {
-      setMentorsById(new Map(data.mentors.map((mentor: any) => [mentor.id, mentor])));
+      const newMentorsById = new Map<number, Mentor>();
+      data.mentors.forEach((mentor: Mentor) => {
+        newMentorsById.set(mentor.id, mentor);
+      });
+      setMentorsById(newMentorsById);
     });
-
-    // add listener for resetting drag
-    if (hoverDiv.current) {
-      const wrapper = () => handleDragEnd(null);
-      window.addEventListener("mouseup", wrapper);
-      // remove listener on unmount
-      return () => {
-        window.removeEventListener("mouseup", wrapper);
-      };
-    }
   }, []);
 
   /* Sort slots by earliest day and then by earliest start time */
   useEffect(() => {
-    setSortedSlots(
-      Array.from(slots).sort((a, b) => {
-        const aDays = a.times.map(t => DAYS.indexOf(t.day));
-        const bDays = b.times.map(t => DAYS.indexOf(t.day));
-        if (Math.min(...aDays) != Math.min(...bDays)) {
-          return Math.min(...aDays) - Math.min(...bDays);
-        } else {
-          const aTimes = a.times.map(t => t.startTime);
-          const bTimes = b.times.map(t => t.startTime);
-          return Math.min(...aTimes) - Math.min(...bTimes);
-        }
-      })
+    setSortedSlots(Array.from(slots).sort((a, b) => SORT_FUNCTIONS["times"](a.times, b.times)));
+    setSlotsById(
+      new Map(
+        slots.map((slot: Slot) => {
+          return [slot.id!, slot];
+        })
+      )
     );
   }, [slots]);
 
   /* Organize assignments by slot */
   useEffect(() => {
-    const newAssignmentBySlot = new Map<number, number[]>();
-    const assignedMentors = new Set<number>();
-    // add all assignments to map
+    const newEditTable: EditTableRow[] = [];
     assignments.forEach((assignment: Assignment) => {
-      const slot_id = assignment.slot;
-      const mentor_id = assignment.mentor;
-      if (!newAssignmentBySlot.has(slot_id)) {
-        newAssignmentBySlot.set(slot_id, []);
+      const mentor = mentorsById.get(assignment.mentor);
+      if (mentor == null) {
+        return;
       }
-      newAssignmentBySlot.get(slot_id)!.push(mentor_id);
-      assignedMentors.add(mentor_id);
+      const section = assignment.section;
+      // default to empty list if no matched slot (i.e. unassigned)
+      const times = slotsById.get(assignment.slot)?.times || [];
+      const capacity = section.capacity;
+      const description = section.description;
+      newEditTable.push({
+        mentorId: assignment.mentor,
+        slotId: assignment.slot,
+        name: mentor.name,
+        email: mentor.email,
+        times,
+        capacity,
+        description
+      });
     });
-    // add all unassigned mentors to map
-    const unassignedMentors = Array.from(mentorsById.keys()).filter(id => !assignedMentors.has(id));
-    newAssignmentBySlot.set(-1, unassignedMentors);
-    setAssignmentBySlot(newAssignmentBySlot);
-    console.log({ assignedMentors, unassignedMentors, mentors: Array.from(mentorsById.keys()) });
+    setEditTable(newEditTable);
+    sortTable();
   }, [assignments, mentorsById]); // update when assignments change, or when mentors are fetched
 
-  console.log({ assignments, mentorsById, assignmentBySlot });
-
-  /* Dragging functionality */
-
-  /**past_objects_included
-   * Handle the start of a drag
+  /**
+   * Sort the table by the current sort attribute.
    */
-  const handleDragStart = (slot: Slot, mentor_id: number) => {
-    setDraggingMentor(mentor_id);
-    setDraggingSlot(slot);
+  const sortTable = () => {
+    setEditTable((oldEditTable: EditTableRow[]) =>
+      Array.from(oldEditTable).sort((a, b) => {
+        const aVal = a[tableSortBy.attr];
+        const bVal = b[tableSortBy.attr];
+
+        // prefer custom sort function if specified
+        if (Object.keys(SORT_FUNCTIONS).includes(tableSortBy.attr)) {
+          // typescript coercing to key of SORT_FUNCTIONS
+          const customSortAttr = tableSortBy.attr as keyof typeof SORT_FUNCTIONS;
+          return SORT_FUNCTIONS[customSortAttr](aVal, bVal) * tableSortBy.dir;
+        } else {
+          if (aVal > bVal) {
+            return tableSortBy.dir;
+          } else if (aVal < bVal) {
+            return -tableSortBy.dir;
+          } else {
+            return 0;
+          }
+        }
+      })
+    );
+  };
+
+  /* Sort table on update */
+  useEffect(sortTable, [tableSortBy]);
+
+  /**
+   * Event handler when a row of the table is changed.
+   */
+  const handleChangeRow = (mentorId: number, attr: keyof EditTableRow, value: any) => {
+    const newEditTable = [...editTable];
+    const rowIdx = newEditTable.findIndex(row => row.mentorId === mentorId);
+    const selectedRowIndices = new Set(
+      // filter for selected rows, and convert them to indices
+      newEditTable.map((row, idx) => (selectedMentors.has(row.mentorId) ? idx : -1)).filter(idx => idx != -1)
+    );
+
+    if (rowIdx != -1) {
+      const row: EditTableRow = { ...newEditTable[rowIdx] };
+      if (attr === "capacity") {
+        const newCapacity = parseInt(value);
+        if (isNaN(newCapacity)) {
+          return;
+        }
+        row[attr] = newCapacity;
+
+        // if the row is selected, update all selected rows
+        if (selectedRowIndices.has(rowIdx)) {
+          selectedRowIndices.forEach(idx => {
+            if (idx != rowIdx) {
+              const newRow = { ...newEditTable[idx] };
+              newRow[attr] = newCapacity;
+              newEditTable[idx] = newRow;
+            }
+          });
+        }
+      } else if (attr === "description") {
+        row[attr] = value;
+
+        // if the row is selected, update all selected rows
+        if (selectedRowIndices.has(rowIdx)) {
+          selectedRowIndices.forEach(idx => {
+            if (idx != rowIdx) {
+              const newRow = { ...newEditTable[idx] };
+              newRow[attr] = value;
+              newEditTable[idx] = newRow;
+            }
+          });
+        }
+      } else if (attr === "times") {
+        // find the corresponding slot and update
+        const slotId = parseInt(value);
+        if (isNaN(slotId)) {
+          return;
+        }
+        const slot = slotsById.get(slotId);
+        if (slot == null) {
+          return;
+        }
+        row.slotId = slotId;
+        row[attr] = slot.times;
+      } else {
+        // should not get here
+        console.error(`Unknown attribute ${attr}`);
+      }
+
+      // update row
+      newEditTable[rowIdx] = row;
+      setEditTable(newEditTable);
+    }
   };
 
   /**
-   * Handle the end of a drag, resetting the drag state;
-   * modifies the assignment to reflect drag changes
+   * Update the header checkbox based on the set of selected rows.
+   * Unchecked when none selected, checked when all selected,
+   * and indeterminate when some selected.
    */
-  const handleDragEnd = (slot: Slot | null) => {
-    if (slot != null && draggingMentor != -1 && draggingSlot != null && slot.id != draggingSlot.id) {
-      const slot_id = slot.id!;
-      const newAssignmentBySlot = new Map<number, number[]>(assignmentBySlot);
-      // remove mentor from old slot
-      const oldSlotAssignment = newAssignmentBySlot.get(draggingSlot.id!)!;
-      newAssignmentBySlot.set(
-        draggingSlot.id!,
-        oldSlotAssignment.filter(mentor_id => mentor_id != draggingMentor)
-      );
-      // add mentor to new slot
-      if (newAssignmentBySlot.has(slot_id)) {
-        newAssignmentBySlot.set(slot_id, [...newAssignmentBySlot.get(slot_id)!, draggingMentor]);
+  const updateHeaderCheckbox = (selected: Set<number>) => {
+    if (headerCheckbox.current != null) {
+      let newState = 0;
+      if (selected.size == 0) {
+        newState = 0;
+        headerCheckbox.current.indeterminate = false;
+      } else if (selected.size == mentorsById.size) {
+        newState = 1;
+        headerCheckbox.current.indeterminate = false;
       } else {
-        newAssignmentBySlot.set(slot_id!, [draggingMentor]);
+        newState = 2;
+        headerCheckbox.current.indeterminate = true;
       }
-      // update assignment
-      setAssignmentBySlot(newAssignmentBySlot);
+      setHeaderCheckboxState(newState);
     }
+  };
 
-    setDraggingMentor(-1);
-    setDraggingSlot(null);
+  /**
+   * Event handler when a row of the table is selected.
+   * Updates selected mentors and the header checkbox.
+   */
+  const handleSelect = (mentorId: number) => {
+    const newSelectedMentors = new Set(selectedMentors);
+    if (newSelectedMentors.has(mentorId)) {
+      newSelectedMentors.delete(mentorId);
+    } else {
+      newSelectedMentors.add(mentorId);
+    }
+    updateHeaderCheckbox(newSelectedMentors);
+    setSelectedMentors(newSelectedMentors);
+  };
+
+  /**
+   * Event handler when the header checkbox is clicked.
+   */
+  const handleHeaderSelect = () => {
+    let newSelected: Set<number>;
+    if (selectedMentors.size == mentorsById.size) {
+      newSelected = new Set();
+    } else {
+      newSelected = new Set(mentorsById.keys());
+    }
+    updateHeaderCheckbox(newSelected);
+    setSelectedMentors(newSelected);
+  };
+
+  /**
+   * Send a PUT request to update the saved assignments in the database.
+   */
+  const saveAssignment = () => {
+    const newAssignments: Assignment[] = [];
+    editTable.forEach(row => {
+      newAssignments.push({
+        mentor: row.mentorId,
+        slot: row.slotId,
+        section: {
+          capacity: row.capacity,
+          description: row.description
+        }
+      });
+    });
+
+    fetchWithMethod(`/matcher/${profile.courseId}/assignment`, "PUT", {
+      assignment: newAssignments
+    }).then(() => {
+      refreshAssignments();
+    });
   };
 
   return (
-    <div ref={hoverDiv}>
-      <AssignmentGroup
-        mentorsById={mentorsById}
-        assignedMentors={assignmentBySlot.get(-1) || []}
-        slot={{ id: -1, times: [] }}
-        onMouseDown={handleDragStart}
-        onMouseUp={handleDragEnd}
-        draggingMentor={draggingMentor}
-      />
-      {sortedSlots.map((slot, idx) => (
-        <AssignmentGroup
-          key={`slot-${idx}`}
-          mentorsById={mentorsById}
-          assignedMentors={assignmentBySlot.get(slot.id!) || []}
-          slot={slot}
-          onMouseDown={handleDragStart}
-          onMouseUp={handleDragEnd}
-          draggingMentor={draggingMentor}
-        />
-      ))}
+    <div>
+      <div>
+        <div className="matcher-assignment-mentor-head">
+          <label className="matcher-assignment-mentor-select">
+            <input
+              ref={headerCheckbox}
+              checked={headerCheckboxState == 1}
+              type="checkbox"
+              onChange={handleHeaderSelect}
+            />
+          </label>
+          <div className="matcher-assignment-mentor-info">Mentor</div>
+          <div className="matcher-assignment-section-times">Times</div>
+          <div className="matcher-assignment-section-capacity">Capacity</div>
+          <div className="matcher-assignment-section-description">Description</div>
+        </div>
+        {editTable.map((row: EditTableRow) => (
+          <EditTableRow
+            key={row.mentorId}
+            row={row}
+            sortedSlots={sortedSlots}
+            prefByMentor={prefByMentor}
+            onChangeRow={handleChangeRow}
+            isSelected={selectedMentors.has(row.mentorId)}
+            onSelect={handleSelect}
+          />
+        ))}
+      </div>
+      <div className="matcher-assignment-footer">
+        <div className="matcher-assignment-footer-help">
+          {selectedMentors.size > 1 && (
+            <React.Fragment>
+              <InfoIcon className="icon matcher-assignment-footer-help-icon" />
+              <span className="matcher-assignment-footer-help-text">Modify any input to bulk edit selected rows.</span>
+            </React.Fragment>
+          )}
+        </div>
+        <button className="matcher-assignment-save-button" onClick={() => saveAssignment()}>
+          Save
+        </button>
+      </div>
     </div>
   );
 };
 
-interface AssignmentGroupProps {
-  mentorsById: Map<number, Mentor>;
-  assignedMentors: number[];
-  slot: Slot;
-  draggingMentor: number;
-  onMouseDown: (slot: Slot, mentor_id: number) => void;
-  onMouseUp: (slot: Slot) => void;
+interface EditTableRowProps {
+  /**
+   * Row of the table to render
+   */
+  row: EditTableRow;
+  /**
+   * List of all slots, sorted by day and time.
+   */
+  sortedSlots: Slot[];
+  /**
+   * Preference list for each mentor.
+   */
+  prefByMentor: Map<number, SlotPreference[]>;
+  /**
+   * Callback when a row is changed.
+   */
+  onChangeRow: (mentorId: number, attr: keyof EditTableRow, value: any) => void;
+  /**
+   * Whether the row is selected.
+   */
+  isSelected: boolean;
+  /**
+   * Callback when the row is selected.
+   */
+  onSelect: (mentorId: number) => void;
 }
 
-const AssignmentGroup = ({
-  mentorsById,
-  assignedMentors,
-  slot,
-  draggingMentor,
-  onMouseDown,
-  onMouseUp
-}: AssignmentGroupProps): React.ReactElement => {
-  const outerDiv = useRef<HTMLDivElement>(null);
+/**
+ * Row of the edit table.
+ */
+const EditTableRow = ({ row, sortedSlots, prefByMentor, onChangeRow, isSelected, onSelect }: EditTableRowProps) => {
+  const [editingTimes, setEditingTimes] = useState<boolean>(false);
+  const [prefBySlot, setPrefBySlot] = useState<Map<number, number>>(new Map());
 
+  /**
+   * Set of inputs that are currently in focus.
+   * Prevents rerendering the input when the user is typing in a field.
+   */
+  const [focuses, setFocuses] = useState<Set<keyof EditTableRow>>(new Set());
+
+  /* Dynamic keys to force refresh of input fields */
+  const [capacityKey, setCapacityKey] = useState<number>(row.capacity);
+  const [descriptionKey, setDescriptionKey] = useState<string>(row.description);
+
+  /**
+   * Reference to the select element;
+   * used to set the focus when the user chooses to edit the times.
+   */
+  const selectTimesRef = useRef<HTMLSelectElement>(null);
+
+  /* Get mentor preferences, stored by slot id. */
   useEffect(() => {
-    if (draggingMentor != null) {
-      outerDiv.current?.classList.remove("matcher-assignment-group-hover");
+    const newPrefBySlot = new Map<number, number>();
+    const prefs = prefByMentor.get(row.mentorId);
+    if (prefs != null) {
+      prefs.forEach(pref => {
+        newPrefBySlot.set(pref.slot, pref.preference);
+      });
     }
-  }, [draggingMentor]);
+    setPrefBySlot(newPrefBySlot);
+  }, [prefByMentor]);
 
-  const handleMouseDown = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, mentor_id: number) => {
-    if (e.button == 0) {
-      e.preventDefault();
-      onMouseDown(slot, mentor_id);
+  /* Focus the select input element when the user starts editing */
+  useEffect(() => {
+    if (editingTimes && selectTimesRef.current != null) {
+      selectTimesRef.current.focus();
     }
-  };
+  }, [editingTimes]);
 
-  const handleMouseUp = (e: React.MouseEvent<HTMLDivElement, MouseEvent>, slot: Slot) => {
+  /**
+   * Update the inputs if the row changes.
+   * Does not update if the input is in focus,
+   * or if the value did not change.
+   */
+  useEffect(() => {
+    if (!focuses.has("capacity") && row.capacity != capacityKey) {
+      setCapacityKey(row.capacity);
+    } else if (!focuses.has("description") && row.description != descriptionKey) {
+      setDescriptionKey(row.description);
+    }
+  }, [row]);
+
+  /**
+   * Toggles whether the user is editing the times.
+   */
+  const toggleEditingTimes = (e: React.MouseEvent<HTMLOrSVGElement, MouseEvent>) => {
     e.stopPropagation();
-    onMouseUp(slot);
+    setEditingTimes(!editingTimes);
   };
 
-  const handleMouseEnter = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (draggingMentor != -1) {
-      outerDiv.current?.classList.add("matcher-assignment-group-hover");
-    }
+  /**
+   * Format a datetime as a string for display.
+   */
+  const displayTime = (time: Time) => {
+    return `${DAYS_ABBREV[time.day]} ${formatTime(time.startTime)}\u2013${formatTime(time.endTime)}`;
   };
 
-  const handleMouseLeave = (e: React.MouseEvent<HTMLDivElement, MouseEvent>) => {
-    if (draggingMentor != -1) {
-      outerDiv.current?.classList.remove("matcher-assignment-group-hover");
-    }
+  /**
+   * Callback when the user changes an input value.
+   */
+  const handleChangeRow = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, attr: keyof EditTableRow) => {
+    onChangeRow(row.mentorId, attr, e.target.value);
+  };
+
+  /**
+   * Disable edit status upon blur.
+   */
+  const handleBlurSelect = () => {
+    setEditingTimes(false);
+  };
+
+  /**
+   * Keep track of which input the user just focused on.
+   */
+  const handleFocus = (attr: keyof EditTableRow) => {
+    const newFocuses = new Set(focuses);
+    newFocuses.add(attr);
+    setFocuses(newFocuses);
+  };
+
+  /**
+   * Keep track of which input the user just unfocused on.
+   */
+  const handleBlur = (attr: keyof EditTableRow) => {
+    const newFocuses = new Set(focuses);
+    newFocuses.delete(attr);
+    setFocuses(newFocuses);
   };
 
   return (
-    <div
-      ref={outerDiv}
-      className="matcher-assignment-slot"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-      onMouseUp={e => handleMouseUp(e, slot)}
-    >
-      {slot.times.length > 0 ? (
-        <div className="matcher-assignment-slot-head">
-          {slot.times.map((time, timeidx) => (
-            <React.Fragment key={`slot-time-${timeidx}`}>
-              <div className="matcher-assignment-time">
-                {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
-              </div>
-              {timeidx < slot.times.length - 1 && <div className="matcher-assignment-time-divider">/</div>}
-            </React.Fragment>
-          ))}
-        </div>
-      ) : (
-        <div className="matcher-assignment-slot-head-empty">
-          <div className="matcher-assignment-time-empty">Unassigned</div>
-        </div>
-      )}
-      <div className="matcher-assignment-slot-body">
-        {assignedMentors.length > 0 ? (
-          assignedMentors.map((mentor_id, idx) => (
-            <div
-              className={
-                "matcher-assignment-mentor" + (mentor_id == draggingMentor ? " matcher-assignment-mentor-dragging" : "")
-              }
-              key={`mentor-${idx}`}
-            >
-              <div onMouseDown={e => handleMouseDown(e, mentor_id)}>
-                <MenuBurger className="matcher-assignment-burger" />
-              </div>
-              <div className="matcher-assignment-mentor-name">{mentorsById.get(mentor_id)?.name}</div>
-              <div className="matcher-assignment-mentor-email">{mentorsById.get(mentor_id)?.email}</div>
-            </div>
-          ))
-        ) : (
-          <div className="matcher-assignment-mentor-empty">None</div>
+    <div className="matcher-assignment-row">
+      <label className="matcher-assignment-mentor-select">
+        <input type="checkbox" checked={isSelected} onChange={() => onSelect(row.mentorId)} />
+      </label>
+      <div className="matcher-assignment-mentor-info">
+        <div className="matcher-assignment-mentor-name">{row.name}</div>
+        <div className="matcher-assignment-mentor-email">{row.email}</div>
+      </div>
+      <div className="matcher-assignment-section-times">
+        {!editingTimes && (
+          <div className="matcher-assignment-section-times-edit">
+            <Pencil className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingTimes} />
+          </div>
         )}
+        <div className="matcher-assignment-section-times-data">
+          {editingTimes ? (
+            <select
+              ref={selectTimesRef}
+              className="matcher-assignment-section-times-input"
+              defaultValue={row.slotId}
+              onChange={e => handleChangeRow(e, "times")}
+              onBlur={handleBlurSelect}
+            >
+              {sortedSlots.map((slot: Slot) => (
+                <option key={slot.id} value={slot.id} className="matcher-assignment-section-times-option">
+                  {`(${prefBySlot.get(slot.id!)}) ` +
+                    slot.times
+                      .map<React.ReactNode>(time => displayTime(time))
+                      .join(" / ")}
+                </option>
+              ))}
+            </select>
+          ) : (
+            row.times.map((time, timeidx) => (
+              <React.Fragment key={`slot-time-${timeidx}`}>
+                <div className="matcher-assignment-time">{displayTime(time)}</div>
+              </React.Fragment>
+            ))
+          )}
+        </div>
+      </div>
+      <div className="matcher-assignment-section-capacity">
+        <input
+          key={capacityKey}
+          className="matcher-assignment-section-capacity-input"
+          type="number"
+          min={0}
+          defaultValue={row.capacity}
+          onChange={e => handleChangeRow(e, "capacity")}
+          onFocus={() => handleFocus("capacity")}
+          onBlur={() => handleBlur("capacity")}
+        />
+      </div>
+      <div className="matcher-assignment-section-description">
+        <input
+          key={descriptionKey}
+          className="matcher-assignment-section-description-input"
+          type="text"
+          defaultValue={row.description}
+          onChange={e => handleChangeRow(e, "description")}
+          onFocus={() => handleFocus("description")}
+          onBlur={() => handleBlur("description")}
+        />
       </div>
     </div>
   );

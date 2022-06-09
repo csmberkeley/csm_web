@@ -26,7 +26,7 @@ export function EnrollmentMatcher(): JSX.Element {
       const new_profile_map: Map<number, Profile> = new Map();
 
       profiles.map((profile: Profile) => {
-        const existing_profile = new_profile_map.get(profile.id);
+        const existing_profile = new_profile_map.get(profile.courseId);
         if (existing_profile == undefined || existing_profile.role !== "COORDINATOR") {
           new_profile_map.set(profile.courseId, profile);
         }
