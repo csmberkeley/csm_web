@@ -1,0 +1,71 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Modal should close correctly when an external modal closer is clicked 1`] = `
+Array [
+  <div
+    className="modal-overlay"
+    onClick={[MockFunction]}
+  />,
+  <div
+    className="modal test-modal"
+  >
+    <div
+      className="modal-contents"
+    >
+      <div
+        className="modal-close-x"
+      >
+        <button
+          className="inline-plus-sign"
+          onClick={[MockFunction]}
+        >
+          <span>
+            ×
+          </span>
+        </button>
+      </div>
+      <div>
+        Hello World
+      </div>
+      <div
+        className="modal-close"
+        onClick={[MockFunction]}
+      >
+        Close
+      </div>
+    </div>
+  </div>,
+]
+`;
+
+exports[`Modal should render correctly 1`] = `
+Array [
+  <div
+    className="modal-overlay"
+    onClick={[MockFunction]}
+  />,
+  <div
+    className="modal test-modal"
+  >
+    <div
+      className="modal-contents"
+    >
+      <div
+        className="modal-close-x"
+      >
+        <button
+          className="inline-plus-sign"
+          onClick={[MockFunction]}
+        >
+          <span>
+            ×
+          </span>
+        </button>
+      </div>
+      <div>
+        Hello World
+      </div>
+    </div>
+  </div>,
+]
+`;
