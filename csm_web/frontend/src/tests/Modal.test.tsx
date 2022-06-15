@@ -5,18 +5,33 @@ import Modal, { ModalCloser } from "../components/Modal";
 /**
  * Returns a test Modal component.
  */
-const getTestModal = (handleCloseModal: React.MouseEventHandler<Element>): React.ReactElement => {
-  return (
-    <Modal closeModal={handleCloseModal} className="test-modal">
-      <div>Hello World</div>
-    </Modal>
-  );
+const getTestModal = (handleCloseModal: React.MouseEventHandler<Element>, className = ""): React.ReactElement => {
+  if (className === "") {
+    return (
+      <Modal closeModal={handleCloseModal}>
+        <div>Hello World</div>
+      </Modal>
+    );
+  } else {
+    return (
+      <Modal closeModal={handleCloseModal} className={className}>
+        <div>Hello World</div>
+      </Modal>
+    );
+  }
 };
 
 describe("Modal", () => {
   it("should render correctly", () => {
     const handleCloseModal = jest.fn();
     const component = renderer.create(getTestModal(handleCloseModal));
+    const tree = component.toJSON();
+    expect(tree).toMatchSnapshot();
+  });
+
+  it("should render correctly with className", () => {
+    const handleCloseModal = jest.fn();
+    const component = renderer.create(getTestModal(handleCloseModal, "test-modal"));
     const tree = component.toJSON();
     expect(tree).toMatchSnapshot();
   });

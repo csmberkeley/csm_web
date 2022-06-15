@@ -45,6 +45,38 @@ Array [
     onClick={[MockFunction]}
   />,
   <div
+    className="modal "
+  >
+    <div
+      className="modal-contents"
+    >
+      <div
+        className="modal-close-x"
+      >
+        <button
+          className="inline-plus-sign"
+          onClick={[MockFunction]}
+        >
+          <span>
+            ×
+          </span>
+        </button>
+      </div>
+      <div>
+        Hello World
+      </div>
+    </div>
+  </div>,
+]
+`;
+
+exports[`Modal should render correctly with className 1`] = `
+Array [
+  <div
+    className="modal-overlay"
+    onClick={[MockFunction]}
+  />,
+  <div
     className="modal test-modal"
   >
     <div
