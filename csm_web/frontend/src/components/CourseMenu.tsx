@@ -1,7 +1,7 @@
 import React from "react";
 import { Link, Route, Switch } from "react-router-dom";
 import { fetchJSON } from "../utils/api";
-import Course from "./Course";
+import Course from "./course/Course";
 import LoadingSpinner from "./LoadingSpinner";
 
 interface CourseType {
