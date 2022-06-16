@@ -1,10 +1,13 @@
-import React from "react";
-import PropTypes from "prop-types";
+import React, { useEffect, useState } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import Modal from "../Modal";
 import { Spacetime } from "../../utils/types";
 import { DAYS_OF_WEEK } from "../section/utils";
 import TimeInput from "../TimeInput";
+
+const makeSpacetime = (): Spacetime => {
+  return { dayOfWeek: "", startTime: "", location: "" } as Spacetime;
+};
 
 interface CreateSectionModalProps {
   courseId: number;
@@ -12,167 +15,183 @@ interface CreateSectionModalProps {
   reloadSections: () => void;
 }
 
-interface CreateSectionModalState {
-  userEmails: string[];
-  mentorEmail: string;
-  spacetimes: Spacetime[];
-  description: string;
-  capacity: string;
-  courseId?: number;
-}
+/**
+ * Modal that coords use to create a new section.
+ */
+export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: CreateSectionModalProps) => {
+  /**
+   * List of all user emails (for assigning a mentor).
+   */
+  const [userEmails, setUserEmails] = useState<string[]>([]);
+  /**
+   * Selected mentor email for the new section.
+   */
+  const [mentorEmail, setMentorEmail] = useState<string>("");
+  /**
+   * Spacetimes for the new section.
+   */
+  const [spacetimes, setSpacetimes] = useState<Spacetime[]>([makeSpacetime()]);
+  /**
+   * Description for the new section.
+   */
+  const [description, setDescription] = useState<string>("");
+  /**
+   * Capacity for the new section.
+   */
+  const [capacity, setCapacity] = useState<string>("");
 
-export class CreateSectionModal extends React.Component<CreateSectionModalProps, CreateSectionModalState> {
-  static propTypes = {
-    courseId: PropTypes.number.isRequired,
-    closeModal: PropTypes.func.isRequired,
-    reloadSections: PropTypes.func.isRequired
+  // fetch all user emails upon first mount
+  useEffect(() => {
+    fetchJSON("/users/").then((userEmails: string[]) => setUserEmails(userEmails));
+  }, []);
+
+  /**
+   * Create a new empty spacetime for the new section.
+   */
+  const appendSpacetime = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault(); // Annoyingly the submit event for the form gets fired, so we have to suppress it
+    setSpacetimes(oldSpacetimes => [...oldSpacetimes, makeSpacetime()]);
   };
 
-  constructor(props: CreateSectionModalProps) {
-    super(props);
-    this.state = { userEmails: [], mentorEmail: "", spacetimes: [this.makeSpacetime()], description: "", capacity: "" };
-    this.handleChange = this.handleChange.bind(this);
-    this.handleSubmit = this.handleSubmit.bind(this);
-    this.appendSpacetime = this.appendSpacetime.bind(this);
-  }
-
-  makeSpacetime(): Spacetime {
-    return { dayOfWeek: "", startTime: "", location: "" } as Spacetime;
-  }
-
-  componentDidMount(): void {
-    fetchJSON("/users/").then((userEmails: string[]) => this.setState({ userEmails }));
-  }
-
-  appendSpacetime(event: React.MouseEvent<HTMLButtonElement>) {
-    event.preventDefault(); // Annoyingly the submit event for the form gets fired, so we have to suppress it
-    this.setState({ spacetimes: [...this.state.spacetimes, this.makeSpacetime()] });
-  }
-
-  handleChange({ target: { name, value } }: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void {
+  /**
+   * Handle the change of a form field.
+   */
+  const handleChange = ({ target: { name, value } }: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void => {
     if (name.startsWith("location") || name.startsWith("startTime") || name.startsWith("dayOfWeek")) {
-      const { spacetimes } = this.state;
       // Funny JavaScript scoping workaround (let [name, index] = name.split("|") doesn't work)
       let index;
       [name, index] = name.split("|");
       index = Number(index);
-      this.setState({
-        spacetimes: [
-          ...spacetimes.slice(0, index),
-          { ...spacetimes[index], [name]: value },
-          ...spacetimes.slice(index + 1)
-        ]
-      });
+      setSpacetimes([
+        ...spacetimes.slice(0, index),
+        { ...spacetimes[index], [name]: value },
+        ...spacetimes.slice(index + 1)
+      ]);
     } else {
-      this.setState({ [name]: value } as any);
+      switch (name) {
+        case "mentorEmail":
+          setMentorEmail(value);
+          break;
+        case "description":
+          setDescription(value);
+          break;
+        case "capacity":
+          setCapacity(value);
+          break;
+        default:
+          console.error("Unknown input name: " + name);
+          break;
+      }
     }
-  }
+  };
 
-  handleSubmit(event: React.FormEvent<HTMLFormElement>): void {
+  /**
+   * Handle form submission.
+   */
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
-    // eslint-disable-next-line no-unused-vars
-    const { userEmails: _, ...data } = this.state;
-    const { courseId, reloadSections, closeModal } = this.props;
-    data.courseId = courseId;
+    const data = {
+      mentorEmail,
+      spacetimes,
+      description,
+      capacity,
+      courseId
+    };
     //TODO: Handle API Failure
     fetchWithMethod("/sections", HTTP_METHODS.POST, data).then(() => {
       closeModal();
       reloadSections();
     });
-  }
+  };
 
-  render() {
-    const { closeModal } = this.props;
-    const { mentorEmail, userEmails, capacity, description, spacetimes } = this.state;
-    return (
-      <Modal closeModal={closeModal}>
-        <form id="create-section-form" className="csm-form" onSubmit={this.handleSubmit}>
-          <div id="create-section-form-contents">
-            <div id="non-spacetime-fields">
-              <label>
-                Mentor Email
-                <input
-                  onChange={this.handleChange}
-                  type="email"
-                  list="user-email-list"
-                  required
-                  name="mentorEmail"
-                  pattern=".+@berkeley.edu$"
-                  title="Please enter a valid @berkeley.edu email address"
-                  value={mentorEmail}
-                  autoFocus
-                />
-                <datalist id="user-email-list">
-                  {userEmails.map(email => (
-                    <option key={email} value={email} />
-                  ))}
-                </datalist>
-              </label>
-              <label>
-                Capacity
-                <input
-                  required
-                  name="capacity"
-                  type="number"
-                  min="0"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={capacity}
-                  onChange={this.handleChange}
-                />
-              </label>
-              <label>
-                Description
-                <input name="description" type="text" value={description} onChange={this.handleChange} />
-              </label>
-            </div>
-            {spacetimes.map(({ dayOfWeek, startTime, location }, index) => (
-              <React.Fragment key={index}>
-                <h4 className="spacetime-fields-header">Weekly occurence {index + 1}</h4>
-                <div className="spacetime-fields">
-                  <label>
-                    Location
-                    <input
-                      onChange={this.handleChange}
-                      required
-                      title="You cannot leave this field blank"
-                      pattern=".*[^\s]+.*"
-                      type="text"
-                      name={`location|${index}`}
-                      value={location}
-                    />
-                  </label>
-                  <label>
-                    Day
-                    <select onChange={this.handleChange} name={`dayOfWeek|${index}`} value={dayOfWeek} required>
-                      {["---"].concat(DAYS_OF_WEEK).map(day => (
-                        <option key={day} value={day === "---" ? "" : day} disabled={day === "---"}>
-                          {day}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Time
-                    <TimeInput
-                      onChange={this.handleChange as React.FormEventHandler<HTMLInputElement>}
-                      required
-                      name={`startTime|${index}`}
-                      value={startTime}
-                    />
-                  </label>
-                  {index === spacetimes.length - 1 && (
-                    <button className="csm-btn" id="add-occurence-btn" onClick={this.appendSpacetime}>
-                      Add another occurence
-                    </button>
-                  )}
-                </div>
-              </React.Fragment>
-            ))}
-            <input type="submit" value="Create Section" />
+  return (
+    <Modal closeModal={closeModal}>
+      <form id="create-section-form" className="csm-form" onSubmit={handleSubmit}>
+        <div id="create-section-form-contents">
+          <div id="non-spacetime-fields">
+            <label>
+              Mentor Email
+              <input
+                onChange={handleChange}
+                type="email"
+                list="user-email-list"
+                required
+                name="mentorEmail"
+                pattern=".+@berkeley.edu$"
+                title="Please enter a valid @berkeley.edu email address"
+                value={mentorEmail}
+                autoFocus
+              />
+              <datalist id="user-email-list">
+                {userEmails.map(email => (
+                  <option key={email} value={email} />
+                ))}
+              </datalist>
+            </label>
+            <label>
+              Capacity
+              <input
+                required
+                name="capacity"
+                type="number"
+                min="0"
+                inputMode="numeric"
+                pattern="[0-9]*"
+                value={capacity}
+                onChange={handleChange}
+              />
+            </label>
+            <label>
+              Description
+              <input name="description" type="text" value={description} onChange={handleChange} />
+            </label>
           </div>
-        </form>
-      </Modal>
-    );
-  }
-}
+          {spacetimes.map(({ dayOfWeek, startTime, location }, index) => (
+            <React.Fragment key={index}>
+              <h4 className="spacetime-fields-header">Weekly occurence {index + 1}</h4>
+              <div className="spacetime-fields">
+                <label>
+                  Location
+                  <input
+                    onChange={handleChange}
+                    required
+                    title="You cannot leave this field blank"
+                    pattern=".*[^\s]+.*"
+                    type="text"
+                    name={`location|${index}`}
+                    value={location}
+                  />
+                </label>
+                <label>
+                  Day
+                  <select onChange={handleChange} name={`dayOfWeek|${index}`} value={dayOfWeek} required>
+                    {["---"].concat(DAYS_OF_WEEK).map(day => (
+                      <option key={day} value={day === "---" ? "" : day} disabled={day === "---"}>
+                        {day}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Time
+                  <TimeInput
+                    onChange={handleChange as React.FormEventHandler<HTMLInputElement>}
+                    required
+                    name={`startTime|${index}`}
+                    value={startTime}
+                  />
+                </label>
+                {index === spacetimes.length - 1 && (
+                  <button className="csm-btn" id="add-occurence-btn" onClick={appendSpacetime}>
+                    Add another occurence
+                  </button>
+                )}
+              </div>
+            </React.Fragment>
+          ))}
+          <input type="submit" value="Create Section" />
+        </div>
+      </form>
+    </Modal>
+  );
+};
