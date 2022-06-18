@@ -41,7 +41,7 @@ const Course = ({
   },
   name,
   isOpen
-}: CourseProps): React.ReactNode => {
+}: CourseProps): React.ReactElement | null => {
   /**
    * Sections grouped by day of the week.
    */

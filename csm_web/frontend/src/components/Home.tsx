@@ -1,54 +1,52 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { groupBy } from "lodash";
 import { fetchJSON } from "../utils/api";
 import { ROLES } from "./section/Section";
 import { Profile } from "../utils/types";
 
-interface HomeState {
-  profiles: Array<Profile>;
-  profilesLoaded: boolean;
-}
+const Home = () => {
+  const [profiles, setProfiles] = useState<Profile[]>([]);
+  const [profilesLoaded, setProfilesLoaded] = useState<boolean>(false);
+
+  useEffect(() => {
+    fetchJSON("/profiles").then(profiles => {
+      setProfiles(profiles);
+      setProfilesLoaded(true);
+    });
+  }, []);
+
+  return (
+    <div id="home-courses">
+      <div id="home-courses-heading">
+        <h3 className="page-title">My courses</h3>
+        <Link className="csm-btn" to="/courses">
+          <span className="inline-plus-sign">+ </span>Add Course
+        </Link>
+      </div>
+      {profilesLoaded && (
+        <div className="course-cards-container">
+          {Object.entries(groupBy(profiles, (profile: Profile) => [profile.course, profile.role])).map(
+            ([course, courseProfiles]) => (
+              <CourseCard key={course} profiles={courseProfiles} />
+            )
+          )}
+        </div>
+      )}
+    </div>
+  );
+};
+export default Home;
 
 interface CourseCardProps {
   profiles: Array<Profile>;
 }
 
-export default class Home extends React.Component {
-  state: HomeState = { profiles: [], profilesLoaded: false };
-
-  componentDidMount(): void {
-    fetchJSON("/profiles").then(profiles => this.setState({ profiles, profilesLoaded: true }));
-  }
-
-  render(): React.ReactNode {
-    const { profiles, profilesLoaded } = this.state;
-    return (
-      <div id="home-courses">
-        <div id="home-courses-heading">
-          <h3 className="page-title">My courses</h3>
-          <Link className="csm-btn" to="/courses">
-            <span className="inline-plus-sign">+ </span>Add Course
-          </Link>
-        </div>
-        {profilesLoaded && (
-          <div className="course-cards-container">
-            {Object.entries(groupBy(profiles, (profile: Profile) => [profile.course, profile.role])).map(
-              ([course, courseProfiles]) => (
-                <CourseCard key={course} profiles={courseProfiles} />
-              )
-            )}
-          </div>
-        )}
-      </div>
-    );
-  }
-}
-
-function CourseCard({ profiles }: CourseCardProps): React.ReactElement {
+const CourseCard = ({ profiles }: CourseCardProps): React.ReactElement => {
   const { course, courseTitle, role, sectionId, courseId } = profiles[0];
   const relation = role.toLowerCase();
-  function Card(): React.ReactElement {
+
+  const Card = (): React.ReactElement => {
     return (
       <div className="course-card" style={{ borderTopColor: `var(--csm-theme-${course.toLowerCase()})` }}>
         <div className="course-card-contents">
@@ -70,7 +68,8 @@ function CourseCard({ profiles }: CourseCardProps): React.ReactElement {
         </div>
       </div>
     );
-  }
+  };
+
   if (role === ROLES.COORDINATOR) {
     return (
       <Link to={`/courses/${courseId}`} className="course-card-link">
@@ -78,6 +77,7 @@ function CourseCard({ profiles }: CourseCardProps): React.ReactElement {
       </Link>
     );
   }
+
   return profiles.length === 1 ? (
     <Link to={`/sections/${sectionId}`} className="course-card-link">
       <Card />
@@ -85,4 +85,4 @@ function CourseCard({ profiles }: CourseCardProps): React.ReactElement {
   ) : (
     <Card />
   );
-}
+};
