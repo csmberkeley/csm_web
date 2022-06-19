@@ -20,6 +20,15 @@ interface MentorSectionProps {
   description: string;
 }
 
+interface MentorSectionState {
+  students: Student[];
+  attendances: {
+    [date: string]: Attendance[];
+  };
+  loaded: boolean;
+  loaded_progress: number;
+}
+
 type ResponseAttendance = {
   studentId: number;
   studentName: string;
@@ -36,38 +45,49 @@ export default function MentorSection({
   userRole,
   mentor
 }: MentorSectionProps) {
-  const [students, setStudents] = useState<Student[]>([]);
-  const [attendances, setAttendances] = useState<{
-    [date: string]: Attendance[];
-  }>({});
-  const [loaded, setLoaded] = useState(false);
-
+  const [{ students, attendances, loaded_progress, loaded }, setState] = useState<MentorSectionState>({
+    students: [],
+    attendances: {},
+    loaded: false,
+    loaded_progress: 0
+  });
   useEffect(() => {
-    Promise.all([
-      fetchJSON(`/sections/${id}/students/`).then(data => {
-        const students: Student[] = data
-          .map(({ name, email, id }: Student) => ({ name, email, id }))
-          .sort((stu1: Student, stu2: Student) => stu1.name.toLowerCase().localeCompare(stu2.name.toLowerCase()));
-        setStudents(students);
-      }),
-      fetchJSON(`/sections/${id}/attendance`).then(data => {
-        const attendances = groupBy(
-          data.flatMap(({ attendances }: { attendances: ResponseAttendance[] }) =>
-            attendances
-              .map(({ id, presence, date, studentName, studentId }) => ({
-                id,
-                presence,
-                date,
-                student: { name: studentName, id: studentId }
-              }))
-              .sort((att1, att2) => att1.student.name.toLowerCase().localeCompare(att2.student.name.toLowerCase()))
-          ),
-          attendance => attendance.date
-        );
-        setAttendances(attendances);
-      })
-    ]).then(() => {
-      setLoaded(true);
+    setState({ students: [], attendances: {}, loaded: false, loaded_progress: 0 });
+    fetchJSON(`/sections/${id}/students/`).then(data => {
+      const students: Student[] = data
+        .map(({ name, email, id }: Student) => ({ name, email, id }))
+        .sort((stu1: Student, stu2: Student) => stu1.name.toLowerCase().localeCompare(stu2.name.toLowerCase()));
+      setState(state => {
+        return {
+          students,
+          attendances: state.attendances,
+          loaded: state.loaded_progress >= 1,
+          loaded_progress: state.loaded_progress + 1
+        };
+      });
+    });
+    fetchJSON(`/sections/${id}/attendance`).then(data => {
+      const attendances = groupBy(
+        data.flatMap(({ attendances }: { attendances: ResponseAttendance[] }) =>
+          attendances
+            .map(({ id, presence, date, studentName, studentId }) => ({
+              id,
+              presence,
+              date,
+              student: { name: studentName, id: studentId }
+            }))
+            .sort((att1, att2) => att1.student.name.toLowerCase().localeCompare(att2.student.name.toLowerCase()))
+        ),
+        attendance => attendance.date
+      );
+      setState(state => {
+        return {
+          students: state.students,
+          attendances,
+          loaded: state.loaded_progress >= 1,
+          loaded_progress: state.loaded_progress + 1
+        };
+      });
     });
   }, [id]);
 
@@ -78,7 +98,10 @@ export default function MentorSection({
         date == updatedDate ? [...updatedDateAttendances] : dateAttendances
       ])
     );
-    setAttendances(updatedAttendances);
+    setState(state => ({
+      ...state,
+      attendances: updatedAttendances
+    }));
   };
 
   return (
