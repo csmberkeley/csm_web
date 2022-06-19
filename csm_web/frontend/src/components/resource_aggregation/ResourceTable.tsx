@@ -5,7 +5,6 @@ import { emptyResource, Link, Resource, Worksheet } from "./ResourceTypes";
 import { Roles } from "../../utils/user";
 
 import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
-import { url } from "inspector";
 
 interface ResourceTableProps {
   courseID: number;

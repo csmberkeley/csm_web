@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Switch, Route, Redirect } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import PropTypes from "prop-types";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { Attendance, Mentor, Override, Spacetime } from "../../utils/types";
@@ -15,7 +15,6 @@ interface StudentSectionType {
   spacetimes: Spacetime[];
   override?: Override;
   associatedProfileId: number;
-  url: string;
 }
 
 export default function StudentSection({
@@ -24,8 +23,7 @@ export default function StudentSection({
   mentor,
   spacetimes,
   override,
-  associatedProfileId,
-  url
+  associatedProfileId
 }: StudentSectionType) {
   return (
     <SectionDetail
@@ -33,27 +31,24 @@ export default function StudentSection({
       courseTitle={courseTitle}
       userRole={ROLES.STUDENT}
       links={[
-        ["Section", url],
-        ["Attendance", `${url}/attendance`]
+        ["Section", ""],
+        ["Attendance", "attendance"]
       ]}
     >
-      <Switch>
+      <Routes>
+        <Route path="attendance" element={<StudentSectionAttendance associatedProfileId={associatedProfileId} />} />
         <Route
-          path={`${url}/attendance`}
-          render={() => <StudentSectionAttendance associatedProfileId={associatedProfileId} />}
-        />
-        <Route
-          path={url}
-          render={() => (
+          index
+          element={
             <StudentSectionInfo
               mentor={mentor}
               spacetimes={spacetimes}
               override={override}
               associatedProfileId={associatedProfileId}
             />
-          )}
+          }
         />
-      </Switch>
+      </Routes>
     </SectionDetail>
   );
 }
@@ -139,7 +134,7 @@ class DropSection extends React.Component<DropSectionProps, DropSectionState> {
           </Modal>
         );
       case DropSection.STAGES.DROPPED:
-        return <Redirect to="/" />;
+        return <Navigate to="/" />;
     }
   }
 }

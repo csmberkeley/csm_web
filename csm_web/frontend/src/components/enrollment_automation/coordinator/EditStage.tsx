@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import { fetchJSON, fetchWithMethod } from "../../../utils/api";
 import { Mentor, Profile } from "../../../utils/types";
@@ -156,7 +156,7 @@ export const EditStage = ({
   /**
    * History for redirection after section creation.
    */
-  const history = useHistory();
+  const navigate = useNavigate();
 
   /* Fetch mentor data */
   useEffect(() => {
@@ -440,7 +440,7 @@ export const EditStage = ({
       assignment: newAssignments
     }).then(async response => {
       if (response.ok) {
-        history.push("/");
+        navigate("/");
       } else {
         const json = await response.json();
         console.error(json);

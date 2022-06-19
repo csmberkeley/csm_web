@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { fetchJSON } from "../../utils/api";
-import { Section } from "../../utils/types";
+import { Section, Course as CourseType } from "../../utils/types";
 import { SectionCard } from "./SectionCard";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
+import { useParams } from "react-router-dom";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",
@@ -21,31 +22,22 @@ const COURSE_MODAL_TYPE = Object.freeze({
 });
 
 interface CourseProps {
-  match: {
-    params: {
-      id: string;
-    };
-  };
   /*
-   * Name will be false if it hasn't yet been loaded (the relevant request to the API is performed in CourseMenu)
+   * `courses` will be null if it hasn't yet been loaded (the relevant request to the API is performed in CourseMenu)
    * We structure things like this in order to avoid a 'waterfall' where we don't start fetching sections until
    * CourseMenu is done with its API requests, making the user suffer twice the latency for no reason.
    */
-  name: boolean | string;
-  isOpen: boolean;
-  isPriority: boolean;
-  enrollmentTimeString: string;
+  courses: Map<number, CourseType> | null;
+  enrollmentTimes: Array<{ courseName: string; enrollmentDate: Date }>;
+  priorityEnrollment: Date | undefined;
 }
 
-const Course = ({
-  match: {
-    params: { id }
-  },
-  name,
-  isOpen,
-  isPriority,
-  enrollmentTimeString
-}: CourseProps): React.ReactElement | null => {
+const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): React.ReactElement | null => {
+  /**
+   * Course id from the URL.
+   */
+  const { courseId } = useParams();
+
   /**
    * Sections grouped by day of the week.
    */
@@ -84,7 +76,7 @@ const Course = ({
       userIsCoordinator: boolean;
     }
 
-    fetchJSON(`/courses/${id}/sections`).then(({ sections, userIsCoordinator }: JSONResponseType) => {
+    fetchJSON(`/courses/${courseId}/sections`).then(({ sections, userIsCoordinator }: JSONResponseType) => {
       setSections(sections);
       setUserIsCoordinator(userIsCoordinator);
       setCurrDayGroup(Object.keys(sections)[0]);
@@ -108,21 +100,49 @@ const Course = ({
         <CreateSectionModal
           reloadSections={reloadSections}
           closeModal={() => setShowModal(false)}
-          courseId={Number(id)}
+          courseId={Number(courseId)}
         />
       );
     }
   };
+
+  if (courses === null) {
+    // don't load if the courses haven't been fetched yet
+    return null;
+  }
+
+  /**
+   * Course object from the courses map, retrieved from the course id.
+   */
+  const course = courses.get(parseInt(courseId!));
+  if (course === undefined) {
+    // exit early if the course doesn't exist or if the course id is not valid
+    return null;
+  }
 
   let currDaySections = sections && sections[currDayGroup];
   if (currDaySections && !showUnavailable) {
     currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
   }
 
-  return !(name && sectionsLoaded) ? null : (
+  // copied from CourseMenu.tsx
+  const date_locale_string_options: Intl.DateTimeFormatOptions = {
+    weekday: "long",
+    month: "numeric",
+    day: "numeric",
+    hour: "numeric",
+    minute: "numeric",
+    hour12: true,
+    timeZoneName: "short"
+  };
+
+  const enrollmentDate = priorityEnrollment ? priorityEnrollment : enrollmentTimes.find(({ courseName }) => courseName == course.name)?.enrollmentDate;
+  const enrollmentTimeString = enrollmentDate?.toLocaleDateString("en-US", date_locale_string_options) ?? ""
+
+  return !sectionsLoaded ? null : (
     <div id="course-section-selector">
       <div id="course-section-controls">
-        <h2 className="course-title">{name}</h2>
+        <h2 className="course-title">{course.name}</h2>
         <div id="day-selector">
           {Object.keys(sections).map(dayGroup => (
             <button
@@ -170,9 +190,9 @@ const Course = ({
             </button>
           </div>
         )}
-        {!isOpen && (
+        {!course.enrollmentOpen && (
           <div id="course-enrollment-open-status">
-            {isPriority
+            {priorityEnrollment
               ? `Priority enrollment opens ${enrollmentTimeString}.`
               : `Enrollment opens ${enrollmentTimeString}.`}
           </div>
@@ -181,7 +201,7 @@ const Course = ({
       <div id="course-section-list">
         {currDaySections && currDaySections.length > 0 ? (
           currDaySections.map(section => (
-            <SectionCard key={section.id} userIsCoordinator={userIsCoordinator} courseOpen={isOpen} {...section} />
+            <SectionCard key={section.id} userIsCoordinator={userIsCoordinator} courseOpen={course.enrollmentOpen} {...section} />
           ))
         ) : (
           <h3 id="course-section-list-empty">No sections available, please select a different day</h3>
