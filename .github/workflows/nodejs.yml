@@ -29,6 +29,6 @@ jobs:
         github_token: ${{ secrets.github_token }}
         eslint: true
         eslint_dir: csm_web/frontend/src
-        eslint_extensions: js,jsx
+        eslint_extensions: js,jsx,ts,tsx
         prettier: true
         prettier_dir: csm_web/frontend/src
