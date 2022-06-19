@@ -74,7 +74,7 @@ export const DataExportModal = ({ closeModal }: DataExportModalProps): React.Rea
    */
   const renderCheck = (i: number): React.ReactElement => {
     return (
-      <div className="data-export-checkbox">
+      <div key={i} className="data-export-checkbox">
         <label>
           <input
             type="checkbox"

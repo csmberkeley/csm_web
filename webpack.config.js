@@ -4,7 +4,7 @@ const plugins = [new LodashModuleReplacementPlugin()];
 
 module.exports = (env, argv) => {
   const config = {
-    entry: "./csm_web/frontend/src/index.js",
+    entry: "./csm_web/frontend/src/index.tsx",
     output: {
       path: path.resolve(__dirname, "./csm_web/frontend/static/frontend/")
     },

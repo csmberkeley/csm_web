@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
-import { Link, Redirect } from "react-router-dom";
+import { Link, Navigate } from "react-router-dom";
 import LocationIcon from "../../../static/frontend/img/location.svg";
 import UserIcon from "../../../static/frontend/img/user.svg";
 import GroupIcon from "../../../static/frontend/img/group.svg";
@@ -120,11 +120,11 @@ export const SectionCard = ({
   const isFull = numStudentsEnrolled >= capacity;
   if (!showModal && enrollmentSuccessful) {
     // redirect to the section page if the user was successfully enrolled in the section
-    return <Redirect to="/" />;
+    return <Navigate to="/" />;
   }
 
   // set of all distinct locations
-  const spacetimeLocationSet = new Set();
+  const spacetimeLocationSet = new Set<string | undefined>();
   for (const spacetime of spacetimes) {
     spacetimeLocationSet.add(spacetime.location);
   }

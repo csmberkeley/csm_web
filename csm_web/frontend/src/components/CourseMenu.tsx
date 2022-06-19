@@ -1,15 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Link, Route, Switch } from "react-router-dom";
+import { Link, Route, Routes, useLocation } from "react-router-dom";
 import { fetchJSON } from "../utils/api";
+import { Course as CourseType } from "../utils/types";
 import Course from "./course/Course";
 import LoadingSpinner from "./LoadingSpinner";
-
-interface CourseType {
-  id: number;
-  name: string;
-  enrollmentOpen: boolean;
-  enrollmentStart: string;
-}
 
 interface UserInfo {
   id: number;
@@ -23,7 +17,8 @@ interface CourseMenuProps {
   match: { path: string };
 }
 
-const CourseMenu = ({ match: { path } }: CourseMenuProps) => {
+const CourseMenu = () => {
+  const location = useLocation();
   const [courses, setCourses] = useState<Map<number, CourseType>>(null as never);
   const [userInfo, setUserInfo] = useState<UserInfo>(null as never);
   const [loaded, setLoaded] = useState<boolean>(false);
@@ -75,7 +70,7 @@ const CourseMenu = ({ match: { path } }: CourseMenuProps) => {
       ) : (
         <div id="course-menu">
           {Array.from(courses.entries()).map(([id, course]) => (
-            <Link className="csm-btn" to={`${path}/${id}`} key={id}>
+            <Link className="csm-btn" to={`${location.pathname}/${id}`} key={id}>
               {course.name}
             </Link>
           ))}
@@ -122,43 +117,28 @@ const CourseMenu = ({ match: { path } }: CourseMenuProps) => {
   );
 
   return (
-    <Switch>
+    <Routes>
       <Route
-        path="/courses/:id"
-        render={(routeProps: any) => {
-          if (loaded) {
-            // only render if loaded
-            const course = courses.get(Number(routeProps.match.params.id))!;
-            const isOpen = course && course.enrollmentOpen;
-            const isPriority = userInfo && userInfo.priorityEnrollment;
-            const enrollmentDate = isPriority
-              ? userInfo.priorityEnrollment
-              : enrollment_times_by_course.find(({ courseName }) => courseName === course.name)?.enrollmentDate;
-            // use key to rerender when manually changing URL
-            return (
-              <Course
-                key={course.id}
-                name={loaded && course.name}
-                isOpen={isOpen}
-                isPriority={isPriority}
-                enrollmentTimeString={enrollmentDate?.toLocaleDateString("en-US", date_locale_string_options) ?? ""}
-                {...routeProps}
-              />
-            );
-          }
-        }}
+        path=":courseId/*"
+        element={
+          <Course
+            courses={courses}
+            priorityEnrollment={userInfo.priorityEnrollment}
+            enrollmentTimes={enrollment_times_by_course}
+          />
+        }
       />
       <Route
-        path="/courses"
-        render={() => (
+        index
+        element={
           <React.Fragment>
             {courses && courses.size > 0 && enrollment_menu}
             <br />
             {show_enrollment_times && enrollment_times}
           </React.Fragment>
-        )}
+        }
       />
-    </Switch>
+    </Routes>
   );
 };
 export default CourseMenu;

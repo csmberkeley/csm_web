@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
+import { NavLink, useParams } from "react-router-dom";
 import { fetchJSON } from "../../utils/api";
 import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";
@@ -7,26 +7,14 @@ import { Override, Section as SectionType, Spacetime } from "../../utils/types";
 
 export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
-interface SectionProps {
-  match: {
-    url: string;
-    params: {
-      id: string;
-    };
-  };
-}
-
 interface SectionState {
   section: Omit<SectionType, "id">; // id specified by props
   loaded: boolean;
 }
 
-export default function Section({
-  match: {
-    url,
-    params: { id }
-  }
-}: SectionProps): React.ReactElement | null {
+export default function Section(): React.ReactElement | null {
+  const { id } = useParams();
+
   const [{ section, loaded }, setState] = useState<SectionState>({
     section: (null as unknown) as SectionType, // type coersion to avoid future type errors
     loaded: false
@@ -46,9 +34,9 @@ export default function Section({
   ) {
     case ROLES.COORDINATOR:
     case ROLES.MENTOR:
-      return <MentorSection reloadSection={reloadSection} url={url} id={Number(id)} {...section} />;
+      return <MentorSection reloadSection={reloadSection} id={Number(id)} {...section} />;
     case ROLES.STUDENT:
-      return <StudentSection url={url} {...section} />;
+      return <StudentSection {...section} />;
   }
   return null;
 }
@@ -82,7 +70,7 @@ export function SectionSidebar({ links }: SectionSidebarProps) {
   return (
     <nav id="section-detail-sidebar">
       {links.map(([label, href]) => (
-        <NavLink exact to={href} key={href}>
+        <NavLink end to={href} key={href}>
           {label}
         </NavLink>
       ))}
