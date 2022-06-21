@@ -1,20 +1,30 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { groupBy } from "lodash";
-import { fetchJSON } from "../utils/api";
+import { useProfiles } from "../utils/query";
 import { ROLES } from "./section/Section";
 import { Profile } from "../utils/types";
+import LoadingSpinner from "./LoadingSpinner";
 
 const Home = () => {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [profilesLoaded, setProfilesLoaded] = useState<boolean>(false);
+  const { data: profiles, isLoading: profilesLoading } = useProfiles();
 
-  useEffect(() => {
-    fetchJSON("/profiles").then(profiles => {
-      setProfiles(profiles);
-      setProfilesLoaded(true);
-    });
-  }, []);
+  let content = null;
+  if (profilesLoading) {
+    // fetching profiles
+    content = <LoadingSpinner />;
+  } else {
+    // loaded, no error
+    content = (
+      <div className="course-cards-container">
+        {Object.entries(groupBy(profiles, (profile: Profile) => [profile.course, profile.role])).map(
+          ([course, courseProfiles]) => (
+            <CourseCard key={course} profiles={courseProfiles} />
+          )
+        )}
+      </div>
+    );
+  }
 
   return (
     <div id="home-courses">
@@ -24,23 +34,7 @@ const Home = () => {
           <span className="inline-plus-sign">+ </span>Add Course
         </Link>
       </div>
-      {profilesLoaded && (
-        <div className="course-cards-container">
-          {Object.entries(groupBy(profiles, (profile: Profile) => [profile.course, profile.role])).map(
-            ([course, courseProfiles]) => {
-              if (courseProfiles[0].role === ROLES.MENTOR) {
-                const courseProfilesWithSection = courseProfiles.filter((profile: Profile) => profile.sectionId);
-                if (courseProfilesWithSection.length > 0) {
-                  return <CourseCard key={course} profiles={courseProfilesWithSection} />;
-                }
-                // otherwise, mentor with no section; do not show the course card
-              } else {
-                return <CourseCard key={course} profiles={courseProfiles} />;
-              }
-            }
-          )}
-        </div>
-      )}
+      {content}
     </div>
   );
 };

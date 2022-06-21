@@ -48,6 +48,13 @@ export function fetchWithMethod(endpoint: string, method: string, data: any = {}
   });
 }
 
+/**
+ * Fetch data from normalized endpoint.
+ */
+export async function fetchNormalized(endpoint: string) {
+  return await fetch(normalizeEndpoint(endpoint), { credentials: "same-origin" });
+}
+
 export async function fetchJSON(endpoint: string) {
   const response = await fetch(normalizeEndpoint(endpoint), { credentials: "same-origin" });
   return await response.json();

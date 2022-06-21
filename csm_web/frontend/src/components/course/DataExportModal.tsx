@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { fetchJSON, normalizeEndpoint } from "../../utils/api";
+import React, { useMemo, useState } from "react";
+import { normalizeEndpoint } from "../../utils/api";
+import { useCourses } from "../../utils/query";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
-import { Course as CourseType } from "../../utils/types";
 
 interface DataExportModalProps {
   closeModal: () => void;
@@ -17,17 +17,17 @@ export const DataExportModal = ({ closeModal }: DataExportModalProps): React.Rea
    */
   const [courseMap, setCourseMap] = useState<Map<number, string>>(new Map());
   /**
-   * Whether course data has been loaded.
-   */
-  const [courseLoaded, setCourseLoaded] = useState<boolean>(false);
-  /**
    * Map of course id to boolean (whether the course is checked)
    */
   const [courseChecks, setCourseChecks] = useState<Map<number, boolean>>(new Map());
 
-  // fetch all courses and construct maps upon first mount
-  useEffect(() => {
-    fetchJSON("/courses").then((courses: CourseType[]) => {
+  const { data: courses, isLoading: coursesLoading } = useCourses();
+
+  /**
+   * Construct a map of course id to course name.
+   */
+  useMemo(() => {
+    if (courses && !coursesLoading) {
       const coursesById = new Map<number, string>();
       const courseCheckbyId = new Map<number, boolean>();
       for (const course of courses) {
@@ -36,9 +36,8 @@ export const DataExportModal = ({ closeModal }: DataExportModalProps): React.Rea
       }
       setCourseMap(coursesById);
       setCourseChecks(courseCheckbyId);
-      setCourseLoaded(true);
-    });
-  }, []);
+    }
+  }, [courses]);
 
   /**
    * Download a csv of student emails in selected courses.
@@ -94,7 +93,7 @@ export const DataExportModal = ({ closeModal }: DataExportModalProps): React.Rea
       <div className="data-export-modal">
         <div className="data-export-modal-header">Download csv of student emails in selected courses</div>
         <div className="data-export-modal-selection">
-          {!courseLoaded ? <LoadingSpinner id="course-menu-loading-spinner" /> : renderCheckGrid()}
+          {coursesLoading ? <LoadingSpinner id="course-menu-loading-spinner" /> : renderCheckGrid()}
         </div>
         <div className="data-export-modal-download">
           <button className="csm-btn export-data-btn" onClick={getStudentEmails}>

@@ -1,4 +1,4 @@
-import { fetchJSON } from "./api";
+import { Profile } from "./types";
 
 export interface Roles {
   STUDENT: Set<number>;
@@ -24,12 +24,10 @@ export function emptyRoles(): Roles {
  *
  * @returns all user roles split by role type
  */
-export function getRoles(): Promise<Roles> {
-  return fetchJSON("/profiles").then(profiles => {
-    const roles = emptyRoles();
-    profiles.map(course => {
-      roles[course.role].add(course.courseId);
-    });
-    return roles;
+export function getRoles(profiles: Profile[]): Roles {
+  const roles = emptyRoles();
+  profiles.map(course => {
+    roles[course.role as keyof Roles].add(course.courseId);
   });
+  return roles;
 }

@@ -23,6 +23,21 @@ export interface Profile {
   sectionSpacetimes: Array<Spacetime>;
 }
 
+export interface UserInfo {
+  id: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  priorityEnrollment?: Date;
+}
+
+/**
+ * Raw type from the query response.
+ */
+export type RawUserInfo = Omit<UserInfo, "priorityEnrollment"> & {
+  priorityEnrollment?: string;
+};
+
 export interface Section {
   id: number;
   spacetimes: Spacetime[];

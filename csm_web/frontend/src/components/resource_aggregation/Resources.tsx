@@ -1,22 +1,42 @@
-import React, { useState, useEffect } from "react";
+import React, { useMemo, useState } from "react";
 import { fetchJSON } from "../../utils/api";
-import { Course } from "../../utils/types";
-import { emptyRoles, getRoles, Roles } from "../../utils/user";
+import { useCourses, useProfiles } from "../../utils/query";
+import { getRoles, Roles } from "../../utils/user";
+import LoadingSpinner from "../LoadingSpinner";
 import ResourceTable from "./ResourceTable";
 import { Resource } from "./ResourceTypes";
 
 export const Resources = (): React.ReactElement => {
-  const [roles, setRoles] = useState<Roles>(emptyRoles());
   const [selectedCourseID, setSelectedCourseID] = useState<number>(1);
-  const [courses, setCourses] = useState<Course[]>([]);
   const [cache, setCache] = useState<Map<number, any>>(new Map());
 
-  useEffect(() => {
-    getRoles().then(roles => setRoles(roles));
-    fetchJSON("courses").then(data => {
-      setCourses(data);
-    });
-  }, []);
+  const { data: profiles, isLoading: profilesLoading } = useProfiles();
+  const { data: courses, isLoading: coursesLoading } = useCourses();
+
+  /**
+   * Organize profiles into roles upon load.
+   */
+  const roles = useMemo<Roles>(() => {
+    if (profiles && !profilesLoading) {
+      return getRoles(profiles);
+    }
+    // not done loading yet
+    return undefined as never;
+  }, [profiles]);
+
+  /**
+   * Whether any query is currently loading.
+   */
+  const loading = profilesLoading || coursesLoading || roles === null;
+
+  // loading spinner
+  if (loading) {
+    return (
+      <div className="spinner-div">
+        <LoadingSpinner />
+      </div>
+    );
+  }
 
   function handleTabClick(courseID: number) {
     setSelectedCourseID(courseID);
@@ -59,7 +79,7 @@ export const Resources = (): React.ReactElement => {
     <div className="outer">
       <div className="tabs">
         <div className="tab-list">
-          {courses.map(course => (
+          {courses!.map(course => (
             <button
               onClick={() => handleTabClick(course.id)}
               key={course.id}
