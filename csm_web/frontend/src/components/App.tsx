@@ -1,17 +1,17 @@
 import React, { useEffect, useState } from "react";
-import { Route, Link, NavLink, NavLinkProps, Routes, useLocation, Outlet } from "react-router-dom";
+import { Link, NavLink, NavLinkProps, Outlet, Route, Routes, useLocation } from "react-router-dom";
+import { fetchJSON } from "../utils/api";
+import { Profile } from "../utils/types";
+import { emptyRoles, Roles } from "../utils/user";
 import CourseMenu from "./CourseMenu";
+import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 import Home from "./Home";
-import Section from "./section/Section";
 import Policies from "./Policies";
 import { Resources } from "./resource_aggregation/Resources";
-import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
+import Section from "./section/Section";
 
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
-import { emptyRoles, Roles } from "../utils/user";
-import { fetchJSON } from "../utils/api";
-import { Profile } from "../utils/types";
 
 interface ErrorType {
   message: string;
@@ -24,27 +24,19 @@ interface ErrorPageProps {
 }
 
 const App = () => {
-  const [error, setError] = useState<ErrorType | null>(null);
-
-  const clearError = (): void => {
-    setError(null);
-  };
-
-  if (error !== null) {
-    return <ErrorPage error={error} clearError={clearError} />;
-  }
-
   return (
-    <Routes>
-      <Route element={<AppLayout />}>
-        <Route index element={<Home />} />
-        <Route path="sections/:id/*" element={<Section />} />
-        <Route path="courses/*" element={<CourseMenu />} />
-        <Route path="resources/*" element={<Resources />} />
-        <Route path="matcher/*" element={<EnrollmentMatcher />} />
+    <ErrorBoundary>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route index element={<Home />} />
+          <Route path="sections/:id/*" element={<Section />} />
+          <Route path="courses/*" element={<CourseMenu />} />
+          <Route path="resources/*" element={<Resources />} />
+          <Route path="matcher/*" element={<EnrollmentMatcher />} />
         <Route path="policies/*" element={<Policies />} />
-      </Route>
-    </Routes>
+        </Route>
+      </Routes>
+    </ErrorBoundary>
   );
 };
 export default App;
@@ -141,6 +133,50 @@ function Header(): React.ReactElement {
       </a>
     </header>
   );
+}
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  error: ErrorType | null;
+}
+
+interface ErrorType {
+  message: string;
+  stack: string;
+}
+
+interface ErrorPageProps {
+  error: ErrorType;
+  clearError: () => void;
+}
+
+/**
+ * Error boundary component; must be a class component,
+ * as there is currently no equivalent hook.
+ */
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error: ErrorType): { error: ErrorType } {
+    return { error };
+  }
+
+  clearError(): void {
+    this.setState({ error: null });
+  }
+
+  render() {
+    if (this.state.error !== null) {
+      return <ErrorPage error={this.state.error} clearError={this.clearError} />;
+    }
+    return this.props.children;
+  }
 }
 
 function ErrorPage({ error: { message, stack }, clearError }: ErrorPageProps) {

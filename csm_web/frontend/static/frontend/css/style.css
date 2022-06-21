@@ -1729,6 +1729,13 @@ table tbody tr:last-child > td {
 }
 
 /* Loading Spinner */
+
+.spinner-centered {
+	margin: auto;
+	height: 50px;
+	width: 50px;
+}
+
 .sk-fading-circle {
 	width: 35px;
 	height: 35px;

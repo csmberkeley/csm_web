@@ -1,58 +1,58 @@
-import React, { useEffect, useState } from "react";
-import { Link, Route, Routes, useLocation } from "react-router-dom";
-import { fetchJSON } from "../utils/api";
-import { Course as CourseType } from "../utils/types";
+import React, { useMemo } from "react";
+import { Link, Route, Routes } from "react-router-dom";
+import { useCourses, useUserInfo } from "../utils/query";
+import { Course as CourseType, UserInfo } from "../utils/types";
 import Course from "./course/Course";
 import LoadingSpinner from "./LoadingSpinner";
 
-interface UserInfo {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  priorityEnrollment?: Date;
-}
-
-interface CourseMenuProps {
-  match: { path: string };
-}
-
 const CourseMenu = () => {
-  const location = useLocation();
-  const [courses, setCourses] = useState<Map<number, CourseType>>(null as never);
-  const [userInfo, setUserInfo] = useState<UserInfo>(null as never);
-  const [loaded, setLoaded] = useState<boolean>(false);
+  const { data: jsonCourses, isLoading: coursesLoading } = useCourses();
+  const { data: jsonUserInfo, isLoading: userInfoLoading } = useUserInfo();
 
-  useEffect(() => {
-    fetchJSON("/courses").then(courses => {
+  /**
+   * Transform JSON courses into a map of course IDs to course objects.
+   */
+  const courses = useMemo<Map<number, CourseType>>(() => {
+    if (jsonCourses && !coursesLoading) {
       // We use a Map here instead of an object because we want the entries() iterator to reflect the order of insertion,
       // which in turn reflects the sorting order returned by the backend
-      const coursesById = new Map();
-      for (const course of courses) {
+      const coursesById = new Map<number, CourseType>();
+      for (const course of jsonCourses) {
         coursesById.set(course.id, course);
       }
-      setCourses(coursesById);
-      setLoaded(true);
-    });
-    fetchJSON("/userinfo").then(userInfo => {
-      let priorityEnrollment = null;
-      if (userInfo.priorityEnrollment) {
-        priorityEnrollment = new Date(Date.parse(userInfo.priorityEnrollment));
+      return coursesById;
+    }
+    // not done loading yet
+    return undefined as never;
+  }, [jsonCourses]);
+
+  /**
+   * Transform JSON user info into a user info object.
+   */
+  const userInfo = useMemo<UserInfo>(() => {
+    if (jsonUserInfo && !userInfoLoading) {
+      let priorityEnrollment = undefined;
+      if (jsonUserInfo.priorityEnrollment) {
+        priorityEnrollment = new Date(Date.parse(jsonUserInfo.priorityEnrollment));
       }
       const convertedUserInfo: UserInfo = {
-        ...userInfo,
+        ...jsonUserInfo,
         priorityEnrollment
       };
-      setUserInfo(convertedUserInfo);
-    });
-  }, []);
+      return convertedUserInfo;
+    }
+    // not done loading yet
+    return undefined as never;
+  }, [jsonUserInfo]);
 
   let show_enrollment_times = false;
   const enrollment_times_by_course: Array<{ courseName: string; enrollmentDate: Date }> = [];
 
-  if (loaded) {
+  console.log(courses);
+
+  if (courses) {
     for (const course of courses.values()) {
-      show_enrollment_times = show_enrollment_times || !course.enrollmentOpen;
+      show_enrollment_times ||= !course.enrollmentOpen;
       if (!course.enrollmentOpen) {
         enrollment_times_by_course.push({
           courseName: course.name,
@@ -60,12 +60,61 @@ const CourseMenu = () => {
         });
       }
     }
+    console.log(show_enrollment_times);
   }
 
-  const enrollment_menu = (
+  return (
+    <Routes>
+      <Route
+        path=":courseId/*"
+        element={
+          coursesLoading ? (
+            // loading courses; don't render course component yet
+            <LoadingSpinner className="spinner-centered" />
+          ) : (
+            <Course
+              courses={courses}
+              priorityEnrollment={userInfo.priorityEnrollment}
+              enrollmentTimes={enrollment_times_by_course}
+            />
+          )
+        }
+      />
+      <Route
+        index
+        element={
+          <React.Fragment>
+            <EnrollmentMenu courses={courses} coursesLoading={coursesLoading} />
+            <br />
+            <EnrollmentTimes
+              coursesLoading={coursesLoading}
+              userInfo={userInfo}
+              userInfoLoading={userInfoLoading}
+              enrollmentTimes={enrollment_times_by_course}
+            />
+          </React.Fragment>
+        }
+      />
+    </Routes>
+  );
+};
+export default CourseMenu;
+
+interface EnrollmentMenuProps {
+  courses: Map<number, CourseType>;
+  coursesLoading: boolean;
+}
+
+/**
+ * Displays the list of courses.
+ *
+ * If courses have not been loaded, this component will display a loading spinner.
+ */
+const EnrollmentMenu = ({ courses, coursesLoading }: EnrollmentMenuProps) => {
+  return (
     <React.Fragment>
       <h3 className="page-title center-title">Which course would you like to enroll in?</h3>
-      {!loaded ? (
+      {coursesLoading ? (
         <LoadingSpinner id="course-menu-loading-spinner" />
       ) : (
         <div id="course-menu">
@@ -78,7 +127,36 @@ const CourseMenu = () => {
       )}
     </React.Fragment>
   );
+};
 
+interface EnrollmentTimesProps {
+  coursesLoading: boolean;
+  userInfo: UserInfo;
+  userInfoLoading: boolean;
+  enrollmentTimes: Array<{ courseName: string; enrollmentDate: Date }>;
+}
+
+/**
+ * Displays the enrollment times for each course.
+ *
+ * If courses have not been loaded, EnrollmentMenu displays loading spinner,
+ * so this component only needs to display the loading spinner when
+ * the userInfo is loading.
+ */
+const EnrollmentTimes = ({
+  enrollmentTimes,
+  coursesLoading,
+  userInfo,
+  userInfoLoading
+}: EnrollmentTimesProps): React.ReactElement | null => {
+  if (coursesLoading) {
+    // if courses are still being loaded, we don't know if we want to render anything yet
+    return null;
+  }
+
+  /**
+   * Formatting for the enrollment times.
+   */
   const date_locale_string_options: Intl.DateTimeFormatOptions = {
     weekday: "long",
     month: "numeric",
@@ -89,56 +167,39 @@ const CourseMenu = () => {
     timeZoneName: "short"
   };
 
-  const enrollment_times = (
-    <React.Fragment>
-      <h3 className="page-title center-title">Enrollment Times:</h3>
-      <div className="enrollment-container">
-        {userInfo && userInfo.priorityEnrollment && (
-          <div className="enrollment-row">
-            <div className="enrollment-course">
-              <em>Priority</em>
-            </div>
-            <div className="enrollment-time">
-              <em>{`${userInfo.priorityEnrollment.toLocaleDateString("en-US", date_locale_string_options)}`}</em>
-            </div>
-          </div>
-        )}
-        {enrollment_times_by_course.map(({ courseName, enrollmentDate }) => (
-          <div className="enrollment-row" key={courseName}>
-            <div className="enrollment-course">{courseName}</div>
-            <div className="enrollment-time">{`${enrollmentDate.toLocaleDateString(
-              "en-US",
-              date_locale_string_options
-            )}`}</div>
-          </div>
-        ))}
-      </div>
-    </React.Fragment>
-  );
+  if (enrollmentTimes.length === 0) {
+    return null;
+  }
 
   return (
-    <Routes>
-      <Route
-        path=":courseId/*"
-        element={
-          <Course
-            courses={courses}
-            priorityEnrollment={userInfo.priorityEnrollment}
-            enrollmentTimes={enrollment_times_by_course}
-          />
-        }
-      />
-      <Route
-        index
-        element={
-          <React.Fragment>
-            {courses && courses.size > 0 && enrollment_menu}
-            <br />
-            {show_enrollment_times && enrollment_times}
-          </React.Fragment>
-        }
-      />
-    </Routes>
+    <React.Fragment>
+      <h3 className="page-title center-title">Enrollment Times:</h3>
+      {userInfoLoading ? (
+        // userInfo is taking a while to load
+        <LoadingSpinner className="spinner-centered" />
+      ) : (
+        // done loading user info
+        <div className="enrollment-container">
+          {userInfo.priorityEnrollment && (
+            <div className="enrollment-row">
+              <div className="enrollment-course">
+                <em>Priority</em>
+              </div>
+              <div className="enrollment-time">
+                <em>{`${userInfo.priorityEnrollment.toLocaleDateString("en-US", date_locale_string_options)}`}</em>
+              </div>
+            </div>
+          )}
+          {enrollmentTimes.map(({ courseName, enrollmentDate }) => (
+            <div className="enrollment-row" key={courseName}>
+              <div className="enrollment-course">{courseName}</div>
+              <div className="enrollment-time">
+                {`${enrollmentDate.toLocaleDateString("en-US", date_locale_string_options)}`}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </React.Fragment>
   );
 };
-export default CourseMenu;
