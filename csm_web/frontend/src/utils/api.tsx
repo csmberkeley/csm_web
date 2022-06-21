@@ -31,7 +31,7 @@ export function fetchWithMethod(endpoint: string, method: string, data: any = {}
       method: method,
       credentials: "same-origin",
       headers: {
-        "X-CSRFToken": Cookies.get("csrftoken")
+        "X-CSRFToken": Cookies.get("csrftoken") ?? ""
       },
       body: data
     });
@@ -40,7 +40,7 @@ export function fetchWithMethod(endpoint: string, method: string, data: any = {}
     method: method,
     credentials: "same-origin",
     headers: {
-      "X-CSRFToken": Cookies.get("csrftoken"),
+      "X-CSRFToken": Cookies.get("csrftoken") ?? "",
       Accept: "application/json",
       "Content-Type": "application/json"
     },
