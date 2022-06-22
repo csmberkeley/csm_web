@@ -7,6 +7,7 @@ import { DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
 
 import Pencil from "../../../../static/frontend/img/pencil.svg";
 import InfoIcon from "../../../../static/frontend/img/info.svg";
+import { Redirect, useHistory } from "react-router-dom";
 
 interface EditTableRow {
   mentorId: number; // need mentor id for identification
@@ -102,6 +103,11 @@ export const EditStage = ({
    * used to set indeterminate state.
    */
   const headerCheckbox = useRef<HTMLInputElement>(null);
+
+  /**
+   * History for redirection after section creation.
+   */
+  const history = useHistory();
 
   /* Fetch mentor data */
   useEffect(() => {
@@ -300,10 +306,7 @@ export const EditStage = ({
     setSelectedMentors(newSelected);
   };
 
-  /**
-   * Send a PUT request to update the saved assignments in the database.
-   */
-  const saveAssignment = () => {
+  const gatherAssignments = (): Assignment[] => {
     const newAssignments: Assignment[] = [];
     editTable.forEach(row => {
       newAssignments.push({
@@ -315,11 +318,38 @@ export const EditStage = ({
         }
       });
     });
+    return newAssignments;
+  };
+
+  /**
+   * Send a PUT request to update the saved assignments in the database.
+   */
+  const saveAssignment = () => {
+    const newAssignments = gatherAssignments();
 
     fetchWithMethod(`/matcher/${profile.courseId}/assignment`, "PUT", {
       assignment: newAssignments
     }).then(() => {
       refreshAssignments();
+    });
+  };
+
+  /**
+   * Send request to create sections.
+   */
+  const createSections = () => {
+    const newAssignments = gatherAssignments();
+
+    fetchWithMethod(`/matcher/${profile.courseId}/create`, "POST", {
+      assignment: newAssignments
+    }).then(async response => {
+      if (response.ok) {
+        history.push("/");
+      } else {
+        const json = await response.json();
+        console.error(json);
+        alert(json.error ?? "Error creating sections");
+      }
     });
   };
 
@@ -361,9 +391,14 @@ export const EditStage = ({
             </React.Fragment>
           )}
         </div>
-        <button className="matcher-assignment-save-button" onClick={() => saveAssignment()}>
-          Save
-        </button>
+        <div className="matcher-assignment-button-div">
+          <button className="matcher-assignment-save-button" onClick={() => saveAssignment()}>
+            Save
+          </button>
+          <button className="matcher-assignment-create-button" onClick={() => createSections()}>
+            Create
+          </button>
+        </div>
       </div>
     </div>
   );

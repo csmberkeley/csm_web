@@ -428,12 +428,15 @@ class Matcher(ValidatingModel):
     assignment = models.JSONField(default=dict, blank=True)
     is_open = models.BooleanField(default=False)
 
+    active = models.BooleanField(default=True)
+
 
 class MatcherSlot(ValidatingModel):
     matcher = models.ForeignKey(Matcher, on_delete=models.CASCADE)
     """
     Serialized times of the form:
     [{"day", "startTime", "endTime"}, ...]
+    Time is in hh:mm 24-hour format
     """
     times = models.JSONField()
     min_mentors = models.PositiveSmallIntegerField()

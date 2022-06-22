@@ -72,21 +72,27 @@ function Header(): React.ReactElement {
     return !location.pathname.startsWith("/resources") && !location.pathname.startsWith("/matcher");
   };
 
-  const [roles, setRoles] = useState<Roles>(emptyRoles());
+  const [activeMatcherRoles, setActiveMatcherRoles] = useState<Roles>(emptyRoles());
 
   useEffect(() => {
-    fetchJSON("profiles").then((profiles: Profile[]) => {
-      const roles = emptyRoles();
-      // get roles, but only if coordinator or mentor with no section
-      for (const profile of profiles) {
-        if (profile.role === "COORDINATOR") {
-          roles["COORDINATOR"].add(profile.courseId);
-        } else if (profile.role === "MENTOR" && profile.sectionId === undefined) {
-          roles["MENTOR"].add(profile.courseId);
+    Promise.all([fetchJSON("/profiles"), fetchJSON("/matcher/active")]).then(
+      ([profiles, activeMatcherCourses]: [Profile[], number[]]) => {
+        const roles = emptyRoles();
+        // get roles, but only if coordinator or mentor with no section
+        for (const profile of profiles) {
+          if (!activeMatcherCourses.includes(profile.courseId)) {
+            // ignore if not active
+            continue;
+          }
+          if (profile.role === "COORDINATOR") {
+            roles["COORDINATOR"].add(profile.courseId);
+          } else if (profile.role === "MENTOR" && profile.sectionId === undefined) {
+            roles["MENTOR"].add(profile.courseId);
+          }
         }
+        setActiveMatcherRoles(roles);
       }
-      setRoles(roles);
-    });
+    );
   }, []);
 
   return (
@@ -100,7 +106,7 @@ function Header(): React.ReactElement {
       <NavLink to="/resources" className="site-title-link" activeClassName="is-active">
         <h3 className="site-title">Resources</h3>
       </NavLink>
-      {roles["COORDINATOR"].size > 0 || roles["MENTOR"].size > 0 ? (
+      {activeMatcherRoles["COORDINATOR"].size > 0 || activeMatcherRoles["MENTOR"].size > 0 ? (
         <NavLink to="/matcher" className="site-title-link" activeClassName="is-active">
           <h3 className="site-title">Matcher</h3>
         </NavLink>

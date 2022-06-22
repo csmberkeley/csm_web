@@ -20,7 +20,7 @@ export function EnrollmentMatcher(): JSX.Element {
   const [staffCourses, setStaffCourses] = useState<Array<MatcherProfile>>([]);
 
   useEffect(() => {
-    fetchJSON("/profiles").then(profiles => {
+    Promise.all([fetchJSON("/profiles"), fetchJSON("/matcher/active")]).then(([profiles, activeCourses]) => {
       const new_courses: Array<MatcherProfile> = [];
       const new_roles: Roles = emptyRoles();
       const new_profile_map: Map<number, Profile> = new Map();
@@ -31,6 +31,10 @@ export function EnrollmentMatcher(): JSX.Element {
           new_profile_map.set(profile.courseId, profile);
         }
         if (profile.role === "COORDINATOR" || (profile.role === "MENTOR" && profile.sectionId == null)) {
+          if (!activeCourses.includes(profile.courseId)) {
+            // ignore if not active
+            return;
+          }
           new_courses.push({
             courseId: profile.courseId,
             courseName: profile.course,
@@ -51,6 +55,10 @@ export function EnrollmentMatcher(): JSX.Element {
       setStaffCourses(new_courses);
     });
   }, []);
+
+  if (roles["COORDINATOR"].size === 0 && roles["MENTOR"].size === 0) {
+    return <div>No matchers found</div>;
+  }
 
   return (
     <div id="matcher-contents">

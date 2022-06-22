@@ -16,10 +16,12 @@ router.register(r"resources", views.ResourceViewSet, basename="resource")
 urlpatterns = router.urls
 
 urlpatterns += [
-    path('userinfo/', views.userinfo, name='userinfo'),
+    path("userinfo/", views.userinfo, name="userinfo"),
+    path("matcher/active/", views.matcher.active),
     path("matcher/<int:pk>/slots/", views.matcher.slots),
     path("matcher/<int:pk>/preferences/", views.matcher.preferences),
     path("matcher/<int:pk>/assignment/", views.matcher.assignment),
     path("matcher/<int:pk>/mentors/", views.matcher.mentors),
     path("matcher/<int:pk>/configure/", views.matcher.configure),
+    path("matcher/<int:pk>/create/", views.matcher.create),
 ]
