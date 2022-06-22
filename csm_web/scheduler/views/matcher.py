@@ -1,32 +1,60 @@
-from rest_framework.decorators import action, api_view
+import datetime
+
+from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from rest_framework import status
 
-from django.db.models.query import EmptyQuerySet
-from django.views.decorators.http import require_http_methods
+from django.db.models import Q
 from django.db import transaction
 
 from scheduler.models import (
     User,
     Course,
+    Section,
     Mentor,
     Matcher,
     MatcherPreference,
     MatcherSlot,
+    Spacetime,
 )
 from scheduler.serializers import (
     MatcherPreferenceSerializer,
     MatcherSlotSerializer,
     MentorSerializer,
-    ProfileSerializer,
 )
-from .utils import viewset_with, get_object_or_error
+from .utils import get_object_or_error
 
 from scheduler.utils.match_solver import get_matches
 
 
 DEFAULT_CAPACITY = 5
+TIME_FORMAT = "%H:%M"  # Assuming 24-hour format in hh:mm
+DEFAULT_LOCATION = "TBD"
+
+
+@api_view(["GET"])
+def active(request):
+    """
+    Endpoint: /api/matcher/active
+
+    GET: Returns a list of course ids for active matchers related to the user.
+        - only gives information about matchers for courses that the user is
+          a coordinator or mentor for
+        - format: [int, int, ...]
+    """
+    user = request.user
+    if not user.is_authenticated:
+        raise PermissionDenied()
+
+    courses = Course.objects.filter(
+        # related to user
+        (Q(mentor__user=user) | Q(coordinator__user=user))
+        # active or not created yet
+        & (Q(matcher__active=True) | Q(matcher__isnull=True))
+    )
+
+    return Response(courses.values_list("id", flat=True))
 
 
 @api_view(["GET", "POST"])
@@ -390,7 +418,11 @@ def assignment(request, pk=None):
 
         # restructure assignments
         assignments = [
-            {"slot": int(cur["slot"]), "mentor": int(cur["mentor"]), "section": cur["section"]}
+            {
+                "slot": int(cur["slot"]),
+                "mentor": int(cur["mentor"]),
+                "section": cur["section"],
+            }
             for cur in matcher.assignment
         ]
         return Response(
@@ -405,11 +437,13 @@ def assignment(request, pk=None):
                     {"error": f"Invalid assignment {cur}"},
                     status=status.HTTP_400_BAD_REQUEST,
                 )
-            assignments.append({
-                "slot": cur["slot"],
-                "mentor": cur["mentor"],
-                "section": cur["section"]
-            })
+            assignments.append(
+                {
+                    "slot": cur["slot"],
+                    "mentor": cur["mentor"],
+                    "section": cur["section"],
+                }
+            )
         matcher.assignment = assignments
         matcher.save()
         return Response([], status=status.HTTP_202_ACCEPTED)
@@ -442,3 +476,91 @@ def run_matcher(course: Course):
 
     # run the matcher
     return get_matches(mentor_list, slot_list, preference_list)
+
+
+@api_view(["POST"])
+def create(request, pk=None):
+    """
+    Endpoint: /api/matcher/<course_pk>/create
+
+    POST: Create sections for the given course from the assignments.
+        - coordinators only
+        - if the input does not match the current server status,
+            return 400 Bad Request
+        - input format: list of slot/mentor/section matching
+            {
+                "assignment: [
+                    {"slot": int, "mentor": int,
+                     "section": {"capacity": int, "description": str}},
+                    ...
+                ]
+            }
+    """
+    course = get_object_or_error(Course.objects.all(), pk=pk)
+    matcher = course.matcher
+    is_coordinator = course.coordinator_set.filter(user=request.user).exists()
+    if not is_coordinator:
+        raise PermissionDenied(
+            "You must be a coordinator to create sections from the matcher assignment."
+        )
+
+    if matcher is None:
+        return Response(
+            {"error": "Matcher has not been set up yet."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # compare local data to server data
+    local_data = request.data["assignment"]
+    server_data = matcher.assignment
+    data_matches = True
+    if len(local_data) != len(server_data):
+        data_matches = False
+
+    # sort by mentor id to avoid ordering issues;
+    # there should only be one assignment per mentor
+    local_data = sorted(local_data, key=lambda x: x["mentor"])
+    server_data = sorted(server_data, key=lambda x: x["mentor"])
+
+    for (local, server) in zip(local_data, server_data):
+        for key in local:
+            if local[key] != server[key]:
+                data_matches = False
+                break
+        if not data_matches:
+            break
+
+    if not data_matches:
+        return Response(
+            {"error": "Input data does not match server data."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+
+    # create sections; atomic to create all sections at once
+    with transaction.atomic():
+        for cur in local_data:
+            mentor = Mentor.objects.get(pk=cur["mentor"])
+            # create section
+            section = Section.objects.create(
+                mentor=mentor,
+                capacity=cur["section"]["capacity"],
+                description=cur["section"]["description"],
+            )
+            # create spacetimes
+            slot = MatcherSlot.objects.get(pk=cur["slot"])
+            for time in slot.times:
+                print(time)
+                start = datetime.datetime.strptime(time["start_time"], TIME_FORMAT)
+                end = datetime.datetime.strptime(time["end_time"], TIME_FORMAT)
+                duration = end - start
+                Spacetime.objects.create(
+                    section=section,
+                    duration=duration,
+                    start_time=start,
+                    day_of_week=time["day"],
+                    location=DEFAULT_LOCATION,
+                )
+        # close the matcher after sections have been created
+        matcher.active = False
+        matcher.save()
+    return Response(status=status.HTTP_201_CREATED)
