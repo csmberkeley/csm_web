@@ -1,20 +1,24 @@
 import React, { useState } from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import { useStudentDropMutation } from "../../utils/query";
 import Modal from "../Modal";
 
 interface StudentDropperProps {
   id: number;
+  sectionId: number;
   name: string;
-  reloadSection: () => void;
 }
 
-export default function StudentDropper({ id, name, reloadSection }: StudentDropperProps) {
+export default function StudentDropper({ id, sectionId, name }: StudentDropperProps) {
   const [showDropPrompt, setShowDropPrompt] = useState(false);
   const [drop, setDrop] = useState(false);
   const [ban, setBan] = useState(false);
 
+  const studentDropMutate = useStudentDropMutation(id, sectionId);
+
   function handleClickDrop() {
-    fetchWithMethod(`students/${id}/drop`, HTTP_METHODS.PATCH, { banned: ban }).then(() => reloadSection());
+    studentDropMutate.mutate({ banned: ban });
+    setShowDropPrompt(false);
   }
 
   return (

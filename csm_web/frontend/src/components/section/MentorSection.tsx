@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from "react";
-import { fetchJSON } from "../../utils/api";
-import { Attendance, Mentor, Spacetime, Student } from "../../utils/types";
+import { Attendance, Mentor, RawAttendance, Spacetime } from "../../utils/types";
 import { SectionDetail, ROLES } from "./Section";
 import { Routes, Route } from "react-router-dom";
 import { groupBy } from "lodash";
 import MentorSectionAttendance from "./MentorSectionAttendance";
 import MentorSectionRoster from "./MentorSectionRoster";
 import MentorSectionInfo from "./MentorSectionInfo";
+import { useSectionAttendances, useSectionStudents } from "../../utils/query";
 
 interface MentorSectionProps {
   id: number;
@@ -20,19 +20,9 @@ interface MentorSectionProps {
   description: string;
 }
 
-interface MentorSectionState {
-  students: Student[];
-  attendances: {
-    [date: string]: Attendance[];
-  };
-  loaded: boolean;
-  loaded_progress: number;
-}
-
-type ResponseAttendance = {
-  studentId: number;
-  studentName: string;
-} & Attendance;
+type GroupedAttendances = {
+  [date: string]: Attendance[];
+};
 
 export default function MentorSection({
   id,
@@ -45,51 +35,31 @@ export default function MentorSection({
   userRole,
   mentor
 }: MentorSectionProps) {
-  const [{ students, attendances, loaded_progress, loaded }, setState] = useState<MentorSectionState>({
-    students: [],
-    attendances: {},
-    loaded: false,
-    loaded_progress: 0
-  });
+  const { data: students, isLoading: studentsLoading } = useSectionStudents(id);
+  const { data: jsonAttendances, isLoading: attendancesLoading } = useSectionAttendances(id);
+  const [attendances, setAttendances] = useState<GroupedAttendances>(undefined as never);
+
   useEffect(() => {
-    setState({ students: [], attendances: {}, loaded: false, loaded_progress: 0 });
-    fetchJSON(`/sections/${id}/students/`).then(data => {
-      const students: Student[] = data
-        .map(({ name, email, id }: Student) => ({ name, email, id }))
-        .sort((stu1: Student, stu2: Student) => stu1.name.toLowerCase().localeCompare(stu2.name.toLowerCase()));
-      setState(state => {
-        return {
-          students,
-          attendances: state.attendances,
-          loaded: state.loaded_progress >= 1,
-          loaded_progress: state.loaded_progress + 1
-        };
-      });
-    });
-    fetchJSON(`/sections/${id}/attendance`).then(data => {
-      const attendances = groupBy(
-        data.flatMap(({ attendances }: { attendances: ResponseAttendance[] }) =>
+    if (jsonAttendances && !attendancesLoading) {
+      const groupedAttendances = groupBy(
+        jsonAttendances.flatMap(({ attendances }: RawAttendance) =>
           attendances
-            .map(({ id, presence, date, studentName, studentId }) => ({
-              id,
-              presence,
-              date,
-              student: { name: studentName, id: studentId }
-            }))
+            .map(
+              ({ id, presence, date, studentId, studentName, studentEmail }) =>
+                ({
+                  id,
+                  presence,
+                  date,
+                  student: { id: studentId, name: studentName, email: studentEmail }
+                } as any)
+            )
             .sort((att1, att2) => att1.student.name.toLowerCase().localeCompare(att2.student.name.toLowerCase()))
         ),
         attendance => attendance.date
-      );
-      setState(state => {
-        return {
-          students: state.students,
-          attendances,
-          loaded: state.loaded_progress >= 1,
-          loaded_progress: state.loaded_progress + 1
-        };
-      });
-    });
-  }, [id]);
+      ) as any;
+      setAttendances(groupedAttendances);
+    }
+  }, [jsonAttendances]);
 
   const updateAttendance = (updatedDate: string | undefined, updatedDateAttendances: Attendance[]) => {
     const updatedAttendances = Object.fromEntries(
@@ -98,11 +68,10 @@ export default function MentorSection({
         date == updatedDate ? [...updatedDateAttendances] : dateAttendances
       ])
     );
-    setState(state => ({
-      ...state,
-      attendances: updatedAttendances
-    }));
+    setAttendances(updatedAttendances);
   };
+
+  const loaded = !studentsLoading && !attendancesLoading && !!attendances;
 
   return (
     <SectionDetail
@@ -122,7 +91,7 @@ export default function MentorSection({
             <MentorSectionAttendance attendances={attendances} loaded={loaded} updateAttendance={updateAttendance} />
           }
         />
-        <Route path="roster" element={<MentorSectionRoster students={students} loaded={loaded} />} />
+        <Route path="roster" element={<MentorSectionRoster id={id} />} />
         <Route
           index
           element={
@@ -130,7 +99,7 @@ export default function MentorSection({
               isCoordinator={userRole === ROLES.COORDINATOR}
               mentor={mentor}
               reloadSection={reloadSection}
-              students={students}
+              students={students!}
               loaded={loaded}
               spacetimes={spacetimes}
               capacity={capacity}
