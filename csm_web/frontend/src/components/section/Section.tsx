@@ -1,32 +1,28 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { NavLink, useParams } from "react-router-dom";
-import { fetchJSON } from "../../utils/api";
 import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";
-import { Override, Section as SectionType, Spacetime } from "../../utils/types";
+import { Override, Spacetime } from "../../utils/types";
+import { useSection } from "../../utils/query";
+import { useQueryClient } from "react-query";
 
 export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
-interface SectionState {
-  section: Omit<SectionType, "id">; // id specified by props
-  loaded: boolean;
-}
-
 export default function Section(): React.ReactElement | null {
   const { id } = useParams();
+  const queryClient = useQueryClient();
 
-  const [{ section, loaded }, setState] = useState<SectionState>({
-    section: (null as unknown) as SectionType, // type coersion to avoid future type errors
-    loaded: false
-  });
+  const { data: section, isLoading: sectionLoading } = useSection(Number(id));
+
+  /**
+   * TODO: completely remove this function after migrating all requests to react-query
+   */
   const reloadSection = () => {
-    setState({ section: (null as unknown) as SectionType, loaded: false });
-    fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
+    console.log("reloading section");
+    queryClient.invalidateQueries(["sections", Number(id)], { refetchInactive: true });
   };
-  useEffect(() => {
-    fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
-  }, [id]);
-  if (!loaded) {
+
+  if (sectionLoading) {
     return null;
   }
   switch (

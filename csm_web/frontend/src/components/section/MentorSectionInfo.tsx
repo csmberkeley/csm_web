@@ -10,6 +10,7 @@ import StudentDropper from "./StudentDropper";
 import XIcon from "../../../static/frontend/img/x.svg";
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
 import MetaEditModal from "./MetaEditModal";
+import { useSectionStudents } from "../../utils/query";
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 
 enum ModalStates {
@@ -32,16 +33,15 @@ interface MentorSectionInfoProps {
 }
 
 export default function MentorSectionInfo({
-  students,
-  loaded,
   spacetimes,
   reloadSection,
   isCoordinator,
   mentor,
   capacity,
-  id,
+  id: sectionId,
   description
 }: MentorSectionInfoProps) {
+  const { data: students, isLoading: studentsLoading } = useSectionStudents(sectionId);
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
   const [userEmails, setUserEmails] = useState<string[]>([]);
@@ -52,7 +52,7 @@ export default function MentorSectionInfo({
       return;
     }
     fetchJSON("/users/").then(userEmails => setUserEmails(userEmails));
-  }, [id, isCoordinator]);
+  }, [sectionId, isCoordinator]);
   const closeModal = () => setShowModal(ModalStates.NONE);
   const closeAddModal = (reload = false) => {
     setIsAddingStudent(false);
@@ -67,7 +67,7 @@ export default function MentorSectionInfo({
       } Section`}</h3>
       <div className="section-info-cards-container">
         <InfoCard title="Students">
-          {loaded && (
+          {!studentsLoading && (
             <React.Fragment>
               <table id="students-table">
                 <thead>
@@ -76,12 +76,12 @@ export default function MentorSectionInfo({
                   </tr>
                 </thead>
                 <tbody>
-                  {(students.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students).map(
-                    ({ name, email, id }: Student) => (
-                      <tr key={id}>
+                  {(students!.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students!).map(
+                    ({ name, email, id: studentId }: Student) => (
+                      <tr key={studentId}>
                         <td>
-                          {isCoordinator && id !== -1 && (
-                            <StudentDropper name={name ? name : email} id={id} reloadSection={reloadSection} />
+                          {isCoordinator && studentId !== -1 && (
+                            <StudentDropper name={name ? name : email} id={studentId} sectionId={sectionId} />
                           )}
                           <span className="student-info">{name || email}</span>
                         </td>
@@ -102,11 +102,11 @@ export default function MentorSectionInfo({
                 </tbody>
               </table>
               {isCoordinator && isAddingStudent && (
-                <CoordinatorAddStudentModal closeModal={closeAddModal} userEmails={userEmails} sectionId={id} />
+                <CoordinatorAddStudentModal closeModal={closeAddModal} userEmails={userEmails} sectionId={sectionId} />
               )}
             </React.Fragment>
           )}
-          {!loaded && <LoadingSpinner />}
+          {studentsLoading && <LoadingSpinner />}
         </InfoCard>
         <div className="section-info-cards-right">
           {spacetimes.map(({ override, ...spacetime }, index) => (
@@ -191,7 +191,7 @@ export default function MentorSectionInfo({
                 </button>
                 {showModal === ModalStates.META_EDIT && (
                   <MetaEditModal
-                    sectionId={id}
+                    sectionId={sectionId}
                     closeModal={closeModal}
                     reloadSection={reloadSection}
                     capacity={capacity}

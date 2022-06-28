@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { normalizeEndpoint } from "../../utils/api";
 import { useCourses } from "../../utils/query";
 import LoadingSpinner from "../LoadingSpinner";
@@ -12,29 +12,34 @@ interface DataExportModalProps {
  * Modal that coords use to export a csv of student emails in selected courses.
  */
 export const DataExportModal = ({ closeModal }: DataExportModalProps): React.ReactElement => {
+  const { data: courses, isLoading: coursesLoading } = useCourses();
+
+  const [courseChecks, setCourseChecks] = useState<Map<number, boolean>>(new Map());
+
   /**
    * Map of course id to course name.
    */
-  const [courseMap, setCourseMap] = useState<Map<number, string>>(new Map());
-  /**
-   * Map of course id to boolean (whether the course is checked)
-   */
-  const [courseChecks, setCourseChecks] = useState<Map<number, boolean>>(new Map());
-
-  const { data: courses, isLoading: coursesLoading } = useCourses();
-
-  /**
-   * Construct a map of course id to course name.
-   */
-  useMemo(() => {
+  const courseMap = useMemo(() => {
     if (courses && !coursesLoading) {
       const coursesById = new Map<number, string>();
-      const courseCheckbyId = new Map<number, boolean>();
       for (const course of courses) {
         coursesById.set(course.id, course.name);
+      }
+      return coursesById;
+    }
+    // not done loading yet
+    return undefined as never;
+  }, [courses]);
+
+  /**
+   * Initialize map of course id to boolean (whether the course is checked)
+   */
+  useEffect(() => {
+    if (courses && !coursesLoading) {
+      const courseCheckbyId = new Map<number, boolean>();
+      for (const course of courses) {
         courseCheckbyId.set(course.id, false);
       }
-      setCourseMap(coursesById);
       setCourseChecks(courseCheckbyId);
     }
   }, [courses]);
