@@ -78,3 +78,17 @@ export interface Attendance {
   student: Student;
   presence: string;
 }
+
+export interface RawAttendance {
+  id: number;
+  date: string;
+  section: Section;
+  attendances: Array<{
+    id: number;
+    date: string;
+    presence: string;
+    studentName: string;
+    studentId: number;
+    studentEmail: string;
+  }>;
+}
