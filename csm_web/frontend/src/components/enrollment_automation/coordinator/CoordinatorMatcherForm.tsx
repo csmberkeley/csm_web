@@ -22,8 +22,7 @@ enum Stage {
   CREATE,
   RELEASE,
   CONFIGURE,
-  EDIT,
-  FINALIZE
+  EDIT
 }
 
 interface StrTime {
@@ -163,12 +162,7 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
 
   STAGE 4: Edit
     - When: Exists assignment
-    - Now: able to edit the assignment
-    - Next: Updates assignment / Continue if no changes
-
-  STAGE 5: Finalize
-    - When: N/A; will always manually get to this stage on frontend
-    - Now: able to edit section descriptions, capacities, etc. manually
+    - Now: able to edit the assignment, section descriptions, capacities, etc. manually
     - Done: Create sections
 
     after creation, disable matcher and hide it
@@ -238,9 +232,6 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
           onClick={() => setCurStage(Stage.EDIT)}
         >
           <div className="matcher-stages-stage-title">Edit</div>
-        </div>
-        <div className={`matcher-stages-stage ${curStage === Stage.FINALIZE ? "active-stage" : ""}`}>
-          <div className="matcher-stages-stage-title">Finalize</div>
         </div>
       </div>
       <div className="matcher-content">

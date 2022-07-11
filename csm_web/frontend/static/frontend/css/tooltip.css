@@ -1,0 +1,19 @@
+.tooltip-body {
+	position: absolute;
+	z-index: 1000;
+	display: block;
+	visibility: visible;
+	background-color: #fff;
+	font-size: 0.85rem;
+	border-radius: 4px;
+	-webkit-box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+	box-shadow: 0 0 5px rgba(0, 0, 0, 0.1);
+	border: 1px solid #ccc;
+	padding: 5px 10px;
+	opacity: 0;
+	transition: opacity 0.2s ease-out;
+}
+
+.tooltip-body.open {
+	opacity: 1;
+}

@@ -1,4 +1,4 @@
-import React, { Ref, useEffect, useRef, useState } from "react";
+import React, { Ref, useEffect, useMemo, useRef, useState } from "react";
 import { CalendarDay, CalendarDayHeader } from "./CalendarDay";
 import { CalendarEvent, CalendarEventSingleTime, DAYS } from "./CalendarTypes";
 
@@ -41,6 +41,7 @@ interface CalendarProps {
   selectedEventIdx: number;
   setSelectedEventIdx: (idx: number) => void;
   disableHover: boolean;
+  limitScrolling: boolean;
 }
 
 export function Calendar({
@@ -53,7 +54,8 @@ export function Calendar({
   onEventBeginCreation,
   onEventCreated,
   setSelectedEventIdx,
-  disableHover
+  disableHover,
+  limitScrolling
 }: CalendarProps): React.ReactElement {
   const [viewBounds, setViewBounds] = useState<{ start: number; end: number }>({ start: START, end: END });
 
@@ -66,6 +68,17 @@ export function Calendar({
     startTime: -1,
     endTime: -1
   });
+
+  const [minEventTime, maxEventTime] = useMemo(() => {
+    return events.reduce(
+      ([min, max], event) => {
+        const start = Math.min(...event.times.map(t => t.startTime));
+        const end = Math.max(...event.times.map(t => t.endTime));
+        return [Math.min(min, start), Math.max(max, end)];
+      },
+      [Number.MAX_VALUE, Number.MIN_VALUE]
+    );
+  }, [events]);
 
   // reference for calendar body mousewheel event listener
   const calendarBodyRef = useRef<HTMLDivElement>(null);
@@ -104,6 +117,11 @@ export function Calendar({
   }, [eventCreationEnabled]);
 
   const scrollView = (e: WheelEvent) => {
+    if (limitScrolling && minEventTime > viewBounds.start && maxEventTime < viewBounds.end) {
+      // everything is in the viewport; don't scroll
+      return;
+    }
+
     // prevent page scroll
     e.preventDefault();
 
@@ -271,7 +289,8 @@ Calendar.defaultProps = {
   onEventCreated: () => {
     /* do nothing */
   },
-  disableHover: false
+  disableHover: false,
+  limitScrolling: false
 };
 
 interface CalendarLabelsProps {

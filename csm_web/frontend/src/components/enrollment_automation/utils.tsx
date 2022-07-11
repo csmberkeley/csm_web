@@ -1,4 +1,9 @@
 /**
+ * Maximum preference for mentors
+ */
+export const MAX_PREFERENCE = 5;
+
+/**
  * Convert 24hr time to 12hr time
  *
  * @param time string in format "HH:MM"

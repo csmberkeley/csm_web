@@ -3,6 +3,8 @@
 @import url("./enrollment_matcher.css");
 @import url("./fontawesome-styles.css");
 @import url("./calendar.css");
+@import url("./searchbar.css");
+@import url("./tooltip.css");
 
 html,
 body {

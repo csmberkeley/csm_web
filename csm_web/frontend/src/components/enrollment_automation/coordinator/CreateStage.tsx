@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from "react";
+import _ from "lodash";
+
 import { fetchWithMethod, fetchJSON, HTTP_METHODS } from "../../../utils/api";
 import { Profile } from "../../../utils/types";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime, DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
 import { Slot, Time } from "../EnrollmentAutomationTypes";
 import { formatTime, parseTime, serializeTime } from "../utils";
+import { Tooltip } from "../../Tooltip";
 
 import XIcon from "../../../../static/frontend/img/x.svg";
+import InfoIcon from "../../../../static/frontend/img/info.svg";
 
 interface TileDetails {
   days: string[];
@@ -23,13 +27,35 @@ interface CreateStageProps {
 }
 
 export function CreateStage({ profile, initialSlots, refreshStage }: CreateStageProps): JSX.Element {
-  const [slots, setSlots] = useState<Slot[]>(initialSlots);
+  /**
+   * List of slots to be displayed in the calendar.
+   */
+  const [slots, _setSlots] = useState<Slot[]>(initialSlots);
+  /**
+   * Current created times in the new slot.
+   */
   const [curCreatedTimes, setCurCreatedTimes] = useState<Time[]>([]);
+  /**
+   * Saved existing event in case of canceling the edit.
+   */
+  const [savedExistingEvent, setSavedExistingEvent] = useState<CalendarEvent | null>(null);
 
+  /**
+   * Currently selected existing event to view details for.
+   */
   const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  /**
+   * Index of currently selected existing event.
+   */
   const [selectedEventIdx, setSelectedEventIdx] = useState<number>(-1);
 
+  /**
+   * Whether the user is creating tiled events; shows a specialized sidebar.
+   */
   const [creatingTiledEvents, setCreatingTiledEvents] = useState<boolean>(false);
+  /**
+   * Details for currently created tiled event.
+   */
   const [tileDetails, setTileDetails] = useState<TileDetails>({
     days: [],
     daysLinked: false,
@@ -38,12 +64,27 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
     length: 60
   });
 
-  // ref objects for tiled event details
+  /**
+   * Whether or not anything has been edited
+   */
+  const [edited, setEdited] = useState<boolean>(false);
+
+  /**
+   *  ref objects for tiled event details
+   */
   const tileRefs = {
     days: React.createRef<HTMLFormElement>(),
     startTime: React.createRef<HTMLInputElement>(),
     endTime: React.createRef<HTMLInputElement>(),
     length: React.createRef<HTMLInputElement>()
+  };
+
+  /**
+   * Wrapper for setSlots, marking that changes have been made
+   */
+  const setSlots = (arg: React.SetStateAction<Slot[]>) => {
+    setEdited(true);
+    _setSlots(arg);
   };
 
   useEffect(() => {
@@ -85,7 +126,9 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
     });
     console.log(converted_slots);
 
-    fetchWithMethod(`matcher/${profile.courseId}/slots`, HTTP_METHODS.POST, { slots: converted_slots });
+    fetchWithMethod(`matcher/${profile.courseId}/slots`, HTTP_METHODS.POST, { slots: converted_slots }).then(() => {
+      setEdited(false);
+    });
   };
 
   const openForm = (): void => {
@@ -225,11 +268,12 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
   };
 
   const toggleCreatingTiledEvents = (e: React.ChangeEvent<HTMLInputElement>): void => {
+    // current value of checkbox after click
     const checked = e.target.checked;
     if (checked) {
-      setSelectedEvent(null);
-      setSelectedEventIdx(-1);
-      setCurCreatedTimes([]);
+      // equivalent to canceling event creation
+      cancelEvent();
+      // initialize tiling event creation
       setTileDetails({
         ...tileDetails,
         days: [],
@@ -283,28 +327,6 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
     setSlots([...slots, ...newSlots]);
   };
 
-  // const updateNumMentors = (e: React.ChangeEvent<HTMLInputElement>, useSelected = false) => {
-  //   const newNumMentors = parseInt(e.target.value);
-  //   if (isNaN(newNumMentors)) {
-  //     return;
-  //   }
-  //   if (useSelected) {
-  //     const newSlots = slots.map((slot, idx) => {
-  //       if (idx === selectedEventIdx) {
-  //         return {
-  //           ...slot,
-  //           num_mentors: newNumMentors
-  //         };
-  //       }
-  //       return slot;
-  //     });
-  //     setSlots(newSlots);
-  //     setSelectedEvent(newSlots[selectedEventIdx]);
-  //   } else {
-  //     setCurNumMentors(newNumMentors);
-  //   }
-  // };
-
   /**
    * Save the newly created event and times
    */
@@ -312,16 +334,53 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
     const newEvent = { times: curCreatedTimes };
     setSlots([...slots, newEvent]);
     setCurCreatedTimes([]);
+    setSavedExistingEvent(null);
+    setSelectedEvent(null);
+    setSelectedEventIdx(-1);
+  };
+
+  /**
+   * Cancel create event
+   */
+  const cancelEvent = () => {
+    if (savedExistingEvent !== null) {
+      setSlots([...slots, savedExistingEvent]);
+      setSavedExistingEvent(null);
+    }
+    // proceed with resetting current event
+    deleteEvent();
+  };
+
+  /**
+   * Delete the event
+   */
+  const deleteEvent = () => {
+    setCurCreatedTimes([]);
+    setSelectedEvent(null);
+    setSelectedEventIdx(-1);
   };
 
   /**
    * Convert selected event into a newly created event for editing
    */
   const editSelectedEvent = () => {
-    setCurCreatedTimes(selectedEvent!.times);
+    // copy event
+    setCurCreatedTimes(_.cloneDeep(selectedEvent!.times));
+    setSavedExistingEvent(_.cloneDeep(selectedEvent)); // duplicate event
+    // delete event
+    deleteSelectedEvent();
+  };
+
+  /**
+   * Delete the selected event
+   */
+  const deleteSelectedEvent = () => {
     const newSlots = [...slots];
-    newSlots.splice(selectedEventIdx!, 1);
+    newSlots.splice(selectedEventIdx, 1);
     setSlots(newSlots);
+    // deselect event
+    setSelectedEvent(null);
+    setSelectedEventIdx(-1);
   };
 
   /**
@@ -330,17 +389,13 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    * @param idx index of event to select
    */
   const setSelectedEventIdxWrapper = (idx: number) => {
-    if (!creatingTiledEvents) {
+    if (!creatingTiledEvents && curCreatedTimes.length == 0) {
       setSelectedEventIdx(idx);
       setSelectedEvent(slots[idx]);
     }
   };
 
-  // const showSidebar = (event_idx: number) => {
-  //   // console.log(event_idx);
-  //   // setSelectedEventIdx(event_idx);
-  //   setSelectedEvent(slots[event_idx]);
-  // };
+  console.log({ savedExistingEvent });
 
   /**
    * Render the details of an event in the sidebar
@@ -360,143 +415,163 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
     );
   };
 
-  let topContents = <div>Click and drag to create a new section, or click an existing section to edit.</div>;
+  let topContents = <div>Click and drag to create a new section slot, or click an existing slot to edit.</div>;
   if (creatingTiledEvents) {
     topContents = (
       <div className="matcher-sidebar-tiling">
         <div className="matcher-sidebar-tiling-top">
-          Create tiled events
-          <br />
-          Days: (
-          <label>
-            Link days <input type="checkbox" onChange={editTiled_linked} />
-          </label>
-          )
-          <form className="tiling-day-container" ref={tileRefs.days} onChange={editTiled_day}>
-            {DAYS.map(day => (
-              <label key={day}>
-                <input type="checkbox" value={day} />
-                {day}
-              </label>
-            ))}
-          </form>
-          Range:
-          <input
-            type="time"
-            ref={tileRefs.startTime}
-            defaultValue={serializeTime(tileDetails.startTime)}
-            onChange={e => editTiled_number("startTime", parseTime(e.target.value))}
-          />
-          &#8211;
-          <input
-            type="time"
-            ref={tileRefs.endTime}
-            defaultValue={serializeTime(tileDetails.endTime)}
-            onChange={e => editTiled_number("endTime", parseTime(e.target.value))}
-          />
-          Length:
-          <input
-            type="number"
-            ref={tileRefs.length}
-            min={15}
-            step={5}
-            defaultValue={tileDetails.length}
-            onChange={e => e.target.validity.valid && editTiled_number("length", parseInt(e.target.value))}
-          />
+          <div className="matcher-sidebar-header">Create tiled events</div>
+          <div className="matcher-sidebar-tiling-body">
+            <div className="matcher-tiling-day-container">
+              <div className="matcher-tiling-subheader">Days:</div>
+              <form className="matcher-tiling-day-form" ref={tileRefs.days} onChange={editTiled_day}>
+                {DAYS.map(day => (
+                  <label key={day}>
+                    <input type="checkbox" value={day} />
+                    {day}
+                  </label>
+                ))}
+              </form>
+              <div className="matcher-tiling-link-day-container">
+                <label className="matcher-tiling-link-day-label">
+                  <input type="checkbox" onChange={editTiled_linked} />
+                  Link days?
+                </label>
+                <Tooltip
+                  source={<InfoIcon className="icon matcher-tooltip-info-icon" />}
+                  bodyClassName="matcher-tiling-tooltip-body"
+                >
+                  Associate the same times across selected days with a single event.
+                </Tooltip>
+              </div>
+            </div>
+
+            <div className="matcher-tiling-range-container">
+              <div className="matcher-tiling-subheader">Range:</div>
+              <input
+                type="time"
+                ref={tileRefs.startTime}
+                defaultValue={serializeTime(tileDetails.startTime)}
+                onChange={e => editTiled_number("startTime", parseTime(e.target.value))}
+              />
+              &#8211;
+              <input
+                type="time"
+                ref={tileRefs.endTime}
+                defaultValue={serializeTime(tileDetails.endTime)}
+                onChange={e => editTiled_number("endTime", parseTime(e.target.value))}
+              />
+            </div>
+            <div className="matcher-tiling-length-container">
+              <div className="matcher-tiling-subheader">Length:</div>
+              <input
+                className="matcher-tiling-length-input"
+                type="number"
+                ref={tileRefs.length}
+                min={15}
+                step={5}
+                defaultValue={tileDetails.length}
+                onChange={e => e.target.validity.valid && editTiled_number("length", parseInt(e.target.value))}
+              />
+              mins
+            </div>
+          </div>
         </div>
         <div className="matcher-sidebar-tiling-bottom">
-          <button onClick={saveTiledEvents}>Save</button>
+          <button className="matcher-secondary-btn" onClick={saveTiledEvents}>
+            Save
+          </button>
         </div>
       </div>
     );
   } else if (curCreatedTimes.length > 0) {
+    // currently editing an event
     topContents = (
-      <div>
-        Section Time{curCreatedTimes.length > 1 ? "s" : ""}:
-        <div className="matcher-selected-times">
-          {curCreatedTimes.map((time, time_idx) => (
-            <div key={time_idx}>
-              <XIcon className="icon matcher-remove-time-icon" onClick={() => deleteTime(time_idx)} />
-              <select
-                className="matcher-select-day-input"
-                defaultValue={time.day}
-                onChange={e => editTime_day(time_idx, e.target.value)}
-              >
-                {DAYS.map(day => (
-                  <option key={day} value={day}>
-                    {DAYS_ABBREV[day]}
-                  </option>
-                ))}
-              </select>
-              <input
-                className="matcher-select-time-input"
-                type="time"
-                defaultValue={serializeTime(time.startTime)}
-                onChange={e => editTime_startTime(time_idx, e.target.value)}
-              />
-              &#8211;
-              <input
-                className="matcher-select-time-input"
-                type="time"
-                defaultValue={serializeTime(time.endTime)}
-                onChange={e => editTime_endTime(time_idx, e.target.value)}
-              />
-            </div>
-          ))}
+      <div className="matcher-sidebar-create">
+        <div className="matcher-sidebar-create-top">
+          <div className="matcher-sidebar-header">Section Time{curCreatedTimes.length > 1 ? "s" : ""}:</div>
+          <div className="matcher-created-times">
+            {curCreatedTimes.map((time, time_idx) => (
+              <div className="matcher-created-time-container" key={time_idx}>
+                <div className="matcher-created-time-remove">
+                  <XIcon className="icon matcher-remove-time-icon" onClick={() => deleteTime(time_idx, false)} />
+                </div>
+                <div className="matcher-created-time">
+                  <select
+                    defaultValue={time.day}
+                    key={`day_${time_idx}/${selectedEventIdx}`}
+                    onChange={e => editTime_day(time_idx, e.target.value, false)}
+                  >
+                    {DAYS.map(day => (
+                      <option key={day} value={day}>
+                        {DAYS_ABBREV[day]}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="time"
+                    key={`start_${time_idx}/${selectedEventIdx}`}
+                    defaultValue={serializeTime(time.startTime)}
+                    onChange={e => editTime_startTime(time_idx, e.target.value, false)}
+                  />
+                  &#8211;
+                  <input
+                    type="time"
+                    key={`end_${time_idx}/${selectedEventIdx}`}
+                    defaultValue={serializeTime(time.endTime)}
+                    onChange={e => editTime_endTime(time_idx, e.target.value, false)}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        {/* <div>
-          Number of mentors:
-          <input type="number" defaultValue={curNumMentors} onChange={updateNumMentors} />
-        </div> */}
-        <button onClick={saveEvent}>Save</button>
+        <div className="matcher-sidebar-create-bottom">
+          <div className="matcher-sidebar-create-bottom-row">
+            <button className="matcher-secondary-btn" onClick={saveEvent}>
+              Save
+            </button>
+            <button className="matcher-secondary-btn" onClick={cancelEvent}>
+              Cancel
+            </button>
+          </div>
+          <div className="matcher-sidebar-create-bottom-row">
+            <button className="matcher-danger-btn" onClick={deleteEvent}>
+              Delete
+            </button>
+          </div>
+        </div>
+        <div className="matcher-sidebar-create-footer">Drag to add another time to the slot.</div>
       </div>
     );
   } else if (selectedEvent !== null) {
-    console.log(selectedEvent);
+    // selected an event to view, but not edit
     topContents = (
-      <div>
-        Section Time{selectedEvent.times.length > 1 ? "s" : ""}
-        <div className="matcher-selected-times">
-          {selectedEvent.times.map((time, time_idx) => (
-            <div key={time_idx}>
-              <XIcon className="icon matcher-remove-time-icon" onClick={() => deleteTime(time_idx, true)} />
-              <select
-                defaultValue={time.day}
-                key={`day_${time_idx}/${selectedEventIdx}`}
-                onChange={e => editTime_day(time_idx, e.target.value, true)}
-              >
-                {DAYS.map(day => (
-                  <option key={day} value={day}>
-                    {day.slice(0, 3)}
-                  </option>
-                ))}
-              </select>
-              <input
-                type="time"
-                key={`start_${time_idx}/${selectedEventIdx}`}
-                defaultValue={serializeTime(time.startTime)}
-                onChange={e => editTime_startTime(time_idx, e.target.value, true)}
-              />
-              &#8211;
-              <input
-                type="time"
-                key={`end_${time_idx}/${selectedEventIdx}`}
-                defaultValue={serializeTime(time.endTime)}
-                onChange={e => editTime_endTime(time_idx, e.target.value, true)}
-              />
-            </div>
-          ))}
+      <div className="matcher-sidebar-selected">
+        <div className="matcher-sidebar-selected-top">
+          <div className="matcher-sidebar-header">Section Time{selectedEvent.times.length > 1 ? "s" : ""}:</div>
+          <ul className="matcher-selected-times">
+            {selectedEvent.times.map((time, time_idx) => (
+              <li key={time_idx} className="matcher-selected-time-container">
+                <span className="matcher-selected-time">
+                  {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
+                </span>
+              </li>
+            ))}
+          </ul>
         </div>
-        {/* <div>
-          Number of mentors:
-          <input
-            type="number"
-            key={selectedEventIdx}
-            defaultValue={selectedEvent.num_mentors}
-            onChange={e => updateNumMentors(e, true)}
-          />
-        </div> */}
-        <button onClick={editSelectedEvent}>Edit</button>
+        <div className="matcher-sidebar-selected-bottom">
+          <div className="matcher-sidebar-selected-bottom-row">
+            <button className="matcher-secondary-btn" onClick={editSelectedEvent}>
+              Edit
+            </button>
+          </div>
+          <div className="matcher-sidebar-selected-bottom-row">
+            <button className="matcher-danger-btn" onClick={deleteSelectedEvent}>
+              Delete
+            </button>
+          </div>
+        </div>
       </div>
     );
   }
@@ -507,7 +582,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
         <div className="coordinator-sidebar-left">
           <div className="matcher-sidebar-left-top">{topContents}</div>
           <div className="matcher-sidebar-left-bottom">
-            <label className="matcher-submit-btn toggle-tiling">
+            <label className="matcher-submit-btn matcher-tiling-toggle matcher-toggle-btn">
               <input type="checkbox" onChange={toggleCreatingTiledEvents} />
               Create tiled events
             </label>
@@ -529,8 +604,11 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
           />
         </div>
       </div>
-      <div className="matcher-body-footer">
-        <button className="matcher-submit-btn" onClick={openForm}>
+      <div className="matcher-body-footer-right">
+        <div className="matcher-unsaved-changes-container">
+          {edited && <span className="matcher-unsaved-changes">You have unsaved changes!</span>}
+        </div>
+        <button className="matcher-submit-btn" onClick={openForm} disabled={edited}>
           Release Form
         </button>
       </div>

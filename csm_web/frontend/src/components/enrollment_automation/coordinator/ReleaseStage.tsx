@@ -2,11 +2,17 @@ import React, { useEffect, useRef, useState } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../../utils/api";
 import { Mentor, Profile } from "../../../utils/types";
 
-import XIcon from "../../../../static/frontend/img/x.svg";
 import { Slot, MentorPreference, SlotPreference } from "../EnrollmentAutomationTypes";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
 import { formatTime } from "../utils";
+
+import XIcon from "../../../../static/frontend/img/x.svg";
+import UndoIcon from "../../../../static/frontend/img/undo.svg";
+import EyeIcon from "../../../../static/frontend/img/eye.svg";
+import CheckIcon from "../../../../static/frontend/img/check.svg";
+import Modal from "../../Modal";
+import { SearchBar } from "../../SearchBar";
 
 interface ReleaseStageProps {
   profile: Profile;
@@ -22,11 +28,6 @@ interface ReleaseStageProps {
   refreshStage: () => void;
 }
 
-enum Tabs {
-  MENTOR_LIST,
-  PREFERENCE_STATUS
-}
-
 /**
  * Component to:
  * - Add mentors to fill out the preference form
@@ -39,14 +40,8 @@ export function ReleaseStage({
   prefByMentor,
   refreshStage
 }: ReleaseStageProps): React.ReactElement {
-  const [curTab, setCurTab] = useState(Tabs.MENTOR_LIST);
-
-  let innerComponent = null;
-  if (curTab === Tabs.MENTOR_LIST) {
-    innerComponent = <MentorList profile={profile} prefByMentor={prefByMentor} />;
-  } else if (curTab === Tabs.PREFERENCE_STATUS) {
-    innerComponent = <PreferenceStatus profile={profile} slots={slots} prefByMentor={prefByMentor} />;
-  }
+  const [selectedMentor, setSelectedMentor] = useState<Mentor | undefined>(undefined);
+  console.log(selectedMentor);
 
   const closeForm = () => {
     // send POST request to close form for mentors
@@ -59,24 +54,25 @@ export function ReleaseStage({
   return (
     <React.Fragment>
       <div className="release-container">
-        <div className="release-tablist">
-          <a
-            className={`release-tab ${curTab === Tabs.MENTOR_LIST ? "active" : ""}`}
-            onClick={() => curTab === Tabs.PREFERENCE_STATUS && setCurTab(Tabs.MENTOR_LIST)}
-          >
-            Mentors
-          </a>
-          <a
-            className={`release-tab ${curTab === Tabs.PREFERENCE_STATUS ? "active" : ""}`}
-            onClick={() => curTab === Tabs.MENTOR_LIST && setCurTab(Tabs.PREFERENCE_STATUS)}
-          >
-            Preferences
-          </a>
+        <div className="release-body-top">
+          <MentorList
+            profile={profile}
+            prefByMentor={prefByMentor}
+            selectedMentor={selectedMentor}
+            setSelectedMentor={setSelectedMentor}
+          />
         </div>
-        <div className="release-body">{innerComponent}</div>
+        <div className="release-body-bottom">
+          <PreferenceStatus
+            profile={profile}
+            slots={slots}
+            prefByMentor={prefByMentor}
+            selectedMentor={selectedMentor}
+          />
+        </div>
       </div>
 
-      <div className="matcher-body-footer">
+      <div className="matcher-body-footer-right">
         <button className="matcher-submit-btn" onClick={closeForm}>
           Close Form
         </button>
@@ -100,9 +96,11 @@ const mentorString = (mentor: Mentor) => {
 interface MentorListProps {
   profile: Profile;
   prefByMentor: Map<number, SlotPreference[]>;
+  selectedMentor: Mentor | undefined;
+  setSelectedMentor: React.Dispatch<React.SetStateAction<Mentor | undefined>>;
 }
 
-function MentorList({ profile, prefByMentor }: MentorListProps): React.ReactElement {
+function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }: MentorListProps): React.ReactElement {
   /**
    * List of all mentors associated with the course that have no assigned section
    */
@@ -115,6 +113,10 @@ function MentorList({ profile, prefByMentor }: MentorListProps): React.ReactElem
    * Mentors to be removed
    */
   const [removedMentorList, setRemovedMentorList] = useState<string[]>([]);
+  /**
+   * Whether to show the add mentors modal
+   */
+  const [showAddMentorsModal, setShowAddMentorsModal] = useState(false);
 
   /**
    * Reference to the search bar input field
@@ -164,6 +166,7 @@ function MentorList({ profile, prefByMentor }: MentorListProps): React.ReactElem
 
   const submitMentorList = () => {
     const newMentorsString = addMentorTextArea.current?.value;
+    setShowAddMentorsModal(false);
 
     if (!newMentorsString) {
       // nothing to request
@@ -218,8 +221,11 @@ function MentorList({ profile, prefByMentor }: MentorListProps): React.ReactElem
   };
 
   const removeMentor = (mentor: Mentor) => {
-    setMentorList(prev => prev.filter(prev_mentor => prev_mentor.email !== mentor.email));
     setRemovedMentorList(prev => [...prev, mentor.email]);
+  };
+
+  const undoRemoveMentor = (mentor: Mentor) => {
+    setRemovedMentorList(prev => prev.filter(email => email !== mentor.email));
   };
 
   const submitMentorRemovals = () => {
@@ -237,48 +243,122 @@ function MentorList({ profile, prefByMentor }: MentorListProps): React.ReactElem
     });
   };
 
+  const hasPreferences = (mentor: Mentor) => prefByMentor.has(mentor.id);
+
+  console.log(filteredMentorList);
+
   return (
     <React.Fragment>
-      <div className="mentor-list-container">
-        <div className="mentor-list-left">
-          <div className="mentor-list-left-top">
-            <div className="mentor-list-search">
-              <span className="mentor-list-search-label">Search Mentors:</span>
-              <input
-                className="mentor-list-search-input"
-                type="text"
-                ref={searchBar}
-                onChange={e => updateSearch(e.target.value)}
-              />
-            </div>
-            <div className="mentor-list">
-              {filteredMentorList.map((mentor, index) => (
-                <div className="mentor-list-item" key={index}>
-                  <XIcon className="icon mentor-list-item-remove" onClick={() => removeMentor(mentor)} />
-                  {mentorString(mentor)}
-                </div>
-              ))}
-            </div>
+      {showAddMentorsModal && (
+        <Modal closeModal={() => setShowAddMentorsModal(false)}>
+          <div className="mentor-list-right">
+            <span className="mentor-add-label">Add mentor emails (one per line, or separated by commas):</span>
+            <textarea className="mentor-add-textarea" ref={addMentorTextArea}></textarea>
+            <button className="matcher-submit-btn" onClick={submitMentorList}>
+              Submit
+            </button>
           </div>
-          <div className="mentor-list-left-bottom">
-            <button
-              className="matcher-submit-btn"
-              onClick={submitMentorRemovals}
-              disabled={removedMentorList.length == 0}
-            >
-              Update
+        </Modal>
+      )}
+      <div className="mentor-list-container">
+        <div className="mentor-list-top">
+          <SearchBar ref={searchBar} onChange={e => updateSearch(e.target.value)} />
+          <div className="mentor-list-top-buttons">
+            {removedMentorList.length > 0 && (
+              <button className="matcher-secondary-btn" onClick={submitMentorRemovals}>
+                Update
+              </button>
+            )}
+
+            <button className="matcher-submit-btn" onClick={() => setShowAddMentorsModal(true)}>
+              Add Mentors
             </button>
           </div>
         </div>
-        <div className="mentor-list-right">
-          <span className="mentor-add-label">Add mentors (one per line, or separated by commas):</span>
-          <textarea className="mentor-add-textarea" ref={addMentorTextArea}></textarea>
-          <button className="matcher-submit-btn" onClick={submitMentorList}>
-            Submit
-          </button>
+        <div className="mentor-list-body">
+          <div className="mentor-list-header">
+            <div className="mentor-list-icon mentor-list-item-remove"></div>
+            <div className="mentor-list-icon mentor-list-item-view"></div>
+            <div className="mentor-list-item-name">Name</div>
+            <div className="mentor-list-item-email">Email</div>
+            <div className="mentor-list-item-check">Submitted</div>
+          </div>
+          <div className="mentor-list">
+            {filteredMentorList.map((mentor, index) => (
+              <MentorListItem
+                key={mentor.id}
+                mentor={mentor}
+                removedMentorList={removedMentorList}
+                removeMentor={removeMentor}
+                undoRemoveMentor={undoRemoveMentor}
+                hasPreferences={hasPreferences(mentor)}
+                selectedMentor={selectedMentor}
+                setSelectedMentor={setSelectedMentor}
+              />
+            ))}
+          </div>
         </div>
+        <div className="mentor-list-bottom"></div>
       </div>
     </React.Fragment>
+  );
+}
+
+interface MentorListItemProps {
+  mentor: Mentor;
+  removedMentorList: string[];
+  removeMentor: (mentor: Mentor) => void;
+  undoRemoveMentor: (mentor: Mentor) => void;
+  hasPreferences: boolean;
+  selectedMentor: Mentor | undefined;
+  setSelectedMentor: (mentor: Mentor | undefined) => void;
+}
+
+function MentorListItem({
+  mentor,
+  removedMentorList,
+  removeMentor,
+  undoRemoveMentor,
+  hasPreferences,
+  selectedMentor,
+  setSelectedMentor
+}: MentorListItemProps) {
+  const classList = ["mentor-list-item"];
+  // whether we can select the item
+  if (hasPreferences) {
+    classList.push("mentor-list-item-clickable");
+  } else {
+    classList.push("mentor-list-item-unclickable");
+  }
+  // removal status
+  let removeIcon;
+  if (removedMentorList.includes(mentor.email)) {
+    classList.push("mentor-list-item-removed");
+    removeIcon = (
+      <UndoIcon
+        className="icon mentor-list-icon mentor-list-item-undo-remove"
+        onClick={() => undoRemoveMentor(mentor)}
+      />
+    );
+  } else {
+    removeIcon = (
+      <XIcon className="icon mentor-list-icon mentor-list-item-remove" onClick={() => removeMentor(mentor)} />
+    );
+  }
+  // selection status
+  if (selectedMentor?.id === mentor.id) {
+    classList.push("mentor-list-item-selected");
+  }
+  const classString = classList.join(" ");
+
+  return (
+    <div className={classString}>
+      {removeIcon}
+      <EyeIcon className="icon mentor-list-icon mentor-list-item-view" onClick={() => setSelectedMentor(mentor)} />
+      <div className="mentor-list-item-name">{mentor.name}</div>
+      <div className="mentor-list-item-email">{mentor.email}</div>
+      <div className="mentor-list-item-check">{hasPreferences && <CheckIcon className="icon mentor-list-icon" />}</div>
+    </div>
   );
 }
 
@@ -289,49 +369,30 @@ interface PreferenceStatusProps {
    * Map from mentor id to mentor preferences
    */
   prefByMentor: Map<number, SlotPreference[]>;
+  selectedMentor: Mentor | undefined;
 }
 
-function PreferenceStatus({ profile, slots, prefByMentor }: PreferenceStatusProps): React.ReactElement {
-  const [selectedMentor, setSelectedMentor] = useState<Mentor | undefined>(undefined);
-  const [mentorList, setMentorList] = useState<Mentor[]>([]);
-  const [filteredMentorList, setFilteredMentorList] = useState<Mentor[]>([]);
-
-  const searchBar = useRef<HTMLInputElement>(null);
-
-  // fetch mentors on first load
-  useEffect(() => {
-    fetchMentors();
-  }, []);
-
-  // update filtered mentor list whenever the mentor list updates
-  useEffect(() => {
-    updateSearch(searchBar.current?.value);
-  }, [mentorList]);
-
-  /**
-   * Fetch mentors from server, filtering only those with preferences
-   */
-  const fetchMentors = () => {
-    fetchJSON(`matcher/${profile.courseId}/mentors`).then(data => {
-      const sortedMentors: Mentor[] = data.mentors.sort((mentor1: Mentor, mentor2: Mentor) =>
-        mentor1.email.toLowerCase().localeCompare(mentor2.email.toLowerCase())
-      );
-      const filteredMentors = sortedMentors.filter((mentor: Mentor) => prefByMentor.has(mentor.id));
-      setMentorList(filteredMentors);
-    });
-  };
-
+function PreferenceStatus({ slots, prefByMentor, selectedMentor }: PreferenceStatusProps): React.ReactElement {
+  console.log("preference status");
   const getEventDetails = (event: CalendarEventSingleTime) => {
     let detail: React.ReactNode = "";
     if (selectedMentor !== undefined) {
       const preferences = prefByMentor.get(selectedMentor.id);
       if (preferences !== undefined) {
         const pref = preferences.find(pref => pref.slot === event.id);
+        const maxPref = preferences.reduce((curmax, cur) => Math.max(curmax, cur.preference), 0);
         if (pref !== undefined) {
+          let prefColor = "";
+          if (pref.preference == 0) {
+            prefColor = "matcher-pref-color-unavailable";
+          } else if (pref.preference == maxPref) {
+            prefColor = "matcher-pref-color-best";
+          }
+
           detail = (
             <React.Fragment>
               <br />
-              <span>Preference: {pref.preference}</span>
+              <span className={prefColor}>({pref.preference})</span>
             </React.Fragment>
           );
         }
@@ -348,51 +409,19 @@ function PreferenceStatus({ profile, slots, prefByMentor }: PreferenceStatusProp
     );
   };
 
-  const updateSearch = (term?: string) => {
-    if (term === undefined) {
-      setFilteredMentorList(mentorList);
-      return;
-    }
-    const newFilteredMentorList = mentorList.filter(
-      mentor =>
-        mentor.email.toLowerCase().includes(term.toLowerCase()) ||
-        mentor.name.toLowerCase().includes(term.toLowerCase())
-    );
-    setFilteredMentorList(newFilteredMentorList);
-  };
-
   return (
     <div className="pref-status-container">
-      <div className="pref-status-left">
-        <div className="pref-status-search">
-          <span className="pref-status-search-label">Search Mentors:</span>
-          <input
-            className="pref-status-search-input"
-            type="text"
-            ref={searchBar}
-            onChange={e => updateSearch(e.target.value)}
-          />
-        </div>
-        <div className="pref-status-mentor-list">
-          {filteredMentorList.map((mentor, index) => (
-            <div className="pref-status-mentor-list-item" key={index} onClick={() => setSelectedMentor(mentor)}>
-              {mentorString(mentor)}
-            </div>
-          ))}
-        </div>
-      </div>
-      <div className="pref-status-right">
-        <Calendar
-          events={slots}
-          selectedEventIdx={-1}
-          setSelectedEventIdx={() => {
-            /* do nothing */
-          }}
-          getEventDetails={getEventDetails}
-          eventCreationEnabled={false}
-          disableHover={true}
-        />
-      </div>
+      <Calendar
+        events={slots}
+        selectedEventIdx={-1}
+        setSelectedEventIdx={() => {
+          /* do nothing */
+        }}
+        getEventDetails={getEventDetails}
+        eventCreationEnabled={false}
+        disableHover={true}
+        limitScrolling={true}
+      />
     </div>
   );
 }
