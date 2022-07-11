@@ -4,7 +4,7 @@ import { Profile } from "../../utils/types";
 import { Calendar } from "./calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime } from "./calendar/CalendarTypes";
 import { Slot } from "./EnrollmentAutomationTypes";
-import { formatTime, parseTime } from "./utils";
+import { MAX_PREFERENCE, formatTime, parseTime } from "./utils";
 
 interface MentorSectionPreferencesProps {
   profile: Profile;
@@ -153,6 +153,8 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
                       defaultValue={selectedEvent.preference}
                       onChange={setPreference}
                       autoFocus={true}
+                      min={0}
+                      max={MAX_PREFERENCE}
                     />
                   </label>
                 </div>

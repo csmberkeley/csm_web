@@ -8,6 +8,7 @@ import { DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
 import Pencil from "../../../../static/frontend/img/pencil.svg";
 import InfoIcon from "../../../../static/frontend/img/info.svg";
 import { Redirect, useHistory } from "react-router-dom";
+import { SearchBar } from "../../SearchBar";
 
 interface EditTableRow {
   mentorId: number; // need mentor id for identification
@@ -356,6 +357,7 @@ export const EditStage = ({
   return (
     <div>
       <div>
+        <SearchBar className="matcher-assignment-search" />
         <div className="matcher-assignment-mentor-head">
           <label className="matcher-assignment-mentor-select">
             <input
@@ -392,10 +394,10 @@ export const EditStage = ({
           )}
         </div>
         <div className="matcher-assignment-button-div">
-          <button className="matcher-assignment-save-button" onClick={() => saveAssignment()}>
+          <button className="matcher-secondary-btn" onClick={() => saveAssignment()}>
             Save
           </button>
-          <button className="matcher-assignment-create-button" onClick={() => createSections()}>
+          <button className="matcher-danger-btn" onClick={() => createSections()}>
             Create
           </button>
         </div>
