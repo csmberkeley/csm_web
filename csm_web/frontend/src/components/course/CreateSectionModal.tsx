@@ -1,9 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import Modal from "../Modal";
-import { Spacetime } from "../../utils/types";
+import { Spacetime, Label, Course } from "../../utils/types";
 import { DAYS_OF_WEEK } from "../section/utils";
 import TimeInput from "../TimeInput";
+import Select, { ActionMeta, MultiValue } from "react-select";
+import makeAnimated from "react-select/animated";
 
 const makeSpacetime = (): Spacetime => {
   return { dayOfWeek: "", startTime: "", location: "" } as Spacetime;
@@ -32,9 +34,13 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
    */
   const [spacetimes, setSpacetimes] = useState<Spacetime[]>([makeSpacetime()]);
   /**
-   * Description for the new section.
+   * Labels for the new section.
    */
-  const [description, setDescription] = useState<string>("");
+  const [labels, setLabels] = useState<Label[]>([]);
+  /**
+   * Labels for the course.
+   */
+  const [courseLabels, setCourseLabels] = useState<Label[]>([]);
   /**
    * Capacity for the new section.
    */
@@ -43,6 +49,9 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
   // fetch all user emails upon first mount
   useEffect(() => {
     fetchJSON("/users/").then((userEmails: string[]) => setUserEmails(userEmails));
+    fetchJSON(`/courses/${courseId}/labels`).then(data => {
+      setCourseLabels(data.map((label: Label) => ({ label: label.name, value: label.id })));
+    });
   }, []);
 
   /**
@@ -72,9 +81,6 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
         case "mentorEmail":
           setMentorEmail(value);
           break;
-        case "description":
-          setDescription(value);
-          break;
         case "capacity":
           setCapacity(value);
           break;
@@ -93,7 +99,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
     const data = {
       mentorEmail,
       spacetimes,
-      description,
+      labels,
       capacity,
       courseId
     };
@@ -103,6 +109,14 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
       reloadSections();
     });
   };
+
+  const handleSelect = (newSelections: any) => {
+    const labelIDs = newSelections.map((label: any) => label.value);
+    setLabels(labelIDs);
+  };
+
+  // cute animation for selecting a Label
+  const animatedComponents = makeAnimated();
 
   return (
     <Modal closeModal={closeModal}>
@@ -142,8 +156,17 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
               />
             </label>
             <label>
-              Description
-              <input name="description" type="text" value={description} onChange={handleChange} />
+              Labels
+              <Select
+                options={courseLabels}
+                isMulti
+                placeholder="Select labels"
+                closeMenuOnSelect={false}
+                hideSelectedOptions={false}
+                onChange={handleSelect}
+                components={animatedComponents}
+                defaultValue={[]}
+              />
             </label>
           </div>
           {spacetimes.map(({ dayOfWeek, startTime, location }, index) => (

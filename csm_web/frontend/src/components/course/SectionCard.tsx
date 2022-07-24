@@ -8,7 +8,7 @@ import ClockIcon from "../../../static/frontend/img/clock.svg";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import XCircle from "../../../static/frontend/img/x_circle.svg";
 import Modal, { ModalCloser } from "../Modal";
-import { Mentor, Spacetime } from "../../utils/types";
+import { Mentor, Spacetime, Label as LabelType } from "../../utils/types";
 
 interface SectionCardProps {
   id: number;
@@ -16,9 +16,9 @@ interface SectionCardProps {
   mentor: Mentor;
   numStudentsEnrolled: number;
   capacity: number;
-  description: string;
   userIsCoordinator: boolean;
   courseOpen: boolean;
+  labels: LabelType[];
 }
 
 export const SectionCard = ({
@@ -27,9 +27,9 @@ export const SectionCard = ({
   mentor,
   numStudentsEnrolled,
   capacity,
-  description,
   userIsCoordinator,
-  courseOpen
+  courseOpen,
+  labels
 }: SectionCardProps): React.ReactElement => {
   /**
    * Whether to show the modal (after an attempt to enroll).
@@ -40,9 +40,41 @@ export const SectionCard = ({
    */
   const [enrollmentSuccessful, setEnrollmentSuccessful] = useState<boolean>(undefined as never);
   /**
+   * Whether the confirmation process is occurring.
+   */
+  const [confirmationProcess, setConfirmationProcess] = useState<boolean>(undefined as never);
+  /**
    * The error message if the enrollment failed.
    */
   const [errorMessage, setErrorMessage] = useState<string>("");
+
+  /**
+   * Handle the confirmation process in the section.
+   */
+  const handleConfirm = () => {
+    setShowModal(true);
+
+    if (!courseOpen) {
+      setShowModal(true);
+      setConfirmationProcess(false);
+      setEnrollmentSuccessful(false);
+      setErrorMessage("The course is not open for enrollment.");
+      return;
+    }
+
+    setConfirmationProcess(true);
+  };
+
+  const labelsShouldShowPopup = () => {
+    if (labels.length == 0) {
+      return false;
+    }
+    return labels
+      .map(label => label.showPopup)
+      .some(function (popup) {
+        return popup;
+      });
+  };
 
   /**
    * Handle enrollment in the section.
@@ -64,10 +96,12 @@ export const SectionCard = ({
         if (response.ok) {
           setShowModal(true);
           setEnrollmentSuccessful(true);
+          setConfirmationProcess(false);
         } else {
           response.json().then(({ detail }: FetchJSON) => {
             setShowModal(true);
             setEnrollmentSuccessful(false);
+            setConfirmationProcess(false);
             setErrorMessage(detail);
           });
         }
@@ -75,6 +109,7 @@ export const SectionCard = ({
       .catch((error: any) => {
         setShowModal(true);
         setEnrollmentSuccessful(false);
+        setConfirmationProcess(false);
         setErrorMessage(String(error));
       });
   };
@@ -97,9 +132,34 @@ export const SectionCard = ({
         <React.Fragment>
           <CheckCircle height={iconHeight} width={iconWidth} />
           <h3>Successfully enrolled</h3>
-          <ModalCloser>
-            <button className="modal-btn">OK</button>
-          </ModalCloser>
+          <div className="modal-confirmation-container">
+            <ModalCloser>
+              <button className="modal-btn">OK</button>
+            </ModalCloser>
+          </div>
+        </React.Fragment>
+      );
+    } else if (confirmationProcess) {
+      return (
+        <React.Fragment>
+          <CheckCircle height={iconHeight} width={iconWidth} />
+          <p>Please confirm that you want to enroll in a section with this affinity: </p>
+          <ul>
+            {labels.map((label: LabelType) => (
+              <li key={label.id}>
+                {label.name}: {label.description}
+              </li>
+            ))}
+          </ul>
+          <div className="modal-confirmation-container">
+            <ModalCloser>
+              <button className="label-btn">Cancel</button>
+            </ModalCloser>
+
+            <button className="label-btn" onClick={enroll}>
+              Confirm
+            </button>
+          </div>
         </React.Fragment>
       );
     }
@@ -108,9 +168,11 @@ export const SectionCard = ({
         <XCircle color="#eb6060" height={iconHeight} width={iconWidth} />
         <h3>Enrollment failed</h3>
         <h4>{errorMessage}</h4>
-        <ModalCloser>
-          <button className="modal-btn">OK</button>
-        </ModalCloser>
+        <div className="modal-confirmation-container">
+          <ModalCloser>
+            <button className="modal-btn">OK</button>
+          </ModalCloser>
+        </div>
       </React.Fragment>
     );
   };
@@ -136,7 +198,11 @@ export const SectionCard = ({
       {showModal && <Modal closeModal={closeModal}>{modalContents().props.children}</Modal>}
       <section className={`section-card ${isFull ? "full" : ""}`}>
         <div className="section-card-contents">
-          {description && <span className="section-card-description">{description}</span>}
+          {labels.length > 0 && (
+            <span className="section-card-description">
+              {labels.length > 1 ? labels.map(label => label.name).join(", ") : labels[0].name}
+            </span>
+          )}
           <p title="Location">
             <LocationIcon width={iconWidth} height={iconHeight} />{" "}
             {spacetimes[0].location === null ? "Online" : spacetimes[0].location}
@@ -183,8 +249,8 @@ export const SectionCard = ({
           </Link>
         ) : (
           <div
-            className={`csm-btn section-card-footer ${courseOpen ? "" : "disabled"}`}
-            onClick={isFull ? undefined : enroll}
+            className="csm-btn section-card-footer"
+            onClick={isFull ? undefined : labelsShouldShowPopup() ? handleConfirm : enroll}
           >
             ENROLL
           </div>

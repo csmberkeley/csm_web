@@ -4,6 +4,7 @@ import { Section } from "../../utils/types";
 import { SectionCard } from "./SectionCard";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
+import { ManageLabelsModal } from "./ManageLabelsModal";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",
@@ -17,7 +18,8 @@ const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
 
 const COURSE_MODAL_TYPE = Object.freeze({
   exportData: "csv",
-  createSection: "mksec"
+  createSection: "mksec",
+  manageLabels: "labels"
 });
 
 interface CourseProps {
@@ -103,6 +105,15 @@ const Course = ({
   const renderModal = (): React.ReactElement => {
     if (whichModal == COURSE_MODAL_TYPE.exportData) {
       return <DataExportModal closeModal={() => setShowModal(false)} />;
+    } else if (whichModal == COURSE_MODAL_TYPE.manageLabels) {
+      return (
+        <ManageLabelsModal
+          closeModal={() => setShowModal(false)}
+          courseId={Number(id)}
+          reloadSections={reloadSections}
+          title={name}
+        />
+      );
     } else {
       return (
         <CreateSectionModal
@@ -168,6 +179,15 @@ const Course = ({
             >
               Export Data
             </button>
+            <button
+              className="csm-btn export-data-btn"
+              onClick={() => {
+                setShowModal(true);
+                setWhichModal(COURSE_MODAL_TYPE.manageLabels);
+              }}
+            >
+              Manage Labels
+            </button>
           </div>
         )}
         {!isOpen && (
@@ -181,7 +201,12 @@ const Course = ({
       <div id="course-section-list">
         {currDaySections && currDaySections.length > 0 ? (
           currDaySections.map(section => (
-            <SectionCard key={section.id} userIsCoordinator={userIsCoordinator} courseOpen={isOpen} {...section} />
+            <SectionCard
+              key={section.id}
+              userIsCoordinator={userIsCoordinator}
+              labels={section.labelSet}
+              {...section}
+            />
           ))
         ) : (
           <h3 id="course-section-list-empty">No sections available, please select a different day</h3>
