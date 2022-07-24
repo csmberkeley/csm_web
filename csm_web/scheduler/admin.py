@@ -18,7 +18,8 @@ from scheduler.models import (
     SectionOccurrence,
     Spacetime,
     Override,
-    DayOfWeekField
+    DayOfWeekField,
+    Label,
 )
 
 admin.site.register(Coordinator)
@@ -608,3 +609,10 @@ class OverrideAdmin(admin.ModelAdmin):
 
     def has_module_permission(self, request, obj=None):
         return request.user.is_superuser  # TODO remove when implemented as coord view
+
+# label admin
+
+
+@admin.register(Label)
+class LabelAdmin(CoordAdmin):
+    pass

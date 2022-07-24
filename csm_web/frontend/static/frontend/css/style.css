@@ -196,9 +196,12 @@ header {
 	color: #575757;
 }
 
+.modal-confirmation-container {
+	display: flex;
+}
+
 .modal-btn {
-	position: absolute;
-	display: block;
+	flex-direction: row;
 	color: white;
 	margin: auto;
 	width: 80px;
@@ -207,9 +210,6 @@ header {
 	background-color: #007bff;
 	border-radius: 10px;
 	cursor: pointer;
-	left: 0;
-	right: 0;
-	bottom: 20px;
 }
 
 .modal-btn:hover {

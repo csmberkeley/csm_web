@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, Link, SectionOccurrence, User, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet
+from .models import Attendance, Course, Link, SectionOccurrence, User, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet, Label
 
 
 class Role(Enum):
@@ -76,10 +76,19 @@ class SpacetimeSerializer(serializers.ModelSerializer):
         fields = ("start_time", "day_of_week", "time", "location", "id", "duration", "override")
         read_only_fields = ("time", "id", "override")
 
+# label serializer
+
+
+class LabelSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Label  # ???
+        fields = ('id', 'course', 'sections', 'name', 'description', 'showPopup')
+
 
 class CourseSerializer(serializers.ModelSerializer):
     enrollment_open = serializers.SerializerMethodField()
     user_can_enroll = serializers.SerializerMethodField()
+    labels = LabelSerializer(many=True)
 
     def get_enrollment_open(self, obj):
         user = self.context.get('request') and self.context.get('request').user
@@ -95,7 +104,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ("id", "name", "enrollment_start", "enrollment_open", "user_can_enroll")
+        fields = ("id", "name", "enrollment_start", "enrollment_open", "user_can_enroll", "labels")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -168,6 +177,9 @@ class SectionSerializer(serializers.ModelSerializer):
     course_title = serializers.CharField(source='mentor.course.title')
     user_role = serializers.SerializerMethodField()
     associated_profile_id = serializers.SerializerMethodField()
+    # add labels
+    queryset = Label.objects.filter()
+    label_set = LabelSerializer(many=True)
 
     def get_num_students_enrolled(self, obj):
         return obj.num_students_annotation if hasattr(obj, 'num_students_annotation') else obj.current_student_count
@@ -199,7 +211,8 @@ class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = ("id", "spacetimes", "mentor", "capacity", "associated_profile_id",
-                  "num_students_enrolled", "description", "mentor", "course", "user_role", "course_title")
+                  "num_students_enrolled", "description", "mentor", "course", "user_role", "course_title", "label_set")
+    # will label_set get all labels associated with this section, or all labels that the course has?
 
 
 class WorksheetSerializer(serializers.ModelSerializer):
