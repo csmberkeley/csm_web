@@ -8,7 +8,7 @@ import ClockIcon from "../../../static/frontend/img/clock.svg";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import XCircle from "../../../static/frontend/img/x_circle.svg";
 import Modal, { ModalCloser } from "../Modal";
-import { Mentor, Spacetime } from "../../utils/types";
+import { Mentor, Spacetime, Label as LabelType } from "../../utils/types";
 
 interface SectionCardProps {
   id: number;
@@ -18,7 +18,11 @@ interface SectionCardProps {
   capacity: number;
   description: string;
   userIsCoordinator: boolean;
+<<<<<<< HEAD
   courseOpen: boolean;
+=======
+  labels: LabelType[];
+>>>>>>> 6c6a1a2... post-week-1 code
 }
 
 export const SectionCard = ({
@@ -40,9 +44,21 @@ export const SectionCard = ({
    */
   const [enrollmentSuccessful, setEnrollmentSuccessful] = useState<boolean>(undefined as never);
   /**
+   * Whether the confirmation process is occurring.
+   */
+  const [confirmationProcess, setConfirmationProcess] = useState<boolean>(undefined as never);
+  /**
    * The error message if the enrollment failed.
    */
   const [errorMessage, setErrorMessage] = useState<string>("");
+
+  /**
+   * Handle the confirmation process in the section.
+   */
+  const confirm = () => {
+    setShowModal(true);
+    setConfirmationProcess(true);
+  }
 
   /**
    * Handle enrollment in the section.
@@ -64,10 +80,12 @@ export const SectionCard = ({
         if (response.ok) {
           setShowModal(true);
           setEnrollmentSuccessful(true);
+          setConfirmationProcess(false);
         } else {
           response.json().then(({ detail }: FetchJSON) => {
             setShowModal(true);
             setEnrollmentSuccessful(false);
+            setConfirmationProcess(false);
             setErrorMessage(detail);
           });
         }
@@ -75,6 +93,7 @@ export const SectionCard = ({
       .catch((error: any) => {
         setShowModal(true);
         setEnrollmentSuccessful(false);
+        setConfirmationProcess(false);
         setErrorMessage(String(error));
       });
   };
@@ -100,6 +119,21 @@ export const SectionCard = ({
           <ModalCloser>
             <button className="modal-btn">OK</button>
           </ModalCloser>
+        </React.Fragment>
+      );
+    } else if (confirmationProcess) {
+      return (
+        <React.Fragment>
+          <CheckCircle height={iconHeight} width={iconWidth} />
+          <p>Please confirm that you want to enroll in a section with this affinity: </p>
+          <div className="modal-confirmation-container">
+            <ModalCloser>
+              <button className="modal-btn">CANCEL</button>
+            </ModalCloser>
+            <button className="modal-btn" onClick={enroll}>
+              CONFIRM
+            </button>
+          </div>
         </React.Fragment>
       );
     }
@@ -184,7 +218,7 @@ export const SectionCard = ({
         ) : (
           <div
             className={`csm-btn section-card-footer ${courseOpen ? "" : "disabled"}`}
-            onClick={isFull ? undefined : enroll}
+            onClick={isFull ? undefined : confirm}
           >
             ENROLL
           </div>

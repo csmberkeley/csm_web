@@ -458,3 +458,14 @@ class MatcherPreference(ValidatingModel):
 
     class Meta:
         unique_together = ("slot", "mentor")
+class Label(ValidatingModel):
+    # course that label corresponds to
+    course = models.ForeignKey(Course, related_name="labels", on_delete=models.CASCADE)
+    # sections that have this label
+    sections = models.ManyToManyField(Section)
+    # name of label
+    name = models.CharField(max_length=100)
+    # description of what label means
+    description = models.CharField(max_length=255)
+    # whether a section with this label will lead to a pop-up if you try to enroll in it
+    showPopup = models.BooleanField(default=False)

@@ -34,6 +34,7 @@ export interface Section {
   course: string;
   userRole: string;
   courseTitle: string;
+  labels: Label[];
 }
 
 export interface Mentor {
@@ -62,4 +63,15 @@ export interface Attendance {
   date: string;
   student: Student;
   presence: string;
+}
+
+// implementing the label type:
+
+export interface Label {
+  id: number;
+  course: Course;
+  sections: Section[];
+  name: string;
+  desription: string;
+  showPopup: boolean;
 }
