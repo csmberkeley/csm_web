@@ -34,7 +34,7 @@ export interface Section {
   course: string;
   userRole: string;
   courseTitle: string;
-  labels: Label[];
+  labelSet: Label[];
 }
 
 export interface Mentor {
@@ -72,6 +72,6 @@ export interface Label {
   course: Course;
   sections: Section[];
   name: string;
-  desription: string;
+  description: string;
   showPopup: boolean;
 }

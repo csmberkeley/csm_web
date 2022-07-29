@@ -7,10 +7,11 @@ from django.http import HttpResponse
 from django.utils import timezone
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from rest_framework import status
 
 from .utils import get_object_or_error, viewset_with
 from ..models import Course, Student, Spacetime, Section
-from ..serializers import CourseSerializer, SectionSerializer
+from ..serializers import CourseSerializer, LabelSerializer, SectionSerializer
 
 
 class CourseViewSet(*viewset_with("list")):
@@ -83,6 +84,14 @@ class CourseViewSet(*viewset_with("list")):
             ).data
             for day_key, group in groupby(sections, lambda section: section.day_key)
         }
+
+    # GET all the labels associated with a course
+    @action(detail=True)
+    def labels(self, request, pk=None):
+        course = get_object_or_error(self.get_queryset(), pk=pk)
+        labels = course.label_set
+        serializer = LabelSerializer(labels, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)  # ???
 
     @action(detail=True)
     def sections(self, request, pk=None):

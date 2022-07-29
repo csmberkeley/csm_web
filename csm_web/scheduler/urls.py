@@ -15,4 +15,7 @@ router.register(r'resources', views.ResourceViewSet, basename='resource')
 urlpatterns = router.urls
 urlpatterns += [
     path('userinfo/', views.userinfo, name='userinfo'),
+
+    # labels paths
+    path()
 ]

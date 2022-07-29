@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { fetchJSON } from "../../utils/api";
-import { Attendance, Mentor, Spacetime, Student } from "../../utils/types";
+import { Attendance, Mentor, Spacetime, Student, Label } from "../../utils/types";
 import { SectionDetail, ROLES } from "./Section";
 import { Switch, Route } from "react-router-dom";
 import { groupBy } from "lodash";
@@ -18,7 +18,7 @@ interface MentorSectionProps {
   userRole: string;
   mentor: Mentor;
   capacity: number;
-  description: string;
+  labelSet: Label[];
 }
 
 interface MentorSectionState {
@@ -42,7 +42,7 @@ export default function MentorSection({
   courseTitle,
   spacetimes,
   capacity,
-  description,
+  labelSet,
   reloadSection,
   userRole,
   mentor
@@ -136,7 +136,7 @@ export default function MentorSection({
               loaded={loaded}
               spacetimes={spacetimes}
               capacity={capacity}
-              description={description}
+              labelSet={labelSet}
               id={id}
             />
           )}

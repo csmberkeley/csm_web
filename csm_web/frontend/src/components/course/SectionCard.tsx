@@ -16,7 +16,6 @@ interface SectionCardProps {
   mentor: Mentor;
   numStudentsEnrolled: number;
   capacity: number;
-  description: string;
   userIsCoordinator: boolean;
   labels: LabelType[];
 }
@@ -27,8 +26,8 @@ export const SectionCard = ({
   mentor,
   numStudentsEnrolled,
   capacity,
-  description,
-  userIsCoordinator
+  userIsCoordinator,
+  labels
 }: SectionCardProps): React.ReactElement => {
   /**
    * Whether to show the modal (after an attempt to enroll).
@@ -53,7 +52,25 @@ export const SectionCard = ({
   const confirm = () => {
     setShowModal(true);
     setConfirmationProcess(true);
-  }
+  };
+
+  const labelsShouldShowPopup = () => {
+    if (labels.length == 0) {
+      return false;
+    }
+    console.log(
+      labels
+        .map(label => label.showPopup)
+        .some(function (popup) {
+          return popup;
+        })
+    );
+    return labels
+      .map(label => label.showPopup)
+      .some(function (popup) {
+        return popup;
+      });
+  };
 
   /**
    * Handle enrollment in the section.
@@ -114,11 +131,19 @@ export const SectionCard = ({
         <React.Fragment>
           <CheckCircle height={iconHeight} width={iconWidth} />
           <p>Please confirm that you want to enroll in a section with this affinity: </p>
+          <ul>
+            {labels.map((label: LabelType) => (
+              <li key={label.id}>
+                {label.name}: {label.description}
+              </li>
+            ))}
+          </ul>
           <div className="modal-confirmation-container">
             <ModalCloser>
-              <button className="modal-btn">CANCEL</button>
+              <button className="affinity-btn">Cancel</button>
             </ModalCloser>
-            <button className="modal-btn" onClick={enroll}>
+
+            <button className="affinity-btn" onClick={enroll}>
               CONFIRM
             </button>
           </div>
@@ -158,7 +183,11 @@ export const SectionCard = ({
       {showModal && <Modal closeModal={closeModal}>{modalContents().props.children}</Modal>}
       <section className={`section-card ${isFull ? "full" : ""}`}>
         <div className="section-card-contents">
-          {description && <span className="section-card-description">{description}</span>}
+          {labels.length > 0 && (
+            <span className="section-card-description">
+              {labels.length > 1 ? labels.map(label => label.name).join(", ") : labels[0].name}
+            </span>
+          )}
           <p title="Location">
             <LocationIcon width={iconWidth} height={iconHeight} />{" "}
             {spacetimes[0].location === null ? "Online" : spacetimes[0].location}
@@ -204,7 +233,10 @@ export const SectionCard = ({
             MANAGE
           </Link>
         ) : (
-          <div className="csm-btn section-card-footer" onClick={isFull ? undefined : confirm }>
+          <div
+            className="csm-btn section-card-footer"
+            onClick={isFull ? undefined : labelsShouldShowPopup() ? confirm : enroll}
+          >
             ENROLL
           </div>
         )}

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchJSON } from "../../utils/api";
-import { Mentor, Spacetime, Student } from "../../utils/types";
+import { Mentor, Spacetime, Student, Label } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { InfoCard, SectionSpacetime } from "./Section";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
@@ -24,7 +24,7 @@ interface MentorSectionInfoProps {
   isCoordinator: boolean;
   mentor: Mentor;
   capacity: number;
-  description: string;
+  labelSet: Label[];
   id: number;
 }
 
@@ -37,7 +37,7 @@ export default function MentorSectionInfo({
   mentor,
   capacity,
   id,
-  description
+  labelSet
 }: MentorSectionInfoProps) {
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
@@ -145,7 +145,7 @@ export default function MentorSectionInfo({
                     closeModal={closeModal}
                     reloadSection={reloadSection}
                     capacity={capacity}
-                    description={description}
+                    description={""}
                   />
                 )}
               </React.Fragment>
@@ -154,7 +154,7 @@ export default function MentorSectionInfo({
               <span className="meta-field">Capacity:</span> {capacity}
             </p>
             <p>
-              <span className="meta-field">Description:</span> {description}
+              <span className="meta-field">Labels:</span> {labelSet.map(label => label.name).join(", ")}
             </p>
           </InfoCard>
         </div>
