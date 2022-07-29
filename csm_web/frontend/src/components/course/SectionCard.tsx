@@ -121,9 +121,11 @@ export const SectionCard = ({
         <React.Fragment>
           <CheckCircle height={iconHeight} width={iconWidth} />
           <h3>Successfully enrolled</h3>
-          <ModalCloser>
-            <button className="modal-btn">OK</button>
-          </ModalCloser>
+          <div className="modal-confirmation-container">
+            <ModalCloser>
+              <button className="modal-btn">OK</button>
+            </ModalCloser>
+          </div>
         </React.Fragment>
       );
     } else if (confirmationProcess) {
@@ -144,7 +146,7 @@ export const SectionCard = ({
             </ModalCloser>
 
             <button className="affinity-btn" onClick={enroll}>
-              CONFIRM
+              Confirm
             </button>
           </div>
         </React.Fragment>
@@ -155,9 +157,11 @@ export const SectionCard = ({
         <XCircle color="#eb6060" height={iconHeight} width={iconWidth} />
         <h3>Enrollment failed</h3>
         <h4>{errorMessage}</h4>
-        <ModalCloser>
-          <button className="modal-btn">OK</button>
-        </ModalCloser>
+        <div className="modal-confirmation-container">
+          <ModalCloser>
+            <button className="modal-btn">OK</button>
+          </ModalCloser>
+        </div>
       </React.Fragment>
     );
   };

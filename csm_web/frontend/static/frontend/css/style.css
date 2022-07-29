@@ -213,15 +213,17 @@ header {
 }
 
 .affinity-btn {
-	/* flex-direction: row; */
-	color: white;
-	margin: auto;
-	width: 80px;
+	flex-direction: row;
 	font-size: 1.25em;
-	padding: 10px 20px;
+	color: white;
 	background-color: #007bff;
 	border-radius: 10px;
 	cursor: pointer;
+	padding: 10px 20px;
+}
+
+.modal-confirmation-container {
+	justify-content: center;
 }
 
 .modal-btn:hover {

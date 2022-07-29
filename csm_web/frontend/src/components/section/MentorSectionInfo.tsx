@@ -145,7 +145,7 @@ export default function MentorSectionInfo({
                     closeModal={closeModal}
                     reloadSection={reloadSection}
                     capacity={capacity}
-                    description={""}
+                    sectionLabels={labelSet}
                   />
                 )}
               </React.Fragment>

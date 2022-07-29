@@ -10,7 +10,7 @@ from rest_framework.response import Response
 from rest_framework import status
 
 from .utils import get_object_or_error, viewset_with
-from ..models import Course, Student, Spacetime, Section
+from ..models import Course, Student, Spacetime, Section, Label
 from ..serializers import CourseSerializer, LabelSerializer, SectionSerializer
 
 
@@ -85,13 +85,31 @@ class CourseViewSet(*viewset_with("list")):
             for day_key, group in groupby(sections, lambda section: section.day_key)
         }
 
-    # GET all the labels associated with a course
     @action(detail=True)
     def labels(self, request, pk=None):
-        course = get_object_or_error(self.get_queryset(), pk=pk)
-        labels = course.label_set
-        serializer = LabelSerializer(labels, many=True)
-        return Response(serializer.data, status=status.HTTP_200_OK)  # ???
+        '''
+        GET: api/course/<course_id>/labels
+        returns all the labels associated with a course
+        POST: api/course/<course_id>/labels
+        adds a new label to the course with <course_id>
+        - format: { "name": string, "description": string, showPopup: boolean }
+        '''
+        # GET all the labels associated with a course
+        if request.method == "GET":
+            course = get_object_or_error(self.get_queryset(), pk=pk)
+            labels = course.labels
+            serializer = LabelSerializer(labels, many=True)
+            return Response(serializer.data, status=status.HTTP_200_OK)  # ???
+        # create a new label with the request data
+        elif request.method == "POST":
+            label = Label.objects.create(
+                name=request.data.get("name"),
+                description=request.data.get("description"),
+                showPopup=request.data.get("showPopup"),
+                course=pk
+            )
+            serializer = LabelSerializer(labels, many=False)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     @action(detail=True)
     def sections(self, request, pk=None):
