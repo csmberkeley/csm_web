@@ -27,5 +27,5 @@ urlpatterns += [
     path('userinfo/', views.userinfo, name='userinfo'),
 
     # labels paths
-    path()
+    # path()
 ]
