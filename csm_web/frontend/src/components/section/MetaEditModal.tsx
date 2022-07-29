@@ -1,6 +1,10 @@
 import React, { useState } from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import Modal from "../Modal";
+import { Label } from "../../utils/types";
+import Chip from "@mui/material/Chip";
+import Autocomplete from "@mui/material/Autocomplete";
+import TextField from "@mui/material/TextField";
 
 interface MetaEditModalProps {
   sectionId: number;
@@ -8,6 +12,7 @@ interface MetaEditModalProps {
   reloadSection: () => void;
   capacity: number;
   description: string;
+  sectionLabels?: Label[];
 }
 
 export default function MetaEditModal({
@@ -15,7 +20,8 @@ export default function MetaEditModal({
   sectionId,
   reloadSection,
   capacity,
-  description
+  description,
+  sectionLabels
 }: MetaEditModalProps) {
   // use existing capacity and description as initial values
   const [formState, setFormState] = useState({ capacity: capacity, description: description });
@@ -52,7 +58,7 @@ export default function MetaEditModal({
           />
         </label>
         <label>
-          Description
+          Labels
           <input name="description" type="text" value={formState.description} onChange={handleChange} />
         </label>
         <input type="submit" value="Save" />

@@ -182,7 +182,12 @@ const Course = ({
       <div id="course-section-list">
         {currDaySections && currDaySections.length > 0 ? (
           currDaySections.map(section => (
-            <SectionCard key={section.id} userIsCoordinator={userIsCoordinator} courseOpen={isOpen} {...section} />
+            <SectionCard
+              key={section.id}
+              userIsCoordinator={userIsCoordinator}
+              labels={section.labelSet}
+              {...section}
+            />
           ))
         ) : (
           <h3 id="course-section-list-empty">No sections available, please select a different day</h3>

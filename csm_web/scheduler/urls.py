@@ -24,4 +24,8 @@ urlpatterns += [
     path("matcher/<int:pk>/mentors/", views.matcher.mentors),
     path("matcher/<int:pk>/configure/", views.matcher.configure),
     path("matcher/<int:pk>/create/", views.matcher.create),
+    path('userinfo/', views.userinfo, name='userinfo'),
+
+    # labels paths
+    path()
 ]
