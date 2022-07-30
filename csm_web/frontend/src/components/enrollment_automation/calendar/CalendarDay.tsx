@@ -14,7 +14,7 @@ interface CalendarDayProps {
   endTime: number;
   intervalLength: number;
   eventHoverIndex: number;
-  eventSelectIndex: number;
+  eventSelectIndices: number[];
   events: {
     event_idx: number;
     event: CalendarEventSingleTime;
@@ -22,7 +22,7 @@ interface CalendarDayProps {
   curCreatedTimes: NumberTime[];
   curCreatedTime: NumberTime;
   intervalHeight: number;
-  onEventClick: (index: number) => void;
+  onEventClick: (index: number, add: boolean) => void;
   onEventHover: (index: number) => void;
   onCreateDragStart: (day: string, startTime: number, endTime: number) => void;
   onCreateDragOver: (day: string, startTime: number, endTime: number) => void;
@@ -46,7 +46,7 @@ export function CalendarDay({
   endTime,
   intervalLength,
   eventHoverIndex,
-  eventSelectIndex,
+  eventSelectIndices: eventSelectIndex,
   events,
   curCreatedTimes,
   curCreatedTime,
@@ -79,11 +79,16 @@ export function CalendarDay({
   // enumerate events with index
   for (const { event_idx, event } of events) {
     const isHover = eventHoverIndex === event_idx;
-    const isSelect = eventSelectIndex === event_idx;
+    const isSelect = eventSelectIndex.includes(event_idx);
 
     // TODO: handle cases where event crosses midnight
     const eventYOffset = (intervalHeight * (event.time.startTime - startTime)) / intervalLength;
     const eventHeight = (intervalHeight * (event.time.endTime - event.time.startTime)) / intervalLength;
+
+    const handleEventClick = (e: React.MouseEvent<HTMLDivElement>) => {
+      const shiftPressed: boolean = e.shiftKey;
+      onEventClick(event_idx, shiftPressed);
+    };
 
     const curElement = (
       <div className="calendar-event-container" key={`${event.time.startTime}-${event.time.endTime}`}>
@@ -98,7 +103,7 @@ export function CalendarDay({
         >
           <div
             className="calendar-event-detail"
-            onClick={() => onEventClick(event_idx)}
+            onClick={handleEventClick}
             onMouseEnter={() => onEventHover(event_idx)}
             onMouseLeave={() => onEventHover(-1)}
           >
