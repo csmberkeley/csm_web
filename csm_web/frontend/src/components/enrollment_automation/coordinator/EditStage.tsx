@@ -1,14 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
+import { useHistory } from "react-router-dom";
 import { fetchJSON, fetchWithMethod } from "../../../utils/api";
 import { Mentor, Profile } from "../../../utils/types";
-import { formatTime } from "../utils";
-import { Assignment, Slot, Time, SlotPreference } from "../EnrollmentAutomationTypes";
-import { DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
-
-import Pencil from "../../../../static/frontend/img/pencil.svg";
-import InfoIcon from "../../../../static/frontend/img/info.svg";
-import { Redirect, useHistory } from "react-router-dom";
+import Modal from "../../Modal";
 import { SearchBar } from "../../SearchBar";
+import { Calendar } from "../calendar/Calendar";
+import { CalendarEventSingleTime, DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
+import { Assignment, Slot, SlotPreference, Time } from "../EnrollmentAutomationTypes";
+import { formatTime } from "../utils";
+
+import InfoIcon from "../../../../static/frontend/img/info.svg";
+import Pencil from "../../../../static/frontend/img/pencil.svg";
+import SortDownIcon from "../../../../static/frontend/img/sort-down.svg";
+import SortUnknownIcon from "../../../../static/frontend/img/sort-unknown.svg";
+import SortUpIcon from "../../../../static/frontend/img/sort-up.svg";
 
 interface EditTableRow {
   mentorId: number; // need mentor id for identification
@@ -38,13 +43,24 @@ const SORT_FUNCTIONS: Record<string, (a: any, b: any) => number> = {
   }
 };
 
+enum SortDirection {
+  ASCENDING = 1,
+  DESCENDING = -1,
+  UNKNOWN = 0
+}
+
+interface SortByType {
+  attr: keyof EditTableRow;
+  dir: SortDirection;
+}
+
 interface EditStageProps {
   profile: Profile;
   slots: Slot[];
   assignments: Assignment[];
   prefByMentor: Map<number, SlotPreference[]>;
-  refreshStage: () => void;
   refreshAssignments: () => void;
+  prevStage: () => void;
 }
 
 export const EditStage = ({
@@ -52,22 +68,29 @@ export const EditStage = ({
   slots,
   assignments,
   prefByMentor,
-  refreshStage,
+  prevStage,
   refreshAssignments
 }: EditStageProps): React.ReactElement => {
   /**
    * Table of mentor information and section metadata for editing.
    */
-  const [editTable, setEditTable] = useState<EditTableRow[]>([]);
+  const [unfilteredEditTable, setUnfilteredEditTable] = useState<EditTableRow[]>([]);
+  /**
+   * Filtered table of mentor information and section metadata for editing.
+   */
+  const [filteredEditTable, setFilteredEditTable] = useState<EditTableRow[]>([]);
+
   /**
    * Attribute to sort the table by,
-   * specified in the form `{attr: key, dir: -1 | 1}`.
+   * specified in the form `{attr: key, dir: SortDirection}`.
    *
-   * -1 means descending, 1 means ascending.
-   *
-   * By default, sorts by time in descending order.
+   * By default, sorts by time in ascending order.
    */
-  const [tableSortBy, setTableSortBy] = useState<{ attr: keyof EditTableRow; dir: -1 | 1 }>({ attr: "times", dir: 1 });
+  const [tableSortBy, setTableSortBy] = useState<SortByType>({ attr: "times", dir: SortDirection.ASCENDING });
+  /**
+   * Search term for the filtered table.
+   */
+  const [searchTerm, setSearchTerm] = useState<string>("");
 
   /**
    * Map from mentor ids to the respective mentor objects.
@@ -104,6 +127,11 @@ export const EditStage = ({
    * used to set indeterminate state.
    */
   const headerCheckbox = useRef<HTMLInputElement>(null);
+
+  /**
+   * Whether the assignment distribution modal is open.
+   */
+  const [distModalOpen, setDistModalOpen] = useState<boolean>(false);
 
   /**
    * History for redirection after section creation.
@@ -156,15 +184,36 @@ export const EditStage = ({
         description
       });
     });
-    setEditTable(newEditTable);
+    setUnfilteredEditTable(newEditTable);
     sortTable();
   }, [assignments, mentorsById]); // update when assignments change, or when mentors are fetched
+
+  /* Filter table when search term changes, or when table changes */
+  useEffect(() => {
+    if (searchTerm === "") {
+      setFilteredEditTable(unfilteredEditTable);
+    } else {
+      const lowercaseSearch = searchTerm.toLowerCase();
+      const filtered = unfilteredEditTable.filter(row => {
+        let include = false;
+        include ||= row.name.toLowerCase().includes(lowercaseSearch);
+        if (searchTerm.includes("@")) {
+          include ||= row.email.toLowerCase().includes(lowercaseSearch);
+        } else {
+          include ||= row.email.split("@")[0].toLowerCase().includes(lowercaseSearch);
+        }
+        include ||= row.description.toLowerCase().includes(lowercaseSearch);
+        return include;
+      });
+      setFilteredEditTable(filtered);
+    }
+  }, [unfilteredEditTable, searchTerm]);
 
   /**
    * Sort the table by the current sort attribute.
    */
   const sortTable = () => {
-    setEditTable((oldEditTable: EditTableRow[]) =>
+    setUnfilteredEditTable((oldEditTable: EditTableRow[]) =>
       Array.from(oldEditTable).sort((a, b) => {
         const aVal = a[tableSortBy.attr];
         const bVal = b[tableSortBy.attr];
@@ -176,9 +225,9 @@ export const EditStage = ({
           return SORT_FUNCTIONS[customSortAttr](aVal, bVal) * tableSortBy.dir;
         } else {
           if (aVal > bVal) {
-            return tableSortBy.dir;
+            return tableSortBy.dir as number;
           } else if (aVal < bVal) {
-            return -tableSortBy.dir;
+            return -tableSortBy.dir as number;
           } else {
             return 0;
           }
@@ -194,7 +243,7 @@ export const EditStage = ({
    * Event handler when a row of the table is changed.
    */
   const handleChangeRow = (mentorId: number, attr: keyof EditTableRow, value: any) => {
-    const newEditTable = [...editTable];
+    const newEditTable = [...unfilteredEditTable];
     const rowIdx = newEditTable.findIndex(row => row.mentorId === mentorId);
     const selectedRowIndices = new Set(
       // filter for selected rows, and convert them to indices
@@ -252,7 +301,7 @@ export const EditStage = ({
 
       // update row
       newEditTable[rowIdx] = row;
-      setEditTable(newEditTable);
+      setUnfilteredEditTable(newEditTable);
     }
   };
 
@@ -309,7 +358,7 @@ export const EditStage = ({
 
   const gatherAssignments = (): Assignment[] => {
     const newAssignments: Assignment[] = [];
-    editTable.forEach(row => {
+    unfilteredEditTable.forEach(row => {
       newAssignments.push({
         mentor: row.mentorId,
         slot: row.slotId,
@@ -354,10 +403,46 @@ export const EditStage = ({
     });
   };
 
+  const handleSearchChange = (term?: string) => {
+    setSearchTerm(term ?? "");
+  };
+
+  /**
+   * Retrieves the sort direction of the specified attribute.
+   * If the attribute is not sorted, returns SortDirection.UNKNOWN.
+   *
+   * @param attr attribute to sort by
+   * @returns direction of sort for the attribute
+   */
+  const getSortDirection = (attr: keyof EditTableRow): SortDirection => {
+    if (tableSortBy.attr === attr) {
+      return tableSortBy.dir;
+    } else {
+      return SortDirection.UNKNOWN;
+    }
+  };
+
+  const updateSort = (attr: keyof EditTableRow) => {
+    if (tableSortBy.attr === attr) {
+      if (tableSortBy.dir === SortDirection.ASCENDING) {
+        setTableSortBy({ attr, dir: SortDirection.DESCENDING });
+      } else {
+        setTableSortBy({ attr, dir: SortDirection.ASCENDING });
+      }
+    } else {
+      setTableSortBy({ attr, dir: SortDirection.ASCENDING });
+    }
+  };
+
   return (
     <div>
       <div>
-        <SearchBar className="matcher-assignment-search" />
+        <div className="matcher-assignment-above-head">
+          <SearchBar className="matcher-assignment-search" onChange={e => handleSearchChange(e.target.value)} />
+          <button className="matcher-submit-btn" onClick={() => setDistModalOpen(true)}>
+            View Distribution
+          </button>
+        </div>
         <div className="matcher-assignment-mentor-head">
           <label className="matcher-assignment-mentor-select">
             <input
@@ -367,12 +452,27 @@ export const EditStage = ({
               onChange={handleHeaderSelect}
             />
           </label>
-          <div className="matcher-assignment-mentor-info">Mentor</div>
-          <div className="matcher-assignment-section-times">Times</div>
-          <div className="matcher-assignment-section-capacity">Capacity</div>
+          <div className="matcher-assignment-mentor-info">
+            <div className="matcher-table-sort-group" onClick={() => updateSort("name")}>
+              <span>Mentor</span>
+              <SortButton sortDirection={getSortDirection("name")} />
+            </div>
+          </div>
+          <div className="matcher-assignment-section-times">
+            <div className="matcher-table-sort-group" onClick={() => updateSort("times")}>
+              <span>Times</span>
+              <SortButton sortDirection={getSortDirection("times")} />
+            </div>
+          </div>
+          <div className="matcher-assignment-section-capacity">
+            <div className="matcher-table-sort-group" onClick={() => updateSort("capacity")}>
+              <span>Capacity</span>
+              <SortButton sortDirection={getSortDirection("capacity")} />
+            </div>
+          </div>
           <div className="matcher-assignment-section-description">Description</div>
         </div>
-        {editTable.map((row: EditTableRow) => (
+        {filteredEditTable.map((row: EditTableRow) => (
           <EditTableRow
             key={row.mentorId}
             row={row}
@@ -384,7 +484,12 @@ export const EditStage = ({
           />
         ))}
       </div>
-      <div className="matcher-assignment-footer">
+      <div className="matcher-body-footer matcher-body-footer-sticky">
+        <div className="matcher-assignment-button-div">
+          <button className="matcher-secondary-btn" onClick={() => prevStage()}>
+            Back
+          </button>
+        </div>
         <div className="matcher-assignment-footer-help">
           {selectedMentors.size > 1 && (
             <React.Fragment>
@@ -402,8 +507,28 @@ export const EditStage = ({
           </button>
         </div>
       </div>
+      <AssignmentDistributionModal
+        isOpen={distModalOpen}
+        closeModal={() => setDistModalOpen(false)}
+        assignments={assignments}
+        slots={slots}
+      />
     </div>
   );
+};
+
+interface SortButtonProps {
+  sortDirection: SortDirection;
+}
+
+const SortButton = ({ sortDirection }: SortButtonProps) => {
+  let icon = <SortUnknownIcon className="icon matcher-table-sort-icon" />;
+  if (sortDirection == SortDirection.ASCENDING) {
+    icon = <SortUpIcon className="icon matcher-table-sort-icon" />;
+  } else if (sortDirection == SortDirection.DESCENDING) {
+    icon = <SortDownIcon className="icon matcher-table-sort-icon" />;
+  }
+  return icon;
 };
 
 interface EditTableRowProps {
@@ -601,5 +726,83 @@ const EditTableRow = ({ row, sortedSlots, prefByMentor, onChangeRow, isSelected,
         />
       </div>
     </div>
+  );
+};
+
+interface AssignmentDistributionModalProps {
+  isOpen: boolean;
+  closeModal: () => void;
+  assignments: Assignment[];
+  slots: Slot[];
+}
+
+const MAX_COLOR = "124, 233, 162";
+
+const AssignmentDistributionModal = ({
+  isOpen,
+  closeModal,
+  assignments,
+  slots
+}: AssignmentDistributionModalProps): React.ReactElement | null => {
+  /**
+   * Map from slot id to number of mentors assigned to the slot.
+   */
+  const [assignmentCounts, setAssignmentCounts] = useState<Map<number, number>>(new Map());
+  const [countExtrema, setCountExtrema] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
+
+  useEffect(() => {
+    const newAssignmentCounts = assignments.reduce((acc, assignment) => {
+      const count = acc.get(assignment.slot) || 0;
+      acc.set(assignment.slot, count + 1);
+      return acc;
+    }, new Map<number, number>());
+    setAssignmentCounts(newAssignmentCounts);
+
+    const newCountExtrema = {
+      min: Math.min(...newAssignmentCounts.values()),
+      max: Math.max(...newAssignmentCounts.values())
+    };
+    setCountExtrema(newCountExtrema);
+  }, [assignments]);
+
+  if (!isOpen) {
+    return null;
+  }
+
+  const getEventDetails = (event: CalendarEventSingleTime) => {
+    const slotId = event.id;
+    const curCount = assignmentCounts.get(slotId) ?? countExtrema.min;
+    const opacity = (curCount - countExtrema.min) / (countExtrema.max - countExtrema.min);
+    const color = `rgba(${MAX_COLOR}, ${opacity})`;
+
+    return (
+      <div className="matcher-assignment-distribution-div" style={{ backgroundColor: color }}>
+        <span className="calendar-event-detail-time">
+          {formatTime(event.time.startTime)}&#8211;{formatTime(event.time.endTime)}
+        </span>
+        <br />
+        <span>({curCount})</span>
+      </div>
+    );
+  };
+
+  return (
+    assignmentCounts && (
+      <Modal closeModal={closeModal} className="matcher-calendar-modal">
+        <div className="matcher-calendar-modal-contents">
+          <Calendar
+            events={slots}
+            getEventDetails={getEventDetails}
+            eventCreationEnabled={false}
+            selectedEventIndices={[]}
+            setSelectedEventIndices={() => {
+              /* do nothing */
+            }}
+            disableHover={true}
+            limitScrolling={true}
+          />
+        </div>
+      </Modal>
+    )
   );
 };

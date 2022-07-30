@@ -65,7 +65,8 @@
 }
 
 .matcher-body-footer,
-.matcher-body-footer-right {
+.matcher-body-footer-right,
+.matcher-body-footer-sticky {
 	margin-top: 20px;
 
 	display: flex;
@@ -79,6 +80,16 @@
 
 .matcher-body-footer-right {
 	justify-content: flex-end;
+}
+
+.matcher-body-footer-sticky {
+	position: sticky;
+	bottom: 0;
+	margin-top: 0;
+	padding: 25px 0 15px;
+	/* fallback for gradient */
+	background-color: #ffffffcc;
+	background: linear-gradient(to bottom, #ffffff99 0%, #ffffff 50%);
 }
 
 .mentor-sidebar-left,
@@ -108,6 +119,26 @@
 	padding: 15px;
 }
 
+.matcher-sidebar-left-bottom-row {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	padding: 15px;
+}
+
+.matcher-submit-status-container {
+	position: relative;
+}
+
+.matcher-submit-status-icon {
+	position: absolute !important;
+	top: -0.75em;
+	left: 10px;
+	width: 1.5em !important;
+	height: 1.5em !important;
+}
+
 .matcher-detail-time {
 	font-size: 0.9rem;
 }
@@ -120,6 +151,43 @@
 	width: 40px;
 	margin-left: 5px;
 	outline: none;
+}
+
+/* Modal */
+
+.matcher-calendar-modal {
+	width: 800px !important;
+	height: 700px !important;
+}
+
+.matcher-calendar-modal-contents {
+	width: 100%;
+	height: calc(100% - 40px);
+	display: flex;
+	flex-direction: column;
+	align-items: stretch;
+	justify-content: center;
+}
+
+.matcher-calendar-modal-header {
+	margin: 0 20px 15px;
+	font-weight: bold;
+}
+
+/* Table */
+
+.matcher-table-sort-group {
+	display: flex;
+	flex-direction: row;
+	gap: 3px;
+
+	user-select: none;
+	cursor: pointer;
+}
+
+.matcher-table-sort-icon {
+	margin-top: 2px;
+	width: 1em;
 }
 
 /* Buttons */
@@ -218,7 +286,8 @@
 	gap: 8px;
 }
 
-.matcher-sidebar-create-footer {
+.matcher-sidebar-create-footer,
+.matcher-sidebar-selected-footer {
 	flex: 1;
 	display: flex;
 	flex-direction: column;
@@ -374,6 +443,18 @@
 	justify-content: space-between;
 }
 
+.mentor-list-top-search {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+	gap: 15px;
+}
+
+.mentor-list-num-submitted {
+	font-size: 0.9rem;
+}
+
 .mentor-list-top-buttons {
 	display: flex;
 	flex-direction: row;
@@ -385,7 +466,6 @@
 .mentor-list-header {
 	display: flex;
 	flex-direction: row;
-	border-radius: 5px;
 	padding: 10px 30px 10px 15px;
 	margin-top: 15px;
 
@@ -399,15 +479,10 @@
 	display: flex;
 	flex-direction: column;
 
-	margin-top: 5px;
-	margin-bottom: 10px;
-
 	background-color: #f5f5f5;
-	border-radius: 5px;
 	padding: 15px 30px 15px 15px;
 
-	max-height: 50vh;
-	overflow-y: auto;
+	gap: 3px;
 }
 
 .mentor-list-with-preferences,
@@ -528,10 +603,21 @@
 	color: green;
 }
 
+.matcher-pref-modal-email {
+	font-size: 0.9rem;
+	font-weight: normal;
+}
+
 /* ConfigureStage.tsx */
 
 .matcher-mentor-min-max {
 	font-size: 0.8rem;
+}
+
+.matcher-configure-sidebar-contents {
+	display: flex;
+	flex-direction: column;
+	height: 100%;
 }
 
 .matcher-configure-sidebar-header {
@@ -559,7 +645,24 @@
 	width: 80%;
 }
 
+.matcher-configure-sidebar-footer {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	justify-content: flex-end;
+
+	font-style: italic;
+	font-size: 0.95rem;
+}
+
 /* EditStage.tsx */
+
+.matcher-assignment-above-head {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: space-between;
+}
 
 .matcher-assignment-search {
 	width: 50%;
@@ -677,7 +780,7 @@
 }
 
 .matcher-assignment-section-capacity {
-	width: 80px;
+	width: 85px;
 	margin-right: 5px;
 }
 
@@ -720,13 +823,6 @@
 	color: var(--csm-neutral);
 }
 
-.matcher-assignment-footer {
-	display: flex;
-	flex-direction: row;
-	justify-content: space-between;
-	margin-top: 30px;
-}
-
 .matcher-assignment-footer-help {
 	display: flex;
 	flex-direction: row;
@@ -762,4 +858,8 @@
 
 .matcher-assignment-save-button:hover {
 	background-color: var(--csm-neutral-darkened);
+}
+
+.matcher-assignment-distribution-div {
+	height: 100%;
 }

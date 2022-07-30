@@ -38,22 +38,22 @@ interface CalendarProps {
   eventCreationEnabled: boolean;
   onEventBeginCreation: (time: Time) => void;
   onEventCreated: (time: Time) => void;
-  selectedEventIdx: number;
-  setSelectedEventIdx: (idx: number) => void;
+  selectedEventIndices: number[];
+  setSelectedEventIndices: (indices: number[]) => void;
   disableHover: boolean;
   limitScrolling: boolean;
 }
 
 export function Calendar({
   events,
-  selectedEventIdx,
   createdTimes,
   onEventClick,
   getEventDetails,
   eventCreationEnabled,
   onEventBeginCreation,
   onEventCreated,
-  setSelectedEventIdx,
+  selectedEventIndices,
+  setSelectedEventIndices,
   disableHover,
   limitScrolling
 }: CalendarProps): React.ReactElement {
@@ -85,7 +85,6 @@ export function Calendar({
 
   useEffect(() => {
     const interval = document.getElementsByClassName("calendar-day-interval").item(0);
-    console.log(interval);
     setIntervalHeight(interval!.getBoundingClientRect().height);
 
     calendarBodyRef.current?.addEventListener<"wheel">("wheel", scrollView, { passive: false });
@@ -176,8 +175,24 @@ export function Calendar({
     }
   }
 
-  const eventClickWrapper = (index: number) => {
-    setSelectedEventIdx(index);
+  /**
+   * Wrapper for when an event is clicked.
+   *
+   * @param index event index in array
+   * @param add whether to add event or replace existing events
+   */
+  const eventClickWrapper = (index: number, add: boolean) => {
+    let newSelectedEventIndices;
+    if (add) {
+      if (selectedEventIndices.includes(index)) {
+        newSelectedEventIndices = selectedEventIndices.filter(i => i !== index);
+      } else {
+        newSelectedEventIndices = [...selectedEventIndices, index];
+      }
+    } else {
+      newSelectedEventIndices = [index];
+    }
+    setSelectedEventIndices(newSelectedEventIndices);
     onEventClick(index);
   };
 
@@ -189,7 +204,7 @@ export function Calendar({
     setCurCreatedEvent({ day, startTime, endTime });
     setCreatingEvent(true);
     setEventHoverIndex(-1);
-    setSelectedEventIdx(-1);
+    setSelectedEventIndices([]);
     onEventBeginCreation(normalizeCreatedEvent());
   };
 
@@ -253,7 +268,7 @@ export function Calendar({
               endTime={viewBounds.end}
               intervalLength={INTERVAL_LENGTH}
               eventHoverIndex={disableHover ? -1 : eventHoverIndex}
-              eventSelectIndex={selectedEventIdx}
+              eventSelectIndices={selectedEventIndices}
               events={categorizedEvents[day] || []}
               curCreatedTimes={createdTimes}
               curCreatedTime={normalizeCreatedEvent()}

@@ -43,11 +43,11 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
   /**
    * Currently selected existing event to view details for.
    */
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
+  const [selectedEvents, setSelectedEvents] = useState<CalendarEvent[]>([]);
   /**
    * Index of currently selected existing event.
    */
-  const [selectedEventIdx, setSelectedEventIdx] = useState<number>(-1);
+  const [selectedEventIndices, setSelectedEventIndices] = useState<number[]>([]);
 
   /**
    * Whether the user is creating tiled events; shows a specialized sidebar.
@@ -143,8 +143,8 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    * Initialize event creation
    */
   const onEventBeginCreation = (): void => {
-    setSelectedEvent(null);
-    setSelectedEventIdx(-1);
+    setSelectedEvents([]);
+    setSelectedEventIndices([]);
   };
 
   /**
@@ -187,24 +187,10 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    * @param index       index of time to remove
    * @param useSelected whether to use selected event or the event currently being created
    */
-  const deleteTime = (index: number, useSelected = false) => {
-    if (useSelected) {
-      const newSelectedEvent = { ...selectedEvent! };
-      newSelectedEvent.times.splice(index, 1);
-      if (newSelectedEvent.times.length === 0) {
-        const newSlots = [...slots];
-        newSlots.splice(selectedEventIdx!, 1);
-        setSlots(newSlots);
-        setSelectedEvent(null);
-        setSelectedEventIdx(-1);
-      } else {
-        setSelectedEvent(newSelectedEvent);
-      }
-    } else {
-      const newTimes = [...curCreatedTimes];
-      newTimes.splice(index, 1);
-      setCurCreatedTimes(newTimes);
-    }
+  const deleteTime = (index: number) => {
+    const newTimes = [...curCreatedTimes];
+    newTimes.splice(index, 1);
+    setCurCreatedTimes(newTimes);
   };
 
   /**
@@ -214,19 +200,13 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    * @param newDay      new day value for time
    * @param useSelected whether to use selected event or the event currently being created
    */
-  const editTime_day = (index: number, newDay: string, useSelected = false): void => {
+  const editTime_day = (index: number, newDay: string): void => {
     if (!DAYS.includes(newDay)) {
       return;
     }
-    if (useSelected) {
-      const newSelectedEvent = { ...selectedEvent! };
-      newSelectedEvent.times[index].day = newDay;
-      setSelectedEvent(newSelectedEvent);
-    } else {
-      const newTimes = [...curCreatedTimes];
-      newTimes[index]["day"] = newDay;
-      setCurCreatedTimes(newTimes);
-    }
+    const newTimes = [...curCreatedTimes];
+    newTimes[index]["day"] = newDay;
+    setCurCreatedTimes(newTimes);
   };
 
   /**
@@ -236,16 +216,10 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    * @param newStartTime  new start time value
    * @param useSelected   whether to use selected event or the event currently being created
    */
-  const editTime_startTime = (index: number, newStartTime: string, useSelected = false) => {
-    if (useSelected) {
-      const newSelectedEvent = { ...selectedEvent! };
-      newSelectedEvent.times[index].startTime = parseTime(newStartTime);
-      setSelectedEvent(newSelectedEvent);
-    } else {
-      const newTimes = [...curCreatedTimes];
-      newTimes[index]["startTime"] = parseTime(newStartTime);
-      setCurCreatedTimes(newTimes);
-    }
+  const editTime_startTime = (index: number, newStartTime: string) => {
+    const newTimes = [...curCreatedTimes];
+    newTimes[index]["startTime"] = parseTime(newStartTime);
+    setCurCreatedTimes(newTimes);
   };
 
   /**
@@ -255,16 +229,10 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    * @param newEndTime  new end time value
    * @param useSelected whether to use selected event or the event currently being created
    */
-  const editTime_endTime = (index: number, newEndTime: string, useSelected = false) => {
-    if (useSelected) {
-      const newSelectedEvent = { ...selectedEvent! };
-      newSelectedEvent.times[index].endTime = parseTime(newEndTime);
-      setSelectedEvent(newSelectedEvent);
-    } else {
-      const newTimes = [...curCreatedTimes];
-      newTimes[index]["endTime"] = parseTime(newEndTime);
-      setCurCreatedTimes(newTimes);
-    }
+  const editTime_endTime = (index: number, newEndTime: string) => {
+    const newTimes = [...curCreatedTimes];
+    newTimes[index]["endTime"] = parseTime(newEndTime);
+    setCurCreatedTimes(newTimes);
   };
 
   const toggleCreatingTiledEvents = (e: React.ChangeEvent<HTMLInputElement>): void => {
@@ -335,8 +303,8 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
     setSlots([...slots, newEvent]);
     setCurCreatedTimes([]);
     setSavedExistingEvent(null);
-    setSelectedEvent(null);
-    setSelectedEventIdx(-1);
+    setSelectedEvents([]);
+    setSelectedEventIndices([]);
   };
 
   /**
@@ -356,46 +324,48 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    */
   const deleteEvent = () => {
     setCurCreatedTimes([]);
-    setSelectedEvent(null);
-    setSelectedEventIdx(-1);
+    setSelectedEvents([]);
+    setSelectedEventIndices([]);
   };
 
   /**
    * Convert selected event into a newly created event for editing
    */
   const editSelectedEvent = () => {
-    // copy event
-    setCurCreatedTimes(_.cloneDeep(selectedEvent!.times));
-    setSavedExistingEvent(_.cloneDeep(selectedEvent)); // duplicate event
-    // delete event
-    deleteSelectedEvent();
+    if (selectedEvents.length === 1) {
+      const event = selectedEvents[0];
+      // copy event
+      setCurCreatedTimes(_.cloneDeep(event.times));
+      setSavedExistingEvent(_.cloneDeep(event)); // duplicate event
+      // delete event
+      deleteSelectedEvent();
+    }
   };
 
   /**
    * Delete the selected event
    */
   const deleteSelectedEvent = () => {
-    const newSlots = [...slots];
-    newSlots.splice(selectedEventIdx, 1);
+    const newSlots = slots.filter((_, i) => !selectedEventIndices.includes(i));
     setSlots(newSlots);
     // deselect event
-    setSelectedEvent(null);
-    setSelectedEventIdx(-1);
+    setSelectedEvents([]);
+    setSelectedEventIndices([]);
   };
 
   /**
    * Wrapper for handler when a time is clicked
    *
-   * @param idx index of event to select
+   * @param indices index of event to select
    */
-  const setSelectedEventIdxWrapper = (idx: number) => {
+  const setSelectedEventIndicesWrapper = (indices: number[]) => {
     if (!creatingTiledEvents && curCreatedTimes.length == 0) {
-      setSelectedEventIdx(idx);
-      setSelectedEvent(slots[idx]);
+      setSelectedEventIndices(indices);
+      setSelectedEvents(indices.map(idx => slots[idx]));
     }
   };
 
-  console.log({ savedExistingEvent });
+  console.log({ savedExistingEvent: savedExistingEvent });
 
   /**
    * Render the details of an event in the sidebar
@@ -494,13 +464,13 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
             {curCreatedTimes.map((time, time_idx) => (
               <div className="matcher-created-time-container" key={time_idx}>
                 <div className="matcher-created-time-remove">
-                  <XIcon className="icon matcher-remove-time-icon" onClick={() => deleteTime(time_idx, false)} />
+                  <XIcon className="icon matcher-remove-time-icon" onClick={() => deleteTime(time_idx)} />
                 </div>
                 <div className="matcher-created-time">
                   <select
                     defaultValue={time.day}
-                    key={`day_${time_idx}/${selectedEventIdx}`}
-                    onChange={e => editTime_day(time_idx, e.target.value, false)}
+                    key={`day_${time_idx}/${selectedEventIndices}`}
+                    onChange={e => editTime_day(time_idx, e.target.value)}
                   >
                     {DAYS.map(day => (
                       <option key={day} value={day}>
@@ -510,16 +480,16 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
                   </select>
                   <input
                     type="time"
-                    key={`start_${time_idx}/${selectedEventIdx}`}
+                    key={`start_${time_idx}/${selectedEventIndices}`}
                     defaultValue={serializeTime(time.startTime)}
-                    onChange={e => editTime_startTime(time_idx, e.target.value, false)}
+                    onChange={e => editTime_startTime(time_idx, e.target.value)}
                   />
                   &#8211;
                   <input
                     type="time"
-                    key={`end_${time_idx}/${selectedEventIdx}`}
+                    key={`end_${time_idx}/${selectedEventIndices}`}
                     defaultValue={serializeTime(time.endTime)}
-                    onChange={e => editTime_endTime(time_idx, e.target.value, false)}
+                    onChange={e => editTime_endTime(time_idx, e.target.value)}
                   />
                 </div>
               </div>
@@ -544,34 +514,45 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
         <div className="matcher-sidebar-create-footer">Drag to add another time to the slot.</div>
       </div>
     );
-  } else if (selectedEvent !== null) {
+  } else if (selectedEvents.length > 0) {
     // selected an event to view, but not edit
     topContents = (
       <div className="matcher-sidebar-selected">
         <div className="matcher-sidebar-selected-top">
-          <div className="matcher-sidebar-header">Section Time{selectedEvent.times.length > 1 ? "s" : ""}:</div>
-          <ul className="matcher-selected-times">
-            {selectedEvent.times.map((time, time_idx) => (
-              <li key={time_idx} className="matcher-selected-time-container">
-                <span className="matcher-selected-time">
-                  {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
-                </span>
-              </li>
-            ))}
-          </ul>
+          {selectedEvents.length === 1 ? (
+            // exactly one selected event
+            <React.Fragment>
+              <div className="matcher-sidebar-header">Section Time{selectedEvents[0].times.length > 1 ? "s" : ""}:</div>
+              <ul className="matcher-selected-times">
+                {selectedEvents[0].times.map((time, time_idx) => (
+                  <li key={time_idx} className="matcher-selected-time-container">
+                    <span className="matcher-selected-time">
+                      {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </React.Fragment>
+          ) : (
+            // multiple selected events
+            <div className="matcher-sidebar-header">Multiple selected events</div>
+          )}
         </div>
         <div className="matcher-sidebar-selected-bottom">
-          <div className="matcher-sidebar-selected-bottom-row">
-            <button className="matcher-secondary-btn" onClick={editSelectedEvent}>
-              Edit
-            </button>
-          </div>
+          {selectedEvents.length === 1 && (
+            <div className="matcher-sidebar-selected-bottom-row">
+              <button className="matcher-secondary-btn" onClick={editSelectedEvent}>
+                Edit
+              </button>
+            </div>
+          )}
           <div className="matcher-sidebar-selected-bottom-row">
             <button className="matcher-danger-btn" onClick={deleteSelectedEvent}>
               Delete
             </button>
           </div>
-        </div>
+        </div>{" "}
+        <div className="matcher-sidebar-create-footer">Shift-click to select more slots.</div>
       </div>
     );
   }
@@ -594,8 +575,8 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
         <div className="coordinator-sidebar-right">
           <Calendar
             events={slots}
-            selectedEventIdx={selectedEventIdx}
-            setSelectedEventIdx={setSelectedEventIdxWrapper}
+            selectedEventIndices={selectedEventIndices}
+            setSelectedEventIndices={setSelectedEventIndicesWrapper}
             createdTimes={curCreatedTimes}
             getEventDetails={getEventDetails}
             eventCreationEnabled={true}

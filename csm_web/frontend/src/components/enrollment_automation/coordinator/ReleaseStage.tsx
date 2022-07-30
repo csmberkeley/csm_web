@@ -1,26 +1,25 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../../utils/api";
 import { Mentor, Profile } from "../../../utils/types";
 
-import { Slot, MentorPreference, SlotPreference } from "../EnrollmentAutomationTypes";
-import { Calendar } from "../calendar/Calendar";
-import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
-import { formatTime } from "../utils";
-
-import XIcon from "../../../../static/frontend/img/x.svg";
-import UndoIcon from "../../../../static/frontend/img/undo.svg";
-import EyeIcon from "../../../../static/frontend/img/eye.svg";
-import CheckIcon from "../../../../static/frontend/img/check.svg";
 import Modal from "../../Modal";
 import { SearchBar } from "../../SearchBar";
+import { Calendar } from "../calendar/Calendar";
+import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
+import { MentorPreference, Slot, SlotPreference } from "../EnrollmentAutomationTypes";
+import { formatTime } from "../utils";
+
+import CheckIcon from "../../../../static/frontend/img/check.svg";
+import EyeIcon from "../../../../static/frontend/img/eye.svg";
+import SortDownIcon from "../../../../static/frontend/img/sort-down.svg";
+import SortUnknownIcon from "../../../../static/frontend/img/sort-unknown.svg";
+import SortUpIcon from "../../../../static/frontend/img/sort-up.svg";
+import UndoIcon from "../../../../static/frontend/img/undo.svg";
+import XIcon from "../../../../static/frontend/img/x.svg";
 
 interface ReleaseStageProps {
   profile: Profile;
   slots: Slot[];
-  /**
-   * Map from slot id to mentor preferences for that slot
-   */
-  prefBySlot: Map<number, MentorPreference[]>;
   /**
    * Map from mentor id to their slot preferences
    */
@@ -33,74 +32,74 @@ interface ReleaseStageProps {
  * - Add mentors to fill out the preference form
  * - View current submitted preferences from mentors
  */
-export function ReleaseStage({
-  profile,
-  slots,
-  prefBySlot,
-  prefByMentor,
-  refreshStage
-}: ReleaseStageProps): React.ReactElement {
+export function ReleaseStage({ profile, slots, prefByMentor, refreshStage }: ReleaseStageProps): React.ReactElement {
   const [selectedMentor, setSelectedMentor] = useState<Mentor | undefined>(undefined);
-  console.log(selectedMentor);
 
-  const closeForm = () => {
-    // send POST request to close form for mentors
-    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { open: false }).then(() => {
-      // recompute stage
-      refreshStage();
-    });
+  const [preferenceModalOpen, setPreferenceModalOpen] = useState<boolean>(false);
+
+  /**
+   * Handler to open the preference modal for a mentor
+   */
+  const handleSelectMentor = (mentor: Mentor | undefined) => {
+    console.log(mentor);
+    setSelectedMentor(mentor);
+    if (mentor === undefined) {
+      setPreferenceModalOpen(false);
+    } else {
+      setPreferenceModalOpen(true);
+    }
   };
 
   return (
     <React.Fragment>
-      <div className="release-container">
-        <div className="release-body-top">
-          <MentorList
-            profile={profile}
-            prefByMentor={prefByMentor}
-            selectedMentor={selectedMentor}
-            setSelectedMentor={setSelectedMentor}
-          />
-        </div>
-        <div className="release-body-bottom">
-          <PreferenceStatus
-            profile={profile}
-            slots={slots}
-            prefByMentor={prefByMentor}
-            selectedMentor={selectedMentor}
-          />
-        </div>
-      </div>
-
-      <div className="matcher-body-footer-right">
-        <button className="matcher-submit-btn" onClick={closeForm}>
-          Close Form
-        </button>
-      </div>
+      {preferenceModalOpen && (
+        <PreferenceStatusModal
+          profile={profile}
+          slots={slots}
+          prefByMentor={prefByMentor}
+          selectedMentor={selectedMentor}
+          closeModal={() => handleSelectMentor(undefined)}
+        />
+      )}
+      <MentorList
+        profile={profile}
+        prefByMentor={prefByMentor}
+        selectedMentor={selectedMentor}
+        setSelectedMentor={handleSelectMentor}
+        refreshStage={refreshStage}
+      />
     </React.Fragment>
   );
 }
 
-const mentorString = (mentor: Mentor) => {
-  if (mentor.name) {
-    return (
-      <span className="mentor-list-item-text">
-        {mentor.name} <span className="mentor-list-item-text-small">({mentor.email})</span>
-      </span>
-    );
-  } else {
-    return <span className="mentor-list-item-text">{mentor.email}</span>;
-  }
-};
+enum SortDirection {
+  ASCENDING = 1,
+  DESCENDING = -1,
+  UNKNOWN = 0
+}
+
+type SortAttr = "name" | "email" | "submitted";
+
+interface SortByType {
+  attr: SortAttr;
+  dir: SortDirection;
+}
 
 interface MentorListProps {
   profile: Profile;
   prefByMentor: Map<number, SlotPreference[]>;
   selectedMentor: Mentor | undefined;
-  setSelectedMentor: React.Dispatch<React.SetStateAction<Mentor | undefined>>;
+  setSelectedMentor: (mentor: Mentor | undefined) => void;
+  refreshStage: () => void;
 }
 
-function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }: MentorListProps): React.ReactElement {
+function MentorList({
+  profile,
+  prefByMentor,
+  selectedMentor,
+  setSelectedMentor,
+  refreshStage
+}: MentorListProps): React.ReactElement {
   /**
    * List of all mentors associated with the course that have no assigned section
    */
@@ -119,6 +118,14 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
   const [showAddMentorsModal, setShowAddMentorsModal] = useState(false);
 
   /**
+   * Attribute to sort the table by,
+   * specified in the form `{attr: key, dir: SortDirection}`.
+   *
+   * By default, sorts by name in ascending order.
+   */
+  const [sortBy, setSortBy] = useState<SortByType>({ attr: "name", dir: SortDirection.ASCENDING });
+
+  /**
    * Reference to the search bar input field
    */
   const searchBar = useRef<HTMLInputElement>(null);
@@ -135,6 +142,24 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
     updateSearch(searchBar.current?.value);
   }, [mentorList]);
 
+  const numSubmitted = useMemo(() => {
+    let count = 0;
+    for (const mentor of mentorList) {
+      if (prefByMentor.has(mentor.id)) {
+        count += 1;
+      }
+    }
+    return count;
+  }, [mentorList]);
+
+  const closeForm = () => {
+    // send POST request to close form for mentors
+    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { open: false }).then(() => {
+      // recompute stage
+      refreshStage();
+    });
+  };
+
   /**
    * Fetches the mentor list from the server, sorted to put mentors
    * that have not filled in the preference form first
@@ -147,20 +172,8 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
      * { "mentors": [{mentor model}, ...] }
      */
     return fetchJSON(`matcher/${profile.courseId}/mentors`).then(data => {
-      // sort alphabetically, then put all mentors with no preferences first
-      const sortedMentors: Mentor[] = data.mentors.sort((mentor1: Mentor, mentor2: Mentor) =>
-        mentor1.email.toLowerCase().localeCompare(mentor2.email.toLowerCase())
-      );
-      const noPrefMentors = [];
-      const hasPrefMentors = [];
-      for (const mentor of sortedMentors) {
-        if (prefByMentor.has(mentor.id)) {
-          hasPrefMentors.push(mentor);
-        } else {
-          noPrefMentors.push(mentor);
-        }
-      }
-      setMentorList([...noPrefMentors, ...hasPrefMentors]);
+      setMentorList(data.mentors);
+      sortTable();
     });
   };
 
@@ -172,8 +185,6 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
       // nothing to request
       return;
     }
-
-    console.log(newMentorsString);
 
     let newMentors: string[] = [];
     if (newMentorsString.includes(",")) {
@@ -206,16 +217,81 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
     });
   };
 
+  /**
+   * Retrieves the sort direction of the specified attribute.
+   * If the attribute is not sorted, returns SortDirection.UNKNOWN.
+   *
+   * @param attr attribute to sort by
+   * @returns direction of sort for the attribute
+   */
+  const getSortDirection = (attr: SortAttr): SortDirection => {
+    if (sortBy.attr === attr) {
+      return sortBy.dir;
+    } else {
+      return SortDirection.UNKNOWN;
+    }
+  };
+
+  /**
+   * Click handler to update the sort direction for the given attribute.
+   */
+  const updateSort = (attr: SortAttr) => {
+    if (sortBy.attr === attr) {
+      if (sortBy.dir === SortDirection.ASCENDING) {
+        setSortBy({ attr, dir: SortDirection.DESCENDING });
+      } else {
+        setSortBy({ attr, dir: SortDirection.ASCENDING });
+      }
+    } else {
+      setSortBy({ attr, dir: SortDirection.ASCENDING });
+    }
+  };
+
+  const sortTable = () => {
+    setMentorList((oldMentorList: Mentor[]) =>
+      Array.from(oldMentorList).sort((a, b) => {
+        let aVal, bVal;
+        if (sortBy.attr === "submitted") {
+          aVal = hasPreferences(a);
+          bVal = hasPreferences(b);
+        } else {
+          // case insensitive comparison
+          aVal = a[sortBy.attr].toLowerCase();
+          bVal = b[sortBy.attr].toLowerCase();
+        }
+
+        if (aVal > bVal) {
+          return sortBy.dir as number;
+        } else if (aVal < bVal) {
+          return -sortBy.dir as number;
+        } else {
+          return 0;
+        }
+      })
+    );
+  };
+
+  /* Sort table on upate */
+  useEffect(sortTable, [sortBy]);
+
+  /**
+   * Update the search query and the resulting filtered mentor list.
+   */
   const updateSearch = (term?: string) => {
     if (term === undefined) {
       setFilteredMentorList(mentorList);
       return;
     }
+    const lowercaseTerm = term.toLowerCase();
     const newFilteredMentorList = mentorList.filter(mentor => {
-      return (
-        mentor.email.toLowerCase().includes(term.toLowerCase()) ||
-        mentor.name.toLowerCase().includes(term.toLowerCase())
-      );
+      let include = false;
+      include ||= mentor.name.toLowerCase().includes(lowercaseTerm);
+      if (term.includes("@")) {
+        include ||= mentor.email.toLowerCase().includes(lowercaseTerm);
+      } else {
+        include ||= mentor.email.split("@")[0].toLowerCase().includes(lowercaseTerm);
+      }
+      return include;
     });
     setFilteredMentorList(newFilteredMentorList);
   };
@@ -245,8 +321,6 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
 
   const hasPreferences = (mentor: Mentor) => prefByMentor.has(mentor.id);
 
-  console.log(filteredMentorList);
-
   return (
     <React.Fragment>
       {showAddMentorsModal && (
@@ -262,14 +336,13 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
       )}
       <div className="mentor-list-container">
         <div className="mentor-list-top">
-          <SearchBar ref={searchBar} onChange={e => updateSearch(e.target.value)} />
+          <div className="mentor-list-top-search">
+            <SearchBar refObject={searchBar} onChange={e => updateSearch(e.target.value)} />
+            <span className="mentor-list-num-submitted">
+              ({numSubmitted} / {mentorList.length} submitted)
+            </span>
+          </div>
           <div className="mentor-list-top-buttons">
-            {removedMentorList.length > 0 && (
-              <button className="matcher-secondary-btn" onClick={submitMentorRemovals}>
-                Update
-              </button>
-            )}
-
             <button className="matcher-submit-btn" onClick={() => setShowAddMentorsModal(true)}>
               Add Mentors
             </button>
@@ -279,9 +352,24 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
           <div className="mentor-list-header">
             <div className="mentor-list-icon mentor-list-item-remove"></div>
             <div className="mentor-list-icon mentor-list-item-view"></div>
-            <div className="mentor-list-item-name">Name</div>
-            <div className="mentor-list-item-email">Email</div>
-            <div className="mentor-list-item-check">Submitted</div>
+            <div className="mentor-list-item-name">
+              <div className="matcher-table-sort-group" onClick={() => updateSort("name")}>
+                <span>Name</span>
+                <SortButton sortDirection={getSortDirection("name")} />
+              </div>
+            </div>
+            <div className="mentor-list-item-email">
+              <div className="matcher-table-sort-group" onClick={() => updateSort("email")}>
+                <span>Email</span>
+                <SortButton sortDirection={getSortDirection("email")} />
+              </div>
+            </div>
+            <div className="mentor-list-item-check">
+              <div className="matcher-table-sort-group" onClick={() => updateSort("submitted")}>
+                <span>Submitted</span>
+                <SortButton sortDirection={getSortDirection("submitted")} />
+              </div>
+            </div>
           </div>
           <div className="mentor-list">
             {filteredMentorList.map((mentor, index) => (
@@ -298,11 +386,36 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
             ))}
           </div>
         </div>
-        <div className="mentor-list-bottom"></div>
+      </div>
+      <div className="matcher-body-footer-sticky matcher-body-footer">
+        <div>
+          {removedMentorList.length > 0 && (
+            <button className="matcher-secondary-btn" onClick={submitMentorRemovals}>
+              Update
+            </button>
+          )}
+        </div>
+        <button className="matcher-submit-btn" onClick={closeForm}>
+          Close Form
+        </button>
       </div>
     </React.Fragment>
   );
 }
+
+interface SortButtonProps {
+  sortDirection: SortDirection;
+}
+
+const SortButton = ({ sortDirection }: SortButtonProps) => {
+  let icon = <SortUnknownIcon className="icon matcher-table-sort-icon" />;
+  if (sortDirection == SortDirection.ASCENDING) {
+    icon = <SortUpIcon className="icon matcher-table-sort-icon" />;
+  } else if (sortDirection == SortDirection.DESCENDING) {
+    icon = <SortDownIcon className="icon matcher-table-sort-icon" />;
+  }
+  return icon;
+};
 
 interface MentorListItemProps {
   mentor: Mentor;
@@ -362,7 +475,7 @@ function MentorListItem({
   );
 }
 
-interface PreferenceStatusProps {
+interface PreferenceStatusModalProps {
   profile: Profile;
   slots: Slot[];
   /**
@@ -370,10 +483,15 @@ interface PreferenceStatusProps {
    */
   prefByMentor: Map<number, SlotPreference[]>;
   selectedMentor: Mentor | undefined;
+  closeModal: () => void;
 }
 
-function PreferenceStatus({ slots, prefByMentor, selectedMentor }: PreferenceStatusProps): React.ReactElement {
-  console.log("preference status");
+function PreferenceStatusModal({
+  slots,
+  prefByMentor,
+  selectedMentor,
+  closeModal
+}: PreferenceStatusModalProps): React.ReactElement | null {
   const getEventDetails = (event: CalendarEventSingleTime) => {
     let detail: React.ReactNode = "";
     if (selectedMentor !== undefined) {
@@ -409,19 +527,29 @@ function PreferenceStatus({ slots, prefByMentor, selectedMentor }: PreferenceSta
     );
   };
 
+  // don't display anything if no mentor is selected
+  if (selectedMentor === undefined) {
+    return null;
+  }
+
   return (
-    <div className="pref-status-container">
-      <Calendar
-        events={slots}
-        selectedEventIdx={-1}
-        setSelectedEventIdx={() => {
-          /* do nothing */
-        }}
-        getEventDetails={getEventDetails}
-        eventCreationEnabled={false}
-        disableHover={true}
-        limitScrolling={true}
-      />
-    </div>
+    <Modal closeModal={closeModal} className="matcher-calendar-modal">
+      <div className="matcher-calendar-modal-contents">
+        <div className="matcher-calendar-modal-header">
+          Preferences for {selectedMentor.name}{" "}
+          <span className="matcher-pref-modal-email">({selectedMentor.email})</span>
+        </div>
+        <Calendar
+          events={slots}
+          selectedEventIndices={[]}
+          setSelectedEventIndices={() => {
+            /* do nothing */
+          }}
+          getEventDetails={getEventDetails}
+          eventCreationEnabled={false}
+          limitScrolling={true}
+        />
+      </div>
+    </Modal>
   );
 }

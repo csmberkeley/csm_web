@@ -43,7 +43,6 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
   const [curStage, setCurStage] = useState<Stage>(Stage.CREATE);
 
   const fetchData = async () => {
-    console.log("Fetch data");
     // ensure all fetches complete
     await Promise.all([
       // fetch slot information
@@ -112,8 +111,7 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
 
       // fetch assignment
       refreshAssignments()
-    ]).then(values => {
-      console.log(values);
+    ]).then(() => {
       setLoaded(true);
     });
   };
@@ -244,6 +242,7 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
           assignments={assignments}
           refreshStage={refreshStage}
           refreshAssignments={refreshAssignments}
+          setCurStage={setCurStage}
         />
       </div>
     </div>
@@ -259,6 +258,7 @@ interface CoordinatorMatcherFormSwitchProps {
   assignments: Assignment[];
   refreshStage: () => Promise<void>;
   refreshAssignments: () => Promise<void>;
+  setCurStage: (stage: Stage) => void;
 }
 
 const CoordinatorMatcherFormSwitch = ({
@@ -269,21 +269,14 @@ const CoordinatorMatcherFormSwitch = ({
   prefByMentor,
   assignments,
   refreshStage,
-  refreshAssignments
+  refreshAssignments,
+  setCurStage
 }: CoordinatorMatcherFormSwitchProps) => {
   switch (stage) {
     case Stage.CREATE:
       return <CreateStage profile={profile} initialSlots={slots} refreshStage={refreshStage} />;
     case Stage.RELEASE:
-      return (
-        <ReleaseStage
-          profile={profile}
-          slots={slots}
-          prefByMentor={prefByMentor}
-          prefBySlot={prefBySlot}
-          refreshStage={refreshStage}
-        />
-      );
+      return <ReleaseStage profile={profile} slots={slots} prefByMentor={prefByMentor} refreshStage={refreshStage} />;
     case Stage.CONFIGURE:
       return (
         <ConfigureStage
@@ -301,7 +294,7 @@ const CoordinatorMatcherFormSwitch = ({
           slots={slots}
           assignments={assignments}
           prefByMentor={prefByMentor}
-          refreshStage={refreshStage}
+          prevStage={() => setCurStage(Stage.CONFIGURE)}
           refreshAssignments={refreshAssignments}
         />
       );

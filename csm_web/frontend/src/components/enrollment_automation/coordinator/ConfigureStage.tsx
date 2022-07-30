@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { fetchJSON, fetchWithMethod } from "../../../utils/api";
 
 import { Profile } from "../../../utils/types";
@@ -16,13 +16,13 @@ interface ConfigureStageProps {
 }
 
 export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refreshStage }: ConfigureStageProps) => {
-  const [selectedEventIdx, setSelectedEventIdx] = useState<number>(-1);
+  const [selectedEventIndices, setSelectedEventIndices] = useState<number[]>([]);
   // slot id -> min mentors
   const [minMentorMap, setMinMentorMap] = useState<Map<number, number>>(new Map());
   // slot id -> max mentors
   const [maxMentorMap, setMaxMentorMap] = useState<Map<number, number>>(new Map());
 
-  const [selectingAll, setSelectingAll] = useState<boolean>(false);
+  const selectAllRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const minMentorMap = new Map();
@@ -38,9 +38,22 @@ export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refre
     });
   }, [slots]);
 
-  const setSelectedEventIdxWrapper = (idx: number) => {
-    if (!selectingAll) {
-      setSelectedEventIdx(idx);
+  const setSelectedEventIdxWrapper = (indices: number[]) => {
+    setSelectedEventIndices(indices);
+    if (selectAllRef.current) {
+      if (indices.length === slots.length) {
+        // selected all
+        selectAllRef.current.checked = true;
+        selectAllRef.current.indeterminate = false;
+      } else if (indices.length === 0) {
+        // selected none
+        selectAllRef.current.checked = false;
+        selectAllRef.current.indeterminate = false;
+      } else {
+        // somewhere in between
+        selectAllRef.current.checked = false;
+        selectAllRef.current.indeterminate = true;
+      }
     }
   };
 
@@ -59,44 +72,35 @@ export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refre
   };
 
   const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const checked = e.target.checked;
-    if (checked) {
-      setSelectingAll(true);
-      setSelectedEventIdx(-1);
+    let newSelectedEventIndices: number[];
+    if (selectedEventIndices.length == slots.length) {
+      // currently selecting all, so select none
+      newSelectedEventIndices = [];
     } else {
-      setSelectingAll(false);
-      setSelectedEventIdx(-1);
+      // select all
+      newSelectedEventIndices = [...slots.keys()];
     }
+    setSelectedEventIndices(newSelectedEventIndices);
   };
 
-  const updateMinMentor = (slotId: number, minMentors_str: string) => {
+  const updateMinMentor = (minMentors_str: string) => {
     const minMentors = parseInt(minMentors_str);
     if (!isNaN(minMentors)) {
-      let newMinMentorMap: Map<number, number>;
-      if (selectingAll) {
-        newMinMentorMap = new Map();
-        for (const slotId of minMentorMap.keys()) {
-          newMinMentorMap.set(slotId, minMentors);
-        }
-      } else {
-        newMinMentorMap = new Map(minMentorMap);
+      const newMinMentorMap = new Map(minMentorMap);
+      for (const idx of selectedEventIndices) {
+        const slotId = slots[idx].id!;
         newMinMentorMap.set(slotId, minMentors);
       }
       setMinMentorMap(newMinMentorMap);
     }
   };
 
-  const updateMaxMentor = (slotId: number, maxMentors_str: string) => {
+  const updateMaxMentor = (maxMentors_str: string) => {
     const maxMentors = parseInt(maxMentors_str);
     if (!isNaN(maxMentors)) {
-      let newMaxMentorMap: Map<number, number>;
-      if (selectingAll) {
-        newMaxMentorMap = new Map();
-        for (const slotId of minMentorMap.keys()) {
-          newMaxMentorMap.set(slotId, maxMentors);
-        }
-      } else {
-        newMaxMentorMap = new Map(maxMentorMap);
+      const newMaxMentorMap = new Map(maxMentorMap);
+      for (const idx of selectedEventIndices) {
+        const slotId = slots[idx].id!;
         newMaxMentorMap.set(slotId, maxMentors);
       }
       setMaxMentorMap(newMaxMentorMap);
@@ -112,22 +116,17 @@ export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refre
   let sidebarContents = <div>Click on a time slot to configure it.</div>;
 
   // has selected an event
-  if (selectedEventIdx != -1 || selectingAll) {
-    let slot: Slot;
-    if (selectingAll) {
-      slot = slots[0];
-    } else {
-      slot = slots[selectedEventIdx];
-    }
+  if (selectedEventIndices.length > 0) {
+    const slot = slots[selectedEventIndices[0]];
+
     const minMentor = minMentorMap.get(slot.id!);
     const maxMentor = maxMentorMap.get(slot.id!);
-    console.log({ slot, id: slot.id, minMentor, maxMentor });
 
     sidebarContents = (
       <div className="matcher-configure-sidebar-contents">
         <div className="matcher-configure-sidebar-header">Number of mentors:</div>
         <div className="matcher-configure-input-container">
-          <div key={`${slot.id}-min`} className="matcher-configure-input-group">
+          <div key={`${slot.id}-${selectedEventIndices.length}-min`} className="matcher-configure-input-group">
             <span>Min</span>
             <input
               className="matcher-configure-input"
@@ -136,11 +135,11 @@ export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refre
               max={maxMentor}
               defaultValue={minMentor}
               onChange={e => {
-                updateMinMentor(slot.id!, e.target.value);
+                updateMinMentor(e.target.value);
               }}
             />
           </div>
-          <div key={`${slot.id}-max`} className="matcher-configure-input-group">
+          <div key={`${slot.id}-${selectedEventIndices.length}-max`} className="matcher-configure-input-group">
             <span>Max</span>
             <input
               className="matcher-configure-input"
@@ -148,11 +147,12 @@ export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refre
               min={minMentor}
               defaultValue={maxMentor}
               onChange={e => {
-                updateMaxMentor(slot.id!, e.target.value);
+                updateMaxMentor(e.target.value);
               }}
             />
           </div>
         </div>
+        <div className="matcher-configure-sidebar-footer">Shift-click to select more slots.</div>
       </div>
     );
   }
@@ -164,7 +164,7 @@ export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refre
           <div className="matcher-sidebar-left-top">{sidebarContents}</div>
           <div className="matcher-sidebar-left-bottom">
             <label className="matcher-submit-btn matcher-toggle-btn">
-              <input type="checkbox" onChange={toggleSelectAll} />
+              <input ref={selectAllRef} type="checkbox" onChange={toggleSelectAll} />
               Select All
             </label>
           </div>
@@ -172,10 +172,11 @@ export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refre
         <div className="coordinator-sidebar-right">
           <Calendar
             events={slots}
-            selectedEventIdx={selectedEventIdx}
-            setSelectedEventIdx={setSelectedEventIdxWrapper}
+            selectedEventIndices={selectedEventIndices}
+            setSelectedEventIndices={setSelectedEventIdxWrapper}
             getEventDetails={getEventDetails}
             eventCreationEnabled={false}
+            limitScrolling={true}
           />
         </div>
       </div>

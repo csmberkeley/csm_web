@@ -1,10 +1,20 @@
 import React, { useEffect, useState } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { Profile } from "../../utils/types";
+import LoadingSpinner from "../LoadingSpinner";
 import { Calendar } from "./calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime } from "./calendar/CalendarTypes";
 import { Slot } from "./EnrollmentAutomationTypes";
 import { MAX_PREFERENCE, formatTime, parseTime } from "./utils";
+
+import CheckCircle from "../../../static/frontend/img/check_circle.svg";
+
+enum Status {
+  NONE,
+  LOADING,
+  SUCCESS,
+  ERROR
+}
 
 interface MentorSectionPreferencesProps {
   profile: Profile;
@@ -14,9 +24,14 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
   const relation = profile.role.toLowerCase();
 
   const [slots, setSlots] = useState<Slot[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<CalendarEvent | null>(null);
-  const [selectedEventIdx, setSelectedEventIdx] = useState<number>(-1);
+  const [selectedEvents, setSelectedEvents] = useState<CalendarEvent[]>([]);
+  const [selectedEventIndices, setSelectedEventIndices] = useState<number[]>([]);
   const [matcherOpen, setMatcherOpen] = useState<boolean>(false);
+
+  /**
+   * Status after submitting preferences
+   */
+  const [submitStatus, setSubmitStatus] = useState<Status>(Status.NONE);
 
   useEffect(() => {
     getSlots();
@@ -73,8 +88,10 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
       return;
     }
 
+    const selectedEventIds = selectedEvents.map(event => event.id);
+
     const newSlots = slots.map(slot => {
-      if (selectedEvent && slot.id === selectedEvent.id) {
+      if (selectedEventIds.includes(slot.id)) {
         return {
           ...slot,
           preference: parseInt(e.target.value)
@@ -83,7 +100,7 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
       return slot;
     });
     setSlots(newSlots);
-    setSelectedEvent(selectedEvent);
+    setSelectedEvents(selectedEvents);
   };
 
   const postPreferences = () => {
@@ -95,34 +112,119 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
       };
       cleaned_preferences.push(cleaned_slot);
     }
-    fetchWithMethod(`matcher/${profile.courseId}/preferences`, HTTP_METHODS.POST, cleaned_preferences);
+    setSubmitStatus(Status.LOADING);
+    fetchWithMethod(`matcher/${profile.courseId}/preferences`, HTTP_METHODS.POST, cleaned_preferences)
+      .then(response => {
+        if (response.ok) {
+          setSubmitStatus(Status.SUCCESS);
+          // clear after 1.5 seconds
+          setTimeout(() => {
+            setSubmitStatus(Status.NONE);
+          }, 1500);
+        } else {
+          setSubmitStatus(Status.ERROR);
+        }
+      })
+      .catch(() => {
+        setSubmitStatus(Status.ERROR);
+      });
   };
 
-  const setSelectedEventIdxWrapper = (idx: number) => {
+  const setSelectedEventIndicesWrapper = (indices: number[]) => {
     if (matcherOpen) {
-      setSelectedEventIdx(idx);
-      setSelectedEvent(slots[idx]);
+      setSelectedEventIndices(indices);
+      setSelectedEvents(indices.map(idx => slots[idx]));
     } else {
-      setSelectedEventIdx(-1);
-      setSelectedEvent(null);
+      setSelectedEventIndices([]);
+      setSelectedEvents([]);
     }
   };
 
-  // const showSidebar = (event_idx: number) => {
-  //   setSelectedEvent(slots[event_idx]);
-  // };
-
   const getEventDetails = (event: CalendarEventSingleTime): React.ReactElement => {
+    const maxPref = slots.reduce((curmax, cur) => Math.max(curmax, cur.preference), 0);
+    let prefColor = "";
+    if (event.preference == 0) {
+      prefColor = "matcher-pref-color-unavailable";
+    } else if (event.preference == maxPref) {
+      prefColor = "matcher-pref-color-best";
+    }
+
+    const detail = (
+      <React.Fragment>
+        <br />
+        <span className={prefColor}>({event.preference})</span>
+      </React.Fragment>
+    );
+
     return (
       <React.Fragment>
         <span className="calendar-event-detail-time">
           {formatTime(event.time.startTime)}&#8211;{formatTime(event.time.endTime)}
         </span>
-        <br />
-        <span className="matcher-detail">Preference: {event.preference}</span>
+        {detail}
       </React.Fragment>
     );
   };
+
+  let sidebarContents;
+  if (matcherOpen) {
+    if (selectedEvents.length === 0) {
+      // no selected event
+      sidebarContents = <div>Click on a section to edit preferences.</div>;
+    } else {
+      const event = selectedEvents[0];
+      sidebarContents = (
+        <div className="matcher-sidebar-selected">
+          <div className="mathcer-sidebar-selected-top">
+            {selectedEvents.length === 1 ? (
+              // exactly one selected event
+              <React.Fragment>
+                <div className="matcher-sidebar-header">Section Time{event.times.length > 1 ? "s" : ""}:</div>
+                <ul className="matcher-selected-times">
+                  {event.times.map((time, time_idx) => (
+                    <li key={time_idx} className="matcher-selected-time-container">
+                      <span className="matcher-selected-time">
+                        {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+              </React.Fragment>
+            ) : (
+              // multiple selected events
+              <div className="matcher-sidebar-header">Multiple selected events</div>
+            )}
+            <label>
+              Preference:
+              <input
+                className="matcher-input"
+                type="number"
+                key={event.id}
+                defaultValue={event.preference}
+                onChange={setPreference}
+                autoFocus={true}
+                min={0}
+                max={MAX_PREFERENCE}
+              />
+            </label>
+          </div>
+          <div className="matcher-sidebar-create-footer">Shift-click to select more slots.</div>
+        </div>
+      );
+    }
+  } else {
+    // matcher closed
+    sidebarContents = <div>The matcher is not currently open for preference submission.</div>;
+  }
+
+  let statusContent: React.ReactNode = "";
+  switch (submitStatus) {
+    case Status.LOADING:
+      statusContent = <LoadingSpinner className="icon matcher-submit-status-icon" />;
+      break;
+    case Status.SUCCESS:
+      statusContent = <CheckCircle className="icon matcher-submit-status-icon" />;
+  }
 
   return (
     <div>
@@ -131,55 +233,22 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
       </h2>
       <div className="matcher-body">
         <div className="mentor-sidebar-left">
-          <div className="matcher-sidebar-left-top">
-            {matcherOpen ? (
-              selectedEvent ? (
-                // matcher open, event selected; show details
-                <div>
-                  Section Time{selectedEvent.times.length > 1 ? "s" : ""}:
-                  <div className="matcher-selected-times">
-                    {selectedEvent.times.map((time, time_idx) => (
-                      <div key={time_idx}>
-                        {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
-                      </div>
-                    ))}
-                  </div>
-                  <label>
-                    Preference:
-                    <input
-                      className="matcher-input"
-                      type="number"
-                      key={selectedEvent.id}
-                      defaultValue={selectedEvent.preference}
-                      onChange={setPreference}
-                      autoFocus={true}
-                      min={0}
-                      max={MAX_PREFERENCE}
-                    />
-                  </label>
-                </div>
-              ) : (
-                // matcher open, no selected event
-                <div>Click on a section to edit preferences.</div>
-              )
-            ) : (
-              // matcher closed
-              <div>The matcher is not currently open for preference submission.</div>
-            )}
-          </div>
-          <div className="matcher-sidebar-left-bottom">
+          <div className="matcher-sidebar-left-top">{sidebarContents}</div>
+          <div className="matcher-sidebar-left-bottom-row">
             <button className="matcher-submit-btn" onClick={postPreferences} disabled={!matcherOpen}>
               Submit
             </button>
+            <div className="matcher-submit-status-container">{statusContent}</div>
           </div>
         </div>
         <div className="mentor-sidebar-right">
           <Calendar
             events={slots}
-            selectedEventIdx={selectedEventIdx}
-            setSelectedEventIdx={setSelectedEventIdxWrapper}
+            selectedEventIndices={selectedEventIndices}
+            setSelectedEventIndices={setSelectedEventIndicesWrapper}
             getEventDetails={getEventDetails}
             eventCreationEnabled={false}
+            limitScrolling={true}
           ></Calendar>
         </div>
       </div>

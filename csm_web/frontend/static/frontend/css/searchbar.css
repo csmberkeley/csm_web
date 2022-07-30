@@ -1,3 +1,9 @@
+.search-bar {
+	min-width: 100px;
+	width: 250px;
+	max-width: 250px;
+}
+
 .search-icon {
 	display: inline-block;
 	font-size: inherit;
@@ -16,6 +22,8 @@
 
 .search-input {
 	width: 100%;
+	box-sizing: border-box;
+
 	border: 1px solid var(--csm-neutral);
 	border-radius: 3px;
 	padding: 5px;
