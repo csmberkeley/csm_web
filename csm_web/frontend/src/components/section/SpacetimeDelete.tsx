@@ -11,6 +11,10 @@ interface SpacetimeDeleteProps {
 export default function SpacetimeDeleteModal({ closeModal, sectionId, reloadSection }: SpacetimeDeleteProps) {
   const [drop, setDrop] = useState(false);
 
+  function handleClickDrop() {
+    fetchWithMethod(`spacetime/${sectionId}/`, HTTP_METHODS.DELETE, {}).then(() => reloadSection());
+  }
+
   return (
     <Modal closeModal={closeModal}>
       <div className="deleteSection">
@@ -21,7 +25,12 @@ export default function SpacetimeDeleteModal({ closeModal, sectionId, reloadSect
             I understand that this is permanent
           </label>
           <br></br>
-          <button className="studentDropperSubmit" id="dropper submit button" disabled={!drop}>
+          <button
+            className="studentDropperSubmit"
+            id="dropper submit button"
+            disabled={!drop}
+            onClick={handleClickDrop}
+          >
             Submit
           </button>
         </div>
