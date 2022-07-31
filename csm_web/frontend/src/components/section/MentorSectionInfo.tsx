@@ -7,13 +7,16 @@ import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
 
+import XIcon from "../../../static/frontend/img/x.svg";
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
 import MetaEditModal from "./MetaEditModal";
+import SpacetimeDeleteModal from "./SpacetimeDelete";
 
 enum ModalStates {
   NONE = "NONE",
   SPACETIME_EDIT = "SPACETIME_EDIT",
-  META_EDIT = "META_EDIT"
+  META_EDIT = "META_EDIT",
+  SPACETIME_DELETE = "SPACETIME_DELETE"
 }
 
 interface MentorSectionInfoProps {
@@ -121,6 +124,18 @@ export default function MentorSectionInfo({
                   closeModal={closeModal}
                 />
               )}
+              {showModal === ModalStates.SPACETIME_DELETE && focusedSpacetimeID === spacetime.id && (
+                <SpacetimeDeleteModal sectionId={spacetime.id} closeModal={closeModal} reloadSection={reloadSection} />
+              )}
+              <button
+                className="delete-spacetime-btn"
+                onClick={() => {
+                  setShowModal(ModalStates.SPACETIME_DELETE);
+                  setFocusedSpacetimeID(spacetime.id);
+                }}
+              >
+                <XIcon width="1em" height="1em" /> Delete
+              </button>
               <button
                 className="info-card-edit-btn"
                 onClick={() => {
