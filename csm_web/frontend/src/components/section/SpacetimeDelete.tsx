@@ -12,7 +12,7 @@ export default function SpacetimeDeleteModal({ closeModal, sectionId, reloadSect
   const [drop, setDrop] = useState(false);
 
   function handleClickDrop() {
-    fetchWithMethod(`spacetime/${sectionId}/`, HTTP_METHODS.DELETE, {}).then(() => reloadSection());
+    fetchWithMethod(`spacetimes/${sectionId}/`, HTTP_METHODS.DELETE, {}).then(() => reloadSection());
   }
 
   return (
