@@ -10,6 +10,7 @@ interface SpacetimeEditModalProps {
   closeModal: () => void;
   defaultSpacetime: Spacetime;
   reloadSection: () => void;
+  editingOverride: boolean;
 }
 
 interface SpacetimeEditModalState {
@@ -150,37 +151,52 @@ export default class SpacetimeEditModal extends React.Component<SpacetimeEditMod
           </div>
           <div id="date-of-change-fields">
             <label>Change for</label>
-            <label>
-              <input
-                onChange={this.handleChange}
-                required
-                type="radio"
-                name="isPermanent"
-                checked={!!isPermanent}
-                value="true"
-              />
-              All sections
-            </label>
-            <label>
-              {/* Need to use empty string as value so that it's falsey because the value is always interpreted as a string, using "false" would actually be a truthy value */}
-              <input
-                onChange={this.handleChange}
-                required
-                type="radio"
-                name="isPermanent"
-                checked={!isPermanent}
-                value=""
-              />
-              <input
-                onChange={this.handleChange}
-                required={!isPermanent}
-                type="date"
-                min={today}
-                name="changeDate"
-                disabled={!!isPermanent}
-                value={isPermanent ? "" : changeDate}
-              />
-            </label>
+            {!this.props.editingOverride && (
+              <React.Fragment>
+                <label>
+                  <input
+                    onChange={this.handleChange}
+                    required
+                    type="radio"
+                    name="isPermanent"
+                    checked={!!isPermanent}
+                    value="true"
+                  />
+                  All sections
+                </label>
+                <input
+                  onChange={this.handleChange}
+                  required
+                  type="radio"
+                  name="isPermanent"
+                  checked={!isPermanent}
+                  value=""
+                />
+                <input
+                  onChange={this.handleChange}
+                  required={!isPermanent}
+                  type="date"
+                  min={today}
+                  name="changeDate"
+                  disabled={!!isPermanent}
+                  value={isPermanent ? "" : changeDate}
+                />
+                <label></label>
+              </React.Fragment>
+            )}
+            {this.props.editingOverride && (
+              <React.Fragment>
+                <input
+                  onChange={this.handleChange}
+                  required={!isPermanent}
+                  type="date"
+                  min={today}
+                  name="changeDate"
+                  disabled={!!isPermanent}
+                  value={isPermanent ? "" : changeDate}
+                />
+              </React.Fragment>
+            )}
           </div>
           <div id="submit-and-status">
             {showSaveSpinner ? <LoadingSpinner /> : <input type="submit" value="Save" />}

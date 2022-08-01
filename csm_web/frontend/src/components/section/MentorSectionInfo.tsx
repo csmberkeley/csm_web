@@ -7,13 +7,16 @@ import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
 
+import XIcon from "../../../static/frontend/img/x.svg";
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
 import MetaEditModal from "./MetaEditModal";
+import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 
 enum ModalStates {
   NONE = "NONE",
   SPACETIME_EDIT = "SPACETIME_EDIT",
-  META_EDIT = "META_EDIT"
+  META_EDIT = "META_EDIT",
+  SPACETIME_DELETE = "SPACETIME_DELETE"
 }
 
 interface MentorSectionInfoProps {
@@ -43,6 +46,7 @@ export default function MentorSectionInfo({
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
   const [userEmails, setUserEmails] = useState<string[]>([]);
   const [isAddingStudent, setIsAddingStudent] = useState<boolean>(false);
+  const [deleteType, setDeleteType] = useState<boolean>(false);
   useEffect(() => {
     if (!isCoordinator) {
       return;
@@ -119,17 +123,63 @@ export default function MentorSectionInfo({
                   reloadSection={reloadSection}
                   defaultSpacetime={spacetime}
                   closeModal={closeModal}
+                  editingOverride={deleteType}
                 />
+              )}
+              {showModal === ModalStates.SPACETIME_DELETE && focusedSpacetimeID === spacetime.id && (
+                <SpacetimeDeleteModal
+                  spacetimeId={spacetime.id}
+                  closeModal={closeModal}
+                  reloadSection={reloadSection}
+                  overrideDelete={deleteType}
+                />
+              )}
+              {spacetimes.length > 1 && isCoordinator && (
+                <button
+                  className="delete-spacetime-btn"
+                  onClick={() => {
+                    setShowModal(ModalStates.SPACETIME_DELETE);
+                    setFocusedSpacetimeID(spacetime.id);
+                    setDeleteType(false);
+                  }}
+                >
+                  <XIcon width="1em" height="1em" /> Delete
+                </button>
+              )}
+              {override && (
+                <button
+                  className="delete-override-btn"
+                  onClick={() => {
+                    setShowModal(ModalStates.SPACETIME_DELETE);
+                    setFocusedSpacetimeID(spacetime.id);
+                    setDeleteType(true);
+                  }}
+                >
+                  <XIcon width="1em" height="1em" /> Delete
+                </button>
               )}
               <button
                 className="info-card-edit-btn"
                 onClick={() => {
                   setShowModal(ModalStates.SPACETIME_EDIT);
                   setFocusedSpacetimeID(spacetime.id);
+                  setDeleteType(false);
                 }}
               >
                 <PencilIcon width="1em" height="1em" /> Edit
               </button>
+              {override && (
+                <button
+                  className="override-info-card-edit-btn"
+                  onClick={() => {
+                    setShowModal(ModalStates.SPACETIME_EDIT);
+                    setFocusedSpacetimeID(spacetime.id);
+                    setDeleteType(true);
+                  }}
+                >
+                  <PencilIcon width="1em" height="1em" /> Edit
+                </button>
+              )}
             </SectionSpacetime>
           ))}
 
