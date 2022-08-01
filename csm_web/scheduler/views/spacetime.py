@@ -28,6 +28,10 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         if not is_coordinator:
             return Response(status=status.HTTP_403_FORBIDDEN)
 
+        has_multiple_spacetimes = section.spacetime_set.count() > 1
+        if not has_multiple_spacetimes:
+            return Response(status=status.HTTP_400_BAD_REQUEST)
+
         now = timezone.now().astimezone(timezone.get_default_timezone())
         future_sectionOccurrences = section.sectionoccurrence_set.filter(
             Q(date__gte=now.date())
