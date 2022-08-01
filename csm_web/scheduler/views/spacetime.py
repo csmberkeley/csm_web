@@ -1,4 +1,5 @@
 from django.db.models import Q
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -17,6 +18,25 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
             Q(section__mentor__user=self.request.user)
             | Q(section__mentor__course__coordinator__user=self.request.user)
         ).distinct()
+
+    def destroy(self, request, pk=None):
+        spacetime = get_object_or_error(self.get_queryset(), pk=pk)
+        section = spacetime.section
+        course = section.mentor.course
+
+        is_coordinator = course.coordinator_set.filter(user=request.user).exists()
+        if not is_coordinator:
+            return Response(status=status.HTTP_403_FORBIDDEN)
+
+        now = timezone.now().astimezone(timezone.get_default_timezone())
+        future_sectionOccurrences = section.sectionoccurrence_set.filter(
+            Q(date__gte=now.date())
+        )
+
+        spacetime.delete()
+        future_sectionOccurrences.delete()
+
+        return Response(status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["put"])
     def modify(self, request, pk=None):
