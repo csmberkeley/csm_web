@@ -6,6 +6,7 @@
 @import url("./searchbar.css");
 @import url("./tooltip.css");
 @import url("./policies.css");
+@import url("./spacetime_delete.css");
 
 html,
 body {
@@ -1451,7 +1452,52 @@ table tbody tr:last-child > td {
 	cursor: pointer;
 }
 
+.override-info-card-edit-btn {
+	background-color: inherit;
+	color: #b3b3b3;
+	font-size: 13px;
+	position: absolute;
+	top: 170px;
+	right: 10px;
+	border: none;
+	cursor: pointer;
+}
+
+.delete-spacetime-btn {
+	background-color: inherit;
+	color: #b3b3b3;
+	font-size: 13px;
+	position: absolute;
+	top: 10px;
+	left: 10px;
+	border: none;
+	cursor: pointer;
+}
+
+.delete-override-btn {
+	background-color: inherit;
+	color: #b3b3b3;
+	font-size: 13px;
+	position: absolute;
+	top: 170px;
+	left: 10px;
+	border: none;
+	cursor: pointer;
+}
+
 .info-card-edit-btn:hover {
+	color: #a1a1a1;
+}
+
+.override-info-card-edit-btn:hover {
+	color: #a1a1a1;
+}
+
+.delete-spacetime-btn:hover {
+	color: #a1a1a1;
+}
+
+.delete-override-btn:hover {
 	color: #a1a1a1;
 }
 
@@ -1849,4 +1895,17 @@ table tbody tr:last-child > td {
 	width: fit-content;
 	width: -moz-fit-content;
 	margin: auto;
+}
+
+.spacetimeDropperSubmit {
+	background-color: var(--csm-danger);
+	border: none;
+	color: white;
+	border-radius: 8px;
+	margin: 10px;
+	padding: 12px 16px;
+}
+
+.spacetimeDeleteDropper {
+	text-align: center;
 }
