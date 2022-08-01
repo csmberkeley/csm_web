@@ -58,24 +58,41 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    @action(detail=True, methods=["put"])
+    @action(detail=True, methods=["put", "delete"])
     def override(self, request, pk=None):
         spacetime = get_object_or_error(self.get_queryset(), pk=pk)
-        if hasattr(spacetime, "_override"):  # update
-            serializer = OverrideSerializer(spacetime._override, data=request.data)
-            status_code = status.HTTP_202_ACCEPTED
-        else:  # create
-            serializer = OverrideSerializer(
-                data={"overriden_spacetime": spacetime.pk, **request.data}
+
+        if request.method == "PUT":
+            if hasattr(spacetime, "_override"):  # update
+                serializer = OverrideSerializer(spacetime._override, data=request.data)
+                status_code = status.HTTP_202_ACCEPTED
+            else:  # create
+                serializer = OverrideSerializer(
+                    data={"overriden_spacetime": spacetime.pk, **request.data}
+                )
+                status_code = status.HTTP_201_CREATED
+            if serializer.is_valid():
+                override = serializer.save()
+                logger.info(
+                    f"<Override:Success> Overrode Spacetime {log_str(spacetime)} with Override {log_str(override)}"
+                )
+                return Response(status=status_code)
+            logger.error(
+                f"<Override:Failure> Could not override Spacetime {log_str(spacetime)}, errors: {serializer.errors}"
             )
-            status_code = status.HTTP_201_CREATED
-        if serializer.is_valid():
-            override = serializer.save()
-            logger.info(
-                f"<Override:Success> Overrode Spacetime {log_str(spacetime)} with Override {log_str(override)}"
-            )
-            return Response(status=status_code)
-        logger.error(
-            f"<Override:Failure> Could not override Spacetime {log_str(spacetime)}, errors: {serializer.errors}"
-        )
-        return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        elif request.method == "DELETE":
+            mentor = spacetime.section.mentor
+            course = mentor.course
+
+            is_mentor = mentor.user == request.user
+            is_coordinator = course.coordinator_set.filter(user=request.user).exists()
+            if not (is_mentor or is_coordinator):
+                return Response(status=status.HTTP_403_FORBIDDEN)
+
+            if hasattr(spacetime, "_override"):
+                override = spacetime._override
+                override.delete()
+
+            return Response(status=status.HTTP_200_OK)
