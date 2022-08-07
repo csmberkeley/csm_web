@@ -480,10 +480,12 @@ def run_matcher(course: Course):
     mentor_list = list(set(mentor_list))
 
     # list of all slot ids
-    slot_list = slots.values_list("id", flat=True)
+    slot_list = list(map(lambda slot: {"id": slot.id, "min_mentors": slot.min_mentors,
+                     "max_mentors": slot.max_mentors}, slots))
 
     # list of preferences (mentor_id, slot_id, preference)
-    preference_list = preferences.values_list("mentor", "slot", "preference")
+    preference_list = list(map(lambda preference: {
+                           "mentor_id": preference.mentor.id, "slot_id": preference.slot.id, "preference_value": preference.preference}, preferences))
 
     # run the matcher
     return get_matches(mentor_list, slot_list, preference_list)
