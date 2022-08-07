@@ -58,7 +58,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    */
   const [tileDetails, setTileDetails] = useState<TileDetails>({
     days: [],
-    daysLinked: false,
+    daysLinked: true,
     startTime: -1,
     endTime: -1,
     length: 60
@@ -68,6 +68,13 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    * Whether or not anything has been edited
    */
   const [edited, setEdited] = useState<boolean>(false);
+
+  /**
+   * Whenever initial slots changes, refresh slots
+   */
+  useEffect(() => {
+    _setSlots(initialSlots);
+  }, [initialSlots]);
 
   /**
    *  ref objects for tiled event details
@@ -124,7 +131,6 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
         times: times
       };
     });
-    console.log(converted_slots);
 
     fetchWithMethod(`matcher/${profile.courseId}/slots`, HTTP_METHODS.POST, { slots: converted_slots }).then(() => {
       setEdited(false);
@@ -365,8 +371,6 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
     }
   };
 
-  console.log({ savedExistingEvent: savedExistingEvent });
-
   /**
    * Render the details of an event in the sidebar
    *
@@ -404,7 +408,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
               </form>
               <div className="matcher-tiling-link-day-container">
                 <label className="matcher-tiling-link-day-label">
-                  <input type="checkbox" onChange={editTiled_linked} />
+                  <input type="checkbox" defaultChecked onChange={editTiled_linked} />
                   Link days?
                 </label>
                 <Tooltip

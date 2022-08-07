@@ -6,9 +6,9 @@
 	display: flex;
 	flex-wrap: wrap;
 	flex-direction: column;
-	padding: 20px;
+	padding: 40px 30px 0 20px;
 	width: fit-content;
-	padding-top: 40px;
+	gap: 10px;
 }
 
 #matcher-body {
@@ -29,6 +29,13 @@
 #matcher-header {
 }
 */
+
+.matcher-title {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+}
 
 .matcher-stages {
 	display: flex;
@@ -51,11 +58,15 @@
 .matcher-link {
 	text-decoration: none;
 	color: #000;
-	padding: 10px 0;
+	padding: 15px 20px;
+	background-color: var(--csm-green-lightened);
+	border-radius: 10px;
 }
 
 .matcher-link.active {
-	color: var(--csm-green);
+	/* color: var(--csm-green); */
+	font-weight: bold;
+	background-color: var(--csm-green);
 }
 
 .matcher-body {
@@ -723,7 +734,7 @@
 
 .matcher-assignment-section-times {
 	flex: auto;
-	width: 25%;
+	width: 15%;
 	margin-right: 5px;
 	font-size: 0.95rem;
 
@@ -862,4 +873,22 @@
 
 .matcher-assignment-distribution-div {
 	height: 100%;
+}
+
+.matcher-assignment-confirm-modal-contents {
+	display: flex;
+	flex-direction: column;
+	justify-content: space-between;
+	align-items: center;
+	height: 65%;
+
+	text-align: center;
+}
+
+.matcher-assignment-confirm-modal-footer {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-evenly;
+	align-items: center;
+	width: 100%;
 }

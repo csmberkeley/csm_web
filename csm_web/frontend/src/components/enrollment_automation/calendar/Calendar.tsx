@@ -200,7 +200,6 @@ export function Calendar({
     if (!eventCreationEnabled) {
       return;
     }
-    console.log("onMouseDownInterval " + day + " " + startTime + " " + endTime);
     setCurCreatedEvent({ day, startTime, endTime });
     setCreatingEvent(true);
     setEventHoverIndex(-1);
@@ -212,7 +211,6 @@ export function Calendar({
     if (!eventCreationEnabled || !creatingEvent) {
       return;
     }
-    console.log("onMouseMoveInterval " + day + " " + start_time + " " + end_time);
     setCurCreatedEvent({
       day: curCreatedEvent.day,
       startTime: curCreatedEvent.startTime,
@@ -224,15 +222,12 @@ export function Calendar({
     if (!eventCreationEnabled || !creatingEvent) {
       return;
     }
-    console.log("onMouseUpInterval " + day + " " + start_time + " " + end_time);
     onEventCreated(normalizeCreatedEvent());
     setCurCreatedEvent({ day: "", startTime: -1, endTime: -1 });
     setCreatingEvent(false);
   };
 
   const onCreateDragEndCancel = (e: MouseEvent | FocusEvent) => {
-    console.log("canceled");
-    console.log(e);
     setCurCreatedEvent({ day: "", startTime: -1, endTime: -1 });
     setCreatingEvent(false);
   };

@@ -447,6 +447,9 @@ class MatcherSlot(ValidatingModel):
         if self.min_mentors > self.max_mentors:
             raise ValidationError("Min mentors cannot be greater than max mentors")
 
+    class Meta:
+        unique_together = ("matcher", "times")
+
 
 class MatcherPreference(ValidatingModel):
     slot = models.ForeignKey(MatcherSlot, on_delete=models.CASCADE)

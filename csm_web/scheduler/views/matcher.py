@@ -23,7 +23,7 @@ from scheduler.serializers import (
     MatcherSlotSerializer,
     MentorSerializer,
 )
-from .utils import get_object_or_error
+from .utils import get_object_or_error, logger
 
 from scheduler.utils.match_solver import get_matches
 
@@ -52,7 +52,7 @@ def active(request):
         (Q(mentor__user=user) | Q(coordinator__user=user))
         # active or not created yet
         & (Q(matcher__active=True) | Q(matcher__isnull=True))
-    )
+    ).distinct()
 
     return Response(courses.values_list("id", flat=True))
 
@@ -90,7 +90,6 @@ def slots(request, pk=None):
 
         slots = MatcherSlot.objects.filter(matcher=matcher)
         serializer = MatcherSlotSerializer(slots, many=True)
-        print(serializer.data)
         return Response({"slots": serializer.data}, status=status.HTTP_200_OK)
     elif request.method == "POST":
         # update possible slots
@@ -109,7 +108,13 @@ def slots(request, pk=None):
         """
 
         if "slots" in request.data:
-            MatcherSlot.objects.filter(matcher=matcher).delete()
+            request_slots = request.data["slots"]
+            request_times = [slot["times"] for slot in request_slots]
+            # delete slots that are not in the request
+            slots = MatcherSlot.objects.filter(matcher=matcher).exclude(times__in=request_times)
+
+            num_deleted, _ = slots.delete()
+            logger.info("<Matcher> Deleted %s slots.", num_deleted)
 
             for slot_json in request.data["slots"]:
                 times = slot_json["times"]
@@ -119,13 +124,19 @@ def slots(request, pk=None):
                 max_mentors = (
                     slot_json["maxMentors"] if "maxMentors" in slot_json else 10
                 )
-                curslot = MatcherSlot(
-                    matcher=matcher,
-                    times=times,
-                    min_mentors=min_mentors,
-                    max_mentors=max_mentors,
-                )
-                curslot.save()
+
+                # update slot if it already exists with the same times
+                slot = MatcherSlot.objects.filter(
+                    matcher=matcher, times=times
+                ).first()
+                if slot is None:
+                    slot = MatcherSlot.objects.create(
+                        matcher=matcher, times=times, min_mentors=min_mentors, max_mentors=max_mentors
+                    )
+                else:
+                    slot.min_mentors = min_mentors
+                    slot.max_mentors = max_mentors
+                    slot.save()
 
         return Response(status=status.HTTP_202_ACCEPTED)
 
@@ -169,7 +180,7 @@ def preferences(request, pk=None):
             return Response({"responses": []}, status=status.HTTP_200_OK)
 
         preferences = MatcherPreference.objects.filter(slot__matcher=matcher)
-        if is_mentor:
+        if not is_coordinator and is_mentor:
             # filter only this mentor's preferences
             preferences = preferences.filter(mentor__user=request.user)
         serializer = MatcherPreferenceSerializer(preferences, many=True)
@@ -192,8 +203,10 @@ def preferences(request, pk=None):
         )
         for pref in request.data:
             curslot = MatcherSlot.objects.get(pk=pref["id"])
-            existing = MatcherPreference.objects.filter(slot=curslot, mentor=mentor)
-            if existing.exists():
+            existing_queryset = MatcherPreference.objects.filter(slot=curslot, mentor=mentor)
+            if existing_queryset.exists():
+                # unique constraint guarantees there will only be one
+                existing = existing_queryset.get()
                 # update existing preference
                 existing.preference = pref["preference"]
                 existing.save()
@@ -203,6 +216,7 @@ def preferences(request, pk=None):
                     slot=curslot, mentor=mentor, preference=pref["preference"]
                 )
                 new_pref.save()
+        logger.info(f"<Matcher:Success> Updated mentor {mentor} preferences for {course}")
         return Response(status=status.HTTP_200_OK)
     else:
         raise PermissionDenied()
@@ -251,8 +265,6 @@ def mentors(request, pk=None):
                 continue
             # create new mentor
             created = Mentor.objects.create(user=user, course=course)
-            print("created", created)
-        print(skipped)
         return Response({"skipped": skipped}, status=status.HTTP_200_OK)
     elif request.method == "DELETE":
         # delete mentors from course
@@ -262,7 +274,6 @@ def mentors(request, pk=None):
                 mentor = Mentor.objects.get(
                     course=course, user__email=email, section=None
                 )
-                print("deleted", mentor)
                 mentor.delete()
             except Mentor.DoesNotExist:
                 skipped.append(email)

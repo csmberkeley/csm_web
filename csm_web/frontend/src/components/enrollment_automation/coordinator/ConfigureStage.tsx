@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { fetchJSON, fetchWithMethod } from "../../../utils/api";
+import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../../utils/api";
 
 import { Profile } from "../../../utils/types";
 import { Calendar } from "../calendar/Calendar";
@@ -10,12 +10,10 @@ import { formatTime } from "../utils";
 interface ConfigureStageProps {
   profile: Profile;
   slots: Slot[];
-  prefBySlot: Map<number, MentorPreference[]>;
-  prefByMentor: Map<number, SlotPreference[]>;
   refreshStage: () => void;
 }
 
-export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refreshStage }: ConfigureStageProps) => {
+export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageProps) => {
   const [selectedEventIndices, setSelectedEventIndices] = useState<number[]>([]);
   // slot id -> min mentors
   const [minMentorMap, setMinMentorMap] = useState<Map<number, number>>(new Map());
@@ -28,7 +26,6 @@ export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refre
     const minMentorMap = new Map();
     const maxMentorMap = new Map();
     fetchJSON(`/matcher/${profile.courseId}/configure`).then((data: any) => {
-      console.log(data);
       data.slots.forEach((slot: any) => {
         minMentorMap.set(slot.id, slot.minMentors);
         maxMentorMap.set(slot.id, slot.maxMentors);
@@ -108,7 +105,15 @@ export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refre
   };
 
   const runMatcher = () => {
-    fetchWithMethod(`/matcher/${profile.courseId}/configure`, "POST", { run: true }).then(() => {
+    fetchWithMethod(`/matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { run: true }).then(() => {
+      refreshStage();
+    });
+  };
+
+  const reopenForm = () => {
+    // send POST request to reopen form for mentors
+    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { open: true }).then(() => {
+      // recompute stage
       refreshStage();
     });
   };
@@ -180,7 +185,10 @@ export const ConfigureStage = ({ profile, slots, prefBySlot, prefByMentor, refre
           />
         </div>
       </div>
-      <div className="matcher-body-footer-right">
+      <div className="matcher-body-footer">
+        <button className="matcher-secondary-btn" onClick={reopenForm}>
+          Reopen Form
+        </button>
         <button className="matcher-submit-btn" onClick={runMatcher}>
           Run Matcher
         </button>

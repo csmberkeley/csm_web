@@ -219,8 +219,12 @@ def create_demo_account():
     Log in at localhost:8000/admin/
     """
           )
+    demo_coord_2 = Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
+        Course.objects.exclude(pk__in=(demo_mentor.course.pk, demo_student.course.pk, demo_coord.course.pk))))
+    # delete all mentors associated with the second course
+    Mentor.objects.filter(course=demo_coord_2.course).delete()
     # create new mentors associated with demo coord's course
-    mentors = [MentorFactory.create(course=demo_coord.course) for _ in range(5)]
+    mentors = [MentorFactory.create(course=demo_coord_2.course) for _ in range(50)]
 
     # allow one mentor to login through admin menu
     demoify_user(mentors[0].user, "demo_mentor")
