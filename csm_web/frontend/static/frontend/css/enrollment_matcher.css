@@ -697,6 +697,10 @@
 	border-bottom: 1px solid var(--csm-neutral);
 }
 
+.matcher-assignment-row.unassigned {
+	background-color: #ffdddd;
+}
+
 .matcher-assignment-mentor-empty {
 	font-style: italic;
 }

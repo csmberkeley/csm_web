@@ -31,6 +31,12 @@ interface EditTableRow {
  */
 const SORT_FUNCTIONS: Record<string, (a: any, b: any) => number> = {
   times: (a: Time[], b: Time[]): number => {
+    // empty times are always less than non-empty times
+    if (a.length === 0) {
+      return -1;
+    } else if (b.length === 0) {
+      return 1;
+    }
     const aDays = a.map(t => DAYS.indexOf(t.day));
     const bDays = b.map(t => DAYS.indexOf(t.day));
     if (Math.min(...aDays) != Math.min(...bDays)) {
@@ -108,6 +114,10 @@ export const EditStage = ({
    * List of all slots, sorted by day, and then by start time.
    */
   const [sortedSlots, setSortedSlots] = useState<Slot[]>(slots);
+  /**
+   * Set of mentor ids with assignments.
+   */
+  const [assignedMentors, setAssignedMentors] = useState<Set<number>>(new Set());
 
   /**
    * Set of all selected mentor ids.
@@ -168,6 +178,7 @@ export const EditStage = ({
   /* Organize assignments by slot */
   useEffect(() => {
     const newEditTable: EditTableRow[] = [];
+    const assignedMentors = new Set<number>();
     assignments.forEach((assignment: Assignment) => {
       const mentor = mentorsById.get(assignment.mentor);
       if (mentor == null) {
@@ -187,7 +198,22 @@ export const EditStage = ({
         capacity,
         description
       });
+      assignedMentors.add(assignment.mentor);
     });
+    mentorsById.forEach((mentor: Mentor, id: number) => {
+      if (!assignedMentors.has(id)) {
+        newEditTable.push({
+          mentorId: id,
+          slotId: -1,
+          name: mentor.name,
+          email: mentor.email,
+          times: [],
+          capacity: 0,
+          description: ""
+        });
+      }
+    });
+    setAssignedMentors(assignedMentors);
     setUnfilteredEditTable(newEditTable);
     sortTable();
   }, [assignments, mentorsById]); // update when assignments change, or when mentors are fetched
@@ -292,12 +318,18 @@ export const EditStage = ({
         if (isNaN(slotId)) {
           return;
         }
-        const slot = slotsById.get(slotId);
-        if (slot == null) {
-          return;
+        if (slotId === -1) {
+          // unassign the mentor
+          row.slotId = -1;
+          row[attr] = [];
+        } else {
+          const slot = slotsById.get(slotId);
+          if (slot == null) {
+            return;
+          }
+          row.slotId = slotId;
+          row[attr] = slot.times;
         }
-        row.slotId = slotId;
-        row[attr] = slot.times;
       } else {
         // should not get here
         console.error(`Unknown attribute ${attr}`);
@@ -363,6 +395,10 @@ export const EditStage = ({
   const gatherAssignments = (): Assignment[] => {
     const newAssignments: Assignment[] = [];
     unfilteredEditTable.forEach(row => {
+      if (row.slotId === -1) {
+        // unassigned
+        return;
+      }
       newAssignments.push({
         mentor: row.mentorId,
         slot: row.slotId,
@@ -485,6 +521,7 @@ export const EditStage = ({
             onChangeRow={handleChangeRow}
             isSelected={selectedMentors.has(row.mentorId)}
             onSelect={handleSelect}
+            isAssigned={assignedMentors.has(row.mentorId)}
           />
         ))}
       </div>
@@ -565,12 +602,25 @@ interface EditTableRowProps {
    * Callback when the row is selected.
    */
   onSelect: (mentorId: number) => void;
+  /**
+   * Whether or not this mentor was assigned by the matcher.
+   * Checking for -1 does not work, as the user can make manual changes.
+   */
+  isAssigned: boolean;
 }
 
 /**
  * Row of the edit table.
  */
-const EditTableRow = ({ row, sortedSlots, prefByMentor, onChangeRow, isSelected, onSelect }: EditTableRowProps) => {
+const EditTableRow = ({
+  row,
+  sortedSlots,
+  prefByMentor,
+  onChangeRow,
+  isSelected,
+  onSelect,
+  isAssigned
+}: EditTableRowProps) => {
   const [editingTimes, setEditingTimes] = useState<boolean>(false);
   const [prefBySlot, setPrefBySlot] = useState<Map<number, number>>(new Map());
 
@@ -670,7 +720,7 @@ const EditTableRow = ({ row, sortedSlots, prefByMentor, onChangeRow, isSelected,
   };
 
   return (
-    <div className="matcher-assignment-row">
+    <div className={`matcher-assignment-row ${!isAssigned ? "unassigned" : ""}`}>
       <label className="matcher-assignment-mentor-select">
         <input type="checkbox" checked={isSelected} onChange={() => onSelect(row.mentorId)} />
       </label>
@@ -693,20 +743,27 @@ const EditTableRow = ({ row, sortedSlots, prefByMentor, onChangeRow, isSelected,
               onChange={e => handleChangeRow(e, "times")}
               onBlur={handleBlurSelect}
             >
+              {!isAssigned && (
+                <option value={-1} className="matcher-assignment-section-times-option">
+                  Unmatched
+                </option>
+              )}
               {sortedSlots.map((slot: Slot) => (
                 <option key={slot.id} value={slot.id} className="matcher-assignment-section-times-option">
-                  {`(${prefBySlot.get(slot.id!)}) ` +
+                  {(isAssigned ? `(${prefBySlot.get(slot.id!)}) ` : "") +
                     slot.times
                       .map<React.ReactNode>(time => displayTime(time))
                       .join(" / ")}
                 </option>
               ))}
             </select>
+          ) : row.times.length === 0 ? (
+            <div className="matcher-assignment-time">Unmatched</div>
           ) : (
             row.times.map((time, timeidx) => (
-              <React.Fragment key={`slot-time-${timeidx}`}>
-                <div className="matcher-assignment-time">{displayTime(time)}</div>
-              </React.Fragment>
+              <div key={`slot-time-${timeidx}`} className="matcher-assignment-time">
+                {displayTime(time)}
+              </div>
             ))
           )}
         </div>
