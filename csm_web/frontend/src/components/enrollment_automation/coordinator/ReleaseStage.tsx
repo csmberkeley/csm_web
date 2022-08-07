@@ -41,7 +41,6 @@ export function ReleaseStage({ profile, slots, prefByMentor, refreshStage }: Rel
    * Handler to open the preference modal for a mentor
    */
   const handleSelectMentor = (mentor: Mentor | undefined) => {
-    console.log(mentor);
     setSelectedMentor(mentor);
     if (mentor === undefined) {
       setPreferenceModalOpen(false);
@@ -136,7 +135,7 @@ function MentorList({
 
   useEffect(() => {
     fetchMentors();
-  }, []);
+  }, [profile]);
 
   useEffect(() => {
     updateSearch(searchBar.current?.value);
@@ -467,7 +466,10 @@ function MentorListItem({
   return (
     <div className={classString}>
       {removeIcon}
-      <EyeIcon className="icon mentor-list-icon mentor-list-item-view" onClick={() => setSelectedMentor(mentor)} />
+      <EyeIcon
+        className="icon mentor-list-icon mentor-list-item-view"
+        onClick={() => hasPreferences && setSelectedMentor(mentor)}
+      />
       <div className="mentor-list-item-name">{mentor.name}</div>
       <div className="mentor-list-item-email">{mentor.email}</div>
       <div className="mentor-list-item-check">{hasPreferences && <CheckIcon className="icon mentor-list-icon" />}</div>

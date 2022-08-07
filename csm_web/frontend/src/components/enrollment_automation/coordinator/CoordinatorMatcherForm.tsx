@@ -11,6 +11,8 @@ import { EditStage } from "./EditStage";
 
 interface CoordinatorMatcherFormProps {
   profile: Profile;
+  switchProfileEnabled: boolean;
+  switchProfile: () => void;
 }
 
 interface Response {
@@ -31,12 +33,15 @@ interface StrTime {
   endTime: string;
 }
 
-export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps): JSX.Element {
+export function CoordinatorMatcherForm({
+  profile,
+  switchProfile,
+  switchProfileEnabled
+}: CoordinatorMatcherFormProps): JSX.Element {
   const relation = profile.role.toLowerCase();
   const [loaded, setLoaded] = useState<boolean>(false);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [prefByMentor, setPrefByMentor] = useState<Map<number, SlotPreference[]>>(new Map());
-  const [prefBySlot, setPrefBySlot] = useState<Map<number, MentorPreference[]>>(new Map());
   const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [formIsOpen, setFormIsOpen] = useState<boolean>(false);
 
@@ -86,27 +91,18 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
          */
         setFormIsOpen(data.open);
         const mentorMap = new Map<number, SlotPreference[]>();
-        const slotMap = new Map<number, MentorPreference[]>();
         for (const response of data.responses) {
           if (!mentorMap.has(response.mentor)) {
             mentorMap.set(response.mentor, []);
-          }
-          if (!slotMap.has(response.slot)) {
-            slotMap.set(response.slot, []);
           }
 
           mentorMap.get(response.mentor)?.push({
             slot: response.slot,
             preference: response.preference
           });
-          slotMap.get(response.slot)?.push({
-            mentor: response.mentor,
-            preference: response.preference
-          });
         }
 
         setPrefByMentor(mentorMap);
-        setPrefBySlot(slotMap);
       }),
 
       // fetch assignment
@@ -193,7 +189,7 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
   // fetch data on first load
   useEffect(() => {
     refreshStage();
-  }, []);
+  }, [profile]);
 
   if (!loaded) {
     return <div>Loading...</div>;
@@ -203,32 +199,27 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
 
   return (
     <div>
-      <h2>
-        {profile.course} ({relation})
-      </h2>
+      <div className="matcher-title">
+        <h2>
+          {profile.course} ({relation})
+        </h2>
+        {switchProfileEnabled && (
+          <button className="matcher-secondary-btn" onClick={switchProfile}>
+            Switch profile
+          </button>
+        )}
+      </div>
       <div className="matcher-stages">
-        <div
-          className={`matcher-stages-stage ${curStage === Stage.CREATE ? "active-stage" : ""}`}
-          onClick={() => setCurStage(Stage.CREATE)}
-        >
+        <div className={`matcher-stages-stage ${curStage === Stage.CREATE ? "active-stage" : ""}`}>
           <div className="matcher-stages-stage-title">Create</div>
         </div>
-        <div
-          className={`matcher-stages-stage ${curStage === Stage.RELEASE ? "active-stage" : ""}`}
-          onClick={() => setCurStage(Stage.RELEASE)}
-        >
+        <div className={`matcher-stages-stage ${curStage === Stage.RELEASE ? "active-stage" : ""}`}>
           <div className="matcher-stages-stage-title">Release</div>
         </div>
-        <div
-          className={`matcher-stages-stage ${curStage === Stage.CONFIGURE ? "active-stage" : ""}`}
-          onClick={() => setCurStage(Stage.CONFIGURE)}
-        >
+        <div className={`matcher-stages-stage ${curStage === Stage.CONFIGURE ? "active-stage" : ""}`}>
           <div className="matcher-stages-stage-title">Configure</div>
         </div>
-        <div
-          className={`matcher-stages-stage ${curStage === Stage.EDIT ? "active-stage" : ""}`}
-          onClick={() => setCurStage(Stage.EDIT)}
-        >
+        <div className={`matcher-stages-stage ${curStage === Stage.EDIT ? "active-stage" : ""}`}>
           <div className="matcher-stages-stage-title">Edit</div>
         </div>
       </div>
@@ -238,7 +229,6 @@ export function CoordinatorMatcherForm({ profile }: CoordinatorMatcherFormProps)
           profile={profile}
           slots={slots}
           prefByMentor={prefByMentor}
-          prefBySlot={prefBySlot}
           assignments={assignments}
           refreshStage={refreshStage}
           refreshAssignments={refreshAssignments}
@@ -253,7 +243,6 @@ interface CoordinatorMatcherFormSwitchProps {
   stage: Stage;
   profile: Profile;
   slots: Slot[];
-  prefBySlot: Map<number, MentorPreference[]>;
   prefByMentor: Map<number, SlotPreference[]>;
   assignments: Assignment[];
   refreshStage: () => Promise<void>;
@@ -265,7 +254,6 @@ const CoordinatorMatcherFormSwitch = ({
   stage,
   profile,
   slots,
-  prefBySlot,
   prefByMentor,
   assignments,
   refreshStage,
@@ -278,15 +266,7 @@ const CoordinatorMatcherFormSwitch = ({
     case Stage.RELEASE:
       return <ReleaseStage profile={profile} slots={slots} prefByMentor={prefByMentor} refreshStage={refreshStage} />;
     case Stage.CONFIGURE:
-      return (
-        <ConfigureStage
-          profile={profile}
-          slots={slots}
-          prefByMentor={prefByMentor}
-          prefBySlot={prefBySlot}
-          refreshStage={refreshStage}
-        />
-      );
+      return <ConfigureStage profile={profile} slots={slots} refreshStage={refreshStage} />;
     case Stage.EDIT:
       return (
         <EditStage

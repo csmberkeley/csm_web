@@ -18,9 +18,15 @@ enum Status {
 
 interface MentorSectionPreferencesProps {
   profile: Profile;
+  switchProfile: () => void;
+  switchProfileEnabled: boolean;
 }
 
-export function MentorSectionPreferences({ profile }: MentorSectionPreferencesProps): JSX.Element {
+export function MentorSectionPreferences({
+  profile,
+  switchProfile,
+  switchProfileEnabled
+}: MentorSectionPreferencesProps): JSX.Element {
   const relation = profile.role.toLowerCase();
 
   const [slots, setSlots] = useState<Slot[]>([]);
@@ -228,9 +234,16 @@ export function MentorSectionPreferences({ profile }: MentorSectionPreferencesPr
 
   return (
     <div>
-      <h2>
-        {profile.course} ({relation})
-      </h2>
+      <div className="matcher-title">
+        <h2>
+          {profile.course} ({relation})
+        </h2>
+        {switchProfileEnabled && (
+          <button className="matcher-secondary-btn" onClick={switchProfile}>
+            Switch profile
+          </button>
+        )}
+      </div>
       <div className="matcher-body">
         <div className="mentor-sidebar-left">
           <div className="matcher-sidebar-left-top">{sidebarContents}</div>

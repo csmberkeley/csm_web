@@ -1,7 +1,7 @@
 .tooltip-body {
 	position: absolute;
 	z-index: 1000;
-	display: block;
+	display: none;
 	visibility: visible;
 	background-color: #fff;
 	font-size: 0.85rem;
@@ -16,4 +16,5 @@
 
 .tooltip-body.open {
 	opacity: 1;
+	display: block;
 }

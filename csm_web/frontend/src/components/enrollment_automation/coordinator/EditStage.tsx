@@ -132,6 +132,10 @@ export const EditStage = ({
    * Whether the assignment distribution modal is open.
    */
   const [distModalOpen, setDistModalOpen] = useState<boolean>(false);
+  /**
+   * Whether the create section confirmation modal is open.
+   */
+  const [createConfirmModalOpen, setCreateConfirmModalOpen] = useState<boolean>(false);
 
   /**
    * History for redirection after section creation.
@@ -502,7 +506,7 @@ export const EditStage = ({
           <button className="matcher-secondary-btn" onClick={() => saveAssignment()}>
             Save
           </button>
-          <button className="matcher-danger-btn" onClick={() => createSections()}>
+          <button className="matcher-danger-btn" onClick={() => setCreateConfirmModalOpen(true)}>
             Create
           </button>
         </div>
@@ -512,6 +516,11 @@ export const EditStage = ({
         closeModal={() => setDistModalOpen(false)}
         assignments={assignments}
         slots={slots}
+      />
+      <CreateConfirmModal
+        isOpen={createConfirmModalOpen}
+        closeModal={() => setCreateConfirmModalOpen(false)}
+        createSections={createSections}
       />
     </div>
   );
@@ -751,13 +760,20 @@ const AssignmentDistributionModal = ({
   const [countExtrema, setCountExtrema] = useState<{ min: number; max: number }>({ min: 0, max: 0 });
 
   useEffect(() => {
+    // initialize for all slot ids
+    const emptyAssignmentCounts = new Map();
+    for (const slot of slots) {
+      emptyAssignmentCounts.set(slot.id!, 0);
+    }
+    // add counts for each assignment
     const newAssignmentCounts = assignments.reduce((acc, assignment) => {
       const count = acc.get(assignment.slot) || 0;
       acc.set(assignment.slot, count + 1);
       return acc;
-    }, new Map<number, number>());
+    }, emptyAssignmentCounts);
     setAssignmentCounts(newAssignmentCounts);
 
+    // extrema for highlighting
     const newCountExtrema = {
       min: Math.min(...newAssignmentCounts.values()),
       max: Math.max(...newAssignmentCounts.values())
@@ -804,5 +820,41 @@ const AssignmentDistributionModal = ({
         </div>
       </Modal>
     )
+  );
+};
+
+interface CreateConfirmModalProps {
+  isOpen: boolean;
+  closeModal: () => void;
+  createSections: () => void;
+}
+
+const CreateConfirmModal = ({
+  isOpen,
+  closeModal,
+  createSections
+}: CreateConfirmModalProps): React.ReactElement | null => {
+  if (!isOpen) {
+    return null;
+  }
+  return (
+    <Modal closeModal={closeModal}>
+      <div className="matcher-assignment-confirm-modal-contents">
+        <div className="matcher-create-confirm-modal-body">
+          <h3>Are you sure?</h3>
+          <p>
+            This will <b>irreversibly</b> create the sections and disable the matcher.
+          </p>
+        </div>
+        <div className="matcher-assignment-confirm-modal-footer">
+          <button className="matcher-secondary-btn" onClick={closeModal}>
+            Cancel
+          </button>
+          <button className="matcher-danger-btn" onClick={createSections}>
+            Confirm
+          </button>
+        </div>
+      </div>
+    </Modal>
   );
 };
