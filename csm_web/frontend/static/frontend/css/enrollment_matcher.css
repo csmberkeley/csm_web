@@ -656,6 +656,17 @@
 	width: 80%;
 }
 
+.matcher-configure-sidebar-buttons {
+	width: 100%;
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+
+	margin: 15px 0;
+}
+
 .matcher-configure-sidebar-footer {
 	flex: 1;
 	display: flex;

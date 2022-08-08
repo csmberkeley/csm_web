@@ -347,12 +347,12 @@ def configure(request, pk=None):
         if "slots" in request.data:
             # update slot configuration
             with transaction.atomic():
-                for slot in request.data:
-                    curslot = MatcherSlot.objects.get(pk=slot["slot"])
-                    if "minMentors" in slot:
-                        curslot.min_mentors = slot["minMentors"]
-                    if "maxMentors" in slot:
-                        curslot.max_mentors = slot["maxMentors"]
+                for slot in request.data.get("slots"):
+                    curslot = MatcherSlot.objects.get(pk=slot["id"])
+                    if "min_mentors" in slot:
+                        curslot.min_mentors = slot["min_mentors"]
+                    if "max_mentors" in slot:
+                        curslot.max_mentors = slot["max_mentors"]
                     curslot.save()
 
         if "open" in request.data:

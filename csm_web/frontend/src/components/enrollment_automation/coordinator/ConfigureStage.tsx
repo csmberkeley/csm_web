@@ -118,6 +118,18 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
     });
   };
 
+  const saveConfig = () => {
+    const formatted = slots.map(slot => ({
+      id: slot.id,
+      minMentors: minMentorMap.get(slot.id!),
+      maxMentors: maxMentorMap.get(slot.id!)
+    }));
+    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { slots: formatted }).then(() => {
+      // recompute stage
+      refreshStage();
+    });
+  };
+
   let sidebarContents = <div>Click on a time slot to configure it.</div>;
 
   // has selected an event
@@ -156,6 +168,11 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
               }}
             />
           </div>
+        </div>
+        <div className="matcher-configure-sidebar-buttons">
+          <button className="matcher-submit-btn" onClick={saveConfig}>
+            Save
+          </button>
         </div>
         <div className="matcher-configure-sidebar-footer">Shift-click to select more slots.</div>
       </div>
