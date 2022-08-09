@@ -92,7 +92,9 @@ class CourseViewSet(*viewset_with("list")):
         returns all the labels associated with a course
         POST: api/course/<course_id>/labels
         adds a new label to the course with <course_id>
-        - format: { "name": string, "description": string, showPopup: boolean }
+        - format: { "name": string, "description": string, "showPopup": boolean }
+        PUT: api/course/<course_id>/labels
+        - format: { "name": string, "description": string, "showPopup": boolean, "labelId": integer }
         '''
         # GET all the labels associated with a course
         if request.method == "GET":
@@ -110,6 +112,38 @@ class CourseViewSet(*viewset_with("list")):
             )
             serializer = LabelSerializer(labels, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
+        elif request.method == "PUT":
+            label_id = request.data.get("labelId")
+            label = Label.objects.get(id=label_id)
+
+            # retrieve
+            name = request.data.get("name")
+            description = request.data.get("description")
+            showPopup = request.data.get("showPopup")
+
+            # validate
+            if name is not None:
+                label.name = name
+            if description is not None:
+                label.description = description
+            if showPopup is not None:
+                label.showPopup = showPopup
+
+            label.save()
+            serializer = LabelSerializer(label, many=False)
+            return Response(serializer.data, status.HTTP_202_ACCEPTED)
+        elif request.method == "DELETE":
+            label_id = request.data.get("labelId")
+            label = Label.objects.get(id=label_id)
+
+            label.delete()
+            return Response(status=status.HTTP_204_NO_CONTENT)  # ???
+
+            # Label.objects.filter(id=label_id).delete()
+
+    # @action(detail=True)
+    # def delete_label(self, request, pk=None):
+    #     course = get_object_or_error(self.get_queryset(), pk=pk)
 
     @action(detail=True)
     def sections(self, request, pk=None):

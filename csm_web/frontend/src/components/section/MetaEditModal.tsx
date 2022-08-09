@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { fetchWithMethod, HTTP_METHODS, fetchJSON } from "../../utils/api";
 import Modal from "../Modal";
-import { Label } from "../../utils/types";
-import TextField from "@material-ui/core/TextField";
-import Autocomplete, { AutocompleteChangeReason } from "@material-ui/lab/Autocomplete";
-// use react-select
+import { Label, Course } from "../../utils/types";
+import Select, { ActionMeta, MultiValue } from "react-select";
+import makeAnimated from "react-select/animated";
 
 interface MetaEditModalProps {
   sectionId: number;
@@ -12,6 +11,7 @@ interface MetaEditModalProps {
   reloadSection: () => void;
   capacity: number;
   sectionLabels: Label[];
+  course: string;
 }
 
 export default function MetaEditModal({
@@ -19,31 +19,51 @@ export default function MetaEditModal({
   sectionId,
   reloadSection,
   capacity,
-  sectionLabels
+  sectionLabels,
+  course
 }: MetaEditModalProps) {
   // use existing capacity and labels as initial values
-  const [formState, setFormState] = useState({ capacity: capacity, sectionLabels: sectionLabels });
+  const [courseLabels, setCourseLabels] = useState([]);
 
-  const [courseLabels, setCourseLabels] = useState<Label[]>([]);
+  const [selectedLabels, setSelectedLabels] = useState(
+    sectionLabels.map(label => ({ label: label.name, value: label.id }))
+  );
+
+  const [formState, setFormState] = useState({ capacity: capacity, selectedLabels: selectedLabels });
+
+  const [courseID, setCourseID] = useState();
+
+  const animatedComponents = makeAnimated();
 
   useEffect(() => {
-    fetchJSON(`/courses/2/labels`).then(data => {
-      setCourseLabels(data);
-    });
-  });
+    fetchJSON(`/courses/`)
+      .then(data => {
+        const courseID = data.find((c: Course) => c.name === course).id;
+        setCourseID(courseID);
+        return fetchJSON(`/courses/${courseID}/labels`);
+      })
+      .then(data => {
+        setCourseLabels(data.map((label: Label) => ({ label: label.name, value: label.id })));
+      });
+  }, []);
 
-  function handleChange({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) {
+  function handleCapacityChange({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) {
     setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
   }
 
   function handleSubmit(event: React.ChangeEvent<HTMLFormElement>) {
     event.preventDefault();
     //TODO: Handle API Failure
-    fetchWithMethod(`/sections/${sectionId}/`, HTTP_METHODS.PATCH, formState).then(() => {
+    fetchWithMethod(`/sections/${sectionId}`, HTTP_METHODS.PATCH, formState).then(() => {
       closeModal();
       reloadSection();
     });
   }
+
+  const handleSelect = (newSelections: any) => {
+    const labelIDs = newSelections.map((label: any) => label.value);
+    setFormState(prevFormState => ({ ...prevFormState, selectedLabels: labelIDs }));
+  };
 
   return (
     <Modal closeModal={closeModal}>
@@ -59,19 +79,21 @@ export default function MetaEditModal({
             inputMode="numeric"
             pattern="[0-9]*"
             value={formState.capacity}
-            onChange={handleChange}
+            onChange={handleCapacityChange}
             autoFocus
           />
         </label>
         <label>
           Labels
-          <Autocomplete
-            multiple
-            id="tags-standard"
+          <Select
             options={courseLabels}
-            getOptionLabel={option => option.name}
-            defaultValue={sectionLabels}
-            renderInput={params => <TextField {...params} variant="outlined" />}
+            isMulti
+            placeholder="Select labels"
+            closeMenuOnSelect={false}
+            hideSelectedOptions={false}
+            onChange={handleSelect}
+            components={animatedComponents}
+            defaultValue={selectedLabels}
           />
         </label>
         <input type="submit" value="Save" />

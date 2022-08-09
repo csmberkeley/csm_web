@@ -5,6 +5,7 @@ import { Label as LabelType } from "../../utils/types";
 import { SectionCard } from "./SectionCard";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
+import { ManageLabelsModal } from "./ManageLabelsModal";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",
@@ -18,7 +19,8 @@ const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
 
 const COURSE_MODAL_TYPE = Object.freeze({
   exportData: "csv",
-  createSection: "mksec"
+  createSection: "mksec",
+  manageLabels: "labels"
 });
 
 interface CourseProps {
@@ -101,9 +103,19 @@ const Course = ({
   /**
    * Render the currently chosen modal.
    */
+
   const renderModal = (): React.ReactElement => {
     if (whichModal == COURSE_MODAL_TYPE.exportData) {
       return <DataExportModal closeModal={() => setShowModal(false)} />;
+    } else if (whichModal == COURSE_MODAL_TYPE.manageLabels) {
+      return (
+        <ManageLabelsModal
+          closeModal={() => setShowModal(false)}
+          courseId={Number(id)}
+          reloadSections={reloadSections}
+          title={name}
+        />
+      );
     } else {
       return (
         <CreateSectionModal
@@ -168,6 +180,15 @@ const Course = ({
               }}
             >
               Export Data
+            </button>
+            <button
+              className="csm-btn export-data-btn"
+              onClick={() => {
+                setShowModal(true);
+                setWhichModal(COURSE_MODAL_TYPE.manageLabels);
+              }}
+            >
+              Manage Labels
             </button>
           </div>
         )}

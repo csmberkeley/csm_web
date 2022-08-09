@@ -12,7 +12,7 @@ from ..serializers import LabelSerializer
 @api_view(['PUT'])
 def label(request, label_id):
     """
-    POST: Update section details
+    PUT: Update section details
         - format: { "name": string, "description": string, showPopup: boolean }
     """
     if request.method == "PUT":
@@ -22,6 +22,7 @@ def label(request, label_id):
         name = request.data.get("name")
         description = request.data.get("description")
         showPopup = request.data.get("showPopup")
+        section_set = req
 
         # validation before adding
         if name is not None:
@@ -35,3 +36,11 @@ def label(request, label_id):
         label.save()
         serializer = LabelSerializer(label, many=None)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
+
+
+@api_view['PUT']
+def delete_label(request, label_id, section_id):
+    """
+    POST: Update 
+    /api/sections/section_id/labels/label_id/delete
+    """

@@ -138,6 +138,7 @@ export default function MentorSection({
               capacity={capacity}
               labelSet={labelSet}
               id={id}
+              course={course}
             />
           )}
         />

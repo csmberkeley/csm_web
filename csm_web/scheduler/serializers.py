@@ -180,6 +180,8 @@ class SectionSerializer(serializers.ModelSerializer):
     # add labels
     queryset = Label.objects.filter()
     label_set = LabelSerializer(many=True)
+    # add course id for retrieving the course's labels
+    # courseID = serializers.SlugRelatedField(slug_field='mentor.course.pk') # slug-related field, primarykeyrelatedfield, or integerfield
 
     def get_num_students_enrolled(self, obj):
         return obj.num_students_annotation if hasattr(obj, 'num_students_annotation') else obj.current_student_count
