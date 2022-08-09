@@ -2,10 +2,20 @@ import React, { useEffect, useRef, useState } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../../utils/api";
 
 import { Profile } from "../../../utils/types";
+import LoadingSpinner from "../../LoadingSpinner";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
 import { MentorPreference, Slot, SlotPreference } from "../EnrollmentAutomationTypes";
 import { formatTime } from "../utils";
+
+import CheckCircle from "../../../../static/frontend/img/check_circle.svg";
+
+enum Status {
+  NONE,
+  LOADING,
+  SUCCESS,
+  ERROR
+}
 
 interface ConfigureStageProps {
   profile: Profile;
@@ -19,10 +29,11 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
   const [minMentorMap, setMinMentorMap] = useState<Map<number, number>>(new Map());
   // slot id -> max mentors
   const [maxMentorMap, setMaxMentorMap] = useState<Map<number, number>>(new Map());
+  const [submitStatus, setSubmitStatus] = useState<Status>();
 
   const selectAllRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  const updateMentorMaps = () => {
     const minMentorMap = new Map();
     const maxMentorMap = new Map();
     fetchJSON(`/matcher/${profile.courseId}/configure`).then((data: any) => {
@@ -33,7 +44,9 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
       setMinMentorMap(minMentorMap);
       setMaxMentorMap(maxMentorMap);
     });
-  }, [slots]);
+  };
+
+  useEffect(updateMentorMaps, [slots]);
 
   const setSelectedEventIdxWrapper = (indices: number[]) => {
     setSelectedEventIndices(indices);
@@ -124,13 +137,45 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
       minMentors: minMentorMap.get(slot.id!),
       maxMentors: maxMentorMap.get(slot.id!)
     }));
-    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { slots: formatted }).then(() => {
-      // recompute stage
-      refreshStage();
-    });
+    setSubmitStatus(Status.LOADING);
+    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { slots: formatted })
+      .then(response => {
+        if (response.ok) {
+          updateMentorMaps();
+          setSubmitStatus(Status.SUCCESS);
+          // clear after 1.5 seconds
+          setTimeout(() => {
+            setSubmitStatus(Status.NONE);
+          }, 1500);
+        } else {
+          setSubmitStatus(Status.ERROR);
+        }
+      })
+      .catch(() => {
+        setSubmitStatus(Status.ERROR);
+      });
   };
 
-  let sidebarContents = <div>Click on a time slot to configure it.</div>;
+  let statusContent: React.ReactNode = "";
+  switch (submitStatus) {
+    case Status.LOADING:
+      statusContent = <LoadingSpinner className="icon matcher-submit-status-icon" />;
+      break;
+    case Status.SUCCESS:
+      statusContent = <CheckCircle className="icon matcher-submit-status-icon" />;
+  }
+
+  let sidebarContents = (
+    <div className="matcher-configure-sidebar-contents">
+      <div className="matcher-configure-input-container">Click on a time slot to configure it.</div>
+      <div className="matcher-configure-sidebar-buttons">
+        <button className="matcher-submit-btn" onClick={saveConfig}>
+          Save
+        </button>
+        <div className="matcher-submit-status-container">{statusContent}</div>
+      </div>
+    </div>
+  );
 
   // has selected an event
   if (selectedEventIndices.length > 0) {
@@ -169,12 +214,13 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
             />
           </div>
         </div>
+        <div className="matcher-configure-sidebar-footer">Shift-click to select more slots.</div>
         <div className="matcher-configure-sidebar-buttons">
           <button className="matcher-submit-btn" onClick={saveConfig}>
             Save
           </button>
+          <div className="matcher-submit-status-container">{statusContent}</div>
         </div>
-        <div className="matcher-configure-sidebar-footer">Shift-click to select more slots.</div>
       </div>
     );
   }
