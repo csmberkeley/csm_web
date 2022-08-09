@@ -22,7 +22,7 @@ class Command(BaseCommand):
 
         for mentor in mentors:
             for slot in slots:
-                pref = random.randint(0, 10)
+                pref = random.randint(0, 5)
                 try:
                     MatcherPreference.objects.create(
                         slot=slot,
