@@ -4,6 +4,7 @@ from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
+from django.core.exceptions import ValidationError
 from rest_framework.response import Response
 
 from .utils import log_str, logger, get_object_or_error, viewset_with
@@ -89,28 +90,66 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         return Response(status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk=None):
+        """
+            JSON: {capacity: int, selected_labels: [list of PKs]}
+        """
         section = get_object_or_error(self.get_queryset(), pk=pk)
         if not section.mentor.course.coordinator_set.filter(user=self.request.user).count():
             raise PermissionDenied("Only coordinators can change section metadata")
-        serializer = self.serializer_class(
-            section,
-            data={
-                "capacity": request.data.get("capacity"),
-                "description": request.data.get("description"),
-            },
-            partial=True,
-        )
-        if serializer.is_valid():
-            section = serializer.save()
-            logger.info(
-                f"<Section:Meta:Success> Updated metadata on section {log_str(section)}"
-            )
-            return Response(status=status.HTTP_202_ACCEPTED)
-        else:
+
+        serializer = self.serializer_class(section, data={
+            "capacity": request.data.get("capacity"),
+        }, partial=True)
+
+        labels = request.data.get("selected_labels")
+        capacity = request.data.get("capacity")
+        if labels is not None:
+            section.label_set.set(labels)
+        if capacity is not None:
+            section.capacity = request.data.get("capacity")
+
+        try:
+            section.save()
+        except ValidationError:
             logger.info(
                 f"<Section:Meta:Failure> Failed to update metadata on section {log_str(section)}"
             )
             return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        logger.info(
+            f"<Section:Meta:Success> Updated metadata on section {log_str(section)}"
+        )
+        return Response(status=status.HTTP_202_ACCEPTED)
+
+        # if serializer.is_valid():
+        #     section = serializer.save()
+
+        # else:
+        #     logger.info(
+        #         f"<Section:Meta:Failure> Failed to update metadata on section {log_str(section)}"
+        #     )
+        #     return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+        # serializer = self.serializer_class(
+        #     section,
+        #     data={
+        #         "capacity": request.data.get("capacity"),
+        #         # "description": request.data.get("description"),
+        #         "labelSet": request.data.get("selectedLabels") # ?????
+        #     },
+
+        #     partial=True,
+        # )
+        # if serializer.is_valid():
+        #     section = serializer.save()
+        #     logger.info(
+        #         f"<Section:Meta:Success> Updated metadata on section {log_str(section)}"
+        #     )
+        #     return Response(status=status.HTTP_202_ACCEPTED)
+        # else:
+        #     logger.info(
+        #         f"<Section:Meta:Failure> Failed to update metadata on section {log_str(section)}"
+        #     )
+        #     return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
     @action(detail=True, methods=["get"])
     def attendance(self, request, pk=None):
@@ -120,6 +159,22 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 section.sectionoccurrence_set.all(), many=True
             ).data
         )
+
+    @action(detail=True, methods=["put"])
+    def update_labels(self, request, pk=None):  # update_labels
+        """
+        PUT: Updates the label_set for this section to the new list
+        {
+            labels: [label_id_1 ...]
+        }
+        """
+        section = get_object_or_error(self.get_queryset, pk=pk)
+        labels = request.data.get("labels")
+
+        if labels is not None:
+            section.label_set = labels
+        section.save()
+        return Response(status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["get", "put"])
     def students(self, request, pk=None):

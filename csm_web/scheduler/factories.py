@@ -20,6 +20,7 @@ from .models import (
     Override,
     Coordinator,
     DayOfWeekField,
+    Label,
     day_to_number,
     week_bounds
 )
@@ -110,6 +111,14 @@ class MentorFactory(factory.django.DjangoModelFactory):
     course = factory.SubFactory(CourseFactory)
 
 
+class CoordinatorFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Coordinator
+
+    user = factory.SubFactory(UserFactory)
+    course = factory.SubFactory(CourseFactory)
+
+
 class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Section
@@ -165,6 +174,18 @@ class ResourceFactory(factory.django.DjangoModelFactory):
 
     class Meta:
         model = Resource
+
+
+LABEL_NAMES = ("EOP", "Seed Scholar", "Women-Affinity")
+
+
+class LabelFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Label
+
+    course = factory.SubFactory(CourseFactory)
+    name = factory.LazyFunction(lambda: random.choice(LABEL_NAMES))
+    description = "hello"
 
 
 def create_attendances_for(student):

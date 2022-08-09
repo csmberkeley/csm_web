@@ -26,6 +26,7 @@ interface MentorSectionInfoProps {
   capacity: number;
   labelSet: Label[];
   id: number;
+  course: string;
 }
 
 export default function MentorSectionInfo({
@@ -37,7 +38,8 @@ export default function MentorSectionInfo({
   mentor,
   capacity,
   id,
-  labelSet
+  labelSet,
+  course
 }: MentorSectionInfoProps) {
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
@@ -146,6 +148,7 @@ export default function MentorSectionInfo({
                     reloadSection={reloadSection}
                     capacity={capacity}
                     sectionLabels={labelSet}
+                    course={course}
                   />
                 )}
               </React.Fragment>
