@@ -9,11 +9,13 @@ from ..models import Label
 from ..serializers import LabelSerializer
 
 
-@api_view(['PUT'])
+@api_view(['PUT', 'POST'])
 def label(request, label_id):
     """
-    PUT: Update section details
+    PATCH: Update label details
         - format: { "name": string, "description": string, showPopup: boolean }
+    POST: Create new label details
+        - format: {"name": string, "description": string, showPopup: boolean}
     """
     if request.method == "PUT":
         # initialize(?) new label
@@ -37,10 +39,4 @@ def label(request, label_id):
         serializer = LabelSerializer(label, many=None)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
-
-@api_view['PUT']
-def delete_label(request, label_id, section_id):
-    """
-    POST: Update 
-    /api/sections/section_id/labels/label_id/delete
-    """
+# PUT/POST /api/labels/<label_id>
