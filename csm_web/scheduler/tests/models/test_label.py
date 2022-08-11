@@ -108,6 +108,7 @@ def test_coordinator_allowed(client, setup_section):
     }, content_type='application/json')
     assert response.status_code == status.HTTP_202_ACCEPTED
 
+
 # test for whether deletion of a section reflects itself in the many-to-many field of the labels that the section had
 # @pytest.mark.django_db
 # def test_section_deletion(client, setup_section):
