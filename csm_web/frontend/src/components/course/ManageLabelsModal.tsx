@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { fetchJSON } from "../../utils/api";
+import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 import { Label } from "../../utils/types";
@@ -27,7 +27,7 @@ export const ManageLabelsModal = ({
   /**
    * Map of course id to course name.
    */
-  const [courseLabels, setCourseLabels] = useState([]);
+  const [courseLabels, setCourseLabels] = useState<Label[]>([]);
 
   // fetch all labels upon first mount
   useEffect(() => {
@@ -40,43 +40,76 @@ export const ManageLabelsModal = ({
     const tempLabels = courseLabels.filter((label: Label) => label.id !== id);
     setCourseLabels(tempLabels);
   };
-  /*
+
+  const editRow = (id: number, name: string, description: string, showPopup: boolean) => {
+    const tempLabels = courseLabels.filter((label: Label) => label.id !== id);
+    const oldLabel = courseLabels.find((label: Label) => label.id === id);
+    const newLabel = { ...oldLabel, name: name, description: description, showPopup: showPopup } as Label;
+    const newLabels = [...tempLabels, newLabel];
+    setCourseLabels(newLabels);
+  };
+
+  function handleSubmit(event: React.ChangeEvent<HTMLFormElement>) {
+    event.preventDefault();
+    fetchWithMethod(`/courses/${courseId}/labels`, HTTP_METHODS.PUT, courseLabels).then(() => {
+      closeModal();
+    });
+  }
+
   return (
     <Modal closeModal={closeModal}>
-      <div className="data-export-modal">
-        <div className="data-export-modal-header">List of labels for {title}</div>
-        <ul>
-          {courseLabels.map((label: Label) => (
-            <EditLabelRow
-            label={label}
-            onChangeRow={() => {}}
-            removeLabel={removeLabel}
-            />
-            // <p> hi csm ppl</p> // HI CSM PPPPPPLLLLLLLLLL
-          ))}
-        </ul>
-      </div>
+      <form className="csm-form" onSubmit={handleSubmit}>
+        <div className="data-export-modal">
+          <div className="data-export-modal-header">List of labels for {title}</div>
+          <ul>
+            {courseLabels.map((label: Label) => (
+              <EditLabelRow
+                key={label.id}
+                label={label}
+                onChangeRow={(name: string, description: string, showPopup: boolean) =>
+                  editRow(label.id, name, description, showPopup)
+                }
+                removeLabel={() => removeLabel(label.id)}
+              />
+            ))}
+          </ul>
+          <input type="submit" value="Save" />
+        </div>
+      </form>
     </Modal>
-  ); */
+  );
 };
 
 interface EditLabelRowProps {
   label: Label;
-  onChangeRow: () => void;
+  onChangeRow: (name: string, description: string, showPopup: boolean) => void;
   removeLabel: (id: number) => void;
 }
 
 export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowProps) => {
   const [editingLabels, setEditingLabels] = useState<boolean>(false);
 
-  /*const handleChangeRow = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>, attr: keyof EditLabelRow) => {
-    onChangeRow(row.mentorId, attr, e.target.value);
-  };*/
-
   const toggleEditingLabels = (e: React.MouseEvent<HTMLOrSVGElement, MouseEvent>) => {
     e.stopPropagation();
     setEditingLabels(!editingLabels);
   };
+
+  const editValue = (type: string, value: any) => {
+    if (type == "name") {
+      onChangeRow(value, label.description, label.showPopup);
+    } else if (type == "description") {
+      onChangeRow(label.name, value, label.showPopup);
+    } else if (type == "showpopup") {
+      onChangeRow(label.name, label.description, value);
+    } else {
+      // should not get here
+      console.error(`Unknown attribute ${type}`);
+    }
+  };
+
+  function handleChange({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) {
+    editValue(name, value);
+  }
 
   return (
     <div>
@@ -92,9 +125,9 @@ export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowPr
       )}
       {editingLabels && (
         <span>
-          <input id="name" defaultValue={label.name} />
-          <input id="description" defaultValue={label.description} />
-          <Toggle id={label.name} defaultChecked={label.showPopup} />
+          <input name="name" defaultValue={label.name} onChange={handleChange} />
+          <input name="description" defaultValue={label.description} onChange={handleChange} />
+          <Toggle defaultChecked={label.showPopup} onChange={handleChange} />
           <Exit className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingLabels} />
         </span>
       )}
