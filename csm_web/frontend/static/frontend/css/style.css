@@ -222,8 +222,9 @@ header {
 	padding: 10px 20px;
 }
 
-.manage-Labels-Modal {
+.manage-labels-modal {
 	display: flex;
+	flex-direction: row;
 }
 
 .modal-confirmation-container {
