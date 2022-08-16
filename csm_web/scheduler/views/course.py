@@ -94,7 +94,8 @@ class CourseViewSet(*viewset_with("list")):
         adds a new label to the course with <course_id>
         - format: { "name": string, "description": string, "showPopup": boolean }
         PUT: api/course/<course_id>/labels
-        - format: { "name": string, "description": string, "showPopup": boolean, "labelId": integer }
+        - format: { labels: [{id: int, name: string, description: string, showPopup: bool}, {...}, {...}] }
+
         '''
         # GET all the labels associated with a course
         if request.method == "GET":
@@ -113,6 +114,18 @@ class CourseViewSet(*viewset_with("list")):
             serializer = LabelSerializer(labels, many=False)
             return Response(serializer.data, status=status.HTTP_201_CREATED)
         elif request.method == "PUT":
+            # filter out labels associated with course_id
+            # iterate through them, and for each one check if ID is in PUT request
+            # if not, it is deleted, so we should delete it from database
+            # if it is there, we just edit it
+            # if it is ONLY in the request, we are adding a new label, so we create and save a new label
+
+            # but this require first iterating through the database labels (for the right course) and THEN the request... is this normal?
+
+            # iterate through each element in list
+            # for label_json in request.data.get("labels"):
+
+            """
             label_id = request.data.get("labelId")
             label = Label.objects.get(id=label_id)
 
@@ -140,6 +153,7 @@ class CourseViewSet(*viewset_with("list")):
             return Response(status=status.HTTP_204_NO_CONTENT)  # ???
 
             # Label.objects.filter(id=label_id).delete()
+            """
 
     # @action(detail=True)
     # def delete_label(self, request, pk=None):
