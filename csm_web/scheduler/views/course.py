@@ -94,7 +94,8 @@ class CourseViewSet(*viewset_with("list")):
         adds a new label to the course with <course_id>
         - format: { "name": string, "description": string, "showPopup": boolean }
         PUT: api/course/<course_id>/labels
-        - format: { labels: [{id: int, name: string, description: string, showPopup: bool}, {...}, {...}] }
+        - format: { labels: [{id: int, name: string, description: string, showPopup: bool}, {...}, {...}] 
+                    deletedLabelIDs: [<list of ids of labels getting deleted>]    }
 
         '''
         # GET all the labels associated with a course
@@ -122,8 +123,48 @@ class CourseViewSet(*viewset_with("list")):
 
             # but this require first iterating through the database labels (for the right course) and THEN the request... is this normal?
 
-            # iterate through each element in list
-            # for label_json in request.data.get("labels"):
+            # get list of all IDs in request?
+
+            # relevant database labels
+
+            currentLabels = request.data.get("labels")
+            for labelJSON in currentLabels:
+                # check if JSON has id field
+                if "id" in labelJSON.keys():
+                    # case of editing existing label
+                    label = Label.objects.get(pk=labelJSON.get("id"))
+
+                    # retrieve
+                    name = request.data.get("name")
+                    description = request.data.get("description")
+                    showPopup = request.data.get("showPopup")
+
+                    # update
+                    if name is not None:
+                        label.name = name
+                    if description is not None:
+                        label.description = description
+                    if showPopup is not None:
+                        label.showPopup = showPopup
+
+                    label.save()
+                else:
+                    # case of adding new label
+                    label = Label.objects.create(
+                        name=request.data.get("name"),
+                        description=request.data.get("description"),
+                        showPopup=request.data.get("showPopup"),
+                        course=pk
+                    )
+
+            # iterate through deleted label IDs to delete from database
+            deletedLabelIDs = request.data.get("deletedLabelIDs")
+            for labelID in deletedLabelIDs:
+                labelToDelete = Label.objects.get(pk=labelID)
+                labelID.delete()
+
+            # serializer = ???
+            return Response(serializer.data, status.HTTP_202_ACCEPTED)
 
             """
             label_id = request.data.get("labelId")

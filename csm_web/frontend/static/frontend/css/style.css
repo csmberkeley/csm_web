@@ -222,6 +222,10 @@ header {
 	padding: 10px 20px;
 }
 
+.manage-Labels-Modal {
+	display: flex;
+}
+
 .modal-confirmation-container {
 	justify-content: center;
 }

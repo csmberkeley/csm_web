@@ -5,7 +5,7 @@ import Modal from "../Modal";
 import { Label } from "../../utils/types";
 import Pencil from "../../../static/frontend/img/pencil.svg";
 import Trash from "../../../static/frontend/img/trash-alt.svg";
-import Exit from "../../../static/frontend/img/x.svg";
+import Exit from "../../../static/frontend/img/check_circle.svg";
 import Toggle from "react-toggle";
 
 interface ManageLabelsModalProps {
@@ -45,8 +45,16 @@ export const ManageLabelsModal = ({
     const tempLabels = courseLabels.filter((label: Label) => label.id !== id);
     const oldLabel = courseLabels.find((label: Label) => label.id === id);
     const newLabel = { ...oldLabel, name: name, description: description, showPopup: showPopup } as Label;
-    const newLabels = [...tempLabels, newLabel];
+    const newLabels = [...tempLabels, newLabel].sort((a, b) => a.id - b.id);
     setCourseLabels(newLabels);
+  };
+
+  const handleNewRow = () => {
+    const course = courseLabels[0].course;
+    setCourseLabels([
+      ...courseLabels,
+      { id: -1, course: course, sections: [], name: "", description: "", showPopup: false }
+    ]);
   };
 
   function handleSubmit(event: React.ChangeEvent<HTMLFormElement>) {
@@ -61,20 +69,26 @@ export const ManageLabelsModal = ({
       <form className="csm-form" onSubmit={handleSubmit}>
         <div className="data-export-modal">
           <div className="data-export-modal-header">List of labels for {title}</div>
-          <ul>
-            {courseLabels.map((label: Label) => (
-              <EditLabelRow
-                key={label.id}
-                label={label}
-                onChangeRow={(name: string, description: string, showPopup: boolean) =>
-                  editRow(label.id, name, description, showPopup)
-                }
-                removeLabel={() => removeLabel(label.id)}
-              />
-            ))}
-          </ul>
+
+          {/* // starting off by wrapping everything in a flexbox div with classname managelabelsmodal & playing around with that -Yahya  */}
+          <div className="manage-Labels-Modal">
+            <ul>
+              {courseLabels.map((label: Label) => (
+                <EditLabelRow
+                  key={label.id}
+                  label={label}
+                  onChangeRow={(name: string, description: string, showPopup: boolean) =>
+                    editRow(label.id, name, description, showPopup)
+                  }
+                  removeLabel={() => removeLabel(label.id)}
+                />
+              ))}
+            </ul>
+            <span onClick={handleNewRow}>Add a new label</span>
+          </div>
           <input type="submit" value="Save" />
         </div>
+        {/* end manageLabelModals div */}
       </form>
     </Modal>
   );
@@ -113,6 +127,7 @@ export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowPr
 
   return (
     <div>
+      {/* // if not editing labels.. */}
       {!editingLabels && (
         <div className="matcher-assignment-section-times-edit">
           {label.name}: {label.description}
@@ -123,10 +138,21 @@ export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowPr
           <Trash className="icon matcher-assignment-section-times-edit-icon" onClick={removeLabel} />
         </div>
       )}
+      {/* // if editing labels... */}
       {editingLabels && (
         <span>
-          <input name="name" defaultValue={label.name} onChange={handleChange} />
-          <input name="description" defaultValue={label.description} onChange={handleChange} />
+          <input
+            name="name"
+            defaultValue={label.name}
+            placeholder={label.name === "" ? "Name of label" : label.name}
+            onChange={handleChange}
+          />
+          <input
+            name="description"
+            defaultValue={label.description}
+            placeholder={label.description === "" ? "Description of label" : label.description}
+            onChange={handleChange}
+          />
           <Toggle defaultChecked={label.showPopup} onChange={handleChange} />
           <Exit className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingLabels} />
         </span>
