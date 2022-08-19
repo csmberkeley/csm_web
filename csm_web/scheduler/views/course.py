@@ -1,5 +1,7 @@
 import csv
+import logging
 from itertools import groupby
+import pkgutil
 
 from django.contrib.postgres.aggregates import ArrayAgg
 from django.db.models import Q, Count, Prefetch
@@ -85,7 +87,7 @@ class CourseViewSet(*viewset_with("list")):
             for day_key, group in groupby(sections, lambda section: section.day_key)
         }
 
-    @action(detail=True)
+    @action(detail=True, methods=["GET", "PUT"])
     def labels(self, request, pk=None):
         '''
         GET: api/course/<course_id>/labels
@@ -99,22 +101,27 @@ class CourseViewSet(*viewset_with("list")):
 
         '''
         # GET all the labels associated with a course
+        logging.error("KIRBYKIRBY" + request.method)
         if request.method == "GET":
+
             course = get_object_or_error(self.get_queryset(), pk=pk)
             labels = course.labels
             serializer = LabelSerializer(labels, many=True)
+
             return Response(serializer.data, status=status.HTTP_200_OK)  # ???
-        # create a new label with the request data
-        elif request.method == "POST":
-            label = Label.objects.create(
-                name=request.data.get("name"),
-                description=request.data.get("description"),
-                showPopup=request.data.get("showPopup"),
-                course=pk
-            )
-            serializer = LabelSerializer(labels, many=False)
-            return Response(serializer.data, status=status.HTTP_201_CREATED)
-        elif request.method == "PUT":
+            # create a new label with the request data
+            """
+            elif request.method == "POST":
+                label = Label.objects.create(
+                    name=request.data.get("name"),
+                    description=request.data.get("description"),
+                    showPopup=request.data.get("showPopup"),
+                    course=pk
+                )
+                serializer = LabelSerializer(labels, many=False)
+                return Response(serializer.data, status=status.HTTP_201_CREATED)"""
+        logging.error("KIRBYKIRBYKIRBYKIRBYKIRBYKIRBYKIRBYKIRBYKIRBYKIRBYKIRBYKIRBYKIRBY")
+        if request.method == "PUT":
             # filter out labels associated with course_id
             # iterate through them, and for each one check if ID is in PUT request
             # if not, it is deleted, so we should delete it from database
@@ -126,13 +133,14 @@ class CourseViewSet(*viewset_with("list")):
             # get list of all IDs in request?
 
             # relevant database labels
-
+            logging.error("Log message goes here.")
             currentLabels = request.data.get("labels")
             for labelJSON in currentLabels:
                 # check if JSON has id field
-                if "id" in labelJSON.keys():
+                labelID = labelJSON.get("id")
+                if labelID >= 0:
                     # case of editing existing label
-                    label = Label.objects.get(pk=labelJSON.get("id"))
+                    label = Label.objects.get(pk=labelID)
 
                     # retrieve
                     name = request.data.get("name")
@@ -154,17 +162,21 @@ class CourseViewSet(*viewset_with("list")):
                         name=request.data.get("name"),
                         description=request.data.get("description"),
                         showPopup=request.data.get("showPopup"),
-                        course=pk
+                        course=Course.objects.get(pk=pk)
                     )
 
             # iterate through deleted label IDs to delete from database
             deletedLabelIDs = request.data.get("deletedLabelIDs")
-            for labelID in deletedLabelIDs:
-                labelToDelete = Label.objects.get(pk=labelID)
-                labelID.delete()
+            if deletedLabelIDs != None:
+                for labelID in deletedLabelIDs:
+                    labelToDelete = Label.objects.get(pk=labelID)
+                    labelToDelete.delete()
 
-            # serializer = ???
+            """
+            serializer = LabelSerializer(currentLabels, many=True)
             return Response(serializer.data, status.HTTP_202_ACCEPTED)
+            """
+            return Response(status.HTTP_202_ACCEPTED)
 
             """
             label_id = request.data.get("labelId")

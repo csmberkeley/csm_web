@@ -6,7 +6,6 @@ import { Label } from "../../utils/types";
 import Pencil from "../../../static/frontend/img/pencil.svg";
 import Trash from "../../../static/frontend/img/trash-alt.svg";
 import Exit from "../../../static/frontend/img/check_circle.svg";
-import Toggle from "react-toggle";
 
 interface ManageLabelsModalProps {
   closeModal: () => void;
@@ -29,12 +28,15 @@ export const ManageLabelsModal = ({
    */
   const [courseLabels, setCourseLabels] = useState<Label[]>([]);
 
+  const [currCourseLabels, setCurrCourseLabels] = useState<Label[]>([]);
+
   const [newLabelKey, setNewLabelKey] = useState(-1);
 
   // fetch all labels upon first mount
   useEffect(() => {
     fetchJSON(`/courses/${courseId}/labels`).then(data => {
       setCourseLabels(data);
+      setCurrCourseLabels(data);
     });
   }, []);
 
@@ -62,19 +64,28 @@ export const ManageLabelsModal = ({
 
   function handleSubmit(event: React.ChangeEvent<HTMLFormElement>) {
     event.preventDefault();
-    fetchWithMethod(`/courses/${courseId}/labels`, HTTP_METHODS.PUT, courseLabels).then(() => {
+    const currIDs = courseLabels.map((label: Label) => label.id.toString());
+    const prevIDs = currCourseLabels.map((label: Label) => label.id.toString());
+    const deletedIDs = [];
+    for (const id of prevIDs) {
+      if (!currIDs.includes(id)) {
+        deletedIDs.push(id);
+      }
+    }
+    const put_value = {
+      labels: courseLabels,
+      deletedLabelIDs: deletedIDs
+    };
+    fetchWithMethod(`/courses/${courseId}/labels`, HTTP_METHODS.PUT, put_value).then(() => {
       closeModal();
     });
   }
 
   return (
     <Modal closeModal={closeModal}>
-      <form className="csm-form" onSubmit={handleSubmit}>
-        <div className="data-export-modal">
-          <div className="data-export-modal-header">List of labels for {title}</div>
-
-          {/* // starting off by wrapping everything in a flexbox div with classname managelabelsmodal & playing around with that -Yahya  */}
-          {/* this is the entire table for the flexbox */}
+      <form className="manage-labels-form" onSubmit={handleSubmit}>
+        <div>
+          <div className="manage-labels-form-header">Labels for {title}</div>
           <div className="manage-labels-modal">
             <ul>
               {courseLabels.map((label: Label) => (
@@ -89,11 +100,13 @@ export const ManageLabelsModal = ({
               ))}
             </ul>
           </div>
-          {/* end manageLabelModals div */}
+          {/* end manage-labels-modal div */}
 
-          <span onClick={handleNewRow}>Add a new label</span>
+          <div className="manage-label-modal-buttons">
+            <input className="affinity-btn" type="button" onClick={handleNewRow} value="Add New Label" />
+            <input className="affinity-btn" type="submit" value="Save Labels" />
+          </div>
         </div>
-        <input type="submit" value="Save" />
       </form>
     </Modal>
   );
@@ -114,6 +127,7 @@ export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowPr
   };
 
   const editValue = (type: string, value: any) => {
+    console.log(type);
     if (type == "name") {
       onChangeRow(value, label.description, label.showPopup);
     } else if (type == "description") {
@@ -130,54 +144,63 @@ export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowPr
     editValue(name, value);
   }
 
+  function handleCheck(e: any) {
+    editValue("showpopup", e.target.checked);
+  }
+
   return (
     <div>
       {/* // if not editing labels.. */}
       {!editingLabels && (
         // begining of evenly spaced row
-        <div className="matcher-assignment-section-times-edit">
-          {label.name === "" && <div>Name of label</div>}
-          {label.name !== "" && <div>{label.name}</div>}
-          {label.description === "" && <div>Description of label</div>}
-          {label.description !== "" && <div>{label.description}</div>}
-          <label>
-            <Toggle id={label.name} defaultChecked={label.showPopup} disabled={true} />
-          </label>
-          <Pencil className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingLabels} />
-          <Trash className="icon matcher-assignment-section-times-edit-icon" onClick={removeLabel} />
+        <div className="manage-labels-modal-row">
+          <div className="manage-labels-modal-col large-col">
+            {label.name === "" && <div>Name of label</div>}
+            {label.name !== "" && <div>{label.name}</div>}
+          </div>
+          <div className="manage-labels-modal-col large-col">
+            {label.description === "" && <div>Description of label</div>}
+            {label.description !== "" && <div>{label.description}</div>}
+          </div>
+          <div className="manage-labels-modal-col small-col">
+            <input type="checkbox" defaultChecked={label.showPopup} onChange={handleCheck} disabled={true} />
+          </div>
+          <div className="manage-labels-modal-col small-col">
+            <Pencil className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingLabels} />
+            <Trash className="icon matcher-assignment-section-times-edit-icon" onClick={removeLabel} />
+          </div>
         </div>
         // end of evenly spaced row
       )}
       {/* // if editing labels... */}
       {editingLabels && (
         <div>
-          <span>
-            <input
-              name="name"
-              defaultValue={label.name}
-              placeholder={label.name === "" ? "Name of label" : label.name}
-              onChange={handleChange}
-            />
-            <input
-              name="description"
-              defaultValue={label.description}
-              placeholder={label.description === "" ? "Description of label" : label.description}
-              onChange={handleChange}
-            />
-            <Toggle defaultChecked={label.showPopup} onChange={handleChange} />
-            <Exit className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingLabels} />
+          <span className="manage-labels-modal-row">
+            <div className="manage-labels-modal-col large-col">
+              <input
+                name="name"
+                defaultValue={label.name}
+                placeholder={label.name === "" ? "Name of label" : label.name}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="manage-labels-modal-col large-col">
+              <input
+                name="description"
+                defaultValue={label.description}
+                placeholder={label.description === "" ? "Description of label" : label.description}
+                onChange={handleChange}
+              />
+            </div>
+            <div className="manage-labels-modal-col small-col">
+              <input type="checkbox" defaultChecked={label.showPopup} onChange={handleCheck} />
+            </div>
+            <div className="manage-labels-modal-col small-col">
+              <Exit className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingLabels} />
+            </div>
           </span>
         </div>
       )}
     </div>
   );
 };
-
-// 167 to 184 is editting labels div
-// 137 to 163 is not edditing label
-
-// columns
-// name
-// description
-// checbox
-// pencil / trash

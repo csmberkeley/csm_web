@@ -216,15 +216,66 @@ header {
 	flex-direction: row;
 	font-size: 1.25em;
 	color: white;
-	background-color: #007bff;
+	background-color: var(--csm-green);
 	border-radius: 10px;
 	cursor: pointer;
 	padding: 10px 20px;
+	margin: 0% 2%;
+}
+
+.manage-labels-form {
+	display: flex;
+	flex-direction: column;
+}
+
+.manage-labels-form-header {
+	text-align: center;
+	font-size: 1.5rem;
+	font-weight: 600;
+	color: #808080;
 }
 
 .manage-labels-modal {
 	display: flex;
-	flex-direction: row;
+	/* background-color: rgb(139, 82, 82); */
+	justify-content: space-evenly;
+	flex-direction: column;
+	padding-right: 7%;
+}
+
+.manage-labels-modal-row {
+	background-color: var(--csm-resources);
+	border: 1px solid var(--csm-resources);
+	border-radius: 8px;
+	align-items: center;
+	justify-content: space-evenly;
+	display: flex;
+	margin-top: 2%;
+	margin-bottom: 2%;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 0 -1px rgb(0 0 0 / 6%);
+}
+
+.manage-labels-modal-col {
+	/* background-color: red; */
+	display: flex;
+	flex-direction: column;
+	justify-content: space-evenly;
+	padding: 10px 10px;
+	text-align: center;
+}
+
+.small-col {
+	flex: 1;
+}
+
+.large-col {
+	flex: 7;
+}
+
+.manage-label-modal-buttons {
+	/* background-color: lightcoral; */
+	display: flex;
+	justify-content: center;
 }
 
 .modal-confirmation-container {
