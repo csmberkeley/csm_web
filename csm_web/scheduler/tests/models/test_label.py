@@ -5,6 +5,7 @@ import factory
 import faker
 import datetime
 from rest_framework import status
+import scheduler
 
 
 from django.utils import timezone
@@ -104,7 +105,7 @@ def test_coordinator_allowed(client, setup_section):
     label_add_url = reverse("section-detail", kwargs={"pk": section.pk})
     response = client.patch(label_add_url, data={
         'capacity': 4,
-        'selected_labels': [labels[0].id]
+        'selected_labels': [labels.id]
     }, content_type='application/json')
     assert response.status_code == status.HTTP_202_ACCEPTED
 

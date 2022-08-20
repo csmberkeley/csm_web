@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from django.core.exceptions import ValidationError
 from rest_framework.response import Response
+import logging
 
 from .utils import log_str, logger, get_object_or_error, viewset_with
 from ..models import Course, Section, Student, Spacetime, User, Attendance, Mentor
@@ -80,13 +81,15 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 for spacetime_serializer in spacetime_serializers
             ]
             mentor = Mentor.objects.create(user=mentor_user, course=course)
+            logging.error(request.data)
+            labels = self.request.data["labels"]
             section = Section.objects.create(
                 mentor=mentor,
-                description=self.request.data["description"],
-                capacity=self.request.data["capacity"]
+                capacity=self.request.data["capacity"],
             )
             section.spacetimes.set(spacetimes)
             section.save()
+            section.label_set.set(labels)
         return Response(status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk=None):
