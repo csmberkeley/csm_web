@@ -35,8 +35,8 @@ export const ManageLabelsModal = ({
   // fetch all labels upon first mount
   useEffect(() => {
     fetchJSON(`/courses/${courseId}/labels`).then(data => {
-      setCourseLabels(data);
-      setCurrCourseLabels(data);
+      setCourseLabels(data.sort((a: Label, b: Label) => a.id - b.id));
+      setCurrCourseLabels(data.sort((a: Label, b: Label) => a.id - b.id));
     });
   }, []);
 
@@ -49,7 +49,10 @@ export const ManageLabelsModal = ({
     const tempLabels = courseLabels.filter((label: Label) => label.id !== id);
     const oldLabel = courseLabels.find((label: Label) => label.id === id);
     const newLabel = { ...oldLabel, name: name, description: description, showPopup: showPopup } as Label;
-    const newLabels = [...tempLabels, newLabel].sort((a, b) => a.id - b.id);
+    let newLabels = [...tempLabels, newLabel];
+    const positiveLabelsSorted = newLabels.filter((label: Label) => label.id >= 0).sort((a, b) => a.id - b.id);
+    const negativeLabelsSorted = newLabels.filter((label: Label) => label.id < 0).sort((a, b) => b.id - a.id);
+    newLabels = [...positiveLabelsSorted, ...negativeLabelsSorted];
     setCourseLabels(newLabels);
   };
 
@@ -64,8 +67,8 @@ export const ManageLabelsModal = ({
 
   function handleSubmit(event: React.ChangeEvent<HTMLFormElement>) {
     event.preventDefault();
-    const currIDs = courseLabels.map((label: Label) => label.id.toString());
-    const prevIDs = currCourseLabels.map((label: Label) => label.id.toString());
+    const currIDs = courseLabels.map((label: Label) => label.id);
+    const prevIDs = currCourseLabels.map((label: Label) => label.id);
     const deletedIDs = [];
     for (const id of prevIDs) {
       if (!currIDs.includes(id)) {
@@ -74,10 +77,11 @@ export const ManageLabelsModal = ({
     }
     const put_value = {
       labels: courseLabels,
-      deletedLabelIDs: deletedIDs
+      deletedLabelIds: deletedIDs
     };
     fetchWithMethod(`/courses/${courseId}/labels`, HTTP_METHODS.PUT, put_value).then(() => {
       closeModal();
+      reloadSections();
     });
   }
 
@@ -100,8 +104,6 @@ export const ManageLabelsModal = ({
               ))}
             </ul>
           </div>
-          {/* end manage-labels-modal div */}
-
           <div className="manage-label-modal-buttons">
             <input className="affinity-btn" type="button" onClick={handleNewRow} value="Add New Label" />
             <input className="affinity-btn" type="submit" value="Save Labels" />
@@ -127,7 +129,6 @@ export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowPr
   };
 
   const editValue = (type: string, value: any) => {
-    console.log(type);
     if (type == "name") {
       onChangeRow(value, label.description, label.showPopup);
     } else if (type == "description") {

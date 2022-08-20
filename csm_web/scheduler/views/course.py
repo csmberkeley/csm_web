@@ -1,5 +1,6 @@
 import csv
 import logging
+from locale import atoi
 from itertools import groupby
 import pkgutil
 
@@ -133,7 +134,8 @@ class CourseViewSet(*viewset_with("list")):
             # get list of all IDs in request?
 
             # relevant database labels
-            logging.error("Log message goes here.")
+            # logging.error("Log message goes here.")
+            logging.error(request.data)
             currentLabels = request.data.get("labels")
             for labelJSON in currentLabels:
                 # check if JSON has id field
@@ -143,10 +145,9 @@ class CourseViewSet(*viewset_with("list")):
                     label = Label.objects.get(pk=labelID)
 
                     # retrieve
-                    name = request.data.get("name")
-                    description = request.data.get("description")
-                    showPopup = request.data.get("showPopup")
-
+                    name = labelJSON.get("name")
+                    description = labelJSON.get("description")
+                    showPopup = labelJSON.get("show_popup")
                     # update
                     if name is not None:
                         label.name = name
@@ -155,21 +156,27 @@ class CourseViewSet(*viewset_with("list")):
                     if showPopup is not None:
                         label.showPopup = showPopup
 
-                    label.save()
+                    serializer = LabelSerializer(label, data=labelJSON)
+                    if serializer.is_valid():
+                        serializer.save()
                 else:
                     # case of adding new label
                     label = Label.objects.create(
-                        name=request.data.get("name"),
-                        description=request.data.get("description"),
-                        showPopup=request.data.get("showPopup"),
+                        name=labelJSON.get("name"),
+                        description=labelJSON.get("description"),
+                        showPopup=labelJSON.get("show_popup"),
                         course=Course.objects.get(pk=pk)
                     )
 
             # iterate through deleted label IDs to delete from database
-            deletedLabelIDs = request.data.get("deletedLabelIDs")
-            if deletedLabelIDs != None:
+            deletedLabelIDs = request.data.get("deleted_label_ids")
+            # logging.error("ajklsdhgjksgklshgsgdsl" + deletedLabelIDs)
+            if deletedLabelIDs != []:
                 for labelID in deletedLabelIDs:
+                    # LABEL ID'S ARE STRINGS, NEED TO PARSE FOR INTEGERS
+                    # labelIDint = atoi(labelID)
                     labelToDelete = Label.objects.get(pk=labelID)
+                    logging.info(labelToDelete)
                     labelToDelete.delete()
 
             """
