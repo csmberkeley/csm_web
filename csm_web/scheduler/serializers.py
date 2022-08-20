@@ -213,7 +213,7 @@ class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = ("id", "spacetimes", "mentor", "capacity", "associated_profile_id",
-                  "num_students_enrolled", "description", "mentor", "course", "user_role", "course_title", "label_set")
+                  "num_students_enrolled", "mentor", "course", "user_role", "course_title", "label_set")
     # will label_set get all labels associated with this section, or all labels that the course has?
 
 

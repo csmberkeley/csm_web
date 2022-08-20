@@ -30,7 +30,6 @@ export interface Section {
   capacity: number;
   associatedProfileId: number;
   numStudentsEnrolled: number;
-  description: string;
   course: string;
   userRole: string;
   courseTitle: string;
