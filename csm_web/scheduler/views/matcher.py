@@ -25,7 +25,12 @@ from scheduler.serializers import (
 )
 from .utils import get_object_or_error, logger
 
-from scheduler.utils.match_solver import get_matches
+from scheduler.utils.match_solver import (
+    get_matches,
+    MentorTuple,
+    SlotTuple,
+    PreferenceTuple,
+)
 
 
 DEFAULT_CAPACITY = 5
@@ -111,7 +116,9 @@ def slots(request, pk=None):
             request_slots = request.data["slots"]
             request_times = [slot["times"] for slot in request_slots]
             # delete slots that are not in the request
-            slots = MatcherSlot.objects.filter(matcher=matcher).exclude(times__in=request_times)
+            slots = MatcherSlot.objects.filter(matcher=matcher).exclude(
+                times__in=request_times
+            )
 
             num_deleted, _ = slots.delete()
             logger.info("<Matcher> Deleted %s slots.", num_deleted)
@@ -124,14 +131,20 @@ def slots(request, pk=None):
                 max_mentors = (
                     slot_json["maxMentors"] if "maxMentors" in slot_json else 10
                 )
+                if min_mentors > max_mentors:
+                    return Response(
+                        {"error": "min mentors is greater than max mentors"},
+                        status=status.HTTP_400_BAD_REQUEST,
+                    )
 
                 # update slot if it already exists with the same times
-                slot = MatcherSlot.objects.filter(
-                    matcher=matcher, times=times
-                ).first()
+                slot = MatcherSlot.objects.filter(matcher=matcher, times=times).first()
                 if slot is None:
                     slot = MatcherSlot.objects.create(
-                        matcher=matcher, times=times, min_mentors=min_mentors, max_mentors=max_mentors
+                        matcher=matcher,
+                        times=times,
+                        min_mentors=min_mentors,
+                        max_mentors=max_mentors,
                     )
                 else:
                     slot.min_mentors = min_mentors
@@ -203,7 +216,9 @@ def preferences(request, pk=None):
         )
         for pref in request.data:
             curslot = MatcherSlot.objects.get(pk=pref["id"])
-            existing_queryset = MatcherPreference.objects.filter(slot=curslot, mentor=mentor)
+            existing_queryset = MatcherPreference.objects.filter(
+                slot=curslot, mentor=mentor
+            )
             if existing_queryset.exists():
                 # unique constraint guarantees there will only be one
                 existing = existing_queryset.get()
@@ -216,7 +231,9 @@ def preferences(request, pk=None):
                     slot=curslot, mentor=mentor, preference=pref["preference"]
                 )
                 new_pref.save()
-        logger.info(f"<Matcher:Success> Updated mentor {mentor} preferences for {course}")
+        logger.info(
+            f"<Matcher:Success> Updated mentor {mentor} preferences for {course}"
+        )
         return Response(status=status.HTTP_200_OK)
     else:
         raise PermissionDenied()
@@ -475,17 +492,27 @@ def run_matcher(course: Course):
     preferences = MatcherPreference.objects.filter(slot__matcher=course.matcher)
 
     # list of all mentor ids
-    mentor_list = preferences.values_list("mentor", flat=True)
-    # remove duplicates
-    mentor_list = list(set(mentor_list))
+    mentor_list = list(
+        map(
+            lambda id: MentorTuple(id),
+            list(set(preferences.values_list("mentor", flat=True))),
+        )
+    )
 
     # list of all slot ids
-    slot_list = list(map(lambda slot: {"id": slot.id, "min_mentors": slot.min_mentors,
-                     "max_mentors": slot.max_mentors}, slots))
+    slot_list = list(
+        map(lambda slot: SlotTuple(slot.id, slot.min_mentors, slot.max_mentors), slots)
+    )
 
     # list of preferences (mentor_id, slot_id, preference)
-    preference_list = list(map(lambda preference: {
-                           "mentor_id": preference.mentor.id, "slot_id": preference.slot.id, "preference_value": preference.preference}, preferences))
+    preference_list = list(
+        map(
+            lambda preference: PreferenceTuple(
+                preference.mentor.id, preference.slot.id, preference.preference
+            ),
+            preferences,
+        )
+    )
 
     # run the matcher
     return get_matches(mentor_list, slot_list, preference_list)
