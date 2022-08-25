@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useHistory } from "react-router-dom";
+
 import { fetchJSON, fetchWithMethod } from "../../../utils/api";
 import { Mentor, Profile } from "../../../utils/types";
 import Modal from "../../Modal";
@@ -7,7 +8,9 @@ import { SearchBar } from "../../SearchBar";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime, DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
 import { Assignment, Slot, SlotPreference, Time } from "../EnrollmentAutomationTypes";
-import { formatTime } from "../utils";
+import { formatInterval, formatTime } from "../utils";
+
+import { Tooltip } from "../../Tooltip";
 
 import InfoIcon from "../../../../static/frontend/img/info.svg";
 import Pencil from "../../../../static/frontend/img/pencil.svg";
@@ -849,33 +852,42 @@ const AssignmentDistributionModal = ({
     const color = `rgba(${MAX_COLOR}, ${opacity})`;
 
     return (
-      <div className="matcher-assignment-distribution-div" style={{ backgroundColor: color }}>
-        <span className="calendar-event-detail-time">
-          {formatTime(event.time.startTime)}&#8211;{formatTime(event.time.endTime)}
-        </span>
-        <br />
-        <span>({curCount})</span>
-      </div>
+      <Tooltip
+        className="matcher-assignment-distribution-tooltip"
+        placement="bottom"
+        source={
+          <div className="matcher-assignment-distribution-div" style={{ backgroundColor: color }}>
+            <span className="calendar-event-detail-time">
+              {formatInterval(event.time.startTime, event.time.endTime)}
+            </span>
+          </div>
+        }
+      >
+        Count: {curCount}
+      </Tooltip>
     );
   };
 
   return (
     assignmentCounts && (
-      <Modal closeModal={closeModal} className="matcher-calendar-modal">
-        <div className="matcher-calendar-modal-contents">
-          <Calendar
-            events={slots}
-            getEventDetails={getEventDetails}
-            eventCreationEnabled={false}
-            selectedEventIndices={[]}
-            setSelectedEventIndices={() => {
-              /* do nothing */
-            }}
-            disableHover={true}
-            limitScrolling={true}
-          />
-        </div>
-      </Modal>
+      <React.Fragment>
+        <Modal closeModal={closeModal} className="matcher-calendar-modal">
+          <div className="matcher-calendar-modal-contents">
+            <Calendar
+              events={slots}
+              getEventDetails={getEventDetails}
+              eventCreationEnabled={false}
+              selectedEventIndices={[]}
+              setSelectedEventIndices={() => {
+                /* do nothing */
+              }}
+              limitScrolling={true}
+              brighterLinkedTimes={false}
+              flushDetails={true}
+            />
+          </div>
+        </Modal>
+      </React.Fragment>
     )
   );
 };

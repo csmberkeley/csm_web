@@ -5,7 +5,7 @@ import LoadingSpinner from "../LoadingSpinner";
 import { Calendar } from "./calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime } from "./calendar/CalendarTypes";
 import { Slot } from "./EnrollmentAutomationTypes";
-import { MAX_PREFERENCE, formatTime, parseTime } from "./utils";
+import { MAX_PREFERENCE, formatTime, parseTime, formatInterval } from "./utils";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 
@@ -54,7 +54,8 @@ export function MentorSectionPreferences({
             times.push({
               day: time.day,
               startTime: parseTime(time.startTime),
-              endTime: parseTime(time.endTime)
+              endTime: parseTime(time.endTime),
+              isLinked: time.isLinked
             });
           }
           const parsed_slot: Slot = {
@@ -164,9 +165,7 @@ export function MentorSectionPreferences({
 
     return (
       <React.Fragment>
-        <span className="calendar-event-detail-time">
-          {formatTime(event.time.startTime)}&#8211;{formatTime(event.time.endTime)}
-        </span>
+        <span className="calendar-event-detail-time">{formatInterval(event.time.startTime, event.time.endTime)}</span>
         {detail}
       </React.Fragment>
     );
@@ -262,6 +261,7 @@ export function MentorSectionPreferences({
             getEventDetails={getEventDetails}
             eventCreationEnabled={false}
             limitScrolling={true}
+            brighterLinkedTimes={true}
           ></Calendar>
         </div>
       </div>

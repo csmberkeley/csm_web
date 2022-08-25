@@ -2,6 +2,7 @@ export interface Time {
   day: string;
   startTime: number;
   endTime: number;
+  isLinked: boolean;
 }
 
 export interface Slot {

@@ -6,8 +6,8 @@ import Modal from "../../Modal";
 import { SearchBar } from "../../SearchBar";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
-import { MentorPreference, Slot, SlotPreference } from "../EnrollmentAutomationTypes";
-import { formatTime } from "../utils";
+import { Slot, SlotPreference } from "../EnrollmentAutomationTypes";
+import { formatInterval } from "../utils";
 
 import CheckIcon from "../../../../static/frontend/img/check.svg";
 import EyeIcon from "../../../../static/frontend/img/eye.svg";
@@ -16,6 +16,7 @@ import SortUnknownIcon from "../../../../static/frontend/img/sort-unknown.svg";
 import SortUpIcon from "../../../../static/frontend/img/sort-up.svg";
 import UndoIcon from "../../../../static/frontend/img/undo.svg";
 import XIcon from "../../../../static/frontend/img/x.svg";
+import { Tooltip } from "../../Tooltip";
 
 interface ReleaseStageProps {
   profile: Profile;
@@ -488,6 +489,9 @@ interface PreferenceStatusModalProps {
   closeModal: () => void;
 }
 
+const MIN_COLOR = "136, 136, 136, 0.8";
+const MAX_COLOR = "124, 233, 162";
+
 function PreferenceStatusModal({
   slots,
   prefByMentor,
@@ -495,36 +499,39 @@ function PreferenceStatusModal({
   closeModal
 }: PreferenceStatusModalProps): React.ReactElement | null {
   const getEventDetails = (event: CalendarEventSingleTime) => {
-    let detail: React.ReactNode = "";
+    let prefColor = `rgba(${MIN_COLOR})`;
+    let preference = null;
     if (selectedMentor !== undefined) {
       const preferences = prefByMentor.get(selectedMentor.id);
       if (preferences !== undefined) {
         const pref = preferences.find(pref => pref.slot === event.id);
         const maxPref = preferences.reduce((curmax, cur) => Math.max(curmax, cur.preference), 0);
         if (pref !== undefined) {
-          let prefColor = "";
-          if (pref.preference == 0) {
-            prefColor = "matcher-pref-color-unavailable";
-          } else if (pref.preference == maxPref) {
-            prefColor = "matcher-pref-color-best";
+          preference = pref.preference;
+          if (pref.preference === 0) {
+            prefColor = `rgba(${MIN_COLOR})`;
+          } else {
+            const opacity = pref.preference / maxPref;
+            prefColor = `rgba(${MAX_COLOR}, ${opacity})`;
           }
-
-          detail = (
-            <React.Fragment>
-              <br />
-              <span className={prefColor}>({pref.preference})</span>
-            </React.Fragment>
-          );
         }
       }
     }
 
     return (
       <React.Fragment>
-        <span className="calendar-event-detail-time">
-          {formatTime(event.time.startTime)}&#8211;{formatTime(event.time.endTime)}
-        </span>
-        {detail}
+        <Tooltip
+          placement="bottom"
+          source={
+            <div className="matcher-pref-distribution-div" style={{ backgroundColor: prefColor }}>
+              <span className="calendar-event-detail-time">
+                {formatInterval(event.time.startTime, event.time.endTime)}
+              </span>
+            </div>
+          }
+        >
+          Preference: {preference ?? "N/A"}
+        </Tooltip>
       </React.Fragment>
     );
   };
@@ -548,8 +555,10 @@ function PreferenceStatusModal({
             /* do nothing */
           }}
           getEventDetails={getEventDetails}
+          flushDetails={true}
           eventCreationEnabled={false}
           limitScrolling={true}
+          brighterLinkedTimes={false}
         />
       </div>
     </Modal>

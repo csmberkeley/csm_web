@@ -148,6 +148,12 @@ Hierarchy:
 	user-select: none;
 	box-sizing: border-box;
 	padding-top: 3px;
+
+	overflow: hidden;
+}
+
+.calendar-event-detail.flush {
+	padding-top: 0;
 }
 
 .calendar-transparent-event .calendar-event-detail {
@@ -165,4 +171,8 @@ Hierarchy:
 
 .calendar-event-select .calendar-event-detail {
 	background-color: #90ee90;
+}
+
+.calendar-event-linked .calendar-event-detail {
+	filter: brightness(1.1);
 }

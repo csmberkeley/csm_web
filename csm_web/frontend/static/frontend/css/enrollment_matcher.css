@@ -886,6 +886,7 @@
 	background-color: var(--csm-neutral-darkened);
 }
 
+.matcher-pref-distribution-div,
 .matcher-assignment-distribution-div {
 	height: 100%;
 }

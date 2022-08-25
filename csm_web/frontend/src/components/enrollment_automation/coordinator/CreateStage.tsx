@@ -1,16 +1,16 @@
-import React, { useEffect, useState } from "react";
 import _ from "lodash";
+import React, { useEffect, useState } from "react";
 
-import { fetchWithMethod, fetchJSON, HTTP_METHODS } from "../../../utils/api";
+import { fetchWithMethod, HTTP_METHODS } from "../../../utils/api";
 import { Profile } from "../../../utils/types";
+import { Tooltip } from "../../Tooltip";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime, DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
 import { Slot, Time } from "../EnrollmentAutomationTypes";
-import { formatTime, parseTime, serializeTime } from "../utils";
-import { Tooltip } from "../../Tooltip";
+import { formatInterval, formatTime, parseTime, serializeTime } from "../utils";
 
-import XIcon from "../../../../static/frontend/img/x.svg";
 import InfoIcon from "../../../../static/frontend/img/info.svg";
+import XIcon from "../../../../static/frontend/img/x.svg";
 
 interface TileDetails {
   days: string[];
@@ -83,7 +83,8 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
     days: React.createRef<HTMLFormElement>(),
     startTime: React.createRef<HTMLInputElement>(),
     endTime: React.createRef<HTMLInputElement>(),
-    length: React.createRef<HTMLInputElement>()
+    length: React.createRef<HTMLInputElement>(),
+    toggle: React.createRef<HTMLInputElement>()
   };
 
   /**
@@ -108,7 +109,9 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
           newTimes.push({
             day: day,
             startTime: t,
-            endTime: t + tileDetails.length
+            endTime: t + tileDetails.length,
+            // linked only if there are multiple days and user wants to link them
+            isLinked: tileDetails.daysLinked && tileDetails.days.length > 1
           });
         }
       }
@@ -149,6 +152,10 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    * Initialize event creation
    */
   const onEventBeginCreation = (): void => {
+    if (curCreatedTimes.length > 0) {
+      // has existing times, and now we're adding to it; modify to change tiled field
+      setCurCreatedTimes(times => times.map(time => ({ ...time, isLinked: true })));
+    }
     setSelectedEvents([]);
     setSelectedEventIndices([]);
   };
@@ -196,7 +203,13 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
   const deleteTime = (index: number) => {
     const newTimes = [...curCreatedTimes];
     newTimes.splice(index, 1);
-    setCurCreatedTimes(newTimes);
+    if (newTimes.length > 1) {
+      // deleted a time, and still multiple
+      setCurCreatedTimes(newTimes);
+    } else {
+      // down to one time; update linked
+      setCurCreatedTimes(newTimes.map(time => ({ ...time, isLinked: false })));
+    }
   };
 
   /**
@@ -251,6 +264,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
       setTileDetails({
         ...tileDetails,
         days: [],
+        daysLinked: true,
         startTime: -1,
         endTime: -1
       });
@@ -289,16 +303,24 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
       if (tileDetails.daysLinked) {
         const newEvent: CalendarEvent = { times: [] };
         for (const day of tileDetails.days) {
-          newEvent.times.push({ day: day, startTime: t, endTime: t + tileDetails.length });
+          newEvent.times.push({
+            day: day,
+            startTime: t,
+            endTime: t + tileDetails.length,
+            isLinked: tileDetails.days.length > 1
+          });
         }
         newSlots.push(newEvent);
       } else {
         for (const day of tileDetails.days) {
-          newSlots.push({ times: [{ day: day, startTime: t, endTime: t + tileDetails.length }] });
+          newSlots.push({ times: [{ day: day, startTime: t, endTime: t + tileDetails.length, isLinked: false }] });
         }
       }
     }
     setSlots([...slots, ...newSlots]);
+    // stop creating tiled events
+    tileRefs.toggle.current!.checked = false;
+    toggleCreatingTiledEvents({ target: tileRefs.toggle.current! } as React.ChangeEvent<HTMLInputElement>);
   };
 
   /**
@@ -380,9 +402,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
   const getEventDetails = (event: CalendarEventSingleTime) => {
     return (
       <React.Fragment>
-        <span className="calendar-event-detail-time">
-          {formatTime(event.time.startTime)}&#8211;{formatTime(event.time.endTime)}
-        </span>
+        <span className="calendar-event-detail-time">{formatInterval(event.time.startTime, event.time.endTime)}</span>
         {/* <br />
         <span className="matcher-detail">Num. Mentors: {event.num_mentors}</span> */}
       </React.Fragment>
@@ -411,11 +431,10 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
                   <input type="checkbox" defaultChecked onChange={editTiled_linked} />
                   Link days?
                 </label>
-                <Tooltip
-                  source={<InfoIcon className="icon matcher-tooltip-info-icon" />}
-                  bodyClassName="matcher-tiling-tooltip-body"
-                >
-                  Associate the same times across selected days with a single event.
+                <Tooltip placement="right" source={<InfoIcon className="icon matcher-tooltip-info-icon" />}>
+                  <div className="matcher-tiling-tooltip-body">
+                    Associate the same times across selected days with a single event.
+                  </div>
                 </Tooltip>
               </div>
             </div>
@@ -426,6 +445,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
                 type="time"
                 ref={tileRefs.startTime}
                 defaultValue={serializeTime(tileDetails.startTime)}
+                step="900"
                 onChange={e => editTiled_number("startTime", parseTime(e.target.value))}
               />
               &#8211;
@@ -433,6 +453,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
                 type="time"
                 ref={tileRefs.endTime}
                 defaultValue={serializeTime(tileDetails.endTime)}
+                step="900"
                 onChange={e => editTiled_number("endTime", parseTime(e.target.value))}
               />
             </div>
@@ -486,6 +507,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
                     type="time"
                     key={`start_${time_idx}/${selectedEventIndices}`}
                     defaultValue={serializeTime(time.startTime)}
+                    step="900"
                     onChange={e => editTime_startTime(time_idx, e.target.value)}
                   />
                   &#8211;
@@ -493,6 +515,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
                     type="time"
                     key={`end_${time_idx}/${selectedEventIndices}`}
                     defaultValue={serializeTime(time.endTime)}
+                    step="900"
                     onChange={e => editTime_endTime(time_idx, e.target.value)}
                   />
                 </div>
@@ -568,7 +591,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
           <div className="matcher-sidebar-left-top">{topContents}</div>
           <div className="matcher-sidebar-left-bottom">
             <label className="matcher-submit-btn matcher-tiling-toggle matcher-toggle-btn">
-              <input type="checkbox" onChange={toggleCreatingTiledEvents} />
+              <input type="checkbox" onChange={toggleCreatingTiledEvents} ref={tileRefs.toggle} />
               Create tiled events
             </label>
             <button className="matcher-submit-btn" onClick={postSlots}>
@@ -586,6 +609,7 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
             eventCreationEnabled={true}
             onEventBeginCreation={onEventBeginCreation}
             onEventCreated={updateTimes}
+            brighterLinkedTimes={true}
           />
         </div>
       </div>

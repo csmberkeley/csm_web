@@ -5,8 +5,8 @@ import { Profile } from "../../../utils/types";
 import LoadingSpinner from "../../LoadingSpinner";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
-import { MentorPreference, Slot, SlotPreference } from "../EnrollmentAutomationTypes";
-import { formatTime } from "../utils";
+import { Slot } from "../EnrollmentAutomationTypes";
+import { formatInterval } from "../utils";
 
 import CheckCircle from "../../../../static/frontend/img/check_circle.svg";
 
@@ -70,9 +70,7 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
   const getEventDetails = (event: CalendarEventSingleTime) => {
     return (
       <React.Fragment>
-        <span className="calendar-event-detail-time">
-          {formatTime(event.time.startTime)}&#8211;{formatTime(event.time.endTime)}
-        </span>
+        <span className="calendar-event-detail-time">{formatInterval(event.time.startTime, event.time.endTime)}</span>
         <br />
         <span className="matcher-mentor-min-max">
           ({minMentorMap.get(event.id)}&#8211;{maxMentorMap.get(event.id)})
@@ -245,6 +243,7 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
             getEventDetails={getEventDetails}
             eventCreationEnabled={false}
             limitScrolling={true}
+            brighterLinkedTimes={false}
           />
         </div>
       </div>

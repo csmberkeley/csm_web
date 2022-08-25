@@ -1,4 +1,5 @@
-import React, { Ref, useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
+import { formatTime } from "../utils";
 import { CalendarDay, CalendarDayHeader } from "./CalendarDay";
 import { CalendarEvent, CalendarEventSingleTime, DAYS } from "./CalendarTypes";
 
@@ -8,26 +9,13 @@ const END = 18 * 60 + 0; // 6:00 PM
 const INTERVAL_LENGTH = 30;
 const SCROLL_AMT = 30;
 
-/**
- * Format time as HH:MM AM/PM
- * @param mins number of minutes past midnight
- */
-function formatMinutes(mins: number): string {
-  const hours_24 = Math.floor(mins / 60);
-  // if hours is 0, use 12 instead
-  const hours = hours_24 % 12 || 12;
-  const minutes = mins % 60;
-  const ampm = hours_24 >= 12 ? "PM" : "AM";
-  if (minutes == 0) {
-    return `${hours > 12 ? hours % 12 : hours} ${ampm}`;
-  }
-  return `${hours > 12 ? hours % 12 : hours}:${minutes < 10 ? "0" : ""}${minutes} ${ampm}`;
-}
+const WIDTH_SCALE = 0.9;
 
 interface Time {
   day: string;
   startTime: number;
   endTime: number;
+  isLinked: boolean; // whether this time is linked to another within a section
 }
 
 interface CalendarProps {
@@ -42,6 +30,11 @@ interface CalendarProps {
   setSelectedEventIndices: (indices: number[]) => void;
   disableHover: boolean;
   limitScrolling: boolean;
+  brighterLinkedTimes: boolean;
+  /**
+   * Whether the event details should be flush with container edges
+   */
+  flushDetails: boolean;
 }
 
 export function Calendar({
@@ -55,18 +48,22 @@ export function Calendar({
   selectedEventIndices,
   setSelectedEventIndices,
   disableHover,
-  limitScrolling
+  limitScrolling,
+  brighterLinkedTimes,
+  flushDetails
 }: CalendarProps): React.ReactElement {
   const [viewBounds, setViewBounds] = useState<{ start: number; end: number }>({ start: START, end: END });
 
   const [intervalHeight, setIntervalHeight] = useState<number>(0);
+  const [intervalWidth, setIntervalWidth] = useState<number>(0);
   const [eventHoverIndex, setEventHoverIndex] = useState<number>(-1);
 
   const [creatingEvent, setCreatingEvent] = useState<boolean>(false);
   const [curCreatedEvent, setCurCreatedEvent] = useState<Time>({
     day: "",
     startTime: -1,
-    endTime: -1
+    endTime: -1,
+    isLinked: false
   });
 
   const [minEventTime, maxEventTime] = useMemo(() => {
@@ -85,11 +82,22 @@ export function Calendar({
 
   useEffect(() => {
     const interval = document.getElementsByClassName("calendar-day-interval").item(0);
-    setIntervalHeight(interval!.getBoundingClientRect().height);
+    const rect = interval!.getBoundingClientRect();
+    setIntervalHeight(rect.height);
+    setIntervalWidth(rect.width * WIDTH_SCALE);
+
+    const resizeHandler = () => {
+      const rect = interval!.getBoundingClientRect();
+      setIntervalHeight(rect.height);
+      setIntervalWidth(rect.width * WIDTH_SCALE);
+    };
+
+    window.addEventListener("resize", resizeHandler);
 
     calendarBodyRef.current?.addEventListener<"wheel">("wheel", scrollView, { passive: false });
     return () => {
       calendarBodyRef.current?.removeEventListener("wheel", scrollView);
+      window.removeEventListener("resize", resizeHandler);
     };
   }, []);
 
@@ -158,6 +166,7 @@ export function Calendar({
   for (let i = 0; i < events.length; i++) {
     const event = events[i];
     const { times, ...rest } = event;
+    const isLinked = times.length > 1;
     for (const time of times) {
       if (!categorizedEvents[time.day]) {
         categorizedEvents[time.day] = [];
@@ -170,7 +179,8 @@ export function Calendar({
 
       categorizedEvents[time.day].push({
         event_idx: i,
-        event: newEvent
+        event: newEvent,
+        isLinked
       });
     }
   }
@@ -200,7 +210,7 @@ export function Calendar({
     if (!eventCreationEnabled) {
       return;
     }
-    setCurCreatedEvent({ day, startTime, endTime });
+    setCurCreatedEvent({ day, startTime, endTime, isLinked: createdTimes.length > 0 });
     setCreatingEvent(true);
     setEventHoverIndex(-1);
     setSelectedEventIndices([]);
@@ -214,7 +224,8 @@ export function Calendar({
     setCurCreatedEvent({
       day: curCreatedEvent.day,
       startTime: curCreatedEvent.startTime,
-      endTime: end_time
+      endTime: end_time,
+      isLinked: curCreatedEvent.isLinked
     });
   };
 
@@ -223,12 +234,12 @@ export function Calendar({
       return;
     }
     onEventCreated(normalizeCreatedEvent());
-    setCurCreatedEvent({ day: "", startTime: -1, endTime: -1 });
+    setCurCreatedEvent({ day: "", startTime: -1, endTime: -1, isLinked: false });
     setCreatingEvent(false);
   };
 
   const onCreateDragEndCancel = (e: MouseEvent | FocusEvent) => {
-    setCurCreatedEvent({ day: "", startTime: -1, endTime: -1 });
+    setCurCreatedEvent({ day: "", startTime: -1, endTime: -1, isLinked: false });
     setCreatingEvent(false);
   };
 
@@ -239,7 +250,8 @@ export function Calendar({
       return {
         day: curCreatedEvent.day,
         startTime: curCreatedEvent.endTime - INTERVAL_LENGTH,
-        endTime: curCreatedEvent.startTime + INTERVAL_LENGTH
+        endTime: curCreatedEvent.startTime + INTERVAL_LENGTH,
+        isLinked: curCreatedEvent.isLinked
       };
     }
   };
@@ -268,6 +280,7 @@ export function Calendar({
               curCreatedTimes={createdTimes}
               curCreatedTime={normalizeCreatedEvent()}
               intervalHeight={intervalHeight}
+              intervalWidth={intervalWidth}
               onEventHover={
                 disableHover
                   ? () => {
@@ -280,6 +293,8 @@ export function Calendar({
               onCreateDragOver={onCreateDragOver}
               onCreateDragEnd={onCreateDragEnd}
               getEventDetails={getEventDetails}
+              brighterLinkedTimes={brighterLinkedTimes}
+              flushDetails={flushDetails}
             ></CalendarDay>
           ))}
         </div>
@@ -300,7 +315,9 @@ Calendar.defaultProps = {
     /* do nothing */
   },
   disableHover: false,
-  limitScrolling: false
+  limitScrolling: false,
+  brighterLinkedTimes: true,
+  flushDetails: false
 };
 
 interface CalendarLabelsProps {
@@ -314,7 +331,7 @@ function CalendarLabels({ startTime, endTime, intervalLength }: CalendarLabelsPr
   for (let i = startTime; i < endTime; i += intervalLength) {
     labels.push(
       <div className="calendar-label" key={i}>
-        {i % 60 == 0 ? formatMinutes(i) : ""}
+        {i % 60 == 0 ? formatTime(i) : ""}
       </div>
     );
   }
