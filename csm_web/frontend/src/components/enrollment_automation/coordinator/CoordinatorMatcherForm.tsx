@@ -3,21 +3,16 @@ import { fetchJSON } from "../../../utils/api";
 import { Profile } from "../../../utils/types";
 import { parseTime } from "../utils";
 
-import { MentorPreference, SlotPreference, Slot, Time, Assignment } from "../EnrollmentAutomationTypes";
-import { CreateStage } from "./CreateStage";
-import { ReleaseStage } from "./ReleaseStage";
+import { Assignment, Slot, SlotPreference, Time } from "../EnrollmentAutomationTypes";
 import { ConfigureStage } from "./ConfigureStage";
+import { CreateStage } from "./CreateStage";
 import { EditStage } from "./EditStage";
+import { ReleaseStage } from "./ReleaseStage";
 
 interface CoordinatorMatcherFormProps {
   profile: Profile;
   switchProfileEnabled: boolean;
   switchProfile: () => void;
-}
-
-interface Response {
-  slot: number;
-  preference: number;
 }
 
 enum Stage {
@@ -67,7 +62,8 @@ export function CoordinatorMatcherForm({
             return {
               startTime: parseTime(time.startTime),
               endTime: parseTime(time.endTime),
-              day: time.day
+              day: time.day,
+              isLinked: slot.times.length > 0
             };
           });
           return {

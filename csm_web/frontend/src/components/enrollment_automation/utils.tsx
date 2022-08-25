@@ -1,3 +1,5 @@
+import React from "react";
+
 /**
  * Maximum preference for mentors
  */
@@ -8,14 +10,37 @@ export const MAX_PREFERENCE = 5;
  *
  * @param time string in format "HH:MM"
  */
-export function formatTime(time: number): string {
+export function formatTime(time: number, show_ampm = true): string {
   const hours = Math.floor(time / 60);
   const minutes = time % 60;
-  const ampm = hours >= 12 ? "PM" : "AM";
-  if (minutes == 0) {
-    return `${hours > 12 ? hours % 12 : hours} ${ampm}`;
+  let ampm;
+  if (show_ampm) {
+    ampm = hours >= 12 ? "pm" : "am";
+  } else {
+    ampm = "";
   }
-  return `${hours > 12 ? hours % 12 : hours}:${minutes} ${ampm}`;
+  if (minutes == 0) {
+    return `${hours > 12 ? hours % 12 : hours === 0 ? 12 : hours}${ampm}`;
+  }
+  return `${hours > 12 ? hours % 12 : hours === 0 ? 12 : hours}:${minutes}${ampm}`;
+}
+
+export function formatInterval(start: number, end: number) {
+  const startHours = Math.floor(start / 60);
+  const endHours = Math.floor(end / 60);
+  if ((startHours >= 12 && endHours < 12) || (startHours < 12 && endHours >= 12)) {
+    return (
+      <React.Fragment>
+        {formatTime(start)} &ndash; {formatTime(end)}
+      </React.Fragment>
+    );
+  } else {
+    return (
+      <React.Fragment>
+        {formatTime(start, false)} &ndash; {formatTime(end)}
+      </React.Fragment>
+    );
+  }
 }
 
 /**
