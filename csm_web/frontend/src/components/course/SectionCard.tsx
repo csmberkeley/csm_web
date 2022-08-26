@@ -18,6 +18,7 @@ interface SectionCardProps {
   capacity: number;
   description: string;
   userIsCoordinator: boolean;
+  courseOpen: boolean;
 }
 
 export const SectionCard = ({
@@ -27,7 +28,8 @@ export const SectionCard = ({
   numStudentsEnrolled,
   capacity,
   description,
-  userIsCoordinator
+  userIsCoordinator,
+  courseOpen
 }: SectionCardProps): React.ReactElement => {
   /**
    * Whether to show the modal (after an attempt to enroll).
@@ -48,6 +50,13 @@ export const SectionCard = ({
   const enroll = () => {
     interface FetchJSON {
       detail: string;
+    }
+
+    if (!courseOpen) {
+      setShowModal(true);
+      setEnrollmentSuccessful(false);
+      setErrorMessage("The course is not open for enrollment.");
+      return;
     }
 
     fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT)
@@ -173,7 +182,10 @@ export const SectionCard = ({
             MANAGE
           </Link>
         ) : (
-          <div className="csm-btn section-card-footer" onClick={isFull ? undefined : enroll}>
+          <div
+            className={`csm-btn section-card-footer ${courseOpen ? "" : "disabled"}`}
+            onClick={isFull ? undefined : enroll}
+          >
             ENROLL
           </div>
         )}

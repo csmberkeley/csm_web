@@ -83,7 +83,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     def get_enrollment_open(self, obj):
         user = self.context.get('request') and self.context.get('request').user
-        if user and user.priority_enrollment:
+        if user and user.priority_enrollment and user.priority_enrollment < obj.enrollment_start:
             now = timezone.now().astimezone(timezone.get_default_timezone())
             return user.priority_enrollment < now < obj.enrollment_end
         else:

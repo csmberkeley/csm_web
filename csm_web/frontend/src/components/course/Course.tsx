@@ -115,11 +115,6 @@ const Course = ({
     currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
   }
 
-  // only let coordinators see the course if enrollment is not open
-  if (!isOpen && sectionsLoaded && !userIsCoordinator) {
-    return <h3 className="page-title center-title">Enrollment is not open.</h3>;
-  }
-
   return !(name && sectionsLoaded) ? null : (
     <div id="course-section-selector">
       <div id="course-section-controls">
@@ -175,7 +170,7 @@ const Course = ({
       <div id="course-section-list">
         {currDaySections && currDaySections.length > 0 ? (
           currDaySections.map(section => (
-            <SectionCard key={section.id} userIsCoordinator={userIsCoordinator} {...section} />
+            <SectionCard key={section.id} userIsCoordinator={userIsCoordinator} courseOpen={isOpen} {...section} />
           ))
         ) : (
           <h3 id="course-section-list-empty">No sections available, please select a different day</h3>
