@@ -159,6 +159,9 @@ class CourseViewSet(*viewset_with("list")):
                     serializer = LabelSerializer(label, data=labelJSON)
                     if serializer.is_valid():
                         serializer.save()
+                    else:
+                        logging.error(serializer.errors)
+                        logging.error("throw new error")
                 else:
                     # case of adding new label
                     label = Label.objects.create(
