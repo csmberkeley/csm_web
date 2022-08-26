@@ -58,13 +58,6 @@ export const SectionCard = ({
     if (labels.length == 0) {
       return false;
     }
-    console.log(
-      labels
-        .map(label => label.showPopup)
-        .some(function (popup) {
-          return popup;
-        })
-    );
     return labels
       .map(label => label.showPopup)
       .some(function (popup) {

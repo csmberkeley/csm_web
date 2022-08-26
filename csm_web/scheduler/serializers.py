@@ -83,6 +83,7 @@ class LabelSerializer(serializers.ModelSerializer):
     class Meta:
         model = Label  # ???
         fields = ('id', 'course', 'sections', 'name', 'description', 'showPopup')
+        # extra_kwargs = {'sections': {'required': False}}
 
 
 class CourseSerializer(serializers.ModelSerializer):

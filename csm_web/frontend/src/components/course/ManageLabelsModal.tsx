@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
-import { Label } from "../../utils/types";
+import { Label, Course } from "../../utils/types";
 import Pencil from "../../../static/frontend/img/pencil.svg";
 import Trash from "../../../static/frontend/img/trash-alt.svg";
 import Exit from "../../../static/frontend/img/check_circle.svg";
@@ -32,8 +32,14 @@ export const ManageLabelsModal = ({
 
   const [newLabelKey, setNewLabelKey] = useState(-1);
 
+  const [course, setCourse] = useState<Course>();
+
   // fetch all labels upon first mount
   useEffect(() => {
+    fetchJSON(`/courses/`).then(data => {
+      const course = data.find((c: Course) => c.id === courseId);
+      setCourse(course);
+    });
     fetchJSON(`/courses/${courseId}/labels`).then(data => {
       setCourseLabels(data.sort((a: Label, b: Label) => a.id - b.id));
       setCurrCourseLabels(data.sort((a: Label, b: Label) => a.id - b.id));
@@ -57,12 +63,13 @@ export const ManageLabelsModal = ({
   };
 
   const handleNewRow = () => {
-    const course = courseLabels[0].course;
-    setCourseLabels([
-      ...courseLabels,
-      { id: newLabelKey, course: course, sections: [], name: "", description: "", showPopup: false }
-    ]);
-    setNewLabelKey(newLabelKey - 1);
+    if (course !== undefined) {
+      setCourseLabels([
+        ...courseLabels,
+        { id: newLabelKey, course: course, sections: [], name: "", description: "", showPopup: false }
+      ]);
+      setNewLabelKey(newLabelKey - 1);
+    }
   };
 
   function handleSubmit(event: React.ChangeEvent<HTMLFormElement>) {
