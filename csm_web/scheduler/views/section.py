@@ -438,7 +438,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because they are already involved in this course"
             )
             raise PermissionDenied(
-                "You are already either mentoring for this course or enrolled in a section",
+                "You are already either mentoring for this course or enrolled in a section, or the course is closed for enrollment",
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         if section.current_student_count >= section.capacity:

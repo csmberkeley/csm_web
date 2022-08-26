@@ -75,11 +75,7 @@ const CourseMenu = ({ match: { path } }: CourseMenuProps) => {
       ) : (
         <div id="course-menu">
           {Array.from(courses.entries()).map(([id, course]) => (
-            <Link
-              className={"csm-btn" + (course.enrollmentOpen ? "" : " disabled")}
-              to={course.enrollmentOpen ? `${path}/${id}` : "#"}
-              key={id}
-            >
+            <Link className="csm-btn" to={`${path}/${id}`} key={id}>
               {course.name}
             </Link>
           ))}
