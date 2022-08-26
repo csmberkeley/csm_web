@@ -33,6 +33,8 @@ interface CourseProps {
    */
   name: boolean | string;
   isOpen: boolean;
+  isPriority: boolean;
+  enrollmentTimeString: string;
 }
 
 const Course = ({
@@ -40,7 +42,9 @@ const Course = ({
     params: { id }
   },
   name,
-  isOpen
+  isOpen,
+  isPriority,
+  enrollmentTimeString
 }: CourseProps): React.ReactElement | null => {
   /**
    * Sections grouped by day of the week.
@@ -164,6 +168,13 @@ const Course = ({
             >
               Export Data
             </button>
+          </div>
+        )}
+        {!isOpen && (
+          <div id="course-enrollment-open-status">
+            {isPriority
+              ? `Priority enrollment opens ${enrollmentTimeString}.`
+              : `Enrollment opens ${enrollmentTimeString}.`}
           </div>
         )}
       </div>
