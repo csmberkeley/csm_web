@@ -130,8 +130,21 @@ const CourseMenu = ({ match: { path } }: CourseMenuProps) => {
             // only render if loaded
             const course = courses.get(Number(routeProps.match.params.id))!;
             const isOpen = course && course.enrollmentOpen;
+            const isPriority = userInfo && userInfo.priorityEnrollment;
+            const enrollmentDate = isPriority
+              ? userInfo.priorityEnrollment
+              : enrollment_times_by_course.find(({ courseName }) => courseName === course.name)?.enrollmentDate;
             // use key to rerender when manually changing URL
-            return <Course key={course.id} name={loaded && course.name} isOpen={isOpen} {...routeProps} />;
+            return (
+              <Course
+                key={course.id}
+                name={loaded && course.name}
+                isOpen={isOpen}
+                isPriority={isPriority}
+                enrollmentTimeString={enrollmentDate?.toLocaleDateString("en-US", date_locale_string_options) ?? ""}
+                {...routeProps}
+              />
+            );
           }
         }}
       />
