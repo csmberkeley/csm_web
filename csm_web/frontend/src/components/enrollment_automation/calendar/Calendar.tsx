@@ -66,16 +66,30 @@ export function Calendar({
     isLinked: false
   });
 
-  const [minEventTime, maxEventTime] = useMemo(() => {
-    return events.reduce(
-      ([min, max], event) => {
+  const [eventExtrema, setEventExtrema] = useState<{ min: number; max: number }>({
+    min: Number.MIN_VALUE,
+    max: Number.MAX_VALUE
+  });
+
+  useEffect(() => {
+    const newExtrema = events.reduce(
+      ({ min, max }, event) => {
         const start = Math.min(...event.times.map(t => t.startTime));
         const end = Math.max(...event.times.map(t => t.endTime));
-        return [Math.min(min, start), Math.max(max, end)];
+        return { min: Math.min(min, start), max: Math.max(max, end) };
       },
-      [Number.MAX_VALUE, Number.MIN_VALUE]
+      { min: Number.MAX_VALUE, max: Number.MIN_VALUE }
     );
+    setEventExtrema(newExtrema);
   }, [events]);
+
+  // re-register scroll listener whenever the extrema states change; otherwise, scrollView uses stale values
+  useEffect(() => {
+    calendarBodyRef.current?.addEventListener<"wheel">("wheel", scrollView, { passive: false });
+    return () => {
+      calendarBodyRef.current?.removeEventListener("wheel", scrollView);
+    };
+  }, [eventExtrema]);
 
   // reference for calendar body mousewheel event listener
   const calendarBodyRef = useRef<HTMLDivElement>(null);
@@ -93,10 +107,7 @@ export function Calendar({
     };
 
     window.addEventListener("resize", resizeHandler);
-
-    calendarBodyRef.current?.addEventListener<"wheel">("wheel", scrollView, { passive: false });
     return () => {
-      calendarBodyRef.current?.removeEventListener("wheel", scrollView);
       window.removeEventListener("resize", resizeHandler);
     };
   }, []);
@@ -124,7 +135,7 @@ export function Calendar({
   }, [eventCreationEnabled]);
 
   const scrollView = (e: WheelEvent) => {
-    if (limitScrolling && minEventTime > viewBounds.start && maxEventTime < viewBounds.end) {
+    if (limitScrolling && eventExtrema.min >= viewBounds.start + 60 && eventExtrema.max <= viewBounds.end - 60) {
       // everything is in the viewport; don't scroll
       return;
     }

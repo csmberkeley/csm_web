@@ -521,7 +521,7 @@ function PreferenceStatusModal({
     return (
       <React.Fragment>
         <Tooltip
-          placement="bottom"
+          placement="top"
           source={
             <div className="matcher-pref-distribution-div" style={{ backgroundColor: prefColor }}>
               <span className="calendar-event-detail-time">
