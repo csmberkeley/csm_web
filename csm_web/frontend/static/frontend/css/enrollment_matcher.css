@@ -258,6 +258,13 @@
 	text-align: center;
 }
 
+/* Mentor Preferences*/
+
+.matcher-sidebar-pref-help {
+	margin: 20px 0;
+	font-style: normal;
+}
+
 /* CreateStage.tsx */
 
 .matcher-sidebar-create,
