@@ -133,7 +133,9 @@ def slots(request, pk=None):
                 )
                 if min_mentors > max_mentors:
                     return Response(
-                        {"error": "min mentors is greater than max mentors"},
+                        {
+                            "error": "min mentors is greater than max mentors for some slot"
+                        },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
 
@@ -370,6 +372,13 @@ def configure(request, pk=None):
                         curslot.min_mentors = slot["min_mentors"]
                     if "max_mentors" in slot:
                         curslot.max_mentors = slot["max_mentors"]
+                    if curslot.min_mentors > curslot.max_mentors:
+                        return Response(
+                            {
+                                "error": "min mentors is greater than max mentors for some slot"
+                            },
+                            status=status.HTTP_400_BAD_REQUEST,
+                        )
                     curslot.save()
 
         if "open" in request.data:
@@ -378,7 +387,10 @@ def configure(request, pk=None):
 
         if "run" in request.data:
             # run the matcher
-            assignment, unmatched = run_matcher(course)
+            try:
+                assignment, unmatched = run_matcher(course)
+            except Exception as e:
+                return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             # assignment is of the form {"mentor", "capacity"};
             # add a "section" key with default values of capacity and description
             updated_assignment = [
@@ -589,7 +601,6 @@ def create(request, pk=None):
             # create spacetimes
             slot = MatcherSlot.objects.get(pk=cur["slot"])
             for time in slot.times:
-                print(time)
                 start = datetime.datetime.strptime(time["start_time"], TIME_FORMAT)
                 end = datetime.datetime.strptime(time["end_time"], TIME_FORMAT)
                 duration = end - start

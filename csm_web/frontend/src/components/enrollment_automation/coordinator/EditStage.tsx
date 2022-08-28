@@ -12,6 +12,7 @@ import { formatInterval, formatTime } from "../utils";
 
 import { Tooltip } from "../../Tooltip";
 
+import ErrorIcon from "../../../../static/frontend/img/error_outline.svg";
 import InfoIcon from "../../../../static/frontend/img/info.svg";
 import Pencil from "../../../../static/frontend/img/pencil.svg";
 import SortDownIcon from "../../../../static/frontend/img/sort-down.svg";
@@ -149,6 +150,8 @@ export const EditStage = ({
    * Whether the create section confirmation modal is open.
    */
   const [createConfirmModalOpen, setCreateConfirmModalOpen] = useState<boolean>(false);
+
+  const [errorMessage, setErrorMessage] = useState<string>("");
 
   /**
    * History for redirection after section creation.
@@ -441,7 +444,8 @@ export const EditStage = ({
       } else {
         const json = await response.json();
         console.error(json);
-        alert(json.error ?? "Error creating sections");
+        setErrorMessage(json.error ?? "Error creating sections");
+        setCreateConfirmModalOpen(false);
       }
     });
   };
@@ -535,11 +539,20 @@ export const EditStage = ({
           </button>
         </div>
         <div className="matcher-assignment-footer-help">
-          {selectedMentors.size > 1 && (
+          {errorMessage ? (
             <React.Fragment>
-              <InfoIcon className="icon matcher-assignment-footer-help-icon" />
-              <span className="matcher-assignment-footer-help-text">Modify any input to bulk edit selected rows.</span>
+              <ErrorIcon className="icon matcher-assignment-footer-error-icon" />
+              <span className="matcher-assignment-footer-error-text">{errorMessage}</span>
             </React.Fragment>
+          ) : (
+            selectedMentors.size > 1 && (
+              <React.Fragment>
+                <InfoIcon className="icon matcher-assignment-footer-help-icon" />
+                <span className="matcher-assignment-footer-help-text">
+                  Modify any input to bulk edit selected rows.
+                </span>
+              </React.Fragment>
+            )
           )}
         </div>
         <div className="matcher-assignment-button-div">

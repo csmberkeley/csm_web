@@ -677,6 +677,25 @@
 	font-size: 0.95rem;
 }
 
+.matcher-configure-error {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+}
+
+.matcher-configure-error-text {
+	color: var(--csm-danger);
+	font-size: 0.9rem;
+	font-style: italic;
+}
+
+.matcher-configure-error-icon {
+	color: var(--csm-danger);
+	width: 1.25em;
+	height: 1.25em;
+}
+
 /* EditStage.tsx */
 
 .matcher-assignment-above-head {
@@ -856,15 +875,22 @@
 	justify-content: center;
 }
 
-.matcher-assignment-footer-help-icon {
+.matcher-assignment-footer-help-icon,
+.matcher-assignment-footer-error-icon {
 	width: 1.25em;
 	height: 1.25em;
 	margin-right: 2px;
 }
 
-.matcher-assignment-footer-help-text {
+.matcher-assignment-footer-help-text,
+.matcher-assignment-footer-error-text {
 	font-size: 0.9rem;
 	font-style: italic;
+}
+
+.matcher-assignment-footer-error-icon,
+.matcher-assignment-footer-error-text {
+	color: var(--csm-danger);
 }
 
 .matcher-assignment-button-div {
