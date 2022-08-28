@@ -213,7 +213,13 @@ export function MentorSectionPreferences({
               />
             </label>
           </div>
-          <div className="matcher-sidebar-create-footer">Shift-click to select more slots.</div>
+          <div className="matcher-sidebar-create-footer">
+            <div className="matcher-sidebar-pref-help">
+              Rate your preferences from 0 to {MAX_PREFERENCE}.
+              <br />0 means unavailable, {MAX_PREFERENCE} means most preferred.
+            </div>
+            <div>Shift-click to select more slots.</div>
+          </div>
         </div>
       );
     }
