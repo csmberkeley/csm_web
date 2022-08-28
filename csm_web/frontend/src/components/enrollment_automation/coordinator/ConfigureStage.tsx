@@ -9,6 +9,7 @@ import { Slot } from "../EnrollmentAutomationTypes";
 import { formatInterval } from "../utils";
 
 import CheckCircle from "../../../../static/frontend/img/check_circle.svg";
+import ErrorCircle from "../../../../static/frontend/img/error_outline.svg";
 
 enum Status {
   NONE,
@@ -30,6 +31,8 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
   // slot id -> max mentors
   const [maxMentorMap, setMaxMentorMap] = useState<Map<number, number>>(new Map());
   const [submitStatus, setSubmitStatus] = useState<Status>();
+  const [matcherError, setMatcherError] = useState<string>("");
+  const [configError, setConfigError] = useState<string>("");
 
   const selectAllRef = useRef<HTMLInputElement>(null);
 
@@ -50,6 +53,7 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
 
   const setSelectedEventIdxWrapper = (indices: number[]) => {
     setSelectedEventIndices(indices);
+    setConfigError("");
     if (selectAllRef.current) {
       if (indices.length === slots.length) {
         // selected all
@@ -116,8 +120,14 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
   };
 
   const runMatcher = () => {
-    fetchWithMethod(`/matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { run: true }).then(() => {
-      refreshStage();
+    fetchWithMethod(`/matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { run: true }).then(async response => {
+      if (response.ok) {
+        setMatcherError("");
+        refreshStage();
+      } else {
+        const json = await response.json();
+        setMatcherError(json.error ?? "An error has occurred when running the matcher.");
+      }
     });
   };
 
@@ -137,8 +147,9 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
     }));
     setSubmitStatus(Status.LOADING);
     fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { slots: formatted })
-      .then(response => {
+      .then(async response => {
         if (response.ok) {
+          setConfigError("");
           updateMentorMaps();
           setSubmitStatus(Status.SUCCESS);
           // clear after 1.5 seconds
@@ -146,7 +157,9 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
             setSubmitStatus(Status.NONE);
           }, 1500);
         } else {
+          const json = await response.json();
           setSubmitStatus(Status.ERROR);
+          setConfigError(json.error ?? "An error has occurred when saving configurations.");
         }
       })
       .catch(() => {
@@ -212,6 +225,12 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
             />
           </div>
         </div>
+        {configError && (
+          <div className="matcher-configure-error">
+            <ErrorCircle className="icon matcher-configure-error-icon" />
+            <span className="matcher-configure-error-text">{configError}</span>
+          </div>
+        )}
         <div className="matcher-configure-sidebar-footer">Shift-click to select more slots.</div>
         <div className="matcher-configure-sidebar-buttons">
           <button className="matcher-submit-btn" onClick={saveConfig}>
@@ -251,6 +270,12 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
         <button className="matcher-secondary-btn" onClick={reopenForm}>
           Reopen Form
         </button>
+        {matcherError && (
+          <div className="matcher-configure-error">
+            <ErrorCircle className="icon matcher-configure-error-icon" />
+            <span className="matcher-configure-error-text">{matcherError}</span>
+          </div>
+        )}
         <button className="matcher-submit-btn" onClick={runMatcher}>
           Run Matcher
         </button>
