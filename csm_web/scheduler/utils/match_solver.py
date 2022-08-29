@@ -1,5 +1,4 @@
 import networkx as nx
-from pprint import pprint
 from collections import namedtuple
 import itertools
 
@@ -88,7 +87,6 @@ def get_matches(mentors, slots, preferences):
     flow_cost, flow_dict = nx.network_simplex(G)
     mentors_set = set(itertools.chain(*mentors))
     assignments = {}
-    pprint(flow_dict)
     for u in flow_dict:
         for v in flow_dict[u]:
             if (

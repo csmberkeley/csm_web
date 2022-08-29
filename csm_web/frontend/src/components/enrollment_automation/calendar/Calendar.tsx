@@ -101,6 +101,7 @@ export function Calendar({
     setIntervalWidth(rect.width * WIDTH_SCALE);
 
     const resizeHandler = () => {
+      const interval = document.getElementsByClassName("calendar-day-interval").item(0);
       const rect = interval!.getBoundingClientRect();
       setIntervalHeight(rect.height);
       setIntervalWidth(rect.width * WIDTH_SCALE);
