@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from "react";
 import { fetchJSON } from "../../utils/api";
-import { useCourses, useProfiles } from "../../utils/query";
+import { useCourses, useProfiles } from "../../utils/queries/base";
 import { getRoles, Roles } from "../../utils/user";
 import LoadingSpinner from "../LoadingSpinner";
 import ResourceTable from "./ResourceTable";
@@ -10,27 +10,22 @@ export const Resources = (): React.ReactElement => {
   const [selectedCourseID, setSelectedCourseID] = useState<number>(1);
   const [cache, setCache] = useState<Map<number, any>>(new Map());
 
-  const { data: profiles, isLoading: profilesLoading } = useProfiles();
-  const { data: courses, isLoading: coursesLoading } = useCourses();
+  const { data: profiles, isSuccess: profilesLoaded } = useProfiles();
+  const { data: courses, isSuccess: coursesLoaded } = useCourses();
 
   /**
    * Organize profiles into roles upon load.
    */
   const roles = useMemo<Roles>(() => {
-    if (profiles && !profilesLoading) {
+    if (profilesLoaded) {
       return getRoles(profiles);
     }
     // not done loading yet
     return undefined as never;
   }, [profiles]);
 
-  /**
-   * Whether any query is currently loading.
-   */
-  const loading = profilesLoading || coursesLoading || roles === null;
-
-  // loading spinner
-  if (loading) {
+  // display loading spinner if anything is loading
+  if (!profilesLoaded || !coursesLoaded || roles === undefined) {
     return (
       <div className="spinner-div">
         <LoadingSpinner />
@@ -79,7 +74,7 @@ export const Resources = (): React.ReactElement => {
     <div className="outer">
       <div className="tabs">
         <div className="tab-list">
-          {courses!.map(course => (
+          {courses.map(course => (
             <button
               onClick={() => handleTabClick(course.id)}
               key={course.id}

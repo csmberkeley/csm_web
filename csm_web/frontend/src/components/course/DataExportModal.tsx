@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { normalizeEndpoint } from "../../utils/api";
-import { useCourses } from "../../utils/query";
+import { useCourses } from "../../utils/queries/base";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 
@@ -12,7 +12,7 @@ interface DataExportModalProps {
  * Modal that coords use to export a csv of student emails in selected courses.
  */
 export const DataExportModal = ({ closeModal }: DataExportModalProps): React.ReactElement => {
-  const { data: courses, isLoading: coursesLoading } = useCourses();
+  const { data: courses, isSuccess: coursesLoaded } = useCourses();
 
   const [courseChecks, setCourseChecks] = useState<Map<number, boolean>>(new Map());
 
@@ -20,7 +20,7 @@ export const DataExportModal = ({ closeModal }: DataExportModalProps): React.Rea
    * Map of course id to course name.
    */
   const courseMap = useMemo(() => {
-    if (courses && !coursesLoading) {
+    if (coursesLoaded) {
       const coursesById = new Map<number, string>();
       for (const course of courses) {
         coursesById.set(course.id, course.name);
@@ -35,7 +35,7 @@ export const DataExportModal = ({ closeModal }: DataExportModalProps): React.Rea
    * Initialize map of course id to boolean (whether the course is checked)
    */
   useEffect(() => {
-    if (courses && !coursesLoading) {
+    if (coursesLoaded) {
       const courseCheckbyId = new Map<number, boolean>();
       for (const course of courses) {
         courseCheckbyId.set(course.id, false);
@@ -98,7 +98,7 @@ export const DataExportModal = ({ closeModal }: DataExportModalProps): React.Rea
       <div className="data-export-modal">
         <div className="data-export-modal-header">Download csv of student emails in selected courses</div>
         <div className="data-export-modal-selection">
-          {coursesLoading ? <LoadingSpinner id="course-menu-loading-spinner" /> : renderCheckGrid()}
+          {coursesLoaded ? renderCheckGrid() : <LoadingSpinner id="course-menu-loading-spinner" />}
         </div>
         <div className="data-export-modal-download">
           <button className="csm-btn export-data-btn" onClick={getStudentEmails}>
