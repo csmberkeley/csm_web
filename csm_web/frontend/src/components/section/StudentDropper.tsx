@@ -1,6 +1,5 @@
 import React, { useState } from "react";
-import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
-import { useStudentDropMutation } from "../../utils/query";
+import { useStudentDropMutation } from "../../utils/queries/section";
 import Modal from "../Modal";
 
 interface StudentDropperProps {

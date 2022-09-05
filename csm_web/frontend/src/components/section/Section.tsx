@@ -3,8 +3,9 @@ import { NavLink, useParams } from "react-router-dom";
 import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";
 import { Override, Spacetime } from "../../utils/types";
-import { useSection } from "../../utils/query";
-import { useQueryClient } from "react-query";
+import { useSection } from "../../utils/queries/section";
+import { useQueryClient } from "@tanstack/react-query";
+import LoadingSpinner from "../LoadingSpinner";
 
 export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
@@ -12,25 +13,24 @@ export default function Section(): React.ReactElement | null {
   const { id } = useParams();
   const queryClient = useQueryClient();
 
-  const { data: section, isLoading: sectionLoading } = useSection(Number(id));
+  const { data: section, isSuccess: sectionLoaded } = useSection(Number(id));
 
   /**
    * TODO: completely remove this function after migrating all requests to react-query
    */
   const reloadSection = () => {
     console.log("reloading section");
-    queryClient.invalidateQueries(["sections", Number(id)], { refetchInactive: true });
+    queryClient.invalidateQueries(["sections", Number(id)], { refetchType: "all" });
   };
 
-  if (sectionLoading) {
-    return null;
+  if (!sectionLoaded) {
+    return <LoadingSpinner className="spinner-centered" />;
   }
-  switch (
-    section!.userRole // section can't be null here because loaded would be false
-  ) {
+
+  switch (section.userRole) {
     case ROLES.COORDINATOR:
     case ROLES.MENTOR:
-      return <MentorSection reloadSection={reloadSection} id={Number(id)} {...section} />;
+      return <MentorSection reloadSection={reloadSection} {...section} />;
     case ROLES.STUDENT:
       return <StudentSection {...section} />;
   }

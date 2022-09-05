@@ -10,7 +10,7 @@ import StudentDropper from "./StudentDropper";
 import XIcon from "../../../static/frontend/img/x.svg";
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
 import MetaEditModal from "./MetaEditModal";
-import { useSectionStudents } from "../../utils/query";
+import { useSectionStudents } from "../../utils/queries/section";
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 
 enum ModalStates {
@@ -21,8 +21,6 @@ enum ModalStates {
 }
 
 interface MentorSectionInfoProps {
-  students: Student[];
-  loaded: boolean;
   spacetimes: Spacetime[];
   reloadSection: () => void;
   isCoordinator: boolean;
@@ -41,7 +39,7 @@ export default function MentorSectionInfo({
   id: sectionId,
   description
 }: MentorSectionInfoProps) {
-  const { data: students, isLoading: studentsLoading } = useSectionStudents(sectionId);
+  const { data: students, isSuccess: studentsLoaded } = useSectionStudents(sectionId);
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
   const [userEmails, setUserEmails] = useState<string[]>([]);
@@ -67,7 +65,8 @@ export default function MentorSectionInfo({
       } Section`}</h3>
       <div className="section-info-cards-container">
         <InfoCard title="Students">
-          {!studentsLoading && (
+          {studentsLoaded ? (
+            // done loading
             <React.Fragment>
               <table id="students-table">
                 <thead>
@@ -76,7 +75,7 @@ export default function MentorSectionInfo({
                   </tr>
                 </thead>
                 <tbody>
-                  {(students!.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students!).map(
+                  {(students.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students).map(
                     ({ name, email, id: studentId }: Student) => (
                       <tr key={studentId}>
                         <td>
@@ -105,8 +104,10 @@ export default function MentorSectionInfo({
                 <CoordinatorAddStudentModal closeModal={closeAddModal} userEmails={userEmails} sectionId={sectionId} />
               )}
             </React.Fragment>
+          ) : (
+            // not done loading
+            <LoadingSpinner />
           )}
-          {studentsLoading && <LoadingSpinner />}
         </InfoCard>
         <div className="section-info-cards-right">
           {spacetimes.map(({ override, ...spacetime }, index) => (
