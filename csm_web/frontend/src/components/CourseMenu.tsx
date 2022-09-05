@@ -1,19 +1,19 @@
 import React, { useMemo } from "react";
 import { Link, Route, Routes } from "react-router-dom";
-import { useCourses, useUserInfo } from "../utils/query";
+import { useCourses, useUserInfo } from "../utils/queries/base";
 import { Course as CourseType, UserInfo } from "../utils/types";
 import Course from "./course/Course";
 import LoadingSpinner from "./LoadingSpinner";
 
 const CourseMenu = () => {
-  const { data: jsonCourses, isLoading: coursesLoading } = useCourses();
-  const { data: jsonUserInfo, isLoading: userInfoLoading } = useUserInfo();
+  const { data: jsonCourses, isSuccess: coursesLoaded } = useCourses();
+  const { data: jsonUserInfo, isSuccess: userInfoLoaded } = useUserInfo();
 
   /**
    * Transform JSON courses into a map of course IDs to course objects.
    */
   const courses = useMemo<Map<number, CourseType>>(() => {
-    if (jsonCourses && !coursesLoading) {
+    if (coursesLoaded) {
       // We use a Map here instead of an object because we want the entries() iterator to reflect the order of insertion,
       // which in turn reflects the sorting order returned by the backend
       const coursesById = new Map<number, CourseType>();
@@ -30,7 +30,7 @@ const CourseMenu = () => {
    * Transform JSON user info into a user info object.
    */
   const userInfo = useMemo<UserInfo>(() => {
-    if (jsonUserInfo && !userInfoLoading) {
+    if (userInfoLoaded) {
       let priorityEnrollment = undefined;
       if (jsonUserInfo.priorityEnrollment) {
         priorityEnrollment = new Date(Date.parse(jsonUserInfo.priorityEnrollment));
@@ -68,15 +68,15 @@ const CourseMenu = () => {
       <Route
         path=":courseId/*"
         element={
-          coursesLoading ? (
-            // loading courses; don't render course component yet
-            <LoadingSpinner className="spinner-centered" />
-          ) : (
+          coursesLoaded ? (
             <Course
               courses={courses}
               priorityEnrollment={userInfo.priorityEnrollment}
               enrollmentTimes={enrollment_times_by_course}
             />
+          ) : (
+            // loading courses; don't render course component yet
+            <LoadingSpinner className="spinner-centered" />
           )
         }
       />
@@ -84,12 +84,12 @@ const CourseMenu = () => {
         index
         element={
           <React.Fragment>
-            <EnrollmentMenu courses={courses} coursesLoading={coursesLoading} />
+            <EnrollmentMenu courses={courses} coursesLoaded={coursesLoaded} />
             <br />
             <EnrollmentTimes
-              coursesLoading={coursesLoading}
+              coursesLoaded={coursesLoaded}
               userInfo={userInfo}
-              userInfoLoading={userInfoLoading}
+              userInfoLoaded={userInfoLoaded}
               enrollmentTimes={enrollment_times_by_course}
             />
           </React.Fragment>
@@ -102,7 +102,7 @@ export default CourseMenu;
 
 interface EnrollmentMenuProps {
   courses: Map<number, CourseType>;
-  coursesLoading: boolean;
+  coursesLoaded: boolean;
 }
 
 /**
@@ -110,13 +110,11 @@ interface EnrollmentMenuProps {
  *
  * If courses have not been loaded, this component will display a loading spinner.
  */
-const EnrollmentMenu = ({ courses, coursesLoading }: EnrollmentMenuProps) => {
+const EnrollmentMenu = ({ courses, coursesLoaded }: EnrollmentMenuProps) => {
   return (
     <React.Fragment>
       <h3 className="page-title center-title">Which course would you like to enroll in?</h3>
-      {coursesLoading ? (
-        <LoadingSpinner id="course-menu-loading-spinner" />
-      ) : (
+      {coursesLoaded ? (
         <div id="course-menu">
           {Array.from(courses.entries()).map(([id, course]) => (
             <Link className="csm-btn" to={`${location.pathname}/${id}`} key={id}>
@@ -124,15 +122,17 @@ const EnrollmentMenu = ({ courses, coursesLoading }: EnrollmentMenuProps) => {
             </Link>
           ))}
         </div>
+      ) : (
+        <LoadingSpinner id="course-menu-loading-spinner" />
       )}
     </React.Fragment>
   );
 };
 
 interface EnrollmentTimesProps {
-  coursesLoading: boolean;
+  coursesLoaded: boolean;
   userInfo: UserInfo;
-  userInfoLoading: boolean;
+  userInfoLoaded: boolean;
   enrollmentTimes: Array<{ courseName: string; enrollmentDate: Date }>;
 }
 
@@ -145,11 +145,11 @@ interface EnrollmentTimesProps {
  */
 const EnrollmentTimes = ({
   enrollmentTimes,
-  coursesLoading,
+  coursesLoaded,
   userInfo,
-  userInfoLoading
+  userInfoLoaded
 }: EnrollmentTimesProps): React.ReactElement | null => {
-  if (coursesLoading) {
+  if (!coursesLoaded) {
     // if courses are still being loaded, we don't know if we want to render anything yet
     return null;
   }
@@ -174,10 +174,7 @@ const EnrollmentTimes = ({
   return (
     <React.Fragment>
       <h3 className="page-title center-title">Enrollment Times:</h3>
-      {userInfoLoading ? (
-        // userInfo is taking a while to load
-        <LoadingSpinner className="spinner-centered" />
-      ) : (
+      {userInfoLoaded ? (
         // done loading user info
         <div className="enrollment-container">
           {userInfo.priorityEnrollment && (
@@ -199,6 +196,9 @@ const EnrollmentTimes = ({
             </div>
           ))}
         </div>
+      ) : (
+        // userInfo is taking a while to load
+        <LoadingSpinner className="spinner-centered" />
       )}
     </React.Fragment>
   );

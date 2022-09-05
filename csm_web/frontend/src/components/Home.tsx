@@ -1,19 +1,16 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import { groupBy } from "lodash";
-import { useProfiles } from "../utils/query";
+import { useProfiles } from "../utils/queries/base";
 import { ROLES } from "./section/Section";
 import { Profile } from "../utils/types";
 import LoadingSpinner from "./LoadingSpinner";
 
 const Home = () => {
-  const { data: profiles, isLoading: profilesLoading } = useProfiles();
+  const { data: profiles, isSuccess: profilesLoaded } = useProfiles();
 
   let content = null;
-  if (profilesLoading) {
-    // fetching profiles
-    content = <LoadingSpinner />;
-  } else {
+  if (profilesLoaded) {
     // loaded, no error
     content = (
       <div className="course-cards-container">
@@ -24,6 +21,9 @@ const Home = () => {
         )}
       </div>
     );
+  } else {
+    // fetching profiles
+    content = <LoadingSpinner />;
   }
 
   return (

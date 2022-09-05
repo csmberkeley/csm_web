@@ -6,7 +6,7 @@ import { groupBy } from "lodash";
 import MentorSectionAttendance from "./MentorSectionAttendance";
 import MentorSectionRoster from "./MentorSectionRoster";
 import MentorSectionInfo from "./MentorSectionInfo";
-import { useSectionAttendances, useSectionStudents } from "../../utils/query";
+import { useSectionAttendances, useSectionStudents } from "../../utils/queries/section";
 
 interface MentorSectionProps {
   id: number;
@@ -35,12 +35,11 @@ export default function MentorSection({
   userRole,
   mentor
 }: MentorSectionProps) {
-  const { data: students, isLoading: studentsLoading } = useSectionStudents(id);
-  const { data: jsonAttendances, isLoading: attendancesLoading } = useSectionAttendances(id);
+  const { data: jsonAttendances, isSuccess: jsonAttendancesLoaded } = useSectionAttendances(id);
   const [attendances, setAttendances] = useState<GroupedAttendances>(undefined as never);
 
   useEffect(() => {
-    if (jsonAttendances && !attendancesLoading) {
+    if (jsonAttendancesLoaded) {
       const groupedAttendances = groupBy(
         jsonAttendances.flatMap(({ attendances }: RawAttendance) =>
           attendances
@@ -71,7 +70,7 @@ export default function MentorSection({
     setAttendances(updatedAttendances);
   };
 
-  const loaded = !studentsLoading && !attendancesLoading && !!attendances;
+  const attendancesLoaded = jsonAttendancesLoaded && !!attendances;
 
   return (
     <SectionDetail
@@ -88,7 +87,11 @@ export default function MentorSection({
         <Route
           path="attendance"
           element={
-            <MentorSectionAttendance attendances={attendances} loaded={loaded} updateAttendance={updateAttendance} />
+            <MentorSectionAttendance
+              attendances={attendances}
+              loaded={attendancesLoaded}
+              updateAttendance={updateAttendance}
+            />
           }
         />
         <Route path="roster" element={<MentorSectionRoster id={id} />} />
@@ -99,8 +102,6 @@ export default function MentorSection({
               isCoordinator={userRole === ROLES.COORDINATOR}
               mentor={mentor}
               reloadSection={reloadSection}
-              students={students!}
-              loaded={loaded}
               spacetimes={spacetimes}
               capacity={capacity}
               description={description}

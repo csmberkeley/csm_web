@@ -3,25 +3,27 @@ import LoadingSpinner from "../LoadingSpinner";
 
 import CopyIcon from "../../../static/frontend/img/copy.svg";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
-import { useSectionStudents } from "../../utils/query";
+import { useSectionStudents } from "../../utils/queries/section";
 
 interface MentorSectionRosterProps {
   id: number;
 }
 
 export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
-  const { data: students, isLoading: studentsLoading } = useSectionStudents(id);
+  const { data: students, isSuccess: studentsLoaded } = useSectionStudents(id);
   const [emailsCopied, setEmailsCopied] = useState(false);
   const handleCopyEmails = () => {
-    navigator.clipboard.writeText(students!.map(({ email }) => email).join("\n")).then(() => {
-      setEmailsCopied(true);
-      setTimeout(() => setEmailsCopied(false), 1500);
-    });
+    if (studentsLoaded) {
+      navigator.clipboard.writeText(students.map(({ email }) => email).join("\n")).then(() => {
+        setEmailsCopied(true);
+        setTimeout(() => setEmailsCopied(false), 1500);
+      });
+    }
   };
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">Roster</h3>
-      {!studentsLoading && (
+      {studentsLoaded ? (
         <table className="standalone-table">
           <thead>
             <tr>
@@ -34,7 +36,7 @@ export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
             </tr>
           </thead>
           <tbody>
-            {students!.map(({ name, email, id }) => (
+            {students.map(({ name, email, id }) => (
               <tr key={id}>
                 <td>{name}</td>
                 <td>{email}</td>
@@ -42,8 +44,9 @@ export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
             ))}
           </tbody>
         </table>
+      ) : (
+        <LoadingSpinner />
       )}
-      {studentsLoading && <LoadingSpinner />}
     </React.Fragment>
   );
 }
