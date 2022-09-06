@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { fetchJSON } from "../../utils/api";
-import { useCourses, useProfiles } from "../../utils/queries/base";
+import { useProfiles } from "../../utils/queries/base";
+import { useCourses } from "../../utils/queries/course";
 import { getRoles, Roles } from "../../utils/user";
 import LoadingSpinner from "../LoadingSpinner";
 import ResourceTable from "./ResourceTable";

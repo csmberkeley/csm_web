@@ -13,10 +13,13 @@ export default function StudentDropper({ id, sectionId, name }: StudentDropperPr
   const [drop, setDrop] = useState(false);
   const [ban, setBan] = useState(false);
 
-  const studentDropMutate = useStudentDropMutation(id, sectionId);
+  /**
+   * Mutation to drop a student from the section.
+   */
+  const studentDropMutation = useStudentDropMutation(id, sectionId);
 
   function handleClickDrop() {
-    studentDropMutate.mutate({ banned: ban });
+    studentDropMutation.mutate({ banned: ban });
     setShowDropPrompt(false);
   }
 

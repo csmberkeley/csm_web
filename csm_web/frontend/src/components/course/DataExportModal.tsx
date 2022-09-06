@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { normalizeEndpoint } from "../../utils/api";
-import { useCourses } from "../../utils/queries/base";
+import { useCourses } from "../../utils/queries/course";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 

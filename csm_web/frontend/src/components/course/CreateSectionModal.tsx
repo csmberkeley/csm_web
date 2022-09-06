@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
-import Modal from "../Modal";
+import React, { useState } from "react";
+import { useUserEmails } from "../../utils/queries/base";
+import { useSectionCreateMutation } from "../../utils/queries/section";
 import { Spacetime } from "../../utils/types";
+import Modal from "../Modal";
 import { DAYS_OF_WEEK } from "../section/utils";
 import TimeInput from "../TimeInput";
 
@@ -22,7 +23,12 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
   /**
    * List of all user emails (for assigning a mentor).
    */
-  const [userEmails, setUserEmails] = useState<string[]>([]);
+  const { data: userEmails, isSuccess: userEmailsLoaded } = useUserEmails();
+  /**
+   * Mutation to create a new section.
+   */
+  const createSectionMutation = useSectionCreateMutation();
+
   /**
    * Selected mentor email for the new section.
    */
@@ -39,11 +45,6 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
    * Capacity for the new section.
    */
   const [capacity, setCapacity] = useState<string>("");
-
-  // fetch all user emails upon first mount
-  useEffect(() => {
-    fetchJSON("/users/").then((userEmails: string[]) => setUserEmails(userEmails));
-  }, []);
 
   /**
    * Create a new empty spacetime for the new section.
@@ -97,10 +98,12 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
       capacity,
       courseId
     };
-    //TODO: Handle API Failure
-    fetchWithMethod("/sections", HTTP_METHODS.POST, data).then(() => {
-      closeModal();
-      reloadSections();
+
+    createSectionMutation.mutate(data, {
+      onSuccess: () => {
+        closeModal();
+        reloadSections();
+      }
     });
   };
 
@@ -123,9 +126,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                 autoFocus
               />
               <datalist id="user-email-list">
-                {userEmails.map(email => (
-                  <option key={email} value={email} />
-                ))}
+                {userEmailsLoaded ? userEmails.map(email => <option key={email} value={email} />) : null}
               </datalist>
             </label>
             <label>
