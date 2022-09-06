@@ -1,10 +1,10 @@
-import React, { useEffect, useState } from "react";
-import { fetchJSON } from "../../utils/api";
-import { Section, Course as CourseType } from "../../utils/types";
-import { SectionCard } from "./SectionCard";
+import React, { useState } from "react";
+import { useParams } from "react-router-dom";
+import { useCourseSections } from "../../utils/queries/course";
+import { Course as CourseType } from "../../utils/types";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
-import { useParams } from "react-router-dom";
+import { SectionCard } from "./SectionCard";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",
@@ -39,13 +39,12 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
   const { courseId } = useParams();
 
   /**
-   * Sections grouped by day of the week.
+   * Sections grouped by day of the week, and whether the user is a corodinator.
    */
-  const [sections, setSections] = useState<{ [day: string]: Section[] }>(null as never);
-  /**
-   * Whether the sections have finished loading.
-   */
-  const [sectionsLoaded, setSectionsLoaded] = useState<boolean>(false);
+  const { data: jsonSections, isSuccess: sectionsLoaded, refetch: reloadSections } = useCourseSections(
+    courseId ? parseInt(courseId) : undefined
+  );
+
   /**
    * The current selected day of the week.
    */
@@ -55,10 +54,6 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
    */
   const [showUnavailable, setShowUnavailable] = useState<boolean>(false);
   /**
-   * Whether the user is a coordinator.
-   */
-  const [userIsCoordinator, setUserIsCoordinator] = useState<boolean>(false);
-  /**
    * Whether to show the modal.
    */
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -66,28 +61,6 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
    * The type of modal to show.
    */
   const [whichModal, setWhichModal] = useState<string>(COURSE_MODAL_TYPE.createSection);
-
-  /**
-   * Fetch all sections for the course and update state accordingly.
-   */
-  const reloadSections = (): void => {
-    interface JSONResponseType {
-      sections: { [day: string]: Section[] };
-      userIsCoordinator: boolean;
-    }
-
-    fetchJSON(`/courses/${courseId}/sections`).then(({ sections, userIsCoordinator }: JSONResponseType) => {
-      setSections(sections);
-      setUserIsCoordinator(userIsCoordinator);
-      setCurrDayGroup(Object.keys(sections)[0]);
-      setSectionsLoaded(true);
-    });
-  };
-
-  // reload sections upon first mount
-  useEffect(() => {
-    reloadSections();
-  }, []);
 
   /**
    * Render the currently chosen modal.
@@ -106,10 +79,12 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
     }
   };
 
-  if (courses === null) {
-    // don't load if the courses haven't been fetched yet
+  if (courses === null || !sectionsLoaded) {
+    // don't load if the courses or sections haven't been fetched yet
     return null;
   }
+
+  const { sections, userIsCoordinator } = jsonSections;
 
   /**
    * Course object from the courses map, retrieved from the course id.
@@ -139,7 +114,7 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
   const enrollmentDate = priorityEnrollment ? priorityEnrollment : enrollmentTimes.find(({ courseName }) => courseName == course.name)?.enrollmentDate;
   const enrollmentTimeString = enrollmentDate?.toLocaleDateString("en-US", date_locale_string_options) ?? ""
 
-  return !sectionsLoaded ? null : (
+  return (
     <div id="course-section-selector">
       <div id="course-section-controls">
         <h2 className="course-title">{course.name}</h2>

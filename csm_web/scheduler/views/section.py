@@ -92,7 +92,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
             section.spacetimes.set(spacetimes)
             section.save()
-        return Response(status=status.HTTP_201_CREATED)
+
+        serializer = self.serializer_class(section)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, pk=None):
         section = get_object_or_error(self.get_queryset(), pk=pk)

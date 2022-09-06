@@ -1,16 +1,15 @@
-import React, { useEffect, useState } from "react";
-import { fetchJSON } from "../../utils/api";
+import React, { useState } from "react";
+import { useSectionStudents } from "../../utils/queries/section";
 import { Mentor, Spacetime, Student } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
-import { InfoCard, SectionSpacetime } from "./Section";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
+import MetaEditModal from "./MetaEditModal";
+import { InfoCard, SectionSpacetime } from "./Section";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
 
 import XIcon from "../../../static/frontend/img/x.svg";
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
-import MetaEditModal from "./MetaEditModal";
-import { useSectionStudents } from "../../utils/queries/section";
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 
 enum ModalStates {
@@ -40,24 +39,21 @@ export default function MentorSectionInfo({
   description
 }: MentorSectionInfoProps) {
   const { data: students, isSuccess: studentsLoaded } = useSectionStudents(sectionId);
+
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
-  const [userEmails, setUserEmails] = useState<string[]>([]);
   const [isAddingStudent, setIsAddingStudent] = useState<boolean>(false);
   const [deleteType, setDeleteType] = useState<boolean>(false);
-  useEffect(() => {
-    if (!isCoordinator) {
-      return;
-    }
-    fetchJSON("/users/").then(userEmails => setUserEmails(userEmails));
-  }, [sectionId, isCoordinator]);
+
   const closeModal = () => setShowModal(ModalStates.NONE);
+
   const closeAddModal = (reload = false) => {
     setIsAddingStudent(false);
     if (reload) {
       reloadSection();
     }
   };
+
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">{`${
@@ -101,7 +97,7 @@ export default function MentorSectionInfo({
                 </tbody>
               </table>
               {isCoordinator && isAddingStudent && (
-                <CoordinatorAddStudentModal closeModal={closeAddModal} userEmails={userEmails} sectionId={sectionId} />
+                <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} />
               )}
             </React.Fragment>
           ) : (

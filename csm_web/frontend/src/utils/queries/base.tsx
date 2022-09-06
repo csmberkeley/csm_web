@@ -10,7 +10,7 @@
 
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { fetchNormalized } from "../api";
-import { Course, Profile, RawUserInfo } from "../types";
+import { Profile, RawUserInfo } from "../types";
 import { handleError, ServerError } from "./helpers";
 
 /**
@@ -31,15 +31,15 @@ export const useProfiles = (): UseQueryResult<Profile[], ServerError> => {
 };
 
 /**
- * Hook to get all courses.
+ * Hook to get the user's info.
  */
-export const useCourses = (): UseQueryResult<Course[], ServerError> => {
-  const queryResult = useQuery<Course[], Error>(["courses"], async () => {
-    const response = await fetchNormalized("/courses");
+export const useUserInfo = (): UseQueryResult<RawUserInfo, ServerError> => {
+  const queryResult = useQuery<RawUserInfo, Error>(["userinfo"], async () => {
+    const response = await fetchNormalized("/userinfo");
     if (response.ok) {
       return await response.json();
     } else {
-      throw new ServerError("Failed to fetch courses");
+      throw new ServerError("Failed to fetch user info");
     }
   });
 
@@ -48,11 +48,11 @@ export const useCourses = (): UseQueryResult<Course[], ServerError> => {
 };
 
 /**
- * Hook to get the user's info.
+ * Hook to get a list of all user emails.
  */
-export const useUserInfo = (): UseQueryResult<RawUserInfo, ServerError> => {
-  const queryResult = useQuery<RawUserInfo, Error>(["userinfo"], async () => {
-    const response = await fetchNormalized("/userinfo");
+export const useUserEmails = (): UseQueryResult<string[], ServerError> => {
+  const queryResult = useQuery<string[], Error>(["users"], async () => {
+    const response = await fetchNormalized("/users");
     if (response.ok) {
       return await response.json();
     } else {
