@@ -4,7 +4,7 @@
 
 import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
-import { RawAttendance, Section, Student } from "../types";
+import { RawAttendance, Section, Spacetime, Student } from "../types";
 import { handleError, ServerError } from "./helpers";
 
 /* ===== Queries ===== */
@@ -75,7 +75,8 @@ export interface StudentDropMutationBody {
  */
 export const useStudentDropMutation = (
   studentId: number,
-  sectionId: number
+  sectionId: number,
+  droppedSelf = false
 ): UseMutationResult<void, ServerError, StudentDropMutationBody> => {
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, Error, StudentDropMutationBody>(
@@ -91,6 +92,74 @@ export const useStudentDropMutation = (
       onSuccess: () => {
         // invalidate all queries for the section
         queryClient.invalidateQueries(["sections", sectionId]);
+
+        if (droppedSelf) {
+          // invalidate profiles query
+          queryClient.invalidateQueries(["profiles"]);
+        }
+      }
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
+
+export interface EnrollStudentMutationResponse {
+  detail: string;
+}
+
+/**
+ * Enroll a student (the user) into a given section.
+ *
+ * If the mutation fails,
+ */
+export const useEnrollStudentMutation = (
+  sectionId: number
+): UseMutationResult<void, EnrollStudentMutationResponse, void> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, EnrollStudentMutationResponse, void>(
+    async () => {
+      const response = await fetchWithMethod(`sections/${sectionId}/students`, HTTP_METHODS.PUT);
+      if (response.ok) {
+        return;
+      } else {
+        throw await response.json();
+      }
+    },
+    {
+      onSuccess: () => {
+        // invalidate all queries for the section
+        queryClient.invalidateQueries(["sections", sectionId]);
+        // invalidate profiles query for the user
+        queryClient.invalidateQueries(["profiles"]);
+      }
+    }
+  );
+
+  // handle error in component
+  return mutationResult;
+};
+
+export interface SectionCreateMutationBody {
+  mentorEmail: string;
+  spacetimes: Spacetime[];
+  description: string;
+  capacity: string;
+  courseId: number;
+}
+
+/**
+ * Hook to create a new section
+ */
+export const useSectionCreateMutation = (): UseMutationResult<Section, ServerError, SectionCreateMutationBody> => {
+  const mutationResult = useMutation<Section, Error, SectionCreateMutationBody>(
+    async (body: SectionCreateMutationBody) => {
+      const response = await fetchWithMethod(`sections`, HTTP_METHODS.POST, body);
+      if (response.ok) {
+        return response.json();
+      } else {
+        throw new ServerError(`Failed to create section`);
       }
     }
   );

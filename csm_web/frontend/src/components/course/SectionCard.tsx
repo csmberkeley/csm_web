@@ -1,14 +1,16 @@
 import React, { useState } from "react";
-import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { Link, Navigate } from "react-router-dom";
+
+import { EnrollStudentMutationResponse, useEnrollStudentMutation } from "../../utils/queries/section";
+import { Mentor, Spacetime } from "../../utils/types";
+import Modal, { ModalCloser } from "../Modal";
+
+import CheckCircle from "../../../static/frontend/img/check_circle.svg";
+import ClockIcon from "../../../static/frontend/img/clock.svg";
+import GroupIcon from "../../../static/frontend/img/group.svg";
 import LocationIcon from "../../../static/frontend/img/location.svg";
 import UserIcon from "../../../static/frontend/img/user.svg";
-import GroupIcon from "../../../static/frontend/img/group.svg";
-import ClockIcon from "../../../static/frontend/img/clock.svg";
-import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import XCircle from "../../../static/frontend/img/x_circle.svg";
-import Modal, { ModalCloser } from "../Modal";
-import { Mentor, Spacetime } from "../../utils/types";
 
 interface SectionCardProps {
   id: number;
@@ -32,6 +34,11 @@ export const SectionCard = ({
   courseOpen
 }: SectionCardProps): React.ReactElement => {
   /**
+   * Mutation to enroll a student in the section.
+   */
+  const enrollStudentMutation = useEnrollStudentMutation(id);
+
+  /**
    * Whether to show the modal (after an attempt to enroll).
    */
   const [showModal, setShowModal] = useState<boolean>(false);
@@ -48,10 +55,6 @@ export const SectionCard = ({
    * Handle enrollment in the section.
    */
   const enroll = () => {
-    interface FetchJSON {
-      detail: string;
-    }
-
     if (!courseOpen) {
       setShowModal(true);
       setEnrollmentSuccessful(false);
@@ -59,24 +62,17 @@ export const SectionCard = ({
       return;
     }
 
-    fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT)
-      .then((response: { ok: boolean; json: () => Promise<FetchJSON> }) => {
-        if (response.ok) {
-          setShowModal(true);
-          setEnrollmentSuccessful(true);
-        } else {
-          response.json().then(({ detail }: FetchJSON) => {
-            setShowModal(true);
-            setEnrollmentSuccessful(false);
-            setErrorMessage(detail);
-          });
-        }
-      })
-      .catch((error: any) => {
+    enrollStudentMutation.mutate(undefined, {
+      onSuccess: () => {
+        setEnrollmentSuccessful(true);
         setShowModal(true);
+      },
+      onError: ({ detail }: EnrollStudentMutationResponse) => {
         setEnrollmentSuccessful(false);
-        setErrorMessage(String(error));
-      });
+        setErrorMessage(detail);
+        setShowModal(true);
+      }
+    });
   };
 
   /**

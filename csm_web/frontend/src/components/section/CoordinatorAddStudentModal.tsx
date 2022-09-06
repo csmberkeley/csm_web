@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import { useUserEmails } from "../../utils/queries/base";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 
@@ -16,7 +17,6 @@ enum CoordModalStates {
 
 interface CoordinatorAddStudentModalProps {
   closeModal: (arg0?: boolean) => void;
-  userEmails: string[];
   sectionId: number;
 }
 
@@ -46,9 +46,9 @@ interface ActionType {
 
 export function CoordinatorAddStudentModal({
   closeModal,
-  userEmails,
   sectionId
 }: CoordinatorAddStudentModalProps): React.ReactElement {
+  const { data: userEmails, isSuccess: userEmailsLoaded } = useUserEmails();
   const [emailsToAdd, setEmailsToAdd] = useState<string[]>([""]);
   const [response, setResponse] = useState<ResponseType>({} as ResponseType);
   /**
@@ -200,9 +200,7 @@ export function CoordinatorAddStudentModal({
             </div>
           ))}
           <datalist id="user-emails-list">
-            {userEmails.map(email => (
-              <option key={email} value={email} />
-            ))}
+            {userEmailsLoaded && userEmails.map(email => <option key={email} value={email} />)}
           </datalist>
         </div>
       </div>
