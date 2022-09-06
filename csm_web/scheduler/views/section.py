@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.utils import timezone
@@ -60,7 +62,11 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 email=self.request.data["mentor_email"],
                 username=self.request.data["mentor_email"].split("@")[0],
             )
-            duration = course.mentor_set.first().section.spacetimes.first().duration
+            mentors_with_sections = course.mentor_set.filter(section__isnull=False)
+            if mentors_with_sections.count() > 0:
+                duration = mentors_with_sections.first().section.spacetimes.first().duration
+            else:
+                duration = datetime.timedelta(hours=1)  # default duration is 1 hour
             spacetime_serializers = [
                 SpacetimeSerializer(data={**spacetime, "duration": str(duration)})
                 for spacetime in self.request.data["spacetimes"]
