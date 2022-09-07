@@ -72,7 +72,6 @@ function Header(): React.ReactElement {
       }
     }
     return true;
-    // return !(location.pathname.startsWith("/resources") || location.pathname.startsWith("/policies"));
   };
 
   return (
