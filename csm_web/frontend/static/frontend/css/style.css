@@ -5,6 +5,7 @@
 @import url("./calendar.css");
 @import url("./searchbar.css");
 @import url("./tooltip.css");
+@import url("./policies.css");
 
 html,
 body {
@@ -50,6 +51,7 @@ button {
 	--csm-neutral: #c0c0c0;
 	--csm-neutral-darkened: #b6b6b6;
 	--csm-resources: #ededed;
+	--csm-link-blue: #039be5;
 }
 
 /* Header */
@@ -82,6 +84,16 @@ header {
 	color: #808080;
 }
 
+.site-subtitle-link {
+	color: #bbbbbb;
+	text-decoration: none;
+	margin: auto 0 auto auto;
+}
+
+.site-subtitle-link.is-active {
+	color: #808080;
+}
+
 #user-profile-pic {
 	border: 2px solid #ffffff;
 	border-radius: 26px;
@@ -90,7 +102,7 @@ header {
 }
 
 #logout-btn {
-	margin: auto 0 auto auto;
+	margin: auto 5px auto 30px;
 }
 
 #logout-btn * {
@@ -122,8 +134,12 @@ header {
 		margin-right: 0;
 	}
 
+	.site-subtitle-link {
+		margin: 0px auto 0px auto;
+	}
+
 	#logout-btn {
-		margin: 10px auto auto auto;
+		margin: 0px auto auto auto;
 	}
 }
 
