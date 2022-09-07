@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import ResourceRow from "./ResourceRow";
-import { emptyResource, Resource, Worksheet } from "./ResourceTypes";
+import { emptyResource, Link, Resource, Worksheet } from "./ResourceTypes";
 import { Roles } from "../../utils/user";
 
 import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
+import { url } from "inspector";
 
 interface ResourceTableProps {
   courseID: number;
@@ -51,19 +52,23 @@ export const ResourceTable = ({
    *    ]
    * }
    *
-   * @param newResource
-   * @param fileFormDataMap
-   * @param newWorksheets
+   * @param newResource - the resource being edited
+   * @param fileFormDataMap - form data object containing worksheet info
+   * @param linkMap - form data object containing link info
+   * @param newWorksheets - list of new worksheets to add
+   * @param newLinks - list of new links to add
    * @returns
    */
   function getResourceFormData(
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Array<Worksheet>
+    linkMap: Map<number, Link>,
+    newWorksheets: Array<Worksheet>,
+    newLinks: Array<Link>
   ) {
     const resourceFormData = new FormData();
     for (const [key, value] of Object.entries(newResource)) {
-      if (key !== "worksheets") {
+      if (key !== "worksheets" && key !== "links") {
         resourceFormData.set(key, value);
       }
     }
@@ -85,11 +90,54 @@ export const ResourceTable = ({
     for (const worksheet of newWorksheets) {
       for (const [key, value] of Object.entries(worksheet)) {
         let updatedValue = value;
+
         // add each nested FormData entry
         if (value instanceof Array) {
           updatedValue = JSON.stringify(value);
         }
         resourceFormData.append(`worksheets[${idx}][${key}]`, updatedValue);
+      }
+      idx++;
+    }
+    idx = 0;
+    for (const link of linkMap.values()) {
+      for (const [key, value] of Object.entries(link)) {
+        if (value instanceof Array) {
+          // add each nested array item
+          for (const [itemIdx, item] of value.entries()) {
+            resourceFormData.append(`links[${idx}][${key}][${itemIdx}]`, item);
+          }
+        } else {
+          let updatedValue = value;
+          // Handle urls
+          if (key === "url") {
+            if (!value.startsWith("http")) {
+              updatedValue = "https://" + value;
+            }
+          }
+
+          // add each nested FormData entry
+          resourceFormData.append(`links[${idx}][${key}]`, updatedValue);
+        }
+      }
+      idx++;
+    }
+    for (const link of newLinks) {
+      for (const [key, value] of Object.entries(link)) {
+        let updatedValue = value;
+        // add each nested FormData entry
+        if (value instanceof Array) {
+          updatedValue = JSON.stringify(value);
+        }
+
+        // Handle urls
+        if (key === "url") {
+          if (!value.startsWith("http")) {
+            updatedValue = "https://" + value;
+          }
+        }
+
+        resourceFormData.append(`links[${idx}][${key}]`, updatedValue);
       }
       idx++;
     }
@@ -111,14 +159,18 @@ export const ResourceTable = ({
    *
    * @param newResource new resource to add
    * @param fileFormDataMap FormData object for any files to add
+   * @param linkMap form data object containing link info
    * @param newWorksheets list of worksheets to add to resource
+   * @param newLinks list of links to add to resource
    */
   function handleAddResource(
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Array<Worksheet>
+    linkMap: Map<number, Link>,
+    newWorksheets: Array<Worksheet>,
+    newLinks: Array<Link>
   ) {
-    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
+    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, linkMap, newWorksheets, newLinks);
     fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.POST, resourceFormData, true).then(response => {
       if (response.status === 400) {
         // Bad request; input invalid
@@ -141,14 +193,17 @@ export const ResourceTable = ({
    * Save and PUT request the updated resource
    * @param newResource new resource to add
    * @param fileFormDataMap FormData object for any files to add
+   * @param linkMap form data object containing link info
    * @param newWorksheets list of worksheets to add to resource
    */
   function handleUpdateResource(
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Array<Worksheet>
+    linkMap: Map<number, Link>,
+    newWorksheets: Array<Worksheet>,
+    newLinks: Array<Link>
   ) {
-    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, newWorksheets);
+    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, linkMap, newWorksheets, newLinks);
     fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then(response => {
       if (response.status === 400) {
         // Bad request; input invalid
@@ -219,7 +274,7 @@ export const ResourceTable = ({
     <div className="resourceWrapperContainer">
       {canEdit && (
         <div className="resourceTableOptions">
-          <button onClick={handleSetAddingResource} id="addResourceButton">
+          <button onClick={handleSetAddingResource} className="addResourceButton" id="addResourceButton">
             <PlusCircle className="icon" id="plusIcon" />
             <div>Add Resource</div>
           </button>
@@ -237,7 +292,8 @@ export const ResourceTable = ({
             <div className="weekNum">Week</div>
             <div className="dateCell">Date</div>
             <div className="resourceTopics">Topics</div>
-            <div className="resourceWkst">Worksheet and Solutions</div>
+            <div className="resourceWkst">Worksheets</div>
+            <div className="resourceLinks">Links</div>
           </div>
           {addingResource && (
             <ResourceRow

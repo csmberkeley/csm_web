@@ -1,7 +1,7 @@
 @import url("./resource_aggregation.css");
 @import url("./student_dropper.css");
+@import url("./enrollment_matcher.css");
 @import url("./fontawesome-styles.css");
-@import url("./policies-styles.css");
 
 html,
 body {
@@ -26,8 +26,10 @@ button {
 }
 
 :root {
+	/* --csm-green: rgb(124, 233, 162); */
 	--csm-green: #9ae0b3;
 	--csm-green-darkened: #75b38a;
+	--csm-green-lightened: #d7ffe5;
 	--csm-theme-cs61a: var(--csm-green);
 	--csm-theme-cs61b: #63c5ff;
 	--csm-theme-cs61c: #797c99;
@@ -551,12 +553,6 @@ header {
 
 #course-section-controls > * {
 	margin: 0 0 10px;
-}
-
-#course-coord-buttons {
-	display: flex;
-	width: max-content;
-	margin: 0 auto;
 }
 
 .course-title {

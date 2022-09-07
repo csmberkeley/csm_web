@@ -27,6 +27,7 @@ WEB_CONCURRENCY=4" > .env
 
 # Get a new key
 echo "Generating Django secret key..."
+export SECRET_KEY='temp'  # set temporary secret key
 export SECRET_KEY=$(python3 csm_web/manage.py shell -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
 echo "SECRET_KEY='$SECRET_KEY'" >> .env
 
@@ -64,7 +65,7 @@ sleep 1
 pwd > "$VIRTUAL_ENV/.project_dir"
 
 # Add env variables to virutalenv activate script so that not everything needs to be run with 'heroku local'
-sed 's/^/export /' .env >> "$VIRTUAL_ENV/bin/activate"
+echo 'set -a; source $(cat $VIRTUAL_ENV/.project_dir)/.env; set +a' >> "$VIRTUAL_ENV/bin/activate"
 
 # Setup postgres DB if needed
 if ! psql -lt | grep -q '^ *csm_web_dev *'

@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, SectionOccurrence, User, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet
+from .models import Attendance, Course, SectionOccurrence, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet
 
 
 class Role(Enum):
@@ -82,11 +82,7 @@ class CourseSerializer(serializers.ModelSerializer):
     user_can_enroll = serializers.SerializerMethodField()
 
     def get_enrollment_open(self, obj):
-        user = self.context.get('request') and self.context.get('request').user
-        if user and user.priority_enrollment:
-            return user.priority_enrollment < timezone.now() < obj.enrollment_end
-        else:
-            return obj.is_open()
+        return obj.enrollment_start < timezone.now() < obj.enrollment_end
 
     def get_user_can_enroll(self, obj):
         user = self.context.get('request') and self.context.get('request').user
@@ -207,12 +203,19 @@ class WorksheetSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'resource', 'worksheet_file', 'solution_file']
 
 
+class LinkSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Link
+        fields = ['id', 'name', 'resource', 'url']
+
+
 class ResourceSerializer(serializers.ModelSerializer):
     worksheets = WorksheetSerializer(source='worksheet_set', many=True)
+    links = LinkSerializer(source='link_set', many=True)
 
     class Meta:
         model = Resource
-        fields = ['id', 'course', 'week_num', 'date', 'topics', 'worksheets']
+        fields = ['id', 'course', 'week_num', 'date', 'topics', 'worksheets', 'links']
 
 
 class SectionOccurrenceSerializer(serializers.ModelSerializer):
@@ -250,3 +253,22 @@ class OverrideSerializer(serializers.ModelSerializer):
         model = Override
         fields = ("location", "start_time", "date", "overriden_spacetime")
         extra_kwargs = {"overriden_spacetime": {'required': False}}
+
+
+class MatcherSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Matcher
+        fields = ('id', 'course', 'assignment', 'is_open')
+
+
+class MatcherSlotSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = MatcherSlot
+        fields = ['id', 'matcher', 'times']
+
+
+class MatcherPreferenceSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MatcherPreference
+        fields = ['slot', 'mentor', 'preference']

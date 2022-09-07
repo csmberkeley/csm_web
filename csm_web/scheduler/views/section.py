@@ -1,3 +1,5 @@
+import datetime
+
 from django.db import transaction
 from django.db.models import Q, Prefetch
 from django.utils import timezone
@@ -60,7 +62,11 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 email=self.request.data["mentor_email"],
                 username=self.request.data["mentor_email"].split("@")[0],
             )
-            duration = course.mentor_set.first().section.spacetimes.first().duration
+            mentors_with_sections = course.mentor_set.filter(section__isnull=False)
+            if mentors_with_sections.count() > 0:
+                duration = mentors_with_sections.first().section.spacetimes.first().duration
+            else:
+                duration = datetime.timedelta(hours=1)  # default duration is 1 hour
             spacetime_serializers = [
                 SpacetimeSerializer(data={**spacetime, "duration": str(duration)})
                 for spacetime in self.request.data["spacetimes"]
@@ -398,8 +404,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 student.section = section
                 student.active = True
                 # generate new attendance objects for this student in all section occurrences past this date
+                now = timezone.now().astimezone(timezone.get_default_timezone())
                 future_sectionOccurrences = section.sectionoccurrence_set.filter(
-                    Q(date__gte=timezone.now())
+                    Q(date__gte=now.date())
                 )
                 for sectionOccurrence in future_sectionOccurrences:
                     Attendance(
@@ -433,15 +440,15 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         Adds a student to a section (initiated by a student)
         """
         if not request.user.can_enroll_in_course(section.mentor.course):
-            logger.warn(
+            logger.warning(
                 f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because they are already involved in this course"
             )
             raise PermissionDenied(
-                "You are already either mentoring for this course or enrolled in a section",
+                "You are already either mentoring for this course or enrolled in a section, or the course is closed for enrollment",
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         if section.current_student_count >= section.capacity:
-            logger.warn(
+            logger.warning(
                 f"<Enrollment:Failure> User {log_str(request.user)} was unable to enroll in Section {log_str(section)} because it was full"
             )
             raise PermissionDenied(
@@ -465,8 +472,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             student.section = section
             student.active = True
             # generate new attendance objects for this student in all section occurrences past this date
+            now = timezone.now().astimezone(timezone.get_default_timezone())
             future_sectionOccurrences = section.sectionoccurrence_set.filter(
-                Q(date__gte=timezone.now())
+                Q(date__gte=now.date())
             )
             for sectionOccurrence in future_sectionOccurrences:
                 Attendance(

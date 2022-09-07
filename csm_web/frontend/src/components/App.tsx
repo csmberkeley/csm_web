@@ -1,4 +1,4 @@
-import React, { useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { HashRouter as Router, Route, Switch, Link, NavLinkProps } from "react-router-dom";
 import { NavLink } from "react-router-dom";
 import ReactDOM from "react-dom";
@@ -6,10 +6,12 @@ import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Section from "./section/Section";
 import { Resources } from "./resource_aggregation/Resources";
-import Policies from "./Policies";
 
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
+import { emptyRoles, Roles } from "../utils/user";
+import { fetchJSON } from "../utils/api";
+import { Profile } from "../utils/types";
 
 interface ErrorType {
   message: string;
@@ -40,6 +42,7 @@ export default class App extends React.Component {
     if (this.state.error) {
       return <ErrorPage error={this.state.error} clearError={this.clearError} />;
     }
+
     return (
       <Router>
         <React.Fragment>
@@ -50,7 +53,6 @@ export default class App extends React.Component {
               <Route path="/sections/:id" component={Section} />
               <Route path="/courses" component={CourseMenu} />
               <Route path="/resources" component={Resources} />
-              <Route path="/policies" component={Policies} />
             </Switch>
           </main>
         </React.Fragment>
@@ -62,17 +64,34 @@ export default class App extends React.Component {
 function Header(): React.ReactElement {
   /**
    * Helper function to determine whether or not "Scheduler" should be active.
-   * That is, it should always be active unless we're in a location prefixed by /resources
+   * That is, it should always be active unless we're in a location prefixed by /resources or /matcher
    */
   const schedulerActive: NavLinkProps["isActive"] = (match, location): boolean => {
-    const links = ["/resources", "/policies"];
-    for (let i = 0; i < links.length; i++) {
-      if (location.pathname.startsWith(links[i])) {
-        return false;
-      }
-    }
-    return true;
+    return !location.pathname.startsWith("/resources");
   };
+
+  const [activeMatcherRoles, setActiveMatcherRoles] = useState<Roles>(emptyRoles());
+
+  useEffect(() => {
+    Promise.all([fetchJSON("/profiles"), fetchJSON("/matcher/active")]).then(
+      ([profiles, activeMatcherCourses]: [Profile[], number[]]) => {
+        const roles = emptyRoles();
+        // get roles, but only if coordinator or mentor with no section
+        for (const profile of profiles) {
+          if (!activeMatcherCourses.includes(profile.courseId)) {
+            // ignore if not active
+            continue;
+          }
+          if (profile.role === "COORDINATOR") {
+            roles["COORDINATOR"].add(profile.courseId);
+          } else if (profile.role === "MENTOR" && profile.sectionId === undefined) {
+            roles["MENTOR"].add(profile.courseId);
+          }
+        }
+        setActiveMatcherRoles(roles);
+      }
+    );
+  }, []);
 
   return (
     <header>
@@ -85,11 +104,6 @@ function Header(): React.ReactElement {
       <NavLink to="/resources" className="site-title-link" activeClassName="is-active">
         <h3 className="site-title">Resources</h3>
       </NavLink>
-
-      <NavLink to="/policies" className="site-subtitle-link" activeClassName="is-active">
-        <h3 className="site-subtitle">Policies</h3>
-      </NavLink>
-
       <a id="logout-btn" href="/logout" title="Log out">
         <LogOutIcon width="1.25em" height="1.25em" />
       </a>

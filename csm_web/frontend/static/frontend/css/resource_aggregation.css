@@ -56,7 +56,7 @@
 .resourceWrapperHeader {
 	grid-column: 1 / -1;
 	display: grid;
-	grid-template-columns: repeat(2, minmax(50px, 1fr)) 2fr 2fr 40px;
+	grid-template-columns: repeat(2, minmax(50px, 1fr)) 2fr 2fr 1fr 40px;
 	column-gap: 10px;
 	text-align: center;
 	width: 100%;
@@ -88,6 +88,35 @@
 
 .resourceWrapperHeader {
 	margin-bottom: 4px;
+}
+
+.resourceEditTabContainer {
+	display: flex;
+	flex-direction: row;
+	align-content: space-between;
+	justify-content: center;
+	margin-bottom: 20px;
+}
+
+.resourceEditTab {
+	margin: 10px;
+	background-color: var(--csm-neutral);
+	border: none;
+	border-radius: 8px;
+	color: white;
+	font-size: 16px;
+	font-weight: 600;
+	justify-content: space-evenly;
+	padding: 8px;
+	width: 200px;
+}
+
+.resourceEditTab:hover {
+	background-color: var(--csm-neutral-darkened);
+}
+
+.resourceEditTab:disabled {
+	background-color: var(--csm-green);
 }
 
 .resourceInfo,
@@ -133,11 +162,15 @@
 .resourceWkstFile a:link,
 .resourceSoln a:link,
 .resourceWkstFile a:visited,
-.resourceSoln a:visited {
+.resourceSoln a:visited,
+.resourceLink,
+.resourceLink a:link,
+.resourceLink a:visited {
 	color: var(--csm-green-darkened);
 }
 
-.resourceSoln a {
+.resourceSoln a,
+.resourceLink a {
 	text-decoration: none;
 }
 
@@ -163,7 +196,8 @@
 }
 
 .resourceWkstFile a:hover,
-.resourceSoln a:hover {
+.resourceSoln a:hover,
+.resourceLink a:hover {
 	border-color: #4e7a5d;
 	color: #4e7a5d;
 	cursor: pointer;
@@ -234,10 +268,34 @@
 	text-align: center;
 }
 
+.resourceLinkHead {
+	display: grid;
+	/* name, url, delete */
+	grid-template-columns: 1fr 1fr 20px;
+	column-gap: 10px;
+	text-align: center;
+}
+
 .resourceWorksheet {
 	display: grid;
 	grid-template-columns: repeat(3, 1fr) 20px;
 	column-gap: 10px;
+}
+
+.resourceLink,
+.resourceLinkEdit {
+	display: grid;
+	column-gap: 10px;
+}
+
+.resourceLinkEdit {
+	grid-template-columns: 1fr 1fr 20px;
+}
+
+.resourceLinksContainer {
+	display: grid;
+	align-content: center;
+	row-gap: 10px;
 }
 
 .resourceWorksheetEditFile {
@@ -262,7 +320,8 @@
 	flex-direction: row;
 	padding: 8px 12px;
 	font-size: 90%;
-	flex: 100%; /* take up as much space as possible */
+	flex: 100%;
+	/* take up as much space as possible */
 }
 
 .fileUpload .fileUploadLabel {
@@ -309,7 +368,7 @@ button.clearFile:hover {
 	color: red;
 }
 
-#addWorksheetButton {
+.addResourceButton {
 	background-color: white;
 	border: 2px solid #ccc;
 	border-radius: 8px;
@@ -320,7 +379,7 @@ button.clearFile:hover {
 	padding: 12px 16px;
 }
 
-#addWorksheetButton:hover {
+.addResourceButton:hover {
 	background-color: #f8f8f8;
 }
 
@@ -376,6 +435,16 @@ button.clearFile:hover {
 #resourceButtonSubmit[disabled="disabled"]:hover {
 	background-color: #cdf3db;
 	cursor: not-allowed;
+}
+
+.resourceTabErrorText {
+	text-align: center;
+	color: red;
+}
+
+.resourceTabErrorText .icon {
+	display: inline-block;
+	padding: 0 3px;
 }
 
 #saveIcon {

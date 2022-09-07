@@ -9,7 +9,6 @@ def move_section_course_to_mentor(apps, schema_editor):
     for mentor in Mentor.objects.all():
         mentor.course = mentor.section.course
         mentor.save()
-    print("Done migrating Section.course to Mentor.course")
     assert Mentor.objects.filter(course__isnull=True).count() == 0
 
 

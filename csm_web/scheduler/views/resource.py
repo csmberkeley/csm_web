@@ -8,7 +8,7 @@ from rest_framework.parsers import FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from ..models import Course, Resource, Worksheet
+from ..models import Course, Resource, Link, Worksheet
 from ..serializers import ResourceSerializer
 
 
@@ -29,6 +29,7 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
         weekNum - week number corresponding to resource
         date - week starting date corresponding to resource
         topics - topics, delimited by a semicolon
+        links - list of objects for individual links (name and url)
         worksheets - list of objects describing individual worksheets, with name and worksheet, solution files
         """
         course = Course.objects.get(pk=pk)
@@ -78,6 +79,34 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
             except ValidationError as e:
                 return JsonResponse(e.message_dict, status=status.HTTP_400_BAD_REQUEST)
             resource_obj.save()
+
+            if "links" in resource:
+                for link in resource["links"]:
+                    if link["id"] != None:
+                        link_obj = Link.objects.get(pk=link["id"])
+                        if "deleted" in link and link["deleted"]:
+                            num_deleted, _ = link_obj.delete()
+                            if num_deleted == 0:
+                                raise ValueError(
+                                    f"Link was unable to be deleted: {request.data}; {worksheet_obj}"
+                                )
+                            continue
+                    else:
+                        # create new link
+                        link_obj = Link(resource=resource_obj)
+
+                    if not ("deleted" in link and link["deleted"]):
+                        link_obj.name = link.get("name", None)
+                        link_obj.url = link.get("url", None)
+
+                    try:  # validate
+                        link_obj.full_clean()
+                    except ValidationError as e:
+                        return JsonResponse(
+                            e.message_dict, status=status.HTTP_400_BAD_REQUEST
+                        )
+
+                    link_obj.save()
 
             if "worksheets" in resource:
                 # has edited worksheets

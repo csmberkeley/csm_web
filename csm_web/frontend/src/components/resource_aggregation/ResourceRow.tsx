@@ -1,6 +1,6 @@
 import React, { useState, useEffect, ChangeEvent, MouseEvent } from "react";
 import ResourceEdit from "./ResourceEdit";
-import { Resource, Worksheet } from "./ResourceTypes";
+import { Link, Resource, Worksheet } from "./ResourceTypes";
 import ResourceRowRender from "./ResourceRowRender";
 
 interface ResourceRowProps {
@@ -8,7 +8,9 @@ interface ResourceRowProps {
   onUpdateResource: (
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Array<Worksheet>
+    linkMap: Map<number, Link>,
+    newWorksheets: Array<Worksheet>,
+    newLinks: Array<Link>
   ) => void;
   canEdit: boolean;
   onDeleteResource: (resourceId: number) => void;
@@ -56,15 +58,18 @@ export const ResourceRow = ({
    *
    * @param e - onSubmit event
    * @param fileFormDataMap - form data object containing file info
+   * @param linkMap - form data object containing link info
    * @param newWorksheets - new worksheets
    */
   function handleSubmit(
     e: MouseEvent<HTMLButtonElement>,
     fileFormDataMap: Map<number, Worksheet>,
-    newWorksheets: Array<Worksheet>
+    linkMap: Map<number, Link>,
+    newWorksheets: Array<Worksheet>,
+    newLinks: Array<Link>
   ): void {
     e.preventDefault();
-    onUpdateResource(resource, fileFormDataMap, newWorksheets);
+    onUpdateResource(resource, fileFormDataMap, linkMap, newWorksheets, newLinks);
     setEdit(false);
   }
 

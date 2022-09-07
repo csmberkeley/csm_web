@@ -1,6 +1,8 @@
 import datetime
 import re
 from django.db import models
+from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
+from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.dispatch import receiver
@@ -10,7 +12,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-logger.info = logger.warn
+logger.info = logger.warning
 
 
 class DayOfWeekField(models.Field):
@@ -33,19 +35,11 @@ def week_bounds(date):
 
 
 class User(AbstractUser):
-    priority_enrollment = models.DateTimeField(null=True, blank=True)
-
-    def can_enroll_in_course(self, course, bypass_enrollment_time=False):
-        is_associated = (self.student_set.filter(active=True, section__mentor__course=course).count() or
-                         self.mentor_set.filter(section__mentor__course=course).count())
-        if bypass_enrollment_time:
-            return not is_associated
-        else:
-            if self.priority_enrollment:
-                is_valid_enrollment_time = self.priority_enrollment < timezone.now() < course.enrollment_end
-            else:
-                is_valid_enrollment_time = course.is_open()
-            return is_valid_enrollment_time and not is_associated
+    def can_enroll_in_course(self, course):
+        return course.is_open() and (
+            not (self.student_set.filter(active=True, section__mentor__course=course).count() or
+                 self.mentor_set.filter(section__mentor__course=course).count())
+        )
 
     class Meta:
         indexes = (models.Index(fields=("email",)),)
@@ -63,6 +57,21 @@ class ValidatingModel(models.Model):
 
     class Meta:
         abstract = True
+
+
+class ReverseOneToOneOrNoneDescriptor(ReverseOneToOneDescriptor):
+    def __get__(self, *args, **kwargs):
+        try:
+            return super().__get__(*args, **kwargs)
+        except ObjectDoesNotExist:
+            return None
+
+
+class OneToOneOrNoneField(models.OneToOneField):
+    """
+    A OneToOneField that returns None if the related object does not exist
+    """
+    related_accessor_class = ReverseOneToOneOrNoneDescriptor
 
 
 class Attendance(ValidatingModel):
@@ -131,7 +140,8 @@ class Course(ValidatingModel):
             raise ValidationError("valid_until must be after enrollment_end")
 
     def is_open(self):
-        return self.enrollment_start < timezone.now() < self.enrollment_end
+        now = timezone.now().astimezone(timezone.get_default_timezone())
+        return self.enrollment_start < now < self.enrollment_end
 
 
 class Profile(ValidatingModel):
@@ -167,7 +177,7 @@ class Student(Profile):
         Create an attendance for this week for the student if their section hasn't already been held this week
         and no attendance for this week already exists.
         """
-        now = timezone.now()
+        now = timezone.now().astimezone(timezone.get_default_timezone())
         week_start = week_bounds(now.date())[0]
         for spacetime in self.section.spacetimes.all():
             section_day_num = day_to_number(spacetime.day_of_week)
@@ -227,7 +237,7 @@ class Coordinator(Profile):
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
-    mentor = models.OneToOneField(Mentor, on_delete=models.CASCADE, blank=True, null=True)
+    mentor = OneToOneOrNoneField(Mentor, on_delete=models.CASCADE, blank=True, null=True)
     description = models.CharField(
         max_length=100,
         blank=True,
@@ -283,6 +293,12 @@ class Resource(ValidatingModel):
 
     class Meta:
         ordering = ['week_num']
+
+
+class Link(ValidatingModel):
+    resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
+    name = models.CharField(max_length=200)
+    url = models.URLField(max_length=255)
 
 
 class Worksheet(ValidatingModel):
@@ -387,7 +403,49 @@ class Override(ValidatingModel):
             raise ValidationError("Day of week of spacetime and day of week of date do not match")
 
     def is_expired(self):
-        return self.date < timezone.now().date()
+        now = timezone.now().astimezone(timezone.get_default_timezone())
+        return self.date < now.date()
 
     def __str__(self):
         return f"Override for {self.overriden_spacetime.section} : {self.spacetime}"
+
+
+class Matcher(ValidatingModel):
+    course = OneToOneOrNoneField(Course, on_delete=models.CASCADE, blank=True, null=True)
+    """
+    Serialized assignment of mentors to times.
+    [{mentor: int, slot: int, section: {capacity: int, description: str}}, ...]
+    """
+    assignment = models.JSONField(default=dict, blank=True)
+    is_open = models.BooleanField(default=False)
+
+    active = models.BooleanField(default=True)
+
+
+class MatcherSlot(ValidatingModel):
+    matcher = models.ForeignKey(Matcher, on_delete=models.CASCADE)
+    """
+    Serialized times of the form:
+    [{"day", "startTime", "endTime"}, ...]
+    Time is in hh:mm 24-hour format
+    """
+    times = models.JSONField()
+    min_mentors = models.PositiveSmallIntegerField()
+    max_mentors = models.PositiveSmallIntegerField()
+
+    def clean(self):
+        super().clean()
+        if self.min_mentors > self.max_mentors:
+            raise ValidationError("Min mentors cannot be greater than max mentors")
+
+    class Meta:
+        unique_together = ("matcher", "times")
+
+
+class MatcherPreference(ValidatingModel):
+    slot = models.ForeignKey(MatcherSlot, on_delete=models.CASCADE)
+    mentor = models.ForeignKey(Mentor, on_delete=models.CASCADE)
+    preference = models.PositiveSmallIntegerField()
+
+    class Meta:
+        unique_together = ("slot", "mentor")

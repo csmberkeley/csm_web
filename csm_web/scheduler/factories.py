@@ -2,6 +2,7 @@ from datetime import timedelta
 import random
 import factory
 import factory.fuzzy
+import faker
 from django.utils import timezone
 from django.core import management
 from django.conf import settings
@@ -40,29 +41,26 @@ class CourseFactory(factory.django.DjangoModelFactory):
     valid_until = factory.Faker("date_between", start_date="+5w", end_date="+18w")
     enrollment_start = factory.LazyAttribute(
         lambda o: timezone.make_aware(
-            evaluate_faker(factory.Faker(
-                "date_time_between_dates",
+            faker.Faker().date_time_between_dates(
                 datetime_start=timezone.now() - timedelta(weeks=3),
                 datetime_end=timezone.now() - timedelta(weeks=2),
-            ))
+            )
         )
     )
     section_start = factory.LazyAttribute(
         lambda o: timezone.make_aware(
-            evaluate_faker(factory.Faker(
-                "date_time_between_dates",
+            faker.Faker().date_time_between_dates(
                 datetime_start=o.enrollment_start + timedelta(weeks=1),
                 datetime_end=o.enrollment_start + timedelta(weeks=3),
-            ))
+            )
         )
     )
     enrollment_end = factory.LazyAttribute(
         lambda o: timezone.make_aware(
-            evaluate_faker(factory.Faker(
-                "date_time_between_dates",
+            faker.Faker().date_time_between_dates(
                 datetime_start=timezone.now() + timedelta(weeks=2),
                 datetime_end=o.valid_until,
-            ))
+            )
         )
     )
     permitted_absences = factory.LazyFunction(lambda: random.randint(1, 4))
@@ -101,6 +99,7 @@ class StudentFactory(factory.django.DjangoModelFactory):
         model = Student
 
     user = factory.SubFactory(UserFactory)
+    course = factory.SubFactory(CourseFactory)
 
 
 class MentorFactory(factory.django.DjangoModelFactory):
@@ -108,6 +107,7 @@ class MentorFactory(factory.django.DjangoModelFactory):
         model = Mentor
 
     user = factory.SubFactory(UserFactory)
+    course = factory.SubFactory(CourseFactory)
 
 
 class SectionFactory(factory.django.DjangoModelFactory):
@@ -212,13 +212,26 @@ def create_demo_account():
     demo_student = random.choice(Student.objects.exclude(course=demo_mentor.course))
     demo_student.user = demo_mentor.user
     demo_student.save()
-    Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
+    demo_coord = Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
         Course.objects.exclude(pk__in=(demo_mentor.course.pk, demo_student.course.pk))))
     print("""
     A demo account has been created with username 'demo_user' and password 'pass'
     Log in at localhost:8000/admin/
     """
           )
+    demo_coord_2 = Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
+        Course.objects.exclude(pk__in=(demo_mentor.course.pk, demo_student.course.pk, demo_coord.course.pk))))
+    # delete all mentors associated with the second course
+    Mentor.objects.filter(course=demo_coord_2.course).delete()
+    # create new mentors associated with demo coord's course
+    mentors = [MentorFactory.create(course=demo_coord_2.course) for _ in range(50)]
+
+    # allow one mentor to login through admin menu
+    demoify_user(mentors[0].user, "demo_mentor")
+    print("""
+    A demo mentor has been created with username 'demo_mentor' and password 'pass'
+    Log in at localhost:8000/admin/
+    """)
 
 
 def confirm_run():
