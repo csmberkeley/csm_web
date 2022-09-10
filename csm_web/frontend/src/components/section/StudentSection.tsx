@@ -1,10 +1,9 @@
-import React, { useEffect, useState } from "react";
-import { Routes, Route, Navigate } from "react-router-dom";
-import PropTypes from "prop-types";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
-import { Attendance, Mentor, Override, Spacetime } from "../../utils/types";
+import React, { useState } from "react";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useDropUserMutation, useStudentAttendances } from "../../utils/queries/sections";
+import { Mentor, Override, Spacetime } from "../../utils/types";
 import Modal from "../Modal";
-import { SectionDetail, InfoCard, ATTENDANCE_LABELS, SectionSpacetime, ROLES } from "./Section";
+import { ATTENDANCE_LABELS, InfoCard, ROLES, SectionDetail, SectionSpacetime } from "./Section";
 
 import XIcon from "../../../static/frontend/img/x.svg";
 
@@ -91,51 +90,47 @@ interface DropSectionProps {
   profileId: number;
 }
 
-interface DropSectionState {
-  stage: string;
+enum DropSectionStage {
+  INITIAL = "INITIAL",
+  CONFIRM = "CONFIRM",
+  DROPPED = "DROPPED"
 }
 
-class DropSection extends React.Component<DropSectionProps, DropSectionState> {
-  static STAGES = Object.freeze({ INITIAL: "INITIAL", CONFIRM: "CONFIRM", DROPPED: "DROPPED" });
+function DropSection({ profileId }: DropSectionProps) {
+  const studentDropMutation = useDropUserMutation(profileId);
+  const [stage, setStage] = useState<DropSectionStage>(DropSectionStage.INITIAL);
 
-  constructor(props: DropSectionProps) {
-    super(props);
-    this.state = { stage: DropSection.STAGES.INITIAL };
-    this.performDrop = this.performDrop.bind(this);
-  }
+  const performDrop = () => {
+    studentDropMutation.mutate(undefined, {
+      onSuccess: () => {
+        setStage(DropSectionStage.DROPPED);
+      }
+    });
+  };
 
-  performDrop() {
-    //TODO: Handle API failure
-    fetchWithMethod(`students/${this.props.profileId}/drop`, HTTP_METHODS.PATCH).then(() =>
-      this.setState({ stage: DropSection.STAGES.DROPPED })
-    );
-  }
-
-  render() {
-    switch (this.state.stage) {
-      case DropSection.STAGES.INITIAL:
-        return (
-          <InfoCard title="Drop Section" showTitle={false}>
-            <h5>Drop Section</h5>
-            <button className="danger-btn" onClick={() => this.setState({ stage: DropSection.STAGES.CONFIRM })}>
-              <XIcon height="1.3em" width="1.3em" />
-              Drop
-            </button>
-          </InfoCard>
-        );
-      case DropSection.STAGES.CONFIRM:
-        return (
-          <Modal className="drop-confirmation" closeModal={() => this.setState({ stage: DropSection.STAGES.INITIAL })}>
-            <h5>Are you sure you want to drop?</h5>
-            <p>You are not guaranteed an available spot in another section!</p>
-            <button className="danger-btn" onClick={this.performDrop}>
-              Confirm
-            </button>
-          </Modal>
-        );
-      case DropSection.STAGES.DROPPED:
-        return <Navigate to="/" />;
-    }
+  switch (stage) {
+    case DropSectionStage.INITIAL:
+      return (
+        <InfoCard title="Drop Section" showTitle={false}>
+          <h5>Drop Section</h5>
+          <button className="danger-btn" onClick={() => setStage(DropSectionStage.CONFIRM)}>
+            <XIcon height="1.3em" width="1.3em" />
+            Drop
+          </button>
+        </InfoCard>
+      );
+    case DropSectionStage.CONFIRM:
+      return (
+        <Modal className="drop-confirmation" closeModal={() => setStage(DropSectionStage.INITIAL)}>
+          <h5>Are you sure you want to drop?</h5>
+          <p>You are not guaranteed an available spot in another section!</p>
+          <button className="danger-btn" onClick={performDrop}>
+            Confirm
+          </button>
+        </Modal>
+      );
+    case DropSectionStage.DROPPED:
+      return <Navigate to="/" />;
   }
 }
 
@@ -143,23 +138,10 @@ interface StudentSectionAttendanceProps {
   associatedProfileId: number;
 }
 
-interface StudentSectionAttendanceState {
-  attendances: Attendance[];
-  loaded: boolean;
-}
-
 function StudentSectionAttendance({ associatedProfileId }: StudentSectionAttendanceProps) {
-  const [state, setState] = useState<StudentSectionAttendanceState>({
-    attendances: (null as unknown) as Attendance[], // type coersion to avoid future type errors
-    loaded: false
-  });
-  useEffect(() => {
-    fetchJSON(`/students/${associatedProfileId}/attendances`).then(attendances =>
-      setState({ attendances, loaded: true })
-    );
-  }, [associatedProfileId]);
-  const { attendances, loaded } = state;
-  return !loaded ? null : (
+  const { data: attendances, isSuccess: attendancesLoaded } = useStudentAttendances(associatedProfileId);
+
+  return !attendancesLoaded ? null : (
     <table id="attendance-table" className="standalone-table">
       <thead>
         <tr>
@@ -183,5 +165,3 @@ function StudentSectionAttendance({ associatedProfileId }: StudentSectionAttenda
     </table>
   );
 }
-
-StudentSectionAttendance.propTypes = { associatedProfileId: PropTypes.number.isRequired };

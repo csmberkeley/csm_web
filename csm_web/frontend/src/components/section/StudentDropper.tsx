@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useStudentDropMutation } from "../../utils/queries/section";
+import { useDropStudentMutation } from "../../utils/queries/sections";
 import Modal from "../Modal";
 
 interface StudentDropperProps {
@@ -16,7 +16,7 @@ export default function StudentDropper({ id, sectionId, name }: StudentDropperPr
   /**
    * Mutation to drop a student from the section.
    */
-  const studentDropMutation = useStudentDropMutation(id, sectionId);
+  const studentDropMutation = useDropStudentMutation(id, sectionId);
 
   function handleClickDrop() {
     studentDropMutation.mutate({ banned: ban });
