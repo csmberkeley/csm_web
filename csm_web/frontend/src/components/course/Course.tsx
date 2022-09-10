@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
-import { useCourseSections } from "../../utils/queries/course";
+import { useCourseSections } from "../../utils/queries/courses";
 import { Course as CourseType } from "../../utils/types";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
@@ -42,7 +42,10 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
    * Sections grouped by day of the week, and whether the user is a corodinator.
    */
   const { data: jsonSections, isSuccess: sectionsLoaded, refetch: reloadSections } = useCourseSections(
-    courseId ? parseInt(courseId) : undefined
+    courseId ? parseInt(courseId) : undefined,
+    response => {
+      setCurrDayGroup(Object.keys(response.sections)[0]);
+    }
   );
 
   /**

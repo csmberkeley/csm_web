@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { useUserEmails } from "../../utils/queries/base";
-import { useSectionCreateMutation } from "../../utils/queries/section";
+import { useSectionCreateMutation } from "../../utils/queries/sections";
 import { Spacetime } from "../../utils/types";
 import Modal from "../Modal";
 import { DAYS_OF_WEEK } from "../section/utils";

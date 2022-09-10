@@ -3,7 +3,7 @@ import { NavLink, useParams } from "react-router-dom";
 import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";
 import { Override, Spacetime } from "../../utils/types";
-import { useSection } from "../../utils/queries/section";
+import { useSection } from "../../utils/queries/sections";
 import { useQueryClient } from "@tanstack/react-query";
 import LoadingSpinner from "../LoadingSpinner";
 
