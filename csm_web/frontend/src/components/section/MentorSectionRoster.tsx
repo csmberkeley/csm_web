@@ -3,7 +3,7 @@ import LoadingSpinner from "../LoadingSpinner";
 
 import CopyIcon from "../../../static/frontend/img/copy.svg";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
-import { useSectionStudents } from "../../utils/queries/section";
+import { useSectionStudents } from "../../utils/queries/sections";
 
 interface MentorSectionRosterProps {
   id: number;

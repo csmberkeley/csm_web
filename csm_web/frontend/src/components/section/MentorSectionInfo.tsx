@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useSectionStudents } from "../../utils/queries/section";
+import { useSectionStudents } from "../../utils/queries/sections";
 import { Mentor, Spacetime, Student } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";

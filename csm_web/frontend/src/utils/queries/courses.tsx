@@ -32,7 +32,10 @@ interface CourseSectionsQueryResponse {
 /**
  * Hook to get all sections for a course.
  */
-export const useCourseSections = (id?: number): UseQueryResult<CourseSectionsQueryResponse, ServerError> => {
+export const useCourseSections = (
+  id: number | undefined,
+  onSuccess?: (response: CourseSectionsQueryResponse) => void
+): UseQueryResult<CourseSectionsQueryResponse, ServerError> => {
   const queryResult = useQuery<CourseSectionsQueryResponse, Error>(
     ["courses", id, "sections"],
     async () => {
@@ -44,7 +47,8 @@ export const useCourseSections = (id?: number): UseQueryResult<CourseSectionsQue
       }
     },
     {
-      enabled: !!id
+      enabled: !!id,
+      onSuccess: onSuccess
     }
   );
 

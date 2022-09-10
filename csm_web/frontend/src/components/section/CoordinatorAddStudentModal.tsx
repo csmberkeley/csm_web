@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { useUserEmails } from "../../utils/queries/base";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import ErrorCircle from "../../../static/frontend/img/error_outline.svg";
+import { useEnrollStudentMutation } from "../../utils/queries/sections";
 
 enum CoordModalStates {
   INITIAL = "INITIAL",
@@ -49,6 +49,8 @@ export function CoordinatorAddStudentModal({
   sectionId
 }: CoordinatorAddStudentModalProps): React.ReactElement {
   const { data: userEmails, isSuccess: userEmailsLoaded } = useUserEmails();
+  const enrollStudentMutation = useEnrollStudentMutation(sectionId);
+
   const [emailsToAdd, setEmailsToAdd] = useState<string[]>([""]);
   const [response, setResponse] = useState<ResponseType>({} as ResponseType);
   /**
@@ -121,28 +123,26 @@ export function CoordinatorAddStudentModal({
       request.actions["capacity"] = responseActions.get("capacity") as string;
     }
 
-    fetchWithMethod(`sections/${sectionId}/students/`, HTTP_METHODS.PUT, request).then(response => {
-      if (!response.ok) {
-        if (response.status === 500) {
+    enrollStudentMutation.mutate(request, {
+      onError: ({ status, json }) => {
+        if (status === 500) {
           // internal error
-          response.text().then(() => {
-            setResponse({
-              errors: { critical: `A internal error occurred. Please report this error to #tech-bugs immediately.` }
-            });
-            setAddStage(CoordModalStates.ERROR);
+          setResponse({
+            errors: { critical: `A internal error occurred. Please report this error to #tech-bugs immediately.` }
           });
+          setAddStage(CoordModalStates.ERROR);
         } else {
-          response.json().then(body => {
-            setResponse(body);
-            if (body.errors.critical) {
-              setAddStage(CoordModalStates.ERROR);
-            } else {
-              setAddStage(CoordModalStates.WARNING);
-            }
-          });
+          // other error
+          setResponse(json);
+          if (json.errors?.critical) {
+            setAddStage(CoordModalStates.ERROR);
+          } else {
+            setAddStage(CoordModalStates.WARNING);
+          }
         }
         setValidationEnabled(false); // reset validation
-      } else {
+      },
+      onSuccess: () => {
         // close modal and refresh the page
         closeModal(true);
       }

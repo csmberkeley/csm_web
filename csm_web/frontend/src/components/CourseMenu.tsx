@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Link, Route, Routes } from "react-router-dom";
-import { useCourses } from "../utils/queries/course";
+import { useCourses } from "../utils/queries/courses";
 import { useUserInfo } from "../utils/queries/base";
 import { Course as CourseType, UserInfo } from "../utils/types";
 import Course from "./course/Course";

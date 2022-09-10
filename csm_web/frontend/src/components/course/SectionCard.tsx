@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 
-import { EnrollStudentMutationResponse, useEnrollStudentMutation } from "../../utils/queries/section";
+import { EnrollUserMutationResponse, useEnrollUserMutation } from "../../utils/queries/sections";
 import { Mentor, Spacetime } from "../../utils/types";
 import Modal, { ModalCloser } from "../Modal";
 
@@ -36,7 +36,7 @@ export const SectionCard = ({
   /**
    * Mutation to enroll a student in the section.
    */
-  const enrollStudentMutation = useEnrollStudentMutation(id);
+  const enrollStudentMutation = useEnrollUserMutation(id);
 
   /**
    * Whether to show the modal (after an attempt to enroll).
@@ -67,7 +67,7 @@ export const SectionCard = ({
         setEnrollmentSuccessful(true);
         setShowModal(true);
       },
-      onError: ({ detail }: EnrollStudentMutationResponse) => {
+      onError: ({ detail }: EnrollUserMutationResponse) => {
         setEnrollmentSuccessful(false);
         setErrorMessage(detail);
         setShowModal(true);
