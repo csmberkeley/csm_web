@@ -1,9 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../../utils/api";
 import { Mentor, Profile } from "../../../utils/types";
 
+import {
+  useMatcherAddMentorsMutation,
+  useMatcherConfigMutation,
+  useMatcherMentors,
+  useMatcherRemoveMentorsMutation
+} from "../../../utils/queries/matcher";
 import Modal from "../../Modal";
 import { SearchBar } from "../../SearchBar";
+import { Tooltip } from "../../Tooltip";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
 import { Slot, SlotPreference } from "../EnrollmentAutomationTypes";
@@ -16,7 +22,6 @@ import SortUnknownIcon from "../../../../static/frontend/img/sort-unknown.svg";
 import SortUpIcon from "../../../../static/frontend/img/sort-up.svg";
 import UndoIcon from "../../../../static/frontend/img/undo.svg";
 import XIcon from "../../../../static/frontend/img/x.svg";
-import { Tooltip } from "../../Tooltip";
 
 interface ReleaseStageProps {
   profile: Profile;
@@ -25,7 +30,6 @@ interface ReleaseStageProps {
    * Map from mentor id to their slot preferences
    */
   prefByMentor: Map<number, SlotPreference[]>;
-  refreshStage: () => void;
 }
 
 /**
@@ -33,7 +37,7 @@ interface ReleaseStageProps {
  * - Add mentors to fill out the preference form
  * - View current submitted preferences from mentors
  */
-export function ReleaseStage({ profile, slots, prefByMentor, refreshStage }: ReleaseStageProps): React.ReactElement {
+export function ReleaseStage({ profile, slots, prefByMentor }: ReleaseStageProps): React.ReactElement {
   const [selectedMentor, setSelectedMentor] = useState<Mentor | undefined>(undefined);
 
   const [preferenceModalOpen, setPreferenceModalOpen] = useState<boolean>(false);
@@ -66,7 +70,6 @@ export function ReleaseStage({ profile, slots, prefByMentor, refreshStage }: Rel
         prefByMentor={prefByMentor}
         selectedMentor={selectedMentor}
         setSelectedMentor={handleSelectMentor}
-        refreshStage={refreshStage}
       />
     </React.Fragment>
   );
@@ -90,16 +93,9 @@ interface MentorListProps {
   prefByMentor: Map<number, SlotPreference[]>;
   selectedMentor: Mentor | undefined;
   setSelectedMentor: (mentor: Mentor | undefined) => void;
-  refreshStage: () => void;
 }
 
-function MentorList({
-  profile,
-  prefByMentor,
-  selectedMentor,
-  setSelectedMentor,
-  refreshStage
-}: MentorListProps): React.ReactElement {
+function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }: MentorListProps): React.ReactElement {
   /**
    * List of all mentors associated with the course that have no assigned section
    */
@@ -126,6 +122,17 @@ function MentorList({
   const [sortBy, setSortBy] = useState<SortByType>({ attr: "name", dir: SortDirection.ASCENDING });
 
   /**
+   * List of all mentors associated with the course that have no assigned section
+   */
+  const { data: jsonMentorList, isSuccess: jsonMentorListLoaded, refetch: refetchMentorList } = useMatcherMentors(
+    profile.courseId
+  );
+
+  const matcherConfigMutation = useMatcherConfigMutation(profile.courseId);
+  const matcherMentorsMutation = useMatcherAddMentorsMutation(profile.courseId);
+  const matcherRemoveMentorsMutation = useMatcherRemoveMentorsMutation(profile.courseId);
+
+  /**
    * Reference to the search bar input field
    */
   const searchBar = useRef<HTMLInputElement>(null);
@@ -135,8 +142,11 @@ function MentorList({
   const addMentorTextArea = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    fetchMentors();
-  }, [profile]);
+    if (jsonMentorListLoaded) {
+      setMentorList(jsonMentorList.mentors);
+    }
+    sortTable();
+  }, [jsonMentorList]);
 
   useEffect(() => {
     updateSearch(searchBar.current?.value);
@@ -154,27 +164,7 @@ function MentorList({
 
   const closeForm = () => {
     // send POST request to close form for mentors
-    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { open: false }).then(() => {
-      // recompute stage
-      refreshStage();
-    });
-  };
-
-  /**
-   * Fetches the mentor list from the server, sorted to put mentors
-   * that have not filled in the preference form first
-   *
-   * @returns {Promise<void>}
-   */
-  const fetchMentors = (): Promise<void> => {
-    /**
-     * Data format:
-     * { "mentors": [{mentor model}, ...] }
-     */
-    return fetchJSON(`matcher/${profile.courseId}/mentors`).then(data => {
-      setMentorList(data.mentors);
-      sortTable();
-    });
+    matcherConfigMutation.mutate({ open: false });
   };
 
   const submitMentorList = () => {
@@ -203,25 +193,23 @@ function MentorList({
     }
 
     // submit mentor list to add to course
-    fetchWithMethod(`matcher/${profile.courseId}/mentors`, HTTP_METHODS.POST, {
-      mentors: newMentors
-    }).then(response => {
-      response
-        .json()
-        .then(data => {
-          if (data.skipped) {
-            console.log(data);
+    matcherMentorsMutation.mutate(
+      { mentors: newMentors },
+      {
+        onSuccess: response => {
+          if (response.skipped) {
+            console.log(response.skipped);
           }
-        })
-        .then(() => {
+
           if (addMentorTextArea.current) {
             // reset text area
             addMentorTextArea.current.value = "";
           }
           // refetch mentors
-          fetchMentors();
-        });
-    });
+          refetchMentorList();
+        }
+      }
+    );
   };
 
   /**
@@ -317,13 +305,16 @@ function MentorList({
       return;
     }
     // submit mentors to remove from course
-    fetchWithMethod(`matcher/${profile.courseId}/mentors`, HTTP_METHODS.DELETE, {
-      mentors: removedMentorList
-    }).then(() => {
-      setRemovedMentorList([]);
-      // refresh mentor list
-      fetchMentors();
-    });
+    matcherRemoveMentorsMutation.mutate(
+      { mentors: removedMentorList },
+      {
+        onSuccess: () => {
+          setRemovedMentorList([]);
+          // refresh mentor list
+          refetchMentorList();
+        }
+      }
+    );
   };
 
   const hasPreferences = (mentor: Mentor) => prefByMentor.has(mentor.id);

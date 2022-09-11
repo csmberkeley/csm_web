@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Link, NavLink, NavLinkProps, Outlet, Route, Routes, useLocation } from "react-router-dom";
-import { fetchJSON } from "../utils/api";
-import { Profile } from "../utils/types";
+import { useProfiles } from "../utils/queries/base";
+import { useMatcherActiveCourses } from "../utils/queries/matcher";
 import { emptyRoles, Roles } from "../utils/user";
 import CourseMenu from "./CourseMenu";
 import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
@@ -88,26 +88,27 @@ function Header(): React.ReactElement {
 
   const [activeMatcherRoles, setActiveMatcherRoles] = useState<Roles>(emptyRoles());
 
+  const { data: profiles, isSuccess: profilesLoaded } = useProfiles();
+  const { data: matcherActiveCourses, isSuccess: matcherActiveCoursesLoaded } = useMatcherActiveCourses();
+
   useEffect(() => {
-    Promise.all([fetchJSON("/profiles"), fetchJSON("/matcher/active")]).then(
-      ([profiles, activeMatcherCourses]: [Profile[], number[]]) => {
-        const roles = emptyRoles();
-        // get roles, but only if coordinator or mentor with no section
-        for (const profile of profiles) {
-          if (!activeMatcherCourses.includes(profile.courseId)) {
-            // ignore if not active
-            continue;
-          }
-          if (profile.role === "COORDINATOR") {
-            roles["COORDINATOR"].add(profile.courseId);
-          } else if (profile.role === "MENTOR" && profile.sectionId === undefined) {
-            roles["MENTOR"].add(profile.courseId);
-          }
-        }
-        setActiveMatcherRoles(roles);
+    if (!profilesLoaded || !matcherActiveCoursesLoaded) return;
+
+    const roles = emptyRoles();
+    // get roles, but only if coordinator or mentor with no section
+    for (const profile of profiles) {
+      if (!matcherActiveCourses.includes(profile.courseId)) {
+        // ignore if not active
+        continue;
       }
-    );
-  }, []);
+      if (profile.role === "COORDINATOR") {
+        roles["COORDINATOR"].add(profile.courseId);
+      } else if (profile.role === "MENTOR" && profile.sectionId === undefined) {
+        roles["MENTOR"].add(profile.courseId);
+      }
+    }
+    setActiveMatcherRoles(roles);
+  }, [profiles, matcherActiveCourses]);
 
   return (
     <header>

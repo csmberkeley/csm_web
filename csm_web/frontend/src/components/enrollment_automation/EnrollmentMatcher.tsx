@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { NavLink, Navigate, Route, Routes, useParams } from "react-router-dom";
-import { fetchJSON } from "../../utils/api";
+import { Navigate, NavLink, Route, Routes, useParams } from "react-router-dom";
+import { useProfiles } from "../../utils/queries/base";
+import { useMatcherActiveCourses } from "../../utils/queries/matcher";
 import { Profile } from "../../utils/types";
 
 import { emptyRoles, Roles } from "../../utils/user";
@@ -22,54 +23,60 @@ export function EnrollmentMatcher(): JSX.Element {
 
   const [overrideProfile, setOverrideProfile] = useState<Map<number, "COORDINATOR" | "MENTOR">>(new Map());
 
+  const { data: profiles, isSuccess: profilesLoaded } = useProfiles();
+  const { data: activeCourses, isSuccess: activeCoursesLoaded } = useMatcherActiveCourses();
+
   useEffect(() => {
-    Promise.all([fetchJSON("/profiles"), fetchJSON("/matcher/active")]).then(([profiles, activeCourses]) => {
-      const newCourses: Array<MatcherProfile> = [];
-      const newRoles: Roles = emptyRoles();
-      const newCoordProfileMap: Map<number, Profile> = new Map();
-      const newMentorProfileMap: Map<number, Profile> = new Map();
-      const newOverrideProfile: Map<number, "COORDINATOR" | "MENTOR"> = new Map();
+    // wait until all data is loaded
+    if (!profilesLoaded || !activeCoursesLoaded) {
+      return;
+    }
 
-      profiles.map((profile: Profile) => {
+    const newCourses: Array<MatcherProfile> = [];
+    const newRoles: Roles = emptyRoles();
+    const newCoordProfileMap: Map<number, Profile> = new Map();
+    const newMentorProfileMap: Map<number, Profile> = new Map();
+    const newOverrideProfile: Map<number, "COORDINATOR" | "MENTOR"> = new Map();
+
+    profiles.map((profile: Profile) => {
+      if (profile.role === "COORDINATOR") {
+        newCoordProfileMap.set(profile.courseId, profile);
+      } else if (profile.role === "MENTOR") {
+        newMentorProfileMap.set(profile.courseId, profile);
+      }
+
+      if (profile.role === "COORDINATOR" || (profile.role === "MENTOR" && profile.sectionId == null)) {
+        if (!activeCourses.includes(profile.courseId)) {
+          // ignore if not active
+          return;
+        }
+        newCourses.push({
+          courseId: profile.courseId,
+          courseName: profile.course,
+          courseTitle: profile.courseTitle,
+          role: profile.role
+        });
+        newRoles[profile.role].add(profile.courseId);
+
         if (profile.role === "COORDINATOR") {
-          newCoordProfileMap.set(profile.courseId, profile);
+          newOverrideProfile.set(profile.courseId, "COORDINATOR");
         } else if (profile.role === "MENTOR") {
-          newMentorProfileMap.set(profile.courseId, profile);
+          newOverrideProfile.set(profile.courseId, "MENTOR");
         }
-
-        if (profile.role === "COORDINATOR" || (profile.role === "MENTOR" && profile.sectionId == null)) {
-          if (!activeCourses.includes(profile.courseId)) {
-            // ignore if not active
-            return;
-          }
-          newCourses.push({
-            courseId: profile.courseId,
-            courseName: profile.course,
-            courseTitle: profile.courseTitle,
-            role: profile.role
-          });
-          newRoles[profile.role].add(profile.courseId);
-
-          if (profile.role === "COORDINATOR") {
-            newOverrideProfile.set(profile.courseId, "COORDINATOR");
-          } else if (profile.role === "MENTOR") {
-            newOverrideProfile.set(profile.courseId, "MENTOR");
-          }
-        }
-      });
-
-      setRoles(newRoles);
-      setCoordProfileMap(newCoordProfileMap);
-      setMentorProfileMap(newMentorProfileMap);
-      setOverrideProfile(newOverrideProfile);
-
-      // sort by course name
-      newCourses.sort((a, b) => {
-        return a.courseName.localeCompare(b.courseName);
-      });
-      setStaffCourses(newCourses);
+      }
     });
-  }, []);
+
+    setRoles(newRoles);
+    setCoordProfileMap(newCoordProfileMap);
+    setMentorProfileMap(newMentorProfileMap);
+    setOverrideProfile(newOverrideProfile);
+
+    // sort by course name
+    newCourses.sort((a, b) => {
+      return a.courseName.localeCompare(b.courseName);
+    });
+    setStaffCourses(newCourses);
+  }, [profiles, activeCourses]);
 
   const switchProfile = (courseId: number) => {
     if (overrideProfile.has(courseId)) {
@@ -146,6 +153,7 @@ const MatcherCourseWrapper = ({
   if (role === "COORDINATOR") {
     return (
       <CoordinatorMatcherForm
+        key={courseId} // key to force re-render upon profile switch
         profile={coordProfileMap.get(courseId)!}
         switchProfileEnabled={coordAndMentor}
         switchProfile={() => switchProfile(courseId)}
@@ -154,6 +162,7 @@ const MatcherCourseWrapper = ({
   } else if (role === "MENTOR") {
     return (
       <MentorSectionPreferences
+        key={courseId}
         profile={mentorProfileMap.get(courseId)!}
         switchProfileEnabled={coordAndMentor}
         switchProfile={() => switchProfile(courseId)}
