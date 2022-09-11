@@ -1,8 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { fetchJSON } from "../../../utils/api";
 import { Profile } from "../../../utils/types";
 import { parseTime } from "../utils";
 
+import {
+  useMatcherAssignment,
+  useMatcherConfig,
+  useMatcherPreferences,
+  useMatcherSlots
+} from "../../../utils/queries/matcher";
 import { Assignment, Slot, SlotPreference, Time } from "../EnrollmentAutomationTypes";
 import { ConfigureStage } from "./ConfigureStage";
 import { CreateStage } from "./CreateStage";
@@ -34,96 +39,58 @@ export function CoordinatorMatcherForm({
   switchProfileEnabled
 }: CoordinatorMatcherFormProps): JSX.Element {
   const relation = profile.role.toLowerCase();
-  const [loaded, setLoaded] = useState<boolean>(false);
   const [slots, setSlots] = useState<Slot[]>([]);
   const [prefByMentor, setPrefByMentor] = useState<Map<number, SlotPreference[]>>(new Map());
-  const [assignments, setAssignments] = useState<Assignment[]>([]);
   const [formIsOpen, setFormIsOpen] = useState<boolean>(false);
 
   const [curStage, setCurStage] = useState<Stage>(Stage.CREATE);
 
-  const fetchData = async () => {
-    // ensure all fetches complete
-    await Promise.all([
-      // fetch slot information
-      fetchJSON(`matcher/${profile.courseId}/slots`).then(data => {
-        /**
-         * Data format:
-         * {
-         *   "slots": [
-         *     {"id": number, "times": JSON_string}, ...
-         *   ]
-         * }
-         */
+  const { data: jsonAssignments, isSuccess: jsonAssignmentsLoaded } = useMatcherAssignment(profile.courseId);
+  const { data: jsonSlots, isSuccess: jsonSlotsLoaded } = useMatcherSlots(profile.courseId);
+  const { data: jsonPreferences, isSuccess: jsonPreferencesLoaded } = useMatcherPreferences(profile.courseId);
+  const { data: matcherConfig, isSuccess: matcherConfigLoaded } = useMatcherConfig(profile.courseId);
 
-        // convert times to numbers
-        const new_slots: Slot[] = data.slots.map((slot: { id: number; times: StrTime[] }) => {
-          const new_times: Time[] = slot.times.map((time: StrTime) => {
-            return {
-              startTime: parseTime(time.startTime),
-              endTime: parseTime(time.endTime),
-              day: time.day,
-              isLinked: slot.times.length > 0
-            };
-          });
-          return {
-            id: slot.id,
-            times: new_times
-          };
-        });
-        setSlots(new_slots);
-      }),
+  const assignments = jsonAssignments?.assignment ?? [];
+  const loaded = jsonAssignmentsLoaded && jsonSlotsLoaded && jsonPreferencesLoaded && matcherConfigLoaded;
 
-      // fetch response information
-      fetchJSON(`matcher/${profile.courseId}/preferences`).then(data => {
-        /**
-         * Data format:
-         * {
-         *   "open": boolean,  // whether form is open to responses
-         *   "responses": [  // list of responses
-         *     {"slot": number, "mentor": number, "preference": number}, ...
-         *   ]
-         * }
-         */
-        setFormIsOpen(data.open);
-        const mentorMap = new Map<number, SlotPreference[]>();
-        for (const response of data.responses) {
-          if (!mentorMap.has(response.mentor)) {
-            mentorMap.set(response.mentor, []);
-          }
+  useEffect(() => {
+    // wait for all data to be loaded
+    if (!jsonAssignmentsLoaded || !jsonSlotsLoaded || !jsonPreferencesLoaded || !matcherConfigLoaded) {
+      return;
+    }
 
-          mentorMap.get(response.mentor)?.push({
-            slot: response.slot,
-            preference: response.preference
-          });
-        }
-
-        setPrefByMentor(mentorMap);
-      }),
-
-      // fetch assignment
-      refreshAssignments()
-    ]).then(() => {
-      setLoaded(true);
+    // convert times to numbers
+    const new_slots: Slot[] = jsonSlots.slots.map((slot: { id: number; times: StrTime[] }) => {
+      const new_times: Time[] = slot.times.map((time: StrTime) => {
+        return {
+          startTime: parseTime(time.startTime),
+          endTime: parseTime(time.endTime),
+          day: time.day,
+          isLinked: slot.times.length > 0
+        };
+      });
+      return {
+        id: slot.id,
+        times: new_times
+      };
     });
-  };
 
-  const refreshAssignments = () => {
-    return fetchJSON(`matcher/${profile.courseId}/assignment`).then(data => {
-      /**
-       * Data format:
-       * {
-       *   "assignment": [  // list of assignments by id
-       *      {"slot": number, "mentor": number,
-       *       "section": {"capacity": number, "description": string}},
-       *      ...,
-       *   ]
-       * }
-       */
-      const assignment = data.assignment;
-      setAssignments(assignment);
-    });
-  };
+    const mentorMap = new Map<number, SlotPreference[]>();
+    for (const response of jsonPreferences.responses) {
+      if (!mentorMap.has(response.mentor)) {
+        mentorMap.set(response.mentor, []);
+      }
+
+      mentorMap.get(response.mentor)?.push({
+        slot: response.slot,
+        preference: response.preference
+      });
+    }
+
+    setSlots(new_slots);
+    setPrefByMentor(mentorMap);
+    setFormIsOpen(matcherConfig.open);
+  }, [jsonSlots, jsonPreferences, jsonAssignments, matcherConfig?.open]);
 
   /*
 
@@ -159,14 +126,7 @@ export function CoordinatorMatcherForm({
     further updates should be done through coordinator interface
   */
 
-  /**
-   * Refetch data and recompute current stage
-   */
-  const refreshStage = async () => {
-    return fetchData();
-  };
-
-  useEffect(() => {
+  const recomputeStage = () => {
     // update stage if anything has been updated
     if (!formIsOpen && slots.length === 0) {
       setCurStage(Stage.CREATE);
@@ -180,12 +140,11 @@ export function CoordinatorMatcherForm({
       // default is create
       setCurStage(Stage.CREATE);
     }
-  }, [formIsOpen, slots, prefByMentor, assignments]);
+  };
 
-  // fetch data on first load
   useEffect(() => {
-    refreshStage();
-  }, [profile]);
+    recomputeStage();
+  }, [formIsOpen, slots.length, assignments.length, prefByMentor.size]);
 
   if (!loaded) {
     return <div>Loading...</div>;
@@ -226,8 +185,7 @@ export function CoordinatorMatcherForm({
           slots={slots}
           prefByMentor={prefByMentor}
           assignments={assignments}
-          refreshStage={refreshStage}
-          refreshAssignments={refreshAssignments}
+          recomputeStage={recomputeStage}
           setCurStage={setCurStage}
         />
       </div>
@@ -241,8 +199,7 @@ interface CoordinatorMatcherFormSwitchProps {
   slots: Slot[];
   prefByMentor: Map<number, SlotPreference[]>;
   assignments: Assignment[];
-  refreshStage: () => Promise<void>;
-  refreshAssignments: () => Promise<void>;
+  recomputeStage: () => void;
   setCurStage: (stage: Stage) => void;
 }
 
@@ -252,17 +209,16 @@ const CoordinatorMatcherFormSwitch = ({
   slots,
   prefByMentor,
   assignments,
-  refreshStage,
-  refreshAssignments,
+  recomputeStage,
   setCurStage
 }: CoordinatorMatcherFormSwitchProps) => {
   switch (stage) {
     case Stage.CREATE:
-      return <CreateStage profile={profile} initialSlots={slots} refreshStage={refreshStage} />;
+      return <CreateStage profile={profile} initialSlots={slots} />;
     case Stage.RELEASE:
-      return <ReleaseStage profile={profile} slots={slots} prefByMentor={prefByMentor} refreshStage={refreshStage} />;
+      return <ReleaseStage profile={profile} slots={slots} prefByMentor={prefByMentor} />;
     case Stage.CONFIGURE:
-      return <ConfigureStage profile={profile} slots={slots} refreshStage={refreshStage} />;
+      return <ConfigureStage profile={profile} slots={slots} recomputeStage={recomputeStage} />;
     case Stage.EDIT:
       return (
         <EditStage
@@ -271,7 +227,6 @@ const CoordinatorMatcherFormSwitch = ({
           assignments={assignments}
           prefByMentor={prefByMentor}
           prevStage={() => setCurStage(Stage.CONFIGURE)}
-          refreshAssignments={refreshAssignments}
         />
       );
     default:

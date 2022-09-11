@@ -1,13 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { Profile } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { Calendar } from "./calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime } from "./calendar/CalendarTypes";
 import { Slot } from "./EnrollmentAutomationTypes";
-import { MAX_PREFERENCE, formatTime, parseTime, formatInterval } from "./utils";
+import { formatInterval, formatTime, MAX_PREFERENCE, parseTime } from "./utils";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
+import {
+  useMatcherConfig,
+  useMatcherPreferenceMutation,
+  useMatcherPreferences,
+  useMatcherSlots
+} from "../../utils/queries/matcher";
 
 enum Status {
   NONE,
@@ -32,62 +37,57 @@ export function MentorSectionPreferences({
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedEvents, setSelectedEvents] = useState<CalendarEvent[]>([]);
   const [selectedEventIndices, setSelectedEventIndices] = useState<number[]>([]);
-  const [matcherOpen, setMatcherOpen] = useState<boolean>(false);
 
   /**
    * Status after submitting preferences
    */
   const [submitStatus, setSubmitStatus] = useState<Status>(Status.NONE);
 
+  const { data: jsonSlots, isSuccess: jsonSlotsLoaded } = useMatcherSlots(profile.courseId);
+  const { data: jsonPreferences, isSuccess: jsonPreferencesLoaded } = useMatcherPreferences(profile.courseId);
+  const { data: matcherConfig, isSuccess: matcherConfigLoaded } = useMatcherConfig(profile.courseId);
+
+  const matcherPreferenceMutation = useMatcherPreferenceMutation(profile.courseId);
+
   useEffect(() => {
-    getSlots();
-    getMatcherOpen();
-  }, [profile]);
+    // wait for all data to be loaded
+    if (!jsonSlotsLoaded || !jsonPreferencesLoaded) {
+      return;
+    }
 
-  const getSlots = () => {
-    fetchJSON(`matcher/${profile.courseId}/slots`)
-      .then(data => {
-        const newSlots: Slot[] = [];
-        for (const slot of data.slots) {
-          const times = [];
-          for (const time of slot.times) {
-            times.push({
-              day: time.day,
-              startTime: parseTime(time.startTime),
-              endTime: parseTime(time.endTime),
-              isLinked: time.isLinked
-            });
-          }
-          const parsed_slot: Slot = {
-            id: slot.id,
-            // replace single quotes for JSON
-            times: times,
-            preference: 0
-          };
-          newSlots.push(parsed_slot);
-        }
-        return newSlots;
-      })
-      .then(newSlots => {
-        // also fetch existing mentor preferences
-        fetchJSON(`matcher/${profile.courseId}/preferences`).then(data => {
-          for (const pref of data.responses) {
-            const slotIndex = newSlots.findIndex(slot => slot.id === pref.slot);
-            if (slotIndex !== -1) {
-              newSlots[slotIndex].preference = pref.preference;
-            }
-          }
-
-          setSlots(newSlots);
+    const newSlots: Slot[] = [];
+    for (const slot of jsonSlots.slots) {
+      const times = [];
+      for (const time of slot.times) {
+        times.push({
+          day: time.day,
+          startTime: parseTime(time.startTime),
+          endTime: parseTime(time.endTime),
+          isLinked: time.isLinked
         });
-      });
-  };
+      }
+      const parsed_slot: Slot = {
+        id: slot.id,
+        // replace single quotes for JSON
+        times: times,
+        preference: 0
+      };
+      newSlots.push(parsed_slot);
+    }
 
-  const getMatcherOpen = () => {
-    fetchJSON(`matcher/${profile.courseId}/configure`).then(data => {
-      setMatcherOpen(data.open);
-    });
-  };
+    for (const pref of jsonPreferences.responses) {
+      const slotIndex = newSlots.findIndex(slot => slot.id === pref.slot);
+      if (slotIndex !== -1) {
+        newSlots[slotIndex].preference = pref.preference;
+      }
+    }
+
+    setSlots(newSlots);
+  }, [jsonSlotsLoaded, jsonPreferencesLoaded]);
+
+  if (!matcherConfigLoaded) {
+    return <LoadingSpinner className="spinner-centered" />;
+  }
 
   const setPreference = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPreference = parseInt(e.target.value);
@@ -124,25 +124,23 @@ export function MentorSectionPreferences({
       cleaned_preferences.push(cleaned_slot);
     }
     setSubmitStatus(Status.LOADING);
-    fetchWithMethod(`matcher/${profile.courseId}/preferences`, HTTP_METHODS.POST, cleaned_preferences)
-      .then(response => {
-        if (response.ok) {
-          setSubmitStatus(Status.SUCCESS);
-          // clear after 1.5 seconds
-          setTimeout(() => {
-            setSubmitStatus(Status.NONE);
-          }, 1500);
-        } else {
-          setSubmitStatus(Status.ERROR);
-        }
-      })
-      .catch(() => {
+
+    matcherPreferenceMutation.mutate(cleaned_preferences, {
+      onSuccess: () => {
+        setSubmitStatus(Status.SUCCESS);
+        // clear after 1.5 seconds
+        setTimeout(() => {
+          setSubmitStatus(Status.NONE);
+        }, 1500);
+      },
+      onError: () => {
         setSubmitStatus(Status.ERROR);
-      });
+      }
+    });
   };
 
   const setSelectedEventIndicesWrapper = (indices: number[]) => {
-    if (matcherOpen) {
+    if (matcherConfig.open) {
       setSelectedEventIndices(indices);
       setSelectedEvents(indices.map(idx => slots[idx]));
     } else {
@@ -176,7 +174,7 @@ export function MentorSectionPreferences({
   };
 
   let sidebarContents;
-  if (matcherOpen) {
+  if (matcherConfig.open) {
     if (selectedEvents.length === 0) {
       // no selected event
       sidebarContents = <div>Click on a section to edit preferences.</div>;
@@ -257,7 +255,7 @@ export function MentorSectionPreferences({
         <div className="mentor-sidebar-left">
           <div className="matcher-sidebar-left-top">{sidebarContents}</div>
           <div className="matcher-sidebar-left-bottom-row">
-            <button className="matcher-submit-btn" onClick={postPreferences} disabled={!matcherOpen}>
+            <button className="matcher-submit-btn" onClick={postPreferences} disabled={!matcherConfig.open}>
               Submit
             </button>
             <div className="matcher-submit-status-container">{statusContent}</div>

@@ -342,7 +342,7 @@ def configure(request, pk=None):
         if is_coordinator:
             if matcher is None:
                 # haven't set up the matcher yet
-                return Response([], status=status.HTTP_200_OK)
+                return Response({"open": False, "slots": []}, status=status.HTTP_200_OK)
 
             slots = MatcherSlot.objects.filter(matcher=matcher)
             return Response(

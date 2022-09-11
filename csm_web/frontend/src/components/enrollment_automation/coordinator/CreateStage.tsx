@@ -1,7 +1,6 @@
 import _ from "lodash";
 import React, { useEffect, useState } from "react";
 
-import { fetchWithMethod, HTTP_METHODS } from "../../../utils/api";
 import { Profile } from "../../../utils/types";
 import { Tooltip } from "../../Tooltip";
 import { Calendar } from "../calendar/Calendar";
@@ -11,6 +10,7 @@ import { formatInterval, formatTime, parseTime, serializeTime } from "../utils";
 
 import InfoIcon from "../../../../static/frontend/img/info.svg";
 import XIcon from "../../../../static/frontend/img/x.svg";
+import { useMatcherConfigMutation, useMatcherSlotsMutation } from "../../../utils/queries/matcher";
 
 interface TileDetails {
   days: string[];
@@ -23,10 +23,9 @@ interface TileDetails {
 interface CreateStageProps {
   profile: Profile;
   initialSlots: Slot[];
-  refreshStage: () => void;
 }
 
-export function CreateStage({ profile, initialSlots, refreshStage }: CreateStageProps): JSX.Element {
+export function CreateStage({ profile, initialSlots }: CreateStageProps): JSX.Element {
   /**
    * List of slots to be displayed in the calendar.
    */
@@ -68,6 +67,9 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
    * Whether or not anything has been edited
    */
   const [edited, setEdited] = useState<boolean>(false);
+
+  const matcherConfigMutation = useMatcherConfigMutation(profile.courseId);
+  const matcherSlotsMutation = useMatcherSlotsMutation(profile.courseId);
 
   /**
    * Whenever initial slots changes, refresh slots
@@ -135,17 +137,19 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
       };
     });
 
-    fetchWithMethod(`matcher/${profile.courseId}/slots`, HTTP_METHODS.POST, { slots: converted_slots }).then(() => {
-      setEdited(false);
-    });
+    matcherSlotsMutation.mutate(
+      { slots: converted_slots },
+      {
+        onSuccess: () => {
+          setEdited(false);
+        }
+      }
+    );
   };
 
   const openForm = (): void => {
     // send POST request to release form for mentors
-    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { open: true }).then(() => {
-      // recompute stage
-      refreshStage();
-    });
+    matcherConfigMutation.mutate({ open: true });
   };
 
   /**
