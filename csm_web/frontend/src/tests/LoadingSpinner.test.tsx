@@ -1,11 +1,10 @@
 import React from "react";
-import renderer from "react-test-renderer";
+import { render } from "@testing-library/react";
 import LoadingSpinner from "../components/LoadingSpinner";
 
 describe("LoadingSpinner", () => {
   it("should render correctly", () => {
-    const component = renderer.create(<LoadingSpinner />);
-    const tree = component.toJSON();
-    expect(tree).toMatchSnapshot();
+    const component = render(<LoadingSpinner />);
+    expect(component.asFragment()).toMatchSnapshot();
   });
 });

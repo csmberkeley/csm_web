@@ -26,7 +26,7 @@ export default function StudentDropper({ id, sectionId, name }: StudentDropperPr
   return (
     <span className={`student-dropper ${showDropPrompt ? "ban-prompt-visible" : ""}`}>
       <span title="Drop student from section" className="inline-plus-sign" onClick={() => setShowDropPrompt(true)}>
-        ×
+        &times;
       </span>
       {showDropPrompt && (
         <Modal closeModal={() => setShowDropPrompt(false)}>

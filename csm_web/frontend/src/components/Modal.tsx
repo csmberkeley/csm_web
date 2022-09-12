@@ -19,8 +19,8 @@ export default function Modal({ children, closeModal, className = "" }: ModalPro
       <div className={`modal ${className}`}>
         <div className="modal-contents">
           <div className="modal-close-x">
-            <button className="inline-plus-sign" onClick={closeModal}>
-              <span>×</span>
+            <button className="inline-plus-sign" aria-label="close" onClick={closeModal}>
+              <span>&times;</span>
             </button>
           </div>
           {children}

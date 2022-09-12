@@ -1,23 +1,22 @@
 // Jest Snapshot v1, https://goo.gl/fbAQLP
 
 exports[`Modal should close correctly when an external modal closer is clicked 1`] = `
-Array [
+<DocumentFragment>
   <div
-    className="modal-overlay"
-    onClick={[MockFunction]}
-  />,
+    class="modal-overlay"
+  />
   <div
-    className="modal test-modal"
+    class="modal test-modal"
   >
     <div
-      className="modal-contents"
+      class="modal-contents"
     >
       <div
-        className="modal-close-x"
+        class="modal-close-x"
       >
         <button
-          className="inline-plus-sign"
-          onClick={[MockFunction]}
+          aria-label="close"
+          class="inline-plus-sign"
         >
           <span>
             ×
@@ -28,34 +27,32 @@ Array [
         Hello World
       </div>
       <div
-        className="modal-close"
-        onClick={[MockFunction]}
+        class="modal-close"
       >
         Close
       </div>
     </div>
-  </div>,
-]
+  </div>
+</DocumentFragment>
 `;
 
 exports[`Modal should render correctly 1`] = `
-Array [
+<DocumentFragment>
   <div
-    className="modal-overlay"
-    onClick={[MockFunction]}
-  />,
+    class="modal-overlay"
+  />
   <div
-    className="modal "
+    class="modal "
   >
     <div
-      className="modal-contents"
+      class="modal-contents"
     >
       <div
-        className="modal-close-x"
+        class="modal-close-x"
       >
         <button
-          className="inline-plus-sign"
-          onClick={[MockFunction]}
+          aria-label="close"
+          class="inline-plus-sign"
         >
           <span>
             ×
@@ -66,28 +63,27 @@ Array [
         Hello World
       </div>
     </div>
-  </div>,
-]
+  </div>
+</DocumentFragment>
 `;
 
 exports[`Modal should render correctly with className 1`] = `
-Array [
+<DocumentFragment>
   <div
-    className="modal-overlay"
-    onClick={[MockFunction]}
-  />,
+    class="modal-overlay"
+  />
   <div
-    className="modal test-modal"
+    class="modal test-modal"
   >
     <div
-      className="modal-contents"
+      class="modal-contents"
     >
       <div
-        className="modal-close-x"
+        class="modal-close-x"
       >
         <button
-          className="inline-plus-sign"
-          onClick={[MockFunction]}
+          aria-label="close"
+          class="inline-plus-sign"
         >
           <span>
             ×
@@ -98,6 +94,6 @@ Array [
         Hello World
       </div>
     </div>
-  </div>,
-]
+  </div>
+</DocumentFragment>
 `;

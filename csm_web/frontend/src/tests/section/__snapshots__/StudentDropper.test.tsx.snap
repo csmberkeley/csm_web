@@ -1,0 +1,107 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`StudentDropper should close modal correctly 1`] = `
+<DocumentFragment>
+  <span
+    class="student-dropper "
+  >
+    <span
+      class="inline-plus-sign"
+      title="Drop student from section"
+    >
+      ×
+    </span>
+  </span>
+</DocumentFragment>
+`;
+
+exports[`StudentDropper should render correctly without interaction 1`] = `
+<DocumentFragment>
+  <span
+    class="student-dropper "
+  >
+    <span
+      class="inline-plus-sign"
+      title="Drop student from section"
+    >
+      ×
+    </span>
+  </span>
+</DocumentFragment>
+`;
+
+exports[`StudentDropper should render modal correctly after clicking x 1`] = `
+<DocumentFragment>
+  <span
+    class="student-dropper ban-prompt-visible"
+  >
+    <span
+      class="inline-plus-sign"
+      title="Drop student from section"
+    >
+      ×
+    </span>
+    <div
+      class="_mock-modal"
+    >
+      <button>
+        Close
+      </button>
+      <div
+        class="studentDropper"
+      >
+        <div
+          class="studentDropperHeadItem"
+        >
+          DROP Student
+        </div>
+        <div>
+          <input
+            id="drop"
+            name="drop"
+            type="checkbox"
+          />
+          <label
+            class="studentDropperCheckboxLabel"
+            for="drop"
+          >
+            I would like to DROP Test Student from this section.
+          </label>
+          <br />
+        </div>
+        <div
+          class="studentDropperHeadItem"
+        >
+          BAN Student
+        </div>
+        <div>
+          <input
+            disabled=""
+            id="ban"
+            name="ban"
+            type="checkbox"
+          />
+          <label
+            class="studentDropperCheckboxLabel"
+            for="ban"
+          >
+            I would like to BAN Test Student from this course.
+          </label>
+          <br />
+        </div>
+        <div
+          class="studentDropperSubmitWrapper"
+        >
+          <button
+            class="studentDropperSubmit"
+            disabled=""
+            id="dropper submit button"
+          >
+            Submit
+          </button>
+        </div>
+      </div>
+    </div>
+  </span>
+</DocumentFragment>
+`;
