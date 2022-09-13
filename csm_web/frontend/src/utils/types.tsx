@@ -64,8 +64,6 @@ export interface Attendance {
   presence: string;
 }
 
-// implementing the label type:
-
 export interface Label {
   id: number;
   course: Course;

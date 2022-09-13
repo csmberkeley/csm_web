@@ -82,11 +82,11 @@ export const ManageLabelsModal = ({
         deletedIDs.push(id);
       }
     }
-    const put_value = {
+    const putValue = {
       labels: courseLabels,
       deletedLabelIds: deletedIDs
     };
-    fetchWithMethod(`/courses/${courseId}/labels`, HTTP_METHODS.PUT, put_value).then(() => {
+    fetchWithMethod(`/courses/${courseId}/labels`, HTTP_METHODS.PUT, putValue).then(() => {
       closeModal();
       reloadSections();
     });
@@ -112,8 +112,8 @@ export const ManageLabelsModal = ({
             </ul>
           </div>
           <div className="manage-label-modal-buttons">
-            <input className="affinity-btn" type="button" onClick={handleNewRow} value="Add New Label" />
-            <input className="affinity-btn" type="submit" value="Save Labels" />
+            <input className="label-btn" type="button" onClick={handleNewRow} value="Add New Label" />
+            <input className="label-btn" type="submit" value="Save Labels" />
           </div>
         </div>
       </form>

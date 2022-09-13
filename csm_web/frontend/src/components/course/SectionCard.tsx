@@ -135,10 +135,10 @@ export const SectionCard = ({
           </ul>
           <div className="modal-confirmation-container">
             <ModalCloser>
-              <button className="affinity-btn">Cancel</button>
+              <button className="label-btn">Cancel</button>
             </ModalCloser>
 
-            <button className="affinity-btn" onClick={enroll}>
+            <button className="label-btn" onClick={enroll}>
               Confirm
             </button>
           </div>
