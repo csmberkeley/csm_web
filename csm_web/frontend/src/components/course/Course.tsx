@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { fetchJSON } from "../../utils/api";
 import { Section } from "../../utils/types";
-import { Label as LabelType } from "../../utils/types";
 import { SectionCard } from "./SectionCard";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";

@@ -52,15 +52,16 @@ def setup_section(db):
     )
     mentor = MentorFactory.create(user=mentor_user, course=course)
     coordinator = CoordinatorFactory.create(user=coordinator_user, course=course)
-    labels = LabelFactory.create(
-
+    labels = LabelFactory.create_batch(
+        size=10,
         course=course
     )
     section = SectionFactory.create(
         mentor=mentor,
         capacity=6,
     )
-    section.label_set.add(labels)
+    for label in labels:
+        section.label_set.add(label)
     section.save()
     return mentor_user, student_user, coordinator_user, course, section, labels
 
@@ -102,12 +103,13 @@ def test_mentor_forbidden(client, setup_section):
 def test_coordinator_allowed(client, setup_section):
     mentor_user, student_user, coordinator_user, course, section, labels = setup_section
     client.force_login(coordinator_user)
-    label_add_url = reverse("section-detail", kwargs={"pk": section.pk})
-    response = client.patch(label_add_url, data={
-        'capacity': 4,
-        'selected_labels': [labels.id]
-    }, content_type='application/json')
-    assert response.status_code == status.HTTP_202_ACCEPTED
+    for label in labels:
+        label_add_url = reverse("section-detail", kwargs={"pk": section.pk})
+        response = client.patch(label_add_url, data={
+            'capacity': 4,
+            'selected_labels': [label.id]
+        }, content_type='application/json')
+        assert response.status_code == status.HTTP_202_ACCEPTED
 
 
 # test for whether deletion of a section reflects itself in the many-to-many field of the labels that the section had

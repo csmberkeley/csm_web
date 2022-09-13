@@ -235,7 +235,7 @@ header {
 	cursor: pointer;
 }
 
-.affinity-btn {
+.label-btn {
 	flex-direction: row;
 	font-size: 1.25em;
 	color: white;

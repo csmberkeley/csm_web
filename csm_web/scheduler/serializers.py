@@ -76,12 +76,10 @@ class SpacetimeSerializer(serializers.ModelSerializer):
         fields = ("start_time", "day_of_week", "time", "location", "id", "duration", "override")
         read_only_fields = ("time", "id", "override")
 
-# label serializer
-
 
 class LabelSerializer(serializers.ModelSerializer):
     class Meta:
-        model = Label  # ???
+        model = Label
         fields = ('id', 'course', 'sections', 'name', 'description', 'showPopup')
         # extra_kwargs = {'sections': {'required': False}}
 
