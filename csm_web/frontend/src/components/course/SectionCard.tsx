@@ -51,7 +51,7 @@ export const SectionCard = ({
   /**
    * Handle the confirmation process in the section.
    */
-  const confirm = () => {
+  const handleConfirm = () => {
     setShowModal(true);
     setConfirmationProcess(true);
   };
@@ -241,7 +241,7 @@ export const SectionCard = ({
         ) : (
           <div
             className="csm-btn section-card-footer"
-            onClick={isFull ? undefined : labelsShouldShowPopup() ? confirm : enroll}
+            onClick={isFull ? undefined : labelsShouldShowPopup() ? handleConfirm : enroll}
           >
             ENROLL
           </div>
