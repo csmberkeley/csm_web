@@ -115,6 +115,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
     setLabels(labelIDs);
   };
 
+  // cute animation for selecting a Label
   const animatedComponents = makeAnimated();
 
   return (

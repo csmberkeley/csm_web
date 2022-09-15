@@ -218,6 +218,7 @@ header {
 	color: white;
 	background-color: var(--csm-green);
 	border-radius: 10px;
+	border-color: white;
 	cursor: pointer;
 	padding: 10px 20px;
 	margin: 0% 2%;
@@ -235,6 +236,27 @@ header {
 	color: #808080;
 }
 
+.manage-labels-hover :hover {
+	color: var(--csm-green);
+}
+
+.icon-space {
+	margin-top: 2px;
+	margin-bottom: 2px;
+}
+
+.manage-labels-header {
+	font-weight: bold;
+	margin-top: 2%;
+	margin-bottom: 2%;
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(200px, 1fr)) 10fr 3fr;
+	text-align: center;
+	width: 100%;
+	align-items: center;
+}
+
 .manage-labels-modal {
 	display: flex;
 	/* background-color: rgb(139, 82, 82); */
@@ -246,13 +268,19 @@ header {
 .manage-labels-modal-row {
 	background-color: var(--csm-resources);
 	border: 1px solid var(--csm-resources);
-	border-radius: 8px;
+	grid-column: 1 / -1;
+	display: grid;
+	grid-template-columns: repeat(2, minmax(200px, 1fr)) 10fr 3fr;
 	align-items: center;
 	justify-content: space-evenly;
-	display: flex;
 	margin-top: 2%;
 	margin-bottom: 2%;
 	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 0 -1px rgb(0 0 0 / 6%);
+	/*border-radius: 8px;
+	display: flex;
+	margin-top: 2%;
+	margin-bottom: 2%;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 0 -1px rgb(0 0 0 / 6%);*/
 }
 
 .manage-labels-modal-col {
@@ -264,16 +292,15 @@ header {
 	text-align: center;
 }
 
-.small-col {
+.manage-label-small-col {
 	flex: 1;
 }
 
-.large-col {
-	flex: 7;
+.manage-label-large-col {
+	flex: 10;
 }
 
 .manage-label-modal-buttons {
-	/* background-color: lightcoral; */
 	display: flex;
 	justify-content: center;
 }

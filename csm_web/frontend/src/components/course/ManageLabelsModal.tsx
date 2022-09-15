@@ -24,14 +24,20 @@ export const ManageLabelsModal = ({
   title
 }: ManageLabelsModalProps): React.ReactElement => {
   /**
-   * Map of course id to course name.
+   * List of course labels.
    */
   const [courseLabels, setCourseLabels] = useState<Label[]>([]);
-
+  /**
+   * All the current course labels.
+   */
   const [currCourseLabels, setCurrCourseLabels] = useState<Label[]>([]);
-
+  /**
+   * Negative keys to differentiate between current and old labels.
+   */
   const [newLabelKey, setNewLabelKey] = useState(-1);
-
+  /**
+   * Course that the Labels are associated with.
+   */
   const [course, setCourse] = useState<Course>();
 
   // fetch all labels upon first mount
@@ -98,9 +104,14 @@ export const ManageLabelsModal = ({
         <div>
           <div className="manage-labels-form-header">Labels for {title}</div>
           <div className="manage-labels-modal">
+            <div className="manage-labels-header">
+              <div>Name</div>
+              <div>Description</div>
+              <div>Popup</div>
+            </div>
             <ul>
               {courseLabels.map((label: Label) => (
-                <EditLabelRow
+                <LabelRow
                   key={label.id}
                   label={label}
                   onChangeRow={(name: string, description: string, showPopup: boolean) =>
@@ -121,30 +132,33 @@ export const ManageLabelsModal = ({
   );
 };
 
-interface EditLabelRowProps {
+interface LabelRowProps {
   label: Label;
   onChangeRow: (name: string, description: string, showPopup: boolean) => void;
   removeLabel: (id: number) => void;
 }
 
-export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowProps) => {
-  const [editingLabels, setEditingLabels] = useState<boolean>(false);
+export const LabelRow = ({ label, onChangeRow, removeLabel }: LabelRowProps) => {
+  const [editingLabel, setEditingLabel] = useState<boolean>(false);
 
-  const toggleEditingLabels = (e: React.MouseEvent<HTMLOrSVGElement, MouseEvent>) => {
+  const toggleEditingLabel = (e: React.MouseEvent<HTMLOrSVGElement, MouseEvent>) => {
     e.stopPropagation();
-    setEditingLabels(!editingLabels);
+    setEditingLabel(!editingLabel);
   };
 
   const editValue = (type: string, value: any) => {
-    if (type == "name") {
-      onChangeRow(value, label.description, label.showPopup);
-    } else if (type == "description") {
-      onChangeRow(label.name, value, label.showPopup);
-    } else if (type == "showpopup") {
-      onChangeRow(label.name, label.description, value);
-    } else {
-      // should not get here
-      console.error(`Unknown attribute ${type}`);
+    switch (type) {
+      case "name":
+        onChangeRow(value, label.description, label.showPopup);
+        break;
+      case "description":
+        onChangeRow(label.name, value, label.showPopup);
+        break;
+      case "showpopup":
+        onChangeRow(label.name, label.description, value);
+        break;
+      default:
+        console.error(`Unknown attribute ${type}`);
     }
   };
 
@@ -158,33 +172,33 @@ export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowPr
 
   return (
     <div>
-      {/* // if not editing labels.. */}
-      {!editingLabels && (
-        // begining of evenly spaced row
-        <div className="manage-labels-modal-row">
-          <div className="manage-labels-modal-col large-col">
-            {label.name === "" && <div>Name of label</div>}
-            {label.name !== "" && <div>{label.name}</div>}
-          </div>
-          <div className="manage-labels-modal-col large-col">
-            {label.description === "" && <div>Description of label</div>}
-            {label.description !== "" && <div>{label.description}</div>}
-          </div>
-          <div className="manage-labels-modal-col small-col">
-            <input type="checkbox" defaultChecked={label.showPopup} onChange={handleCheck} disabled={true} />
-          </div>
-          <div className="manage-labels-modal-col small-col">
-            <Pencil className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingLabels} />
-            <Trash className="icon matcher-assignment-section-times-edit-icon" onClick={removeLabel} />
-          </div>
-        </div>
-        // end of evenly spaced row
-      )}
-      {/* // if editing labels... */}
-      {editingLabels && (
+      {!editingLabel && (
         <div>
           <span className="manage-labels-modal-row">
-            <div className="manage-labels-modal-col large-col">
+            <div className="manage-labels-modal-col manage-labels-large-col">
+              {label.name === "" ? <div>Name of label</div> : <div>{label.name}</div>}
+            </div>
+            <div className="manage-labels-modal-col manage-labels-large-col">
+              {label.description === "" ? <div>Description of label</div> : <div>{label.description}</div>}
+            </div>
+            <div className="manage-labels-modal-col manage-labels-small-col">
+              <input type="checkbox" defaultChecked={label.showPopup} onChange={handleCheck} disabled={true} />
+            </div>
+            <div className="manage-labels-modal-col manage-labels-small-col">
+              <div className="manage-labels-hover icon-space">
+                <Pencil className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingLabel} />
+              </div>
+              <div className="manage-labels-hover icon-space">
+                <Trash className="icon matcher-assignment-section-times-edit-icon" onClick={removeLabel} />
+              </div>
+            </div>
+          </span>
+        </div>
+      )}
+      {editingLabel && (
+        <div>
+          <span className="manage-labels-modal-row">
+            <div className="manage-labels-modal-col manage-labels-large-col">
               <input
                 name="name"
                 defaultValue={label.name}
@@ -192,7 +206,7 @@ export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowPr
                 onChange={handleChange}
               />
             </div>
-            <div className="manage-labels-modal-col large-col">
+            <div className="manage-labels-modal-col manage-labels-large-col">
               <input
                 name="description"
                 defaultValue={label.description}
@@ -200,11 +214,11 @@ export const EditLabelRow = ({ label, onChangeRow, removeLabel }: EditLabelRowPr
                 onChange={handleChange}
               />
             </div>
-            <div className="manage-labels-modal-col small-col">
+            <div className="manage-labels-modal-col manage-labels-small-col">
               <input type="checkbox" defaultChecked={label.showPopup} onChange={handleCheck} />
             </div>
-            <div className="manage-labels-modal-col small-col">
-              <Exit className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingLabels} />
+            <div className="manage-labels-modal-col manage-labels-small-col">
+              <Exit className="icon matcher-assignment-section-times-edit-icon" onClick={toggleEditingLabel} />
             </div>
           </span>
         </div>

@@ -98,7 +98,6 @@ const Course = ({
   /**
    * Render the currently chosen modal.
    */
-
   const renderModal = (): React.ReactElement => {
     if (whichModal == COURSE_MODAL_TYPE.exportData) {
       return <DataExportModal closeModal={() => setShowModal(false)} />;
