@@ -99,11 +99,15 @@ export const ManageLabelsModal = ({
   }
 
   return (
-    <Modal closeModal={closeModal}>
+    <Modal className="manage-labels-modal-form" closeModal={closeModal}>
       <form className="manage-labels-form" onSubmit={handleSubmit}>
         <div>
           <div className="manage-labels-form-header">Labels for {title}</div>
           <div className="manage-labels-modal">
+            <div className="manage-label-modal-buttons">
+              <input className="label-btn" type="button" onClick={handleNewRow} value="Add New Label" />
+              <input className="label-btn" type="submit" value="Save Labels" />
+            </div>
             <div className="manage-labels-header">
               <div>Name</div>
               <div>Description</div>
@@ -121,10 +125,6 @@ export const ManageLabelsModal = ({
                 />
               ))}
             </ul>
-          </div>
-          <div className="manage-label-modal-buttons">
-            <input className="label-btn" type="button" onClick={handleNewRow} value="Add New Label" />
-            <input className="label-btn" type="submit" value="Save Labels" />
           </div>
         </div>
       </form>

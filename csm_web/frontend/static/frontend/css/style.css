@@ -1,6 +1,7 @@
 @import url("./resource_aggregation.css");
 @import url("./student_dropper.css");
 @import url("./fontawesome-styles.css");
+@import url("./affinity_sections_styles.css");
 
 html,
 body {
@@ -212,105 +213,9 @@ header {
 	cursor: pointer;
 }
 
-.label-btn {
-	flex-direction: row;
-	font-size: 1.25em;
-	color: white;
-	background-color: var(--csm-green);
-	border-radius: 10px;
-	border-color: white;
-	cursor: pointer;
-	padding: 10px 20px;
-	margin: 0% 2%;
-}
-
-.manage-labels-form {
-	display: flex;
-	flex-direction: column;
-}
-
-.manage-labels-form-header {
-	text-align: center;
-	font-size: 1.5rem;
-	font-weight: 600;
-	color: #808080;
-}
-
-.manage-labels-hover :hover {
-	color: var(--csm-green);
-}
-
 .icon-space {
 	margin-top: 2px;
 	margin-bottom: 2px;
-}
-
-.manage-labels-header {
-	font-weight: bold;
-	margin-top: 2%;
-	margin-bottom: 2%;
-	grid-column: 1 / -1;
-	display: grid;
-	grid-template-columns: repeat(2, minmax(200px, 1fr)) 10fr 3fr;
-	text-align: center;
-	width: 100%;
-	align-items: center;
-}
-
-.manage-labels-modal {
-	display: flex;
-	/* background-color: rgb(139, 82, 82); */
-	justify-content: space-evenly;
-	flex-direction: column;
-	padding-right: 7%;
-}
-
-.manage-labels-modal-row {
-	background-color: var(--csm-resources);
-	border: 1px solid var(--csm-resources);
-	grid-column: 1 / -1;
-	display: grid;
-	grid-template-columns: repeat(2, minmax(200px, 1fr)) 10fr 3fr;
-	align-items: center;
-	justify-content: space-evenly;
-	margin-top: 2%;
-	margin-bottom: 2%;
-	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 0 -1px rgb(0 0 0 / 6%);
-	/*border-radius: 8px;
-	display: flex;
-	margin-top: 2%;
-	margin-bottom: 2%;
-	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 0 -1px rgb(0 0 0 / 6%);*/
-}
-
-.manage-labels-modal-col {
-	/* background-color: red; */
-	display: flex;
-	flex-direction: column;
-	justify-content: space-evenly;
-	padding: 10px 10px;
-	text-align: center;
-}
-
-.manage-label-small-col {
-	flex: 1;
-}
-
-.manage-label-large-col {
-	flex: 10;
-}
-
-.manage-label-modal-buttons {
-	display: flex;
-	justify-content: center;
-}
-
-.modal-confirmation-container {
-	justify-content: center;
-}
-
-.modal-btn:hover {
-	background-color: #0069d9;
 }
 
 /* Home page */
