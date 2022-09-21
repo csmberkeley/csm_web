@@ -462,5 +462,5 @@ class Label(ValidatingModel):
     name = models.CharField(max_length=100)
     # description of what label means
     description = models.CharField(max_length=255)
-    # whether a section with this label will lead to a pop-up if you try to enroll in it
+    # whether a section with this label will lead to a pop-up if you try to enroll in it!
     showPopup = models.BooleanField(default=False)
