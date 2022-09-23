@@ -4,29 +4,24 @@ interface TooltipProps {
   className?: string;
   bodyClassName?: string;
   source: React.ReactNode;
-  activation: TooltipActivation;
   children: React.ReactChild | React.ReactChild[];
   placement: "top" | "bottom" | "left" | "right";
 }
 
-enum TooltipActivation {
-  Hover,
-  Click
-}
-
-export const Tooltip = ({ className, bodyClassName, source, activation, placement, children }: TooltipProps) => {
+/**
+ * Tooltip for displaying additional information on hover.
+ *
+ * Must be surrounded by a parent element with position: relative.
+ */
+export const Tooltip = ({ className, bodyClassName, source, placement, children }: TooltipProps) => {
   const [isOpen, setIsOpen] = useState(false);
 
   const handleMouseEnter = () => {
-    if (activation === TooltipActivation.Hover) {
-      setIsOpen(true);
-    }
+    setIsOpen(true);
   };
 
   const handleMouseLeave = () => {
-    if (activation === TooltipActivation.Hover) {
-      setIsOpen(false);
-    }
+    setIsOpen(false);
   };
 
   let top, left, transform;
@@ -71,8 +66,4 @@ export const Tooltip = ({ className, bodyClassName, source, activation, placemen
       </div>
     </div>
   );
-};
-
-Tooltip.defaultProps = {
-  activation: TooltipActivation.Hover
 };

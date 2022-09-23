@@ -431,11 +431,13 @@ export function CreateStage({ profile, initialSlots, refreshStage }: CreateStage
                   <input type="checkbox" defaultChecked onChange={editTiled_linked} />
                   Link days?
                 </label>
-                <Tooltip placement="right" source={<InfoIcon className="icon matcher-tooltip-info-icon" />}>
-                  <div className="matcher-tiling-tooltip-body">
-                    Associate the same times across selected days with a single event.
-                  </div>
-                </Tooltip>
+                <div className="matcher-tooltip-container">
+                  <Tooltip placement="right" source={<InfoIcon className="icon matcher-tooltip-info-icon" />}>
+                    <div className="matcher-tiling-tooltip-body">
+                      Associate the same times across selected days with a single event.
+                    </div>
+                  </Tooltip>
+                </div>
               </div>
             </div>
 
