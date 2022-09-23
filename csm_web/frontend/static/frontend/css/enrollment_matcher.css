@@ -412,6 +412,10 @@
 	margin-bottom: 3px;
 }
 
+.matcher-tooltip-container {
+	position: relative;
+}
+
 .matcher-tooltip-info-icon {
 	width: 1em;
 	margin-left: 3px;
