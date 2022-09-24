@@ -1,69 +1,111 @@
-// set date constants
-const TWO_DAYS_AGO = new Date("2020-06-13T12:00:00");
-const YESTERDAY = new Date("2020-06-14T12:00:00");
-const NOW = new Date("2020-06-15T12:00:00");
-const TOMORROW = new Date("2020-06-16T12:00:00");
-// course data for mock endpoints
-const COURSES_DATA = [
-  {
-    id: 1,
-    name: "CS61A",
-    enrollmentStart: TWO_DAYS_AGO.toISOString(),
-    enrollmentOpen: true,
-    userCanEnroll: false
-  },
-  {
-    id: 2,
-    name: "CS61B",
-    enrollmentStart: TWO_DAYS_AGO.toISOString(),
-    enrollmentOpen: true,
-    userCanEnroll: true
-  },
-  {
-    id: 3,
-    name: "CS61C",
-    enrollmentStart: TOMORROW.toISOString(),
-    enrollmentOpen: false,
-    userCanEnroll: false
-  }
-];
-
-/**
- * Set up network stubs.
- */
-const baseStubs = (priorityEnrollment = false) => {
-  cy.intercept({ method: "GET", url: "/api/profiles/" }, []).as("getProfiles");
-  cy.intercept({ method: "GET", url: "/api/matcher/active/" }, []).as("getMatcherActive");
-  cy.intercept({ method: "GET", url: "/api/courses/" }, COURSES_DATA).as("getCourses");
-  cy.intercept({ method: "GET", url: "/api/courses/*/sections/" }, { sections: {}, userIsCoordinator: false }).as(
-    "getSection"
-  );
-
-  const baseUserInfo = {
-    id: 1,
-    email: "demo_user@berkeley.edu",
-    firstName: "Demo",
-    lastName: "User",
-    priorityEnrollment: null
-  };
-  if (priorityEnrollment) {
-    cy.intercept({ method: "GET", url: "/api/userinfo/" }, { ...baseUserInfo, priorityEnrollment: YESTERDAY }).as(
-      "getPriorityEnrollment"
-    );
-  } else {
-    cy.intercept({ method: "GET", url: "/api/userinfo/" }, baseUserInfo).as("getPriorityEnrollment");
-  }
-};
-
-beforeEach(() => {
-  cy.clock(NOW); // set up clock
-  cy.login();
-});
-
 describe("course menu", () => {
+  // set date constants
+  const TWO_DAYS_AGO = new Date("2020-06-13T12:00:00");
+  const YESTERDAY = new Date("2020-06-14T12:00:00");
+  const NOW = new Date("2020-06-15T12:00:00");
+  const TOMORROW = new Date("2020-06-16T12:00:00");
+  // course data for mock endpoints
+  const COURSES_DATA = [
+    {
+      id: 1,
+      name: "CS61A",
+      enrollmentStart: TWO_DAYS_AGO.toISOString(),
+      enrollmentOpen: true,
+      userCanEnroll: false
+    },
+    {
+      id: 2,
+      name: "CS61B",
+      enrollmentStart: TWO_DAYS_AGO.toISOString(),
+      enrollmentOpen: true,
+      userCanEnroll: true
+    },
+    {
+      id: 3,
+      name: "CS61C",
+      enrollmentStart: TOMORROW.toISOString(),
+      enrollmentOpen: false,
+      userCanEnroll: false
+    }
+  ];
+
+  /**
+   * Set up network stubs.
+   */
+  const networkStubs = (priorityEnrollment = false) => {
+    cy.intercept({ method: "GET", url: "/api/profiles/" }, []).as("getProfiles");
+    cy.intercept({ method: "GET", url: "/api/matcher/active/" }, []).as("getMatcherActive");
+    cy.intercept({ method: "GET", url: "/api/courses/" }, COURSES_DATA).as("getCourses");
+    cy.intercept(
+      { method: "GET", url: "/api/courses/*/sections/" },
+      {
+        sections: {
+          "{Monday,Tuesday}": [
+            {
+              id: 1,
+              associatedProfileId: null,
+              capacity: 5,
+              course: "CS61A",
+              courseTitle: "Structure and Interpretation of Computer Programs",
+              description: "",
+              mentor: {
+                id: 101,
+                name: "Mentor 1",
+                section: 1,
+                email: "mentor_1@berkeley.edu"
+              },
+              numStudentsEnrolled: 0,
+              spacetimes: [
+                {
+                  id: 123,
+                  startTime: "11:00:00",
+                  dayOfWeek: "Monday",
+                  time: "Monday 11:00 AM-12:00 PM",
+                  location: "Cory 400",
+                  duration: "01:00:00",
+                  override: null
+                },
+                {
+                  id: 124,
+                  startTime: "11:00:00",
+                  dayOfWeek: "Tuesday",
+                  time: "Tuesday 11:00 AM-12:00 PM",
+                  location: "Cory 400",
+                  duration: "01:00:00",
+                  override: null
+                }
+              ]
+            }
+          ]
+        },
+        userIsCoordinator: false
+      }
+    ).as("getSection");
+
+    const baseUserInfo = {
+      id: 1,
+      email: "demo_user@berkeley.edu",
+      firstName: "Demo",
+      lastName: "User",
+      priorityEnrollment: null
+    };
+    if (priorityEnrollment) {
+      cy.intercept({ method: "GET", url: "/api/userinfo/" }, { ...baseUserInfo, priorityEnrollment: YESTERDAY }).as(
+        "getPriorityEnrollment"
+      );
+    } else {
+      cy.intercept({ method: "GET", url: "/api/userinfo/" }, baseUserInfo).as("getPriorityEnrollment");
+    }
+  };
+
+  beforeEach(() => {
+    cy.clock(NOW); // set up clock
+    cy.login();
+  });
+
   it("should be accessible from home page", () => {
     // network stubs
-    baseStubs();
+    networkStubs();
 
     // visit the home page
     cy.visit("/");
@@ -78,7 +120,7 @@ describe("course menu", () => {
   describe("should display courses and enrollment times", () => {
     it("with no priority enrollment", () => {
       // network stubs
-      baseStubs();
+      networkStubs();
 
       // visit the courses page
       cy.visit("/courses");
@@ -96,7 +138,7 @@ describe("course menu", () => {
 
     it("with priority enrollment", () => {
       // network stubs
-      baseStubs(true);
+      networkStubs(true);
 
       // visit the courses page
       cy.visit("/courses");
@@ -119,7 +161,7 @@ describe("course menu", () => {
   });
 
   it("should have buttons that navigate to course pages", () => {
-    baseStubs();
+    networkStubs();
 
     // visit the course menu
     cy.visit("/courses");
