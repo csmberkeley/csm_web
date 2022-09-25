@@ -1909,3 +1909,10 @@ table tbody tr:last-child > td {
 .spacetimeDeleteDropper {
 	text-align: center;
 }
+
+.add-section-btn {
+	padding-bottom: 10px;
+	position: absolute;
+	right: 10px;
+	top: 10px;
+}

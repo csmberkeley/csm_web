@@ -9,6 +9,7 @@ import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import XCircle from "../../../static/frontend/img/x_circle.svg";
 import Modal, { ModalCloser } from "../Modal";
 import { Mentor, Spacetime } from "../../utils/types";
+import XIcon from "../../../static/frontend/img/plus-circle.svg";
 
 interface SectionCardProps {
   id: number;
@@ -137,6 +138,10 @@ export const SectionCard = ({
       <section className={`section-card ${isFull ? "full" : ""}`}>
         <div className="section-card-contents">
           {description && <span className="section-card-description">{description}</span>}
+          <div className="add-section-btn">
+            {" "}
+            <XIcon width="1em" height="1em" /> Add Spacetime
+          </div>
           <p title="Location">
             <LocationIcon width={iconWidth} height={iconHeight} />{" "}
             {spacetimes[0].location === null ? "Online" : spacetimes[0].location}
