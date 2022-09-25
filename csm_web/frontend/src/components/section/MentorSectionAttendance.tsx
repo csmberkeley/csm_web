@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import LoadingSpinner from "../LoadingSpinner";
 import { ATTENDANCE_LABELS } from "./Section";
@@ -15,165 +15,127 @@ interface MentorSectionAttendanceProps {
   updateAttendance: (updatedDate: string, updatedDateAttendances: Attendance[]) => void;
 }
 
-interface MentorSectionAttendanceState {
-  selectedDate?: string;
-  stagedAttendances?: Attendance[];
-  showAttendanceSaveSuccess: boolean;
-  showSaveSpinner: boolean;
-}
+const MentorSectionAttendance = ({
+  loaded,
+  attendances,
+  updateAttendance
+}: MentorSectionAttendanceProps): React.ReactElement => {
+  const [selectedDate, setSelectedDate] = useState(loaded ? Object.keys(attendances).sort(dateSort)[0] : undefined);
+  const [stagedAttendances, setStagedAttendances] = useState(loaded ? attendances[selectedDate!] : undefined);
+  const [showAttendanceSaveSuccess, setShowAttendanceSaveSuccess] = useState(false);
+  const [showSaveSpinner, setShowSaveSpinner] = useState(false);
+  const prevLoaded = useRef(loaded);
 
-export default class MentorSectionAttendance extends React.Component<
-  MentorSectionAttendanceProps,
-  MentorSectionAttendanceState
-> {
-  attendanceTitle: React.RefObject<HTMLHeadingElement>;
-
-  constructor(props: MentorSectionAttendanceProps) {
-    super(props);
-
-    const state: MentorSectionAttendanceState = {
-      selectedDate: undefined,
-      stagedAttendances: undefined,
-      showAttendanceSaveSuccess: false,
-      showSaveSpinner: false
-    };
-
-    if (props.loaded) {
-      // update selected date if already loaded
-      state.selectedDate = Object.keys(props.attendances).sort(dateSort)[0];
-      state.stagedAttendances = props.attendances[state.selectedDate!];
+  useEffect(() => {
+    prevLoaded.current = loaded;
+    if (loaded && !prevLoaded.current) {
+      const newSelectedDate = Object.keys(attendances).sort(dateSort)[0];
+      setSelectedDate(newSelectedDate);
+      setStagedAttendances(attendances[newSelectedDate]);
     }
-    this.state = state;
+  }, [loaded]);
 
-    this.handleAttendanceChange = this.handleAttendanceChange.bind(this);
-    this.handleSaveAttendance = this.handleSaveAttendance.bind(this);
-    this.handleMarkAllPresent = this.handleMarkAllPresent.bind(this);
-    this.attendanceTitle = React.createRef<HTMLHeadingElement>();
+  function handleAttendanceChange({ target: { name: id, value } }: React.ChangeEvent<HTMLSelectElement>): void {
+    const newStagedAttendances = stagedAttendances || Object.values(attendances)[0];
+    setStagedAttendances(
+      newStagedAttendances.map(attendance =>
+        attendance.id == Number(id) ? { ...attendance, presence: value } : attendance
+      )
+    );
   }
 
-  componentDidMount(): void {
-    if (this.attendanceTitle.current) {
-      this.attendanceTitle.current.scrollIntoView();
-    }
-  }
-
-  handleAttendanceChange({ target: { name: id, value } }: React.ChangeEvent<HTMLSelectElement>): void {
-    this.setState((prevState, props) => {
-      const prevStagedAttendances = prevState.stagedAttendances || Object.values(props.attendances)[0];
-      return {
-        stagedAttendances: prevStagedAttendances.map(attendance =>
-          attendance.id == Number(id) ? { ...attendance, presence: value } : attendance
-        )
-      };
-    });
-  }
-
-  componentDidUpdate(prevProps: MentorSectionAttendanceProps): void {
-    // if the attendances have now loaded, select the most recent attendance date
-    if (!prevProps.loaded && this.props.loaded) {
-      const selectedDate = Object.keys(this.props.attendances).sort(dateSort)[0];
-      const stagedAttendances = this.props.attendances[selectedDate];
-      this.setState({ selectedDate, stagedAttendances });
-    }
-  }
-
-  handleSaveAttendance() {
-    const { stagedAttendances, selectedDate } = this.state;
+  function handleSaveAttendance() {
     if (!stagedAttendances) {
       return;
     }
     //TODO: Handle API Failure
-    this.setState({ showSaveSpinner: true });
+    setShowSaveSpinner(true);
     Promise.all(
       stagedAttendances.map(({ id, presence, student: { id: studentId } }) =>
         fetchWithMethod(`students/${studentId}/attendances/`, HTTP_METHODS.PUT, { id, presence })
       )
     ).then(() => {
-      this.props.updateAttendance(selectedDate!, stagedAttendances);
-      this.setState({ showAttendanceSaveSuccess: true, showSaveSpinner: false });
-      setTimeout(() => this.setState({ showAttendanceSaveSuccess: false }), 1500);
+      updateAttendance(selectedDate!, stagedAttendances);
+      setShowAttendanceSaveSuccess(true);
+      setShowSaveSpinner(false);
+      setTimeout(() => setShowAttendanceSaveSuccess(false), 1500);
     });
   }
 
-  handleMarkAllPresent() {
-    if (!this.state.stagedAttendances) {
-      const [selectedDate, stagedAttendances] = Object.entries(this.props.attendances)[0];
-      this.setState({ selectedDate, stagedAttendances });
+  function handleMarkAllPresent() {
+    if (!stagedAttendances) {
+      const [newSelectedDate, newStagedAttendances] = Object.entries(attendances)[0];
+      setSelectedDate(newSelectedDate);
+      setStagedAttendances(newStagedAttendances);
     }
-    this.setState(prevState => ({
-      stagedAttendances: prevState.stagedAttendances!.map(attendance => ({ ...attendance, presence: "PR" }))
-    }));
+    setStagedAttendances(stagedAttendances!.map(attendance => ({ ...attendance, presence: "PR" })));
   }
 
-  render() {
-    const { attendances, loaded } = this.props;
-    // use state selected date, or if undefined, use most recent date from props
-    const selectedDate = this.state.selectedDate || (loaded && Object.keys(attendances).sort(dateSort)[0]);
-    const stagedAttendances = this.state.stagedAttendances || (selectedDate ? attendances[selectedDate] : []);
-    const { showAttendanceSaveSuccess, showSaveSpinner } = this.state;
-    return (
-      <React.Fragment>
-        <h3 ref={this.attendanceTitle} className="section-detail-page-title">
-          Attendance
-        </h3>
-        {loaded && (
-          <React.Fragment>
-            <div id="mentor-attendance">
-              <div id="attendance-date-tabs-container">
-                {Object.keys(attendances)
-                  .sort(dateSort)
-                  .map(date => (
-                    <div
-                      key={date}
-                      className={date === selectedDate ? "active" : ""}
-                      onClick={() => this.setState({ selectedDate: date, stagedAttendances: attendances[date] })}
-                    >
-                      {formatDate(date)}
-                    </div>
-                  ))}
-              </div>
-              <table id="mentor-attendance-table">
-                <tbody>
-                  {selectedDate &&
-                    stagedAttendances.map(({ id, student, presence }) => (
-                      <tr key={id}>
-                        <td>{student.name}</td>
-                        <td>
-                          <select
-                            value={presence}
-                            name={String(id)}
-                            className="select-css"
-                            style={{
-                              backgroundColor: `var(--csm-attendance-${ATTENDANCE_LABELS[presence][1]})`
-                            }}
-                            onChange={this.handleAttendanceChange}
-                          >
-                            {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
-                              <option key={value} value={value} disabled={!value}>
-                                {label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
-                </tbody>
-              </table>
+  return (
+    <div className="mentor-attendance-page">
+      <h3 className="section-detail-page-title">Attendance</h3>
+      {loaded && (
+        <React.Fragment>
+          <div id="mentor-attendance">
+            <div id="attendance-date-tabs-container">
+              {Object.keys(attendances)
+                .sort(dateSort)
+                .map(date => (
+                  <div
+                    key={date}
+                    className={date === selectedDate ? "active" : ""}
+                    onClick={() => {
+                      setSelectedDate(date);
+                      setStagedAttendances(attendances[date]);
+                    }}
+                  >
+                    {formatDate(date)}
+                  </div>
+                ))}
             </div>
+            <table id="mentor-attendance-table">
+              <tbody>
+                {selectedDate &&
+                  stagedAttendances!.map(({ id, student, presence }) => (
+                    <tr key={id}>
+                      <td>{student.name}</td>
+                      <td>
+                        <select
+                          value={presence}
+                          name={String(id)}
+                          className="select-css"
+                          style={{
+                            backgroundColor: `var(--csm-attendance-${ATTENDANCE_LABELS[presence][1]})`
+                          }}
+                          onChange={handleAttendanceChange}
+                        >
+                          {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
+                            <option key={value} value={value} disabled={!value}>
+                              {label}
+                            </option>
+                          ))}
+                        </select>
+                      </td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
             <div id="mentor-attendance-controls">
-              <button className="csm-btn save-attendance-btn" onClick={this.handleSaveAttendance}>
+              <button className="csm-btn save-attendance-btn" onClick={handleSaveAttendance}>
                 Save
               </button>
-              <button className="mark-all-present-btn" onClick={this.handleMarkAllPresent}>
+              <button className="mark-all-present-btn" onClick={handleMarkAllPresent}>
                 Mark All As Present
               </button>
               {showSaveSpinner && <LoadingSpinner />}
               {showAttendanceSaveSuccess && <CheckCircle height="2em" width="2em" />}
             </div>
-          </React.Fragment>
-        )}
-        {!loaded && <h5> Loading attendances...</h5>}
-      </React.Fragment>
-    );
-  }
-}
+          </div>
+        </React.Fragment>
+      )}
+      {!loaded && <h5> Loading attendances...</h5>}
+    </div>
+  );
+};
+
+export default MentorSectionAttendance;

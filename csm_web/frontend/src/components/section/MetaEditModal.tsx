@@ -16,7 +16,7 @@ export default function MetaEditModal({
   reloadSection,
   capacity,
   description
-}: MetaEditModalProps) {
+}: MetaEditModalProps): React.ReactElement {
   // use existing capacity and description as initial values
   const [formState, setFormState] = useState({ capacity: capacity, description: description });
 
