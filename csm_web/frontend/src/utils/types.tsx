@@ -34,6 +34,8 @@ export interface Section {
   course: string;
   userRole: string;
   courseTitle: string;
+  numStudentsWaitlisted: number;
+  waitlistCapacity: number;
 }
 
 export interface Mentor {

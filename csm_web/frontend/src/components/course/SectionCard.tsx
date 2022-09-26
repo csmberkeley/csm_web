@@ -4,6 +4,7 @@ import { Link, Redirect } from "react-router-dom";
 import LocationIcon from "../../../static/frontend/img/location.svg";
 import UserIcon from "../../../static/frontend/img/user.svg";
 import GroupIcon from "../../../static/frontend/img/group.svg";
+import WaitListIcon from "../../../static/frontend/img/waitlist.svg";
 import ClockIcon from "../../../static/frontend/img/clock.svg";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import XCircle from "../../../static/frontend/img/x_circle.svg";
@@ -19,6 +20,8 @@ interface SectionCardProps {
   description: string;
   userIsCoordinator: boolean;
   courseOpen: boolean;
+  numStudentsWaitlisted: number;
+  waitlistCapacity: number;
 }
 
 export const SectionCard = ({
@@ -29,8 +32,12 @@ export const SectionCard = ({
   capacity,
   description,
   userIsCoordinator,
-  courseOpen
+  courseOpen,
+  numStudentsWaitlisted,
+  waitlistCapacity
 }: SectionCardProps): React.ReactElement => {
+  numStudentsWaitlisted = 0;
+  waitlistCapacity = 5;
   /**
    * Whether to show the modal (after an attempt to enroll).
    */
@@ -117,7 +124,8 @@ export const SectionCard = ({
 
   const iconWidth = "1.3em";
   const iconHeight = "1.3em";
-  const isFull = numStudentsEnrolled >= capacity;
+  const isOpen = numStudentsEnrolled < capacity;
+  const isWaitlistOpen = numStudentsWaitlisted < waitlistCapacity;
   if (!showModal && enrollmentSuccessful) {
     // redirect to the section page if the user was successfully enrolled in the section
     return <Redirect to="/" />;
@@ -131,10 +139,37 @@ export const SectionCard = ({
   // remove the first location because it'll always be displayed
   spacetimeLocationSet.delete(spacetimes[0].location);
 
+  let footerButton = null;
+  if (userIsCoordinator) {
+    footerButton = (
+      <Link to={`/sections/${id}`} className="csm-btn section-card-footer">
+        MANAGE
+      </Link>
+    );
+  } else if (isWaitlistOpen && !isOpen) {
+    footerButton = (
+      <div
+        className={`csm-btn csm-btn-waitlist section-card-footer ${courseOpen ? "" : "disabled"}`}
+        onClick={isOpen ? enroll : undefined}
+      >
+        ENROLL WAITLIST
+      </div>
+    );
+  } else {
+    footerButton = (
+      <div
+        className={`csm-btn section-card-footer ${courseOpen ? "" : "disabled"}`}
+        onClick={isOpen ? enroll : undefined}
+      >
+        ENROLL
+      </div>
+    );
+  }
+
   return (
     <React.Fragment>
       {showModal && <Modal closeModal={closeModal}>{modalContents().props.children}</Modal>}
-      <section className={`section-card ${isFull ? "full" : ""}`}>
+      <section className={`section-card ${isOpen || isWaitlistOpen ? "" : "full"}`}>
         <div className="section-card-contents">
           {description && <span className="section-card-description">{description}</span>}
           <p title="Location">
@@ -173,22 +208,16 @@ export const SectionCard = ({
           <p title="Mentor">
             <UserIcon width={iconWidth} height={iconHeight} /> {mentor.name}
           </p>
-          <p title="Current enrollment">
-            <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}
-          </p>
-        </div>
-        {userIsCoordinator ? (
-          <Link to={`/sections/${id}`} className="csm-btn section-card-footer">
-            MANAGE
-          </Link>
-        ) : (
-          <div
-            className={`csm-btn section-card-footer ${courseOpen ? "" : "disabled"}`}
-            onClick={isFull ? undefined : enroll}
-          >
-            ENROLL
+          <div className="registration-container">
+            <p title="Current enrollment">
+              <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}
+            </p>
+            <p title="Current waitlist">
+              <WaitListIcon width={iconWidth} height={iconHeight} /> {`${numStudentsWaitlisted}/${waitlistCapacity}`}
+            </p>
           </div>
-        )}
+        </div>
+        {footerButton}
       </section>
     </React.Fragment>
   );

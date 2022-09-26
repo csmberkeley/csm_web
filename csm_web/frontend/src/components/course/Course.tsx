@@ -116,7 +116,10 @@ const Course = ({
 
   let currDaySections = sections && sections[currDayGroup];
   if (currDaySections && !showUnavailable) {
-    currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
+    currDaySections = currDaySections.filter(
+      ({ numStudentsEnrolled, capacity, numStudentsWaitlisted, waitlistCapacity }) =>
+        numStudentsEnrolled < capacity || numStudentsWaitlisted < waitlistCapacity
+    );
   }
 
   return !(name && sectionsLoaded) ? null : (
