@@ -205,7 +205,7 @@ class Student(Profile):
                     section=self.section, date=week_start + datetime.timedelta(days=section_day_num))
                 if not so_qs.exists():
                     so = SectionOccurrence.objects.create(
-                        section=self.section, date=week_start + datetime.timedelta(days=section_day_num))
+                        section=self.section, date=week_start + datetime.timedelta(days=section_day_num), spacetime=spacetime)
                 else:
                     so = so_qs.get()
                 Attendance.objects.create(student=self, sectionOccurrence=so)

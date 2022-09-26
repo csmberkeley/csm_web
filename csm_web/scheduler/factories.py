@@ -178,11 +178,11 @@ def create_attendances_for(student):
             date = current_date + timedelta(days=spacetime_day)
             if date not in existing_attendance_dates:
                 so = student.section.sectionoccurrence_set.get(date=date)
-                # if current_date < today:
-                #     AttendanceFactory.create(student=student, sectionOccurrence=so)
-                # else:
-                #     # Students cannot have attended or not attended sections that haven't happened yet
-                #     AttendanceFactory.create(student=student, sectionOccurrence=so, presence="")
+                if current_date < today:
+                    AttendanceFactory.create(student=student, sectionOccurrence=so)
+                else:
+                    # Students cannot have attended or not attended sections that haven't happened yet
+                    AttendanceFactory.create(student=student, sectionOccurrence=so, presence="")
         current_date += timedelta(weeks=1)
 
 
