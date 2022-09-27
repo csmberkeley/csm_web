@@ -1,11 +1,13 @@
+import datetime
 from django.db.models import Q
+
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework import viewsets
 
 from .utils import log_str, logger, get_object_or_error
-from ..models import Spacetime
+from ..models import Spacetime, Section
 from ..serializers import SpacetimeSerializer, OverrideSerializer
 
 
@@ -55,3 +57,13 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
             f"<Override:Failure> Could not override Spacetime {log_str(spacetime)}, errors: {serializer.errors}"
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+
+    @action(detail=True, methods=['put'])
+    def create(self, request):
+        spacetime = Spacetime.objects.create(
+            location = request.data['location'],
+            start_time = request.data['start_time'],
+            duration = datetime.timedelta(hours=1),
+            day_of_week = request.data['day_of_week'],
+            section = get_object_or_error(Section.objects.all(), )
+        )
