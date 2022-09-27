@@ -29,6 +29,14 @@
 	width: 100%;
 }
 
+.manage-labels-footer {
+    width: '100%';
+    justify-content: 'center';
+    align-items: 'center';
+    position: 'absolute';
+    bottom: 0;
+}
+
 .manage-labels-modal {
 	display: flex;
 	/* background-color: rgb(139, 82, 82); */
