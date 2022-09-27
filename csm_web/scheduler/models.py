@@ -247,8 +247,7 @@ class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
     mentor = OneToOneOrNoneField(Mentor, on_delete=models.CASCADE, blank=True, null=True)
-
-
+    
     # @functional.cached_property
     # def course(self):
     #     return self.mentor.course
@@ -418,7 +417,6 @@ class Matcher(ValidatingModel):
     course = OneToOneOrNoneField(Course, on_delete=models.CASCADE, blank=True, null=True)
     """
     Serialized assignment of mentors to times.
-    [{mentor: int, slot: int, section: {capacity: int, description: str}}, ...]
     """
     assignment = models.JSONField(default=dict, blank=True)
     is_open = models.BooleanField(default=False)
@@ -456,8 +454,6 @@ class MatcherPreference(ValidatingModel):
 class Label(ValidatingModel):
     # course that label corresponds to
     course = models.ForeignKey(Course, related_name="labels", on_delete=models.CASCADE)
-    # sections that have this label
-    sections = models.ManyToManyField(Section, blank=True)
     # name of label
     name = models.CharField(max_length=100)
     # description of what label means
