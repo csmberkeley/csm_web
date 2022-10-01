@@ -79,8 +79,9 @@ function Header(): React.ReactElement {
     return `site-subtitle-link ${isActive ? "is-active" : ""}`;
   };
 
+
   /**
-   * Helper function to determine class name for the home NavLInk component;
+   * Helper function to determine class name for the home NavLink component;
    * is always active unless we're in another tab.
    */
   const homeNavlinkClass = () => {

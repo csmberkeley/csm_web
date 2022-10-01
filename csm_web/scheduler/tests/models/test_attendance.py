@@ -102,13 +102,14 @@ def fixture_setup_section(db):  # pylint: disable=unused-argument
     ],
 )
 def test_attendance_add_student_on_day(
-    client, setup_section, day, num_attendances_added
+    client, setup_section, day, num_attendances_added, mocker
 ):
     """
     Check various section occurrence and attendance objects are created
     when a student is added on a given day.
     """
     _, student_user, _, section = setup_section
+    mocker.patch('scheduler.email.email_utils._email_send_message')
     with freeze_time(day):
         client.force_login(student_user)
         enroll_url = reverse("section-students", kwargs={"pk": section.pk})
@@ -172,13 +173,14 @@ def test_attendance_add_student_on_day(
     ],
 )
 def test_attendance_drop_student_on_day(
-    client, setup_section, day, num_attendances_left
+    client, setup_section, day, num_attendances_left, mocker
 ):
     """
     Check that future attendances are deleted when a student is dropped,
     and verify that past section occurrences and attendances are unchanged.
     """
     _, student_user, _, section = setup_section
+    mocker.patch('scheduler.email.email_utils._email_send_message')
 
     # enroll student first
     with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):
