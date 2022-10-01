@@ -1179,8 +1179,24 @@ main {
 	padding: 10px 27px;
 }
 
-.danger-btn:hover {
+.warning-btn:hover {
 	background-color: var(--csm-danger-darkened);
+}
+
+.warning-btn {
+	display: block;
+	border: none;
+	margin: auto;
+	cursor: pointer;
+	background-color: var(--csm-warning);
+	border-radius: 6px;
+	color: white;
+	font-size: 14px;
+	padding: 10px 27px;
+}
+
+.warning-btn:hover {
+	background-color: var(--csm-warning-darkened);
 }
 
 .override-label {
