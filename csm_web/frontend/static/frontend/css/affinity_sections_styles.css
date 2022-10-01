@@ -30,19 +30,22 @@
 }
 
 .manage-labels-footer {
-    width: '100%';
-    justify-content: 'center';
-    align-items: 'center';
-    position: 'absolute';
-    bottom: 0;
+	position: fixed;
+	width: 100%;
+	bottom: 0;
+	padding-bottom: 20px;
+	padding-top: 20px;
+	background-color: white;
+	margin-right: 90px;
+	border-radius: 20px;
 }
 
 .manage-labels-modal {
 	display: flex;
-	/* background-color: rgb(139, 82, 82); */
 	justify-content: space-evenly;
 	flex-direction: column;
 	padding-right: 7%;
+	padding-bottom: 30px;
 }
 
 .manage-labels-modal-row {
@@ -57,16 +60,17 @@
 	margin-bottom: 2%;
 	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 0 -1px rgb(0 0 0 / 6%);
 	text-align: center;
+	font-size: 15px;
 	vertical-align: middle;
 	position: relative;
+	border-radius: 10px;
 }
 
 .manage-labels-modal-col {
-	/* background-color: red; */
 	display: flex;
 	flex-direction: column;
 	justify-content: space-evenly;
-	padding: 10px 10px;
+	padding: 10px 20px;
 	text-align: center;
 }
 
