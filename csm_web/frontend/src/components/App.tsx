@@ -5,6 +5,7 @@ import { useMatcherActiveCourses } from "../utils/queries/matcher";
 import { emptyRoles, Roles } from "../utils/user";
 import CourseMenu from "./CourseMenu";
 import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
+import { Profile } from "./Profile";
 import Home from "./Home";
 import Policies from "./Policies";
 import { Resources } from "./resource_aggregation/Resources";
@@ -33,6 +34,7 @@ const App = () => {
           <Route path="courses/*" element={<CourseMenu />} />
           <Route path="resources/*" element={<Resources />} />
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
+          <Route path="profile/*" element={<Profile />} />
           <Route path="policies/*" element={<Policies />} />
           <Route path="*" element={<NotFound />} />
         </Route>
@@ -71,8 +73,12 @@ function Header(): React.ReactElement {
     return `site-subtitle-link ${isActive ? "is-active" : ""}`;
   };
 
+  const navlinkGapClassSubtitle: NavLinkProps["className"] = ({ isActive }): string => {
+    return `site-subtitle-link ${isActive ? "is-active" : ""} gap-item`;
+  };
+
   /**
-   * Helper function to determine class name for the home NavLInk component;
+   * Helper function to determine class name for the home NavLink component;
    * is always active unless we're in another tab.
    */
   const homeNavlinkClass = () => {
@@ -80,6 +86,7 @@ function Header(): React.ReactElement {
     if (
       location.pathname.startsWith("/resources") ||
       location.pathname.startsWith("/matcher") ||
+      location.pathname.startsWith("/profilePage") ||
       location.pathname.startsWith("/policies")
     ) {
       isActive = false;
@@ -127,7 +134,10 @@ function Header(): React.ReactElement {
           <h3 className="site-title">Matcher</h3>
         </NavLink>
       ) : null}
-      <NavLink to="/policies" className={navlinkClassSubtitle}>
+      <NavLink to="/profile" className={navlinkGapClassSubtitle} activeClassName="is-active">
+        <h3 className="site-subtitle">Profile</h3>
+      </NavLink>
+      <NavLink to="/policies" className={navlinkClassSubtitle} activeClassName="is-active">
         <h3 className="site-subtitle">Policies</h3>
       </NavLink>
       <a id="logout-btn" href="/logout" title="Log out">

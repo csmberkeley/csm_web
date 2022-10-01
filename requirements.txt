@@ -24,6 +24,12 @@ enforce==0.3.4
 factory-boy==3.2.0
 Faker==8.12.1
 freezegun==1.1.0
+google-api-core==2.10.2
+google-api-python-client==2.73.0
+google-auth==2.16.0
+google-auth-httplib2==0.1.0
+google-auth-oauthlib==0.8.0
+googleapis-common-protos==1.56.4
 gunicorn==20.1.0
 idna==3.2
 jmespath==0.10.0
@@ -35,6 +41,7 @@ pycparser==2.20
 Pygments==2.10.0
 PyJWT==2.4.0
 pytest-django==4.5.2
+pytest-mock==3.10.0
 python-dateutil==2.8.0
 python-social-auth==0.3.6
 python3-openid==3.2.0

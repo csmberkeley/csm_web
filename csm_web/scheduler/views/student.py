@@ -11,6 +11,13 @@ import datetime
 from .utils import log_str, logger, get_object_or_error
 from ..models import Student
 from ..serializers import AttendanceSerializer, StudentSerializer
+from ..email.email_utils import (email_coordinator_drop,
+    email_student_drop,
+    EmailFormattingError,
+    NoEmailError,
+    EmailAuthError,
+    HttpError
+)
 
 
 class StudentViewSet(viewsets.GenericViewSet):
@@ -45,7 +52,8 @@ class StudentViewSet(viewsets.GenericViewSet):
         logger.info(
             f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)} for Student user {log_str(student.user)}"
         )
-        # filter attendances and delete future attendances
+
+        # Filter attendances and delete future attendances
         now = timezone.now().astimezone(timezone.get_default_timezone())
         num_deleted, _ = student.attendance_set.filter(
             Q(
@@ -56,6 +64,55 @@ class StudentViewSet(viewsets.GenericViewSet):
         logger.info(
             f"<Drop> Deleted {num_deleted} attendances for user {log_str(student.user)} in Section {log_str(student.section)} after {now.date()}"
         )
+        # Send drop email
+        if is_coordinator:
+            coordinator = student.course.coordinator_set.get(user=request.user)
+            mentor = student.section.mentor
+            try:
+                email_coordinator_drop(student)
+                logger.info(
+                    f"<Drop Email:Success> Email for coord {coordinator} dropping student {student} sent"
+                )
+            except NoEmailError:
+                logger.info(
+                    f"<Drop Email:Failure> Email address for {student} or {mentor} not found"
+                )
+            except EmailFormattingError:
+                logger.info(
+                    f"<Drop Email:Failure> Email for coord {coordinator} dropping student {student} has not been formatted correctly for sending"
+                )
+            except EmailAuthError:
+                logger.info(
+                    f"<Drop Email:Failure> Cannot log into CSM email"
+                )
+            except HttpError:
+                logger.info(
+                    f"<Drop Email:Failure> Email for coord {coordinator} dropping student {student} failed to send"
+                )
+        else:
+            mentor = student.section.mentor
+            try:
+                email_student_drop(student)
+                logger.info(
+                    f"<Drop Email:Success> Email for student {student} dropping section sent"
+                )
+            except NoEmailError:
+                logger.info(
+                    f"<Drop Email:Failure> Email address for {student} or {mentor} not found"
+                )
+            except EmailFormattingError:
+                logger.info(
+                    f"<Drop Email:Failure> Email for student {student} dropping section has not been formatted correctly for sending"
+                )
+            except EmailAuthError:
+                logger.info(
+                    f"<Drop Email:Failure> Cannot log into CSM email"
+                )
+            except HttpError:
+                logger.info(
+                    f"<Drop Email:Failure> Email for student {student} dropping section failed to send"
+                )
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["get", "put"])
