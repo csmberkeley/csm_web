@@ -278,7 +278,7 @@ header {
 }
 
 .csm-btn-waitlist:hover {
-	background-color: var(--csm-waitlist-darkened);
+	background-color: var(--csm-warning-darkened);
 }
 
 .csm-btn:focus {
