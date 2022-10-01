@@ -29,6 +29,7 @@ interface MentorSectionInfoProps {
   capacity: number;
   description: string;
   id: number;
+  waitlistedStudents: Student[];
 }
 
 export default function MentorSectionInfo({
@@ -40,7 +41,8 @@ export default function MentorSectionInfo({
   mentor,
   capacity,
   id,
-  description
+  description,
+  waitlistedStudents
 }: MentorSectionInfoProps) {
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
@@ -108,6 +110,49 @@ export default function MentorSectionInfo({
           )}
           {!loaded && <LoadingSpinner />}
         </InfoCard>
+        <InfoCard title="Waitlisted Students">
+          {loaded && (
+            <React.Fragment>
+              <table id="students-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(students.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students).map(
+                    ({ name, email, id }: Student) => (
+                      <tr key={id}>
+                        <td>
+                          {isCoordinator && id !== -1 && (
+                            <StudentDropper name={name ? name : email} id={id} reloadSection={reloadSection} />
+                          )}
+                          <span className="student-info">{name || email}</span>
+                        </td>
+                      </tr>
+                    )
+                  )}
+                  {isCoordinator && (
+                    <React.Fragment>
+                      <tr>
+                        <td>
+                          <button className="coordinator-email-modal-button" onClick={() => setIsAddingStudent(true)}>
+                            Add students
+                          </button>
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  )}
+                </tbody>
+              </table>
+              {isCoordinator && isAddingStudent && (
+                <CoordinatorAddStudentModal closeModal={closeAddModal} userEmails={userEmails} sectionId={id} />
+              )}
+            </React.Fragment>
+          )}
+          {!loaded && <LoadingSpinner />}
+        </InfoCard>
+        s
         <div className="section-info-cards-right">
           {spacetimes.map(({ override, ...spacetime }, index) => (
             <SectionSpacetime
