@@ -25,7 +25,7 @@ class Command(BaseCommand):
             #     so_manager = so_db.on_conflict(["date", "section"], ConflictAction.NOTHING)
 
             sos = [{"date": week_start + timedelta(days=day_to_number(spacetime.day_of_week)),
-                    "section": section} for section in sections for spacetime in section.spacetimes.all()]
+                    "section": section, "spacetime": spacetime} for section in sections for spacetime in section.spacetimes.all()]
             sos_models = []  # list of section occurrence models
             for so in sos:
                 try:

@@ -118,6 +118,7 @@ class SectionOccurrence(ValidatingModel):
     """
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
+    spacetime = models.ForeignKey("Spacetime", on_delete = models.CASCADE)
 
     def __str__(self):
         return f"SectionOccurrence for {self.section} at {self.date}"
@@ -204,7 +205,7 @@ class Student(Profile):
                     section=self.section, date=week_start + datetime.timedelta(days=section_day_num))
                 if not so_qs.exists():
                     so = SectionOccurrence.objects.create(
-                        section=self.section, date=week_start + datetime.timedelta(days=section_day_num))
+                        section=self.section, date=week_start + datetime.timedelta(days=section_day_num), spacetime=spacetime)
                 else:
                     so = so_qs.get()
                 Attendance.objects.create(student=self, sectionOccurrence=so)

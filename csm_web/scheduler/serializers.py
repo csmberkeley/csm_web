@@ -226,7 +226,8 @@ class ResourceSerializer(serializers.ModelSerializer):
 class SectionOccurrenceSerializer(serializers.ModelSerializer):
     attendances = AttendanceSerializer(source='attendance_set', many=True)
     section = SectionSerializer()
-
+    # section_occurrence = SectionOccurrenceSerializer()
+    
     class Meta:
         model = SectionOccurrence
         fields = ('id', 'date', 'section', 'attendances')
