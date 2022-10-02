@@ -31,12 +31,11 @@
 
 .manage-labels-footer {
 	position: fixed;
-	width: 100%;
+	width: 94.5%;
 	bottom: 0;
-	padding-bottom: 20px;
-	padding-top: 20px;
+	padding-bottom: 15px;
+	padding-top: 15px;
 	background-color: white;
-	margin-right: 90px;
 	border-radius: 20px;
 }
 
