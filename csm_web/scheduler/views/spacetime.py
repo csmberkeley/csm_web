@@ -58,12 +58,13 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
-    @action(detail=True, methods=['put'])
     def create(self, request):
         spacetime = Spacetime.objects.create(
             location = request.data['location'],
             start_time = request.data['start_time'],
             duration = datetime.timedelta(hours=1),
             day_of_week = request.data['day_of_week'],
-            section = get_object_or_error(Section.objects.all(), )
+            section = get_object_or_error(Section.objects.all(), pk=request.data['section'])
         )
+        spacetime.save()
+        return Response(status=status.HTTP_201_CREATED)
