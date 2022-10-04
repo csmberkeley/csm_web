@@ -3,6 +3,17 @@
 from django.db import migrations, models
 import django.db.models.deletion
 
+def copy_descriptions_to_label(apps, schema_editor):
+    Course = apps.get_model("scheduler", "Section")
+    Section = apps.get_model("scheduler", "Course")
+    Label = apps.get_model("scheduler", "Label")
+    for section in Section.objects.all():
+        label = Label.objects.create(
+            name = section.description
+            showPopup = True
+            course = section.mentor.course
+        )
+        section.save()
 
 class Migration(migrations.Migration):
 
@@ -15,6 +26,7 @@ class Migration(migrations.Migration):
             model_name='section',
             name='description',
         ),
+        migrations.RunPython(copy_descriptions_to_label)
         migrations.AlterField(
             model_name='label',
             name='course',
