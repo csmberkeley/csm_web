@@ -9,8 +9,8 @@ def copy_descriptions_to_label(apps, schema_editor):
     Label = apps.get_model("scheduler", "Label")
     for section in Section.objects.all():
         label = Label.objects.create(
-            name = section.description
-            showPopup = True
+            name = section.description,
+            showPopup = True,
             course = section.mentor.course
         )
         section.save()
@@ -26,7 +26,7 @@ class Migration(migrations.Migration):
             model_name='section',
             name='description',
         ),
-        migrations.RunPython(copy_descriptions_to_label)
+        migrations.RunPython(copy_descriptions_to_label),
         migrations.AlterField(
             model_name='label',
             name='course',
