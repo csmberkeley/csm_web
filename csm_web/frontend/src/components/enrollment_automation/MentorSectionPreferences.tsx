@@ -96,12 +96,16 @@ export function MentorSectionPreferences({
     }
 
     const selectedEventIds = selectedEvents.map(event => event.id);
+    let intPreference = parseInt(e.target.value);
+
+    // clamp preference value
+    intPreference = Math.min(MAX_PREFERENCE, Math.max(0, intPreference));
 
     const newSlots = slots.map(slot => {
       if (selectedEventIds.includes(slot.id)) {
         return {
           ...slot,
-          preference: parseInt(e.target.value)
+          preference: intPreference
         };
       }
       return slot;
@@ -115,7 +119,7 @@ export function MentorSectionPreferences({
     for (const slot of slots) {
       const cleaned_slot = {
         id: slot.id!,
-        preference: slot.preference
+        preference: Math.min(MAX_PREFERENCE, Math.max(0, slot.preference))
       };
       cleaned_preferences.push(cleaned_slot);
     }
