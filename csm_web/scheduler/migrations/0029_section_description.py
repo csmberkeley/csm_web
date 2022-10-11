@@ -10,10 +10,10 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='section',
-            name='description',
-            field=models.CharField(
-                blank=True, help_text='A brief note to add some extra information about the section, e.g. "EOP" or "early start".', max_length=100),
-        ),
+        # migrations.AddField(
+        #     model_name='section',
+        #     name='description',
+        #     field=models.CharField(
+        #         blank=True, help_text='A brief note to add some extra information about the section, e.g. "EOP" or "early start".', max_length=100),
+        # ),
     ]

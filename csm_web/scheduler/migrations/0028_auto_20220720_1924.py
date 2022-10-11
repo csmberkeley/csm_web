@@ -11,10 +11,6 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.RemoveField(
-            model_name='section',
-            name='description',
-        ),
         migrations.CreateModel(
             name='Label',
             fields=[
