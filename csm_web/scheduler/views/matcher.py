@@ -275,15 +275,19 @@ def mentors(request, pk=None):
         # users already associated with the course as a mentor
         users_with_course = User.objects.filter(mentor__course=course)
         for email in request.data["mentors"]:
-            username = email.split("@")[0]  # username is everything before @
-            # use existing user, or create a new user if it doesnt exist
-            user, _ = User.objects.get_or_create(username=username, email=email)
-            # if mentor exists, skip
-            if user in users_with_course:
+            if not email or "@" not in email:
+                # invalid or blank email
                 skipped.append(email)
-                continue
-            # create new mentor
-            created = Mentor.objects.create(user=user, course=course)
+            else:
+                username = email.split("@")[0]  # username is everything before @
+                # use existing user, or create a new user if it doesnt exist
+                user, _ = User.objects.get_or_create(username=username, email=email)
+                # if mentor exists, skip
+                if user in users_with_course:
+                    skipped.append(email)
+                    continue
+                # create new mentor
+                created = Mentor.objects.create(user=user, course=course)
         return Response({"skipped": skipped}, status=status.HTTP_200_OK)
     elif request.method == "DELETE":
         # delete mentors from course

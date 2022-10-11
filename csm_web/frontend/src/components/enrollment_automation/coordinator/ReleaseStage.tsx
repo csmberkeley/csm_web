@@ -194,6 +194,13 @@ function MentorList({
       // split by newline
       newMentors = newMentorsString.split("\n").map(email => email.trim());
     }
+    // filter empty emails
+    newMentors = newMentors.filter(email => email.length > 0);
+
+    if (newMentors.length == 0) {
+      // nothing to request
+      return;
+    }
 
     // submit mentor list to add to course
     fetchWithMethod(`matcher/${profile.courseId}/mentors`, HTTP_METHODS.POST, {
