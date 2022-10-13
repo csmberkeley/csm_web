@@ -15,6 +15,8 @@ def copy_descriptions_to_label(apps, schema_editor):
                 course = section.mentor.course
             )
             section.save()
+            label.sections.add(section)
+            label.save()
 
 class Migration(migrations.Migration):
 
