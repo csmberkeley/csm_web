@@ -186,6 +186,7 @@ export function CoordinatorMatcherForm({
           prefByMentor={prefByMentor}
           assignments={assignments}
           recomputeStage={recomputeStage}
+          formIsOpen={formIsOpen}
           setCurStage={setCurStage}
         />
       </div>
@@ -200,6 +201,7 @@ interface CoordinatorMatcherFormSwitchProps {
   prefByMentor: Map<number, SlotPreference[]>;
   assignments: Assignment[];
   recomputeStage: () => void;
+  formIsOpen: boolean;
   setCurStage: (stage: Stage) => void;
 }
 
@@ -210,13 +212,22 @@ const CoordinatorMatcherFormSwitch = ({
   prefByMentor,
   assignments,
   recomputeStage,
+  formIsOpen,
   setCurStage
 }: CoordinatorMatcherFormSwitchProps) => {
   switch (stage) {
     case Stage.CREATE:
-      return <CreateStage profile={profile} initialSlots={slots} />;
+      return <CreateStage profile={profile} initialSlots={slots} nextStage={() => setCurStage(Stage.RELEASE)} />;
     case Stage.RELEASE:
-      return <ReleaseStage profile={profile} slots={slots} prefByMentor={prefByMentor} />;
+      return (
+        <ReleaseStage
+          profile={profile}
+          slots={slots}
+          prefByMentor={prefByMentor}
+          prevStage={() => setCurStage(Stage.CREATE)}
+          formIsOpen={formIsOpen}
+        />
+      );
     case Stage.CONFIGURE:
       return <ConfigureStage profile={profile} slots={slots} recomputeStage={recomputeStage} />;
     case Stage.EDIT:

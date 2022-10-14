@@ -30,6 +30,8 @@ interface ReleaseStageProps {
    * Map from mentor id to their slot preferences
    */
   prefByMentor: Map<number, SlotPreference[]>;
+  formIsOpen: boolean;
+  prevStage: () => void;
 }
 
 /**
@@ -37,7 +39,13 @@ interface ReleaseStageProps {
  * - Add mentors to fill out the preference form
  * - View current submitted preferences from mentors
  */
-export function ReleaseStage({ profile, slots, prefByMentor }: ReleaseStageProps): React.ReactElement {
+export function ReleaseStage({
+  profile,
+  slots,
+  prefByMentor,
+  formIsOpen,
+  prevStage
+}: ReleaseStageProps): React.ReactElement {
   const [selectedMentor, setSelectedMentor] = useState<Mentor | undefined>(undefined);
 
   const [preferenceModalOpen, setPreferenceModalOpen] = useState<boolean>(false);
@@ -70,6 +78,8 @@ export function ReleaseStage({ profile, slots, prefByMentor }: ReleaseStageProps
         prefByMentor={prefByMentor}
         selectedMentor={selectedMentor}
         setSelectedMentor={handleSelectMentor}
+        prevStage={prevStage}
+        formIsOpen={formIsOpen}
       />
     </React.Fragment>
   );
@@ -93,9 +103,18 @@ interface MentorListProps {
   prefByMentor: Map<number, SlotPreference[]>;
   selectedMentor: Mentor | undefined;
   setSelectedMentor: (mentor: Mentor | undefined) => void;
+  prevStage: () => void;
+  formIsOpen: boolean;
 }
 
-function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }: MentorListProps): React.ReactElement {
+function MentorList({
+  profile,
+  prefByMentor,
+  selectedMentor,
+  setSelectedMentor,
+  prevStage,
+  formIsOpen
+}: MentorListProps): React.ReactElement {
   /**
    * List of all mentors associated with the course that have no assigned section
    */
@@ -124,11 +143,9 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
   /**
    * List of all mentors associated with the course that have no assigned section
    */
-  const {
-    data: jsonMentorList,
-    isSuccess: jsonMentorListLoaded,
-    refetch: refetchMentorList
-  } = useMatcherMentors(profile.courseId);
+  const { data: jsonMentorList, isSuccess: jsonMentorListLoaded, refetch: refetchMentorList } = useMatcherMentors(
+    profile.courseId
+  );
 
   const matcherConfigMutation = useMatcherConfigMutation(profile.courseId);
   const matcherMentorsMutation = useMatcherAddMentorsMutation(profile.courseId);
@@ -163,6 +180,11 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
     }
     return count;
   }, [mentorList]);
+
+  const openForm = (): void => {
+    // send POST request to release form for mentors
+    matcherConfigMutation.mutate({ open: true });
+  };
 
   const closeForm = () => {
     // send POST request to close form for mentors
@@ -389,15 +411,26 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
       </div>
       <div className="matcher-body-footer-sticky matcher-body-footer">
         <div>
+          {mentorList.every(mentor => !hasPreferences(mentor)) && (
+            <button className="matcher-secondary-btn" onClick={prevStage}>
+              Back
+            </button>
+          )}
           {removedMentorList.length > 0 && (
             <button className="matcher-secondary-btn" onClick={submitMentorRemovals}>
               Update
             </button>
           )}
         </div>
-        <button className="matcher-submit-btn" onClick={closeForm}>
-          Close Form
-        </button>
+        {formIsOpen ? (
+          <button className="matcher-submit-btn" onClick={closeForm}>
+            Close Form
+          </button>
+        ) : (
+          <button className="matcher-submit-btn" onClick={openForm}>
+            Open Form
+          </button>
+        )}
       </div>
     </React.Fragment>
   );

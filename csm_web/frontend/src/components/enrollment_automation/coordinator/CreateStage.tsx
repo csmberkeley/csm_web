@@ -23,9 +23,10 @@ interface TileDetails {
 interface CreateStageProps {
   profile: Profile;
   initialSlots: Slot[];
+  nextStage: () => void;
 }
 
-export function CreateStage({ profile, initialSlots }: CreateStageProps): JSX.Element {
+export function CreateStage({ profile, initialSlots, nextStage }: CreateStageProps): JSX.Element {
   /**
    * List of slots to be displayed in the calendar.
    */
@@ -145,11 +146,6 @@ export function CreateStage({ profile, initialSlots }: CreateStageProps): JSX.El
         }
       }
     );
-  };
-
-  const openForm = (): void => {
-    // send POST request to release form for mentors
-    matcherConfigMutation.mutate({ open: true });
   };
 
   /**
@@ -623,8 +619,8 @@ export function CreateStage({ profile, initialSlots }: CreateStageProps): JSX.El
         <div className="matcher-unsaved-changes-container">
           {edited && <span className="matcher-unsaved-changes">You have unsaved changes!</span>}
         </div>
-        <button className="matcher-submit-btn" onClick={openForm} disabled={edited}>
-          Release Form
+        <button className="matcher-submit-btn" onClick={nextStage} disabled={edited}>
+          Continue
         </button>
       </div>
     </React.Fragment>
