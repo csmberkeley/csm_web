@@ -17,7 +17,6 @@ export const Resources = (): React.ReactElement => {
       // initialize with the first course in order
       const associatedCourses = [...roles.COORDINATOR, ...roles.MENTOR, ...roles.STUDENT].sort();
       if (associatedCourses.length > 0) {
-        console.log(associatedCourses);
         setSelectedCourseID(associatedCourses[0]);
       }
     });
