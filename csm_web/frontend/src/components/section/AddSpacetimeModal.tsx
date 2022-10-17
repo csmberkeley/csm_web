@@ -46,45 +46,46 @@ export default function AddSpacetimeModal({ sectionID, closeModal, reloadSection
   };
 
   return (
-    <Modal closeModal={closeModal}>
-      <form id="create-section-form" className="csm-form" onSubmit={handleSubmit}>
-        <h4 className="spacetime-fields-header">New Spacetime</h4>
-        <React.Fragment>
-          <div className="spacetime-fields">
-            <label>
-              Location
-              <input
-                onChange={handleLocation}
-                required
-                title="You cannot leave this field blank"
-                pattern=".*[^\s]+.*"
-                type="text"
-                name={"location"}
-                value={location}
-              />
-            </label>
-            <label>
-              Day
-              <select onChange={handleDay} name={`dayOfWeek`} value={day} required>
-                {["---"].concat(DAYS_OF_WEEK).map(day => (
-                  <option key={day} value={day === "---" ? "" : day} disabled={day === "---"}>
-                    {day}
-                  </option>
-                ))}
-              </select>
-            </label>
-            <label>
-              Time
-              <TimeInput
-                onChange={handleTime as React.FormEventHandler<HTMLInputElement>}
-                required
-                name={`startTime`}
-                value={time}
-              />
-            </label>
-          </div>
-        </React.Fragment>
-        <input type="submit" value="Create Spacetime" />
+    <Modal className="add-spacetime-modal" closeModal={closeModal}>
+      <form id="add-spacetime-form" className="csm-form" onSubmit={handleSubmit}>
+        <div id="add-spacetime-form-contents">
+          <React.Fragment>
+            <div className="spacetime-fields">
+              <label>
+                Location
+                <input
+                  onChange={handleLocation}
+                  required
+                  title="You cannot leave this field blank"
+                  pattern=".*[^\s]+.*"
+                  type="text"
+                  name={"location"}
+                  value={location}
+                />
+              </label>
+              <label>
+                Day
+                <select onChange={handleDay} name={`dayOfWeek`} value={day} required>
+                  {["---"].concat(DAYS_OF_WEEK).map(day => (
+                    <option key={day} value={day === "---" ? "" : day} disabled={day === "---"}>
+                      {day}
+                    </option>
+                  ))}
+                </select>
+              </label>
+              <label>
+                Time
+                <TimeInput
+                  onChange={handleTime as React.FormEventHandler<HTMLInputElement>}
+                  required
+                  name={`startTime`}
+                  value={time}
+                />
+              </label>
+            </div>
+          </React.Fragment>
+          <input type="submit" value="Create Spacetime" />
+        </div>
       </form>
     </Modal>
   );

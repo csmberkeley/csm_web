@@ -186,7 +186,9 @@ export default function MentorSectionInfo({
           ))}
           {isCoordinator && (
             <InfoCard title="Add Spacetime">
-              <button onClick={() => setShowModal(ModalStates.SPACETIME_ADD)}>Add Spacetime</button>
+              <button className="add-spacetime-btn" onClick={() => setShowModal(ModalStates.SPACETIME_ADD)}>
+                New Spacetime
+              </button>
               {showModal == ModalStates.SPACETIME_ADD && (
                 <AddSpacetimeModal sectionID={id} closeModal={closeModal} reloadSections={reloadSection} />
               )}

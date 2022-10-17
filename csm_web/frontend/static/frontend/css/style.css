@@ -507,6 +507,12 @@ header {
 	margin-left: 5px;
 }
 
+.add-spacetime-modal {
+	height: 90%;
+	display: flex;
+	flex-direction: column;
+}
+
 .data-export-modal {
 	height: 90%;
 	display: flex;
@@ -639,7 +645,8 @@ header {
 	padding-top: 40px;
 }
 
-#create-section-form {
+#create-section-form,
+#add-spacetime-form {
 	padding: unset;
 }
 
@@ -654,6 +661,16 @@ header {
 	grid-gap: 20px;
 }
 
+#add-spacetime-form .spacetime-fields {
+	display: grid;
+	justify-content: center;
+	grid-template-columns: max-content max-content;
+	grid-template-areas:
+		". ."
+		"last last";
+	grid-gap: 20px;
+}
+
 #create-section-form-contents > .spacetime-fields-header {
 	margin: 0 0 10px 0;
 	color: #646464;
@@ -661,12 +678,14 @@ header {
 	border-bottom: 2px solid #646464;
 }
 
-#create-section-form-contents {
+#create-section-form-contents,
+#add-spacetime-form-contents {
 	margin: auto;
 	max-width: max-content;
 }
 
-#create-section-form-contents > * {
+#create-section-form-contents > *,
+#add-spacetime-form-contents > * {
 	margin-bottom: 20px;
 }
 
@@ -857,6 +876,11 @@ main {
 	width: 65vw;
 }
 
+.add-spacetime-modal {
+	height: 28vh;
+	width: 40vw;
+}
+
 .coordinator-add-student-modal .modal-contents {
 	overflow: hidden;
 }
@@ -945,7 +969,8 @@ main {
 }
 
 .coordinator-email-input-add,
-.coordinator-email-modal-button {
+.coordinator-email-modal-button,
+.add-spacetime-btn {
 	background-color: var(--csm-neutral);
 	border: none;
 	border-radius: 8px;
@@ -968,7 +993,8 @@ main {
 }
 
 .coordinator-email-input-add:hover,
-.coordinator-email-modal-button:hover {
+.coordinator-email-modal-button:hover,
+.add-spacetime-btn:hover {
 	background-color: var(--csm-neutral-darkened);
 }
 
