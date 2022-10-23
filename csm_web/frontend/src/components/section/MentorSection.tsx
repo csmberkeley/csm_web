@@ -89,6 +89,7 @@ export default function MentorSection({
           element={
             <MentorSectionAttendance
               attendances={attendances}
+              sectionId={id}
               loaded={attendancesLoaded}
               updateAttendance={updateAttendance}
             />
