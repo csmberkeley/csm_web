@@ -82,6 +82,39 @@ export const useStudentAttendances = (studentId: number): UseQueryResult<Attenda
 
 /* ===== Mutations ===== */
 
+export interface UpdateStudentAttendanceBody {
+  id: number;
+  presence: string;
+}
+export interface UpdateStudentAttendancesMutationParams {
+  studentId: number;
+  body: UpdateStudentAttendanceBody;
+}
+
+export const useUpdateStudentAttendancesMutation = (
+  sectionId: number
+): UseMutationResult<void, ServerError, UpdateStudentAttendancesMutationParams> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, Error, UpdateStudentAttendancesMutationParams>(
+    async ({ studentId, body }: UpdateStudentAttendancesMutationParams) => {
+      const response = await fetchWithMethod(`students/${studentId}/attendances/`, HTTP_METHODS.PUT, body);
+      if (response.ok) {
+        return;
+      } else {
+        throw new ServerError(`Failed to save attendance ${body.id} for student ${studentId}`);
+      }
+    },
+    {
+      onSuccess: () => {
+        //invalidate all queries for the section
+        queryClient.invalidateQueries(["sections", sectionId, "attendance"]);
+      }
+    }
+  );
+  handleError(mutationResult);
+  return mutationResult;
+};
+
 export interface StudentDropMutationBody {
   banned: boolean;
 }

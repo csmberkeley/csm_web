@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import { useUpdateStudentAttendancesMutation } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import { ATTENDANCE_LABELS } from "./Section";
 import { dateSort, formatDate } from "./utils";
@@ -8,6 +9,7 @@ import { Attendance } from "../../utils/types";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 
 interface MentorSectionAttendanceProps {
+  sectionId: number;
   loaded: boolean;
   attendances: {
     [date: string]: Attendance[];
@@ -16,6 +18,7 @@ interface MentorSectionAttendanceProps {
 }
 
 const MentorSectionAttendance = ({
+  sectionId,
   loaded,
   attendances,
   updateAttendance
@@ -25,6 +28,8 @@ const MentorSectionAttendance = ({
   const [showAttendanceSaveSuccess, setShowAttendanceSaveSuccess] = useState(false);
   const [showSaveSpinner, setShowSaveSpinner] = useState(false);
   const prevLoaded = useRef(loaded);
+
+  const updateStudentAttendancesMutations = useUpdateStudentAttendancesMutation(sectionId);
 
   useEffect(() => {
     prevLoaded.current = loaded;
@@ -50,16 +55,13 @@ const MentorSectionAttendance = ({
     }
     //TODO: Handle API Failure
     setShowSaveSpinner(true);
-    Promise.all(
-      stagedAttendances.map(({ id, presence, student: { id: studentId } }) =>
-        fetchWithMethod(`students/${studentId}/attendances/`, HTTP_METHODS.PUT, { id, presence })
-      )
-    ).then(() => {
-      updateAttendance(selectedDate!, stagedAttendances);
-      setShowAttendanceSaveSuccess(true);
-      setShowSaveSpinner(false);
-      setTimeout(() => setShowAttendanceSaveSuccess(false), 1500);
-    });
+    stagedAttendances.map(({ id, presence, student: { id: studentId } }) =>
+      updateStudentAttendancesMutations.mutate({ studentId, body: { id, presence } })
+    );
+    updateAttendance(selectedDate!, stagedAttendances);
+    setShowAttendanceSaveSuccess(true);
+    setShowSaveSpinner(false);
+    setTimeout(() => setShowAttendanceSaveSuccess(false), 1500);
   }
 
   function handleMarkAllPresent() {
