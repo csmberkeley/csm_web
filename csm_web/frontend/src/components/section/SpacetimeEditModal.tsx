@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import { useSpacetimeModifyMutation, useSpacetimeOverrideMutation } from "../../utils/queries/spacetime";
 import { Spacetime } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
@@ -7,6 +7,7 @@ import TimeInput from "../TimeInput";
 import { DAYS_OF_WEEK, zeroPadTwoDigit } from "./utils";
 
 interface SpacetimeEditModalProps {
+  sectionId: number;
   closeModal: () => void;
   defaultSpacetime: Spacetime;
   reloadSection: () => void;
@@ -14,6 +15,7 @@ interface SpacetimeEditModalProps {
 }
 
 const SpaceTimeEditModal = ({
+  sectionId,
   closeModal,
   defaultSpacetime: { id: spacetimeId, startTime: timeString, location: prevLocation, dayOfWeek },
   reloadSection,
@@ -28,25 +30,26 @@ const SpaceTimeEditModal = ({
   const [mode, setMode] = useState<string>(prevLocation && prevLocation.startsWith("http") ? "virtual" : "inperson");
   const [showSaveSpinner, setShowSaveSpinner] = useState<boolean>(false);
 
+  const spacetimeModifyMutation = useSpacetimeModifyMutation(sectionId, spacetimeId);
+  const spacetimeOverrideMutation = useSpacetimeOverrideMutation(sectionId, spacetimeId);
+
   const handleSubmit = (e: React.ChangeEvent<HTMLFormElement>) => {
     e.preventDefault();
     //TODO: Handle API failure
     setShowSaveSpinner(true);
-    (isPermanent
-      ? fetchWithMethod(`/spacetimes/${spacetimeId}/modify`, HTTP_METHODS.PUT, {
+    isPermanent
+      ? spacetimeModifyMutation.mutate({
           day_of_week: day,
           location: location,
           start_time: `${time}:00`
         })
-      : fetchWithMethod(`/spacetimes/${spacetimeId}/override`, HTTP_METHODS.PUT, {
+      : spacetimeOverrideMutation.mutate({
           location: location,
           start_time: `${time}:00`,
           date: date
-        })
-    ).then(() => {
-      closeModal();
-      reloadSection();
-    });
+        });
+    closeModal();
+    reloadSection();
   };
 
   const now = new Date();
