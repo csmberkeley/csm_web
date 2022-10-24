@@ -297,3 +297,36 @@ export const useSectionCreateMutation = (): UseMutationResult<Section, ServerErr
   handleError(mutationResult);
   return mutationResult;
 };
+
+export interface SectionUpdateMutationBody {
+  capacity: number;
+  description: string;
+}
+
+/**
+ * Hook to modify a section
+ */
+export const useSectionUpdateMutation = (
+  sectionId: number
+): UseMutationResult<void, ServerError, SectionUpdateMutationBody> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, Error, SectionUpdateMutationBody>(
+    async (body: SectionUpdateMutationBody) => {
+      const response = await fetchWithMethod(`/sections/${sectionId}/`, HTTP_METHODS.PATCH, body);
+      if (response.ok) {
+        return;
+      } else {
+        throw new ServerError(`Failed to create section`);
+      }
+    },
+    {
+      onSuccess: () => {
+        // invalidate all queries for the section
+        queryClient.invalidateQueries(["sections", sectionId]);
+      }
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
