@@ -117,6 +117,7 @@ export default function MentorSectionInfo({
               {showModal === ModalStates.SPACETIME_EDIT && focusedSpacetimeID === spacetime.id && (
                 <SpacetimeEditModal
                   key={spacetime.id}
+                  sectionId={sectionId}
                   reloadSection={reloadSection}
                   defaultSpacetime={spacetime}
                   closeModal={closeModal}
