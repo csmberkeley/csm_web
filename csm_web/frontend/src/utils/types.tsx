@@ -30,10 +30,10 @@ export interface Section {
   capacity: number;
   associatedProfileId: number;
   numStudentsEnrolled: number;
-  description: string;
   course: string;
   userRole: string;
   courseTitle: string;
+  labelSet: Label[];
 }
 
 export interface Mentor {
@@ -62,4 +62,13 @@ export interface Attendance {
   date: string;
   student: Student;
   presence: string;
+}
+
+export interface Label {
+  id: number;
+  course: Course;
+  sections: Section[];
+  name: string;
+  description: string;
+  showPopup: boolean;
 }

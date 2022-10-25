@@ -7,6 +7,7 @@
 @import url("./tooltip.css");
 @import url("./policies.css");
 @import url("./spacetime_delete.css");
+@import url("./affinity_sections_styles.css");
 
 html,
 body {
@@ -219,9 +220,12 @@ header {
 	color: #575757;
 }
 
+.modal-confirmation-container {
+	display: flex;
+}
+
 .modal-btn {
-	position: absolute;
-	display: block;
+	flex-direction: row;
 	color: white;
 	margin: auto;
 	width: 80px;
@@ -230,13 +234,11 @@ header {
 	background-color: #007bff;
 	border-radius: 10px;
 	cursor: pointer;
-	left: 0;
-	right: 0;
-	bottom: 20px;
 }
 
-.modal-btn:hover {
-	background-color: #0069d9;
+.icon-space {
+	margin-top: 2px;
+	margin-bottom: 2px;
 }
 
 /* Home page */
@@ -1512,6 +1514,10 @@ table tbody tr:last-child > td {
 
 .csm-form {
 	padding-left: 40px;
+}
+
+#meta {
+	padding-right: 40px;
 }
 
 .csm-form #submit-and-status > * {
