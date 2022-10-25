@@ -11,12 +11,14 @@ import XIcon from "../../../static/frontend/img/x.svg";
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
 import MetaEditModal from "./MetaEditModal";
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
+import AddSpacetimeModal from "./AddSpacetimeModal";
 
 enum ModalStates {
   NONE = "NONE",
   SPACETIME_EDIT = "SPACETIME_EDIT",
   META_EDIT = "META_EDIT",
-  SPACETIME_DELETE = "SPACETIME_DELETE"
+  SPACETIME_DELETE = "SPACETIME_DELETE",
+  SPACETIME_ADD = "SPACETIME_ADD"
 }
 
 interface MentorSectionInfoProps {
@@ -182,7 +184,16 @@ export default function MentorSectionInfo({
               )}
             </SectionSpacetime>
           ))}
-
+          {isCoordinator && (
+            <InfoCard title="Add Spacetime">
+              <button className="add-spacetime-btn" onClick={() => setShowModal(ModalStates.SPACETIME_ADD)}>
+                New Spacetime
+              </button>
+              {showModal == ModalStates.SPACETIME_ADD && (
+                <AddSpacetimeModal sectionID={id} closeModal={closeModal} reloadSections={reloadSection} />
+              )}
+            </InfoCard>
+          )}
           <InfoCard title="Meta">
             {isCoordinator && (
               <React.Fragment>
