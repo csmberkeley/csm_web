@@ -1,6 +1,9 @@
+import datetime
 from django.db.models import Q
+
 from django.db import transaction
 from django.utils import timezone
+
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
@@ -8,7 +11,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework import viewsets
 
 from .utils import log_str, logger, get_object_or_error
-from ..models import Spacetime
+from ..models import Spacetime, Section
 from ..serializers import SpacetimeSerializer, OverrideSerializer
 
 
@@ -117,3 +120,16 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
                 f"<Override Deletion:Success> Deleted override for {log_str(spacetime)}"
             )
             return Response(status=status.HTTP_200_OK)
+
+    def create(self, request):
+        spacetime = Spacetime.objects.create(
+            location = request.data['location'],
+            start_time = request.data['start_time'],
+            duration = datetime.timedelta(hours=1),
+            day_of_week = request.data['day_of_week'],
+            section = get_object_or_error(Section.objects.all(), pk=request.data['section'])
+        )
+        spacetime.save()
+        return Response(status=status.HTTP_201_CREATED)
+
+
