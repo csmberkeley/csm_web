@@ -190,7 +190,7 @@ export default function MentorSectionInfo({
                 New Spacetime
               </button>
               {showModal == ModalStates.SPACETIME_ADD && (
-                <AddSpacetimeModal sectionID={id} closeModal={closeModal} reloadSections={reloadSection} />
+                <AddSpacetimeModal section_id={id} closeModal={closeModal} reloadSections={reloadSection} />
               )}
             </InfoCard>
           )}

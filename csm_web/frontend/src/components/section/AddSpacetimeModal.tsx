@@ -4,14 +4,15 @@ import Modal from "../Modal";
 import { Spacetime } from "../../utils/types";
 import { DAYS_OF_WEEK } from "../section/utils";
 import TimeInput from "../TimeInput";
+import { stringify } from "querystring";
 
 interface AddSpacetimeProps {
-  sectionID: number;
+  section_id: number;
   closeModal: () => void;
   reloadSections: () => void;
 }
 
-export default function AddSpacetimeModal({ sectionID, closeModal, reloadSections }: AddSpacetimeProps) {
+export default function AddSpacetimeModal({ section_id, closeModal, reloadSections }: AddSpacetimeProps) {
   const [location, setLocation] = useState<string>();
   const [time, setTime] = useState<string>();
   const [day, setDay] = useState<string>("Monday");
@@ -33,12 +34,11 @@ export default function AddSpacetimeModal({ sectionID, closeModal, reloadSection
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
     const data = {
-      sectionID,
+      section_id,
       location,
       day,
       time
     };
-
     //TODO: Handle API Failure
     fetchWithMethod("/spacetimes", HTTP_METHODS.POST, data).then(() => {
       closeModal();
