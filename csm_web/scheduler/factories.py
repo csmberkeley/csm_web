@@ -110,6 +110,14 @@ class MentorFactory(factory.django.DjangoModelFactory):
     course = factory.SubFactory(CourseFactory)
 
 
+class CoordinatorFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = Coordinator
+
+    user = factory.SubFactory(UserFactory)
+    course = factory.SubFactory(CourseFactory)
+
+
 class SectionFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Section

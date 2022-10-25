@@ -5,6 +5,7 @@ import ReactDOM from "react-dom";
 import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Section from "./section/Section";
+import Policies from "./Policies";
 import { Resources } from "./resource_aggregation/Resources";
 import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 
@@ -55,6 +56,7 @@ export default class App extends React.Component {
               <Route path="/courses" component={CourseMenu} />
               <Route path="/resources" component={Resources} />
               <Route path="/matcher" component={EnrollmentMatcher} />
+              <Route path="/policies" component={Policies} />
             </Switch>
           </main>
         </React.Fragment>
@@ -69,7 +71,11 @@ function Header(): React.ReactElement {
    * That is, it should always be active unless we're in a location prefixed by /resources or /matcher
    */
   const schedulerActive: NavLinkProps["isActive"] = (match, location): boolean => {
-    return !location.pathname.startsWith("/resources") && !location.pathname.startsWith("/matcher");
+    return (
+      !location.pathname.startsWith("/resources") &&
+      !location.pathname.startsWith("/matcher") &&
+      !location.pathname.startsWith("/policies")
+    );
   };
 
   const [activeMatcherRoles, setActiveMatcherRoles] = useState<Roles>(emptyRoles());
@@ -111,6 +117,9 @@ function Header(): React.ReactElement {
           <h3 className="site-title">Matcher</h3>
         </NavLink>
       ) : null}
+      <NavLink to="/policies" className="site-subtitle-link" activeClassName="is-active">
+        <h3 className="site-subtitle">Policies</h3>
+      </NavLink>
       <a id="logout-btn" href="/logout" title="Log out">
         <LogOutIcon width="1.25em" height="1.25em" />
       </a>

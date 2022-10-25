@@ -137,6 +137,7 @@ export const SectionCard = ({
       <section className={`section-card ${isFull ? "full" : ""}`}>
         <div className="section-card-contents">
           {description && <span className="section-card-description">{description}</span>}
+          <div className="add-section-btn"> </div>
           <p title="Location">
             <LocationIcon width={iconWidth} height={iconHeight} />{" "}
             {spacetimes[0].location === null ? "Online" : spacetimes[0].location}
