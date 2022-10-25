@@ -14,7 +14,7 @@ interface AddSpacetimeProps {
 export default function AddSpacetimeModal({ sectionID, closeModal, reloadSections }: AddSpacetimeProps) {
   const [location, setLocation] = useState<string>();
   const [time, setTime] = useState<string>();
-  const [day, setDay] = useState<string>();
+  const [day, setDay] = useState<string>("Monday");
 
   const handleLocation = ({
     target: { name, value }
@@ -38,7 +38,6 @@ export default function AddSpacetimeModal({ sectionID, closeModal, reloadSection
       day,
       time
     };
-    alert(JSON.stringify(data));
 
     //TODO: Handle API Failure
     fetchWithMethod("/spacetimes", HTTP_METHODS.POST, data).then(() => {
