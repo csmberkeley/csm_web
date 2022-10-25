@@ -38,8 +38,10 @@ export default function AddSpacetimeModal({ sectionID, closeModal, reloadSection
       day,
       time
     };
+    alert(JSON.stringify(data));
+
     //TODO: Handle API Failure
-    fetchWithMethod("/sections", HTTP_METHODS.POST, data).then(() => {
+    fetchWithMethod("/spacetimes", HTTP_METHODS.POST, data).then(() => {
       closeModal();
       reloadSections();
     });

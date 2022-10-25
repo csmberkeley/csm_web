@@ -123,11 +123,11 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
 
     def create(self, request):
         spacetime = Spacetime.objects.create(
-            location = request.data['location'],
-            start_time = request.data['start_time'],
+            location = self.request.data['location'],
+            start_time = self.request.data['time'],
             duration = datetime.timedelta(hours=1),
-            day_of_week = request.data['day_of_week'],
-            section = get_object_or_error(Section.objects.all(), pk=request.data['section'])
+            day_of_week = self.request.data['day'],
+            section = get_object_or_error(Section.objects.all(), pk=self.request.data['sectionID'])
         )
         spacetime.save()
         return Response(status=status.HTTP_201_CREATED)
