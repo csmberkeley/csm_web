@@ -2,11 +2,20 @@ import pytest
 from freezegun import freeze_time
 import datetime
 
+from rest_framework import status
 from django.db.models import Q
 from django.utils import timezone
 from django.urls import reverse
 from scheduler.models import (
     Override,
+    User,
+    Course,
+    Section,
+    Spacetime,
+    Mentor,
+    Student,
+    Attendance,
+    SectionOccurrence,
 )
 from scheduler.factories import (
     UserFactory,
@@ -14,6 +23,7 @@ from scheduler.factories import (
     SectionFactory,
     MentorFactory,
     CoordinatorFactory,
+    AttendanceFactory,
     SpacetimeFactory,
 )
 
@@ -222,3 +232,17 @@ def test_delete_override(client, setup_section, day, override_date, spacetime_in
 
         # make sure override has been deleted
         assert not hasattr(spacetime, "_override")
+
+@pytest.mark.django_db
+def test_create_spacetime(client, setup_section):
+    section, mentor, coord, spacetimes = setup_section
+    client.force_login(mentor.user)
+    data = {'location': 'Main Stacks C1', 'time': datetime.time(hour=9, minute=0, tzinfo=DEFAULT_TZ), 'day': 'Monday', 'section_id': section.pk}
+    create_spacetime_url = reverse("spacetime-list")
+    client.post(create_spacetime_url, data=data,content_type="application/json")
+
+    assert Spacetime.objects.count() == 3
+    new_spacetime = Spacetime.objects.get(location='Main Stacks C1')
+    assert new_spacetime.start_time == datetime.time(hour=9, minute=0, tzinfo=DEFAULT_TZ)
+    assert new_spacetime.day_of_week == 'Monday'
+    assert new_spacetime.section.pk == section.pk

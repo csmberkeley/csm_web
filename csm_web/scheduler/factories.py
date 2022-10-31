@@ -280,12 +280,14 @@ def generate_test_data(preconfirm=False):
             section = SectionFactory.create(mentor=mentor)
 
             current_date = week_bounds(section.mentor.course.section_start)[0]
-            spacetime_days = [day_to_number(day_of_week)
-                              for day_of_week in section.spacetimes.values_list("day_of_week", flat=True)]
+            # spacetime_days = [day_to_number(day_of_week) 
+            #                   for day_of_week in section.spacetimes.values_list("day_of_week", flat=True)]
+            spacetime_days = [spacetime #day_to_number(day_of_week) 
+                              for spacetime in section.spacetimes.all()]
             while current_date < section.mentor.course.valid_until:
                 for spacetime_day in spacetime_days:
-                    date = current_date + timedelta(days=spacetime_day)
-                    SectionOccurrenceFactory.create(section=section, date=date)
+                    date = current_date + timedelta(days=day_to_number(spacetime_day.day_of_week))
+                    SectionOccurrenceFactory.create(section=section, date=date, spacetime=spacetime_day)
                 current_date += timedelta(weeks=1)
 
             students = StudentFactory.create_batch(random.randint(0, section.capacity), section=section, course=course)
