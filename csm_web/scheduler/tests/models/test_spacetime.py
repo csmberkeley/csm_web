@@ -235,9 +235,9 @@ def test_delete_override(client, setup_section, day, override_date, spacetime_in
 
 @pytest.mark.django_db
 def test_create_spacetime(client, setup_section):
-    mentor, student_user, course, section = setup_section
+    section, mentor, coord, spacetimes = setup_section
     client.force_login(mentor.user)
-    data = {'location': 'Main Stacks C1', 'start_time': datetime.time(hour=9, minute=0, tzinfo=DEFAULT_TZ), 'day_of_week': 'Monday', 'section': section.pk}
+    data = {'location': 'Main Stacks C1', 'time': datetime.time(hour=9, minute=0, tzinfo=DEFAULT_TZ), 'day': 'Monday', 'section_id': section.pk}
     create_spacetime_url = reverse("spacetime-list")
     client.post(create_spacetime_url, data=data,content_type="application/json")
 
