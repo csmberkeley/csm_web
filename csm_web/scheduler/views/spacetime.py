@@ -127,7 +127,7 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
             start_time = self.request.data['time'],
             duration = datetime.timedelta(hours=1),
             day_of_week = self.request.data['day'],
-            section = get_object_or_error(Section.objects.all(), pk=self.request.data['sectionID'])
+            section = get_object_or_error(Section.objects.all(), pk=self.request.data['section_id'])
         )
         spacetime.save()
         return Response(status=status.HTTP_201_CREATED)
