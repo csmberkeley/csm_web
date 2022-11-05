@@ -33,7 +33,8 @@ const App = () => {
           <Route path="courses/*" element={<CourseMenu />} />
           <Route path="resources/*" element={<Resources />} />
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
-        <Route path="policies/*" element={<Policies />} />
+          <Route path="policies/*" element={<Policies />} />
+          <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
     </ErrorBoundary>
@@ -135,6 +136,13 @@ function Header(): React.ReactElement {
     </header>
   );
 }
+
+/**
+ * 404 not found page.
+ */
+const NotFound = () => {
+  return <h3>Page not found</h3>;
+};
 
 interface ErrorBoundaryProps {
   children: React.ReactNode;
