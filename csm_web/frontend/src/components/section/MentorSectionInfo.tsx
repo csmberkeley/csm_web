@@ -121,7 +121,6 @@ export default function MentorSectionInfo({
                 <SpacetimeEditModal
                   key={spacetime.id}
                   sectionId={sectionId}
-                  reloadSection={reloadSection}
                   defaultSpacetime={spacetime}
                   closeModal={closeModal}
                   editingOverride={deleteType}
@@ -129,9 +128,9 @@ export default function MentorSectionInfo({
               )}
               {showModal === ModalStates.SPACETIME_DELETE && focusedSpacetimeID === spacetime.id && (
                 <SpacetimeDeleteModal
+                  sectionId={sectionId}
                   spacetimeId={spacetime.id}
                   closeModal={closeModal}
-                  reloadSection={reloadSection}
                   overrideDelete={deleteType}
                 />
               )}

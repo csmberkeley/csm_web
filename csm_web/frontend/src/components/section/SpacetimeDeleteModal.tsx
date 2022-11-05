@@ -1,29 +1,32 @@
 import React, { useState } from "react";
-import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
-import { Override, Section as SectionType, Spacetime } from "../../utils/types";
+import { useSpacetimeDeleteMutation, useSpacetimeOverrideDeleteMutation } from "../../utils/queries/spacetime";
 import Modal from "../Modal";
 
 interface SpacetimeDeleteProps {
   spacetimeId: number;
+  sectionId: number;
   overrideDelete: boolean;
   closeModal: () => void;
-  reloadSection: () => void;
 }
 
 export default function SpacetimeDeleteModal({
   closeModal,
   spacetimeId,
-  reloadSection,
+  sectionId,
   overrideDelete
 }: SpacetimeDeleteProps) {
   const [drop, setDrop] = useState(false);
 
+  const spacetimeDeleteMutation = useSpacetimeDeleteMutation(sectionId, spacetimeId);
+  const spacetimeOverrideDeleteMutation = useSpacetimeOverrideDeleteMutation(sectionId, spacetimeId);
+
   function handleClickDrop() {
     if (overrideDelete) {
-      fetchWithMethod(`spacetimes/${spacetimeId}/override/`, HTTP_METHODS.DELETE).then(() => reloadSection());
+      spacetimeOverrideDeleteMutation.mutate();
     } else {
-      fetchWithMethod(`spacetimes/${spacetimeId}/`, HTTP_METHODS.DELETE).then(() => reloadSection());
+      spacetimeDeleteMutation.mutate();
     }
+    closeModal();
   }
 
   return (
