@@ -13,19 +13,26 @@ import {
 import { Assignment, Slot } from "../../components/enrollment_automation/EnrollmentAutomationTypes";
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
 import { Mentor } from "../types";
-import { handleError, ServerError } from "./helpers";
+import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
 
 /* ==== Queries ===== */
 
 export const useMatcherActiveCourses = (): UseQueryResult<number[], ServerError> => {
-  const queryResult = useQuery<number[], Error>(["matcher", "active"], async () => {
-    const response = await fetchNormalized("/matcher/active");
-    if (response.ok) {
-      return await response.json();
-    } else {
-      throw new ServerError("Failed to fetch active matcher courses");
+  const queryResult = useQuery<number[], Error>(
+    ["matcher", "active"],
+    async () => {
+      const response = await fetchNormalized("/matcher/active");
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError("Failed to fetch active matcher courses");
+      }
+    },
+    {
+      retry: handleRetry
     }
-  });
+  );
 
   handleError(queryResult);
   return queryResult;
@@ -52,14 +59,21 @@ interface MatcherSlotsResponseTime {
  * Hook to fetch the matcher slots for a given course.
  */
 export const useMatcherSlots = (courseId: number): UseQueryResult<MatcherSlotsResponse, ServerError> => {
-  const queryResult = useQuery<MatcherSlotsResponse, Error>(["matcher", courseId, "slots"], async () => {
-    const response = await fetchNormalized(`/matcher/${courseId}/slots`);
-    if (response.ok) {
-      return await response.json();
-    } else {
-      throw new ServerError(`Failed to fetch matcher slots for course ${courseId}`);
+  const queryResult = useQuery<MatcherSlotsResponse, Error>(
+    ["matcher", courseId, "slots"],
+    async () => {
+      const response = await fetchNormalized(`/matcher/${courseId}/slots`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to fetch matcher slots for course ${courseId}`);
+      }
+    },
+    {
+      retry: handleRetry
     }
-  });
+  );
 
   handleError(queryResult);
   return queryResult;
@@ -70,14 +84,24 @@ interface MatcherPreferencesResponse {
 }
 
 export const useMatcherPreferences = (courseId: number): UseQueryResult<MatcherPreferencesResponse, ServerError> => {
-  const queryResult = useQuery<MatcherPreferencesResponse, Error>(["matcher", courseId, "preferences"], async () => {
-    const response = await fetchNormalized(`/matcher/${courseId}/preferences`);
-    if (response.ok) {
-      return await response.json();
-    } else {
-      throw new ServerError("Failed to fetch matcher preferences");
+  const queryResult = useQuery<MatcherPreferencesResponse, Error>(
+    ["matcher", courseId, "preferences"],
+    async () => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
+      const response = await fetchNormalized(`/matcher/${courseId}/preferences`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError("Failed to fetch matcher preferences");
+      }
+    },
+    {
+      retry: handleRetry
     }
-  });
+  );
 
   handleError(queryResult);
   return queryResult;
@@ -93,14 +117,22 @@ interface MatcherConfigResponse {
 }
 
 export const useMatcherConfig = (courseId: number): UseQueryResult<MatcherConfigResponse, ServerError> => {
-  const queryResult = useQuery<MatcherConfigResponse, Error>(["matcher", courseId, "config"], async () => {
-    const response = await fetchNormalized(`/matcher/${courseId}/configure`);
-    if (response.ok) {
-      return await response.json();
-    } else {
-      throw new ServerError(`Failed to fetch matcher config for course ${courseId}`);
-    }
-  });
+  const queryResult = useQuery<MatcherConfigResponse, Error>(
+    ["matcher", courseId, "config"],
+    async () => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
+      const response = await fetchNormalized(`/matcher/${courseId}/configure`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to fetch matcher config for course ${courseId}`);
+      }
+    },
+    { retry: handleRetry }
+  );
 
   handleError(queryResult);
   return queryResult;
@@ -111,14 +143,22 @@ interface MatcherAssignmentResponse {
 }
 
 export const useMatcherAssignment = (courseId: number): UseQueryResult<MatcherAssignmentResponse, ServerError> => {
-  const queryResult = useQuery<MatcherAssignmentResponse, Error>(["matcher", courseId, "assignment"], async () => {
-    const response = await fetchNormalized(`/matcher/${courseId}/assignment`);
-    if (response.ok) {
-      return await response.json();
-    } else {
-      throw new ServerError(`Failed to fetch matcher assignment for course ${courseId}`);
-    }
-  });
+  const queryResult = useQuery<MatcherAssignmentResponse, Error>(
+    ["matcher", courseId, "assignment"],
+    async () => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
+      const response = await fetchNormalized(`/matcher/${courseId}/assignment`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to fetch matcher assignment for course ${courseId}`);
+      }
+    },
+    { retry: handleRetry }
+  );
 
   handleError(queryResult);
   return queryResult;
@@ -129,14 +169,22 @@ interface MatcherMentorsResponse {
 }
 
 export const useMatcherMentors = (courseId: number): UseQueryResult<MatcherMentorsResponse, ServerError> => {
-  const queryResult = useQuery<MatcherMentorsResponse, Error>(["matcher", courseId, "mentors"], async () => {
-    const response = await fetchNormalized(`/matcher/${courseId}/mentors`);
-    if (response.ok) {
-      return await response.json();
-    } else {
-      throw new ServerError(`Failed to fetch matcher mentors for course ${courseId}`);
-    }
-  });
+  const queryResult = useQuery<MatcherMentorsResponse, Error>(
+    ["matcher", courseId, "mentors"],
+    async () => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
+      const response = await fetchNormalized(`/matcher/${courseId}/mentors`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to fetch matcher mentors for course ${courseId}`);
+      }
+    },
+    { retry: handleRetry }
+  );
 
   handleError(queryResult);
   return queryResult;
@@ -155,6 +203,9 @@ export const useMatcherPreferenceMutation = (
   const queryClient = useQueryClient();
   const mutationResult = useMutation<boolean, Error, MatcherPreferenceMutationRequest>(
     async (body: MatcherPreferenceMutationRequest) => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
       const response = await fetchWithMethod(`/matcher/${courseId}/preferences`, HTTP_METHODS.POST, body);
       if (!response.ok && response.status === 500) {
         throw new ServerError(`Failed to update matcher preferences for course ${courseId}`);
@@ -189,17 +240,22 @@ export const useMatcherSlotsMutation = (
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, Error, MatcherSlotsMutationRequest>(
     async (body: MatcherSlotsMutationRequest) => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
       const response = await fetchWithMethod(`/matcher/${courseId}/slots`, HTTP_METHODS.POST, body);
       if (response.ok) {
         return;
       } else {
+        handlePermissionsError(response.status);
         throw new ServerError(`Failed to create matcher slots for course ${courseId}`);
       }
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["matcher", courseId, "slots"]);
-      }
+      },
+      retry: handleRetry
     }
   );
 
@@ -237,6 +293,9 @@ export const useMatcherConfigMutation = (
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, MatcherConfigMutationResponse, MatcherConfigMutationRequest>(
     async (body: MatcherConfigMutationRequest) => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
       const response = await fetchWithMethod(`/matcher/${courseId}/configure`, HTTP_METHODS.POST, body);
       if (response.ok) {
         return;
@@ -268,17 +327,22 @@ export const useMatcherAssignmentMutation = (
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, Error, MatcherAssignmentMutationRequest>(
     async (body: MatcherAssignmentMutationRequest) => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
       const response = await fetchWithMethod(`/matcher/${courseId}/assignment`, HTTP_METHODS.PUT, body);
       if (response.ok) {
         return;
       } else {
+        handlePermissionsError(response.status);
         throw new ServerError(`Failed to update matcher assignment for course ${courseId}`);
       }
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["matcher", courseId, "assignment"]);
-      }
+      },
+      retry: handleRetry
     }
   );
 
@@ -300,10 +364,14 @@ export const useMatcherAddMentorsMutation = (
   const queryClient = useQueryClient();
   const mutationResult = useMutation<MatcherMentorsMutationResponse, Error, MatcherMentorsMutationRequest>(
     async (body: MatcherMentorsMutationRequest) => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
       const response = await fetchWithMethod(`/matcher/${courseId}/mentors`, HTTP_METHODS.POST, body);
       if (response.ok) {
         return response.json();
       } else {
+        handlePermissionsError(response.status);
         throw new ServerError(`Failed to update matcher mentors for course ${courseId}`);
       }
     },
@@ -312,7 +380,8 @@ export const useMatcherAddMentorsMutation = (
         queryClient.invalidateQueries(["matcher", courseId, "mentors"]);
         // possibly added the current user, so reload profiles too
         queryClient.invalidateQueries(["profiles"]);
-      }
+      },
+      retry: handleRetry
     }
   );
 
@@ -326,10 +395,14 @@ export const useMatcherRemoveMentorsMutation = (
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, Error, MatcherMentorsMutationRequest>(
     async (body: MatcherMentorsMutationRequest) => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
       const response = await fetchWithMethod(`/matcher/${courseId}/mentors`, HTTP_METHODS.DELETE, body);
       if (response.ok) {
         return;
       } else {
+        handlePermissionsError(response.status);
         throw new ServerError(`Failed to update matcher mentors for course ${courseId}`);
       }
     },
@@ -338,7 +411,8 @@ export const useMatcherRemoveMentorsMutation = (
         queryClient.invalidateQueries(["matcher", courseId, "mentors"]);
         // possibly removed the current user, so reload profiles too
         queryClient.invalidateQueries(["profiles"]);
-      }
+      },
+      retry: handleRetry
     }
   );
 
@@ -360,6 +434,9 @@ export const useMatcherCreateSectionsMutation = (
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, MatcherCreateSectionsMutationResponse, MatcherCreateSectionsMutationRequest>(
     async (body: MatcherCreateSectionsMutationRequest) => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
       const response = await fetchWithMethod(`/matcher/${courseId}/create`, HTTP_METHODS.POST, body);
       if (response.ok) {
         return;

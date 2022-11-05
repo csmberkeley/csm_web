@@ -11,20 +11,25 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { fetchNormalized } from "../api";
 import { Profile, RawUserInfo } from "../types";
-import { handleError, ServerError } from "./helpers";
+import { handleError, handlePermissionsError, handleRetry, ServerError } from "./helpers";
 
 /**
  * Hook to get the user's profile list.
  */
-export const useProfiles = (): UseQueryResult<Profile[], ServerError> => {
-  const queryResult = useQuery<Profile[], ServerError>(["profiles"], async () => {
-    const response = await fetchNormalized("/profiles");
-    if (response.ok) {
-      return await response.json();
-    } else {
-      throw new ServerError("Failed to fetch profiles");
-    }
-  });
+export const useProfiles = (): UseQueryResult<Profile[], Error> => {
+  const queryResult = useQuery<Profile[], Error>(
+    ["profiles"],
+    async () => {
+      const response = await fetchNormalized("/profiles");
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError("Failed to fetch profiles");
+      }
+    },
+    { retry: handleRetry }
+  );
 
   handleError(queryResult);
   return queryResult;
@@ -33,15 +38,20 @@ export const useProfiles = (): UseQueryResult<Profile[], ServerError> => {
 /**
  * Hook to get the user's info.
  */
-export const useUserInfo = (): UseQueryResult<RawUserInfo, ServerError> => {
-  const queryResult = useQuery<RawUserInfo, Error>(["userinfo"], async () => {
-    const response = await fetchNormalized("/userinfo");
-    if (response.ok) {
-      return await response.json();
-    } else {
-      throw new ServerError("Failed to fetch user info");
-    }
-  });
+export const useUserInfo = (): UseQueryResult<RawUserInfo, Error> => {
+  const queryResult = useQuery<RawUserInfo, Error>(
+    ["userinfo"],
+    async () => {
+      const response = await fetchNormalized("/userinfo");
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError("Failed to fetch user info");
+      }
+    },
+    { retry: handleRetry }
+  );
 
   handleError(queryResult);
   return queryResult;
@@ -50,15 +60,20 @@ export const useUserInfo = (): UseQueryResult<RawUserInfo, ServerError> => {
 /**
  * Hook to get a list of all user emails.
  */
-export const useUserEmails = (): UseQueryResult<string[], ServerError> => {
-  const queryResult = useQuery<string[], Error>(["users"], async () => {
-    const response = await fetchNormalized("/users");
-    if (response.ok) {
-      return await response.json();
-    } else {
-      throw new ServerError("Failed to fetch user info");
-    }
-  });
+export const useUserEmails = (): UseQueryResult<string[], Error> => {
+  const queryResult = useQuery<string[], Error>(
+    ["users"],
+    async () => {
+      const response = await fetchNormalized("/users");
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError("Failed to fetch user info");
+      }
+    },
+    { retry: handleRetry }
+  );
 
   handleError(queryResult);
   return queryResult;

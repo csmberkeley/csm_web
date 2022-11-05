@@ -122,7 +122,8 @@ export function EnrollmentMatcher(): JSX.Element {
                 />
               }
             />
-            <Route index element={defaultMatcher} />
+            {/* for any other path, resort to default */}
+            <Route path="*" element={defaultMatcher} />
           </Routes>
         </div>
       </div>

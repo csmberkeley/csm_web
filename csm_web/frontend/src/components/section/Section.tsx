@@ -13,7 +13,7 @@ export default function Section(): React.ReactElement | null {
   const { id } = useParams();
   const queryClient = useQueryClient();
 
-  const { data: section, isSuccess: sectionLoaded } = useSection(Number(id));
+  const { data: section, isSuccess: sectionLoaded, isError: sectionLoadError } = useSection(Number(id));
 
   /**
    * TODO: completely remove this function after migrating all requests to react-query
@@ -24,6 +24,9 @@ export default function Section(): React.ReactElement | null {
   };
 
   if (!sectionLoaded) {
+    if (sectionLoadError) {
+      return <h3>Section not found</h3>;
+    }
     return <LoadingSpinner className="spinner-centered" />;
   }
 

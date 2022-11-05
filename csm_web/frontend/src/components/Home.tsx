@@ -7,7 +7,7 @@ import { Profile } from "../utils/types";
 import LoadingSpinner from "./LoadingSpinner";
 
 const Home = () => {
-  const { data: profiles, isSuccess: profilesLoaded } = useProfiles();
+  const { data: profiles, isSuccess: profilesLoaded, isError: profilesLoadError } = useProfiles();
 
   let content = null;
   if (profilesLoaded) {
@@ -15,12 +15,23 @@ const Home = () => {
     content = (
       <div className="course-cards-container">
         {Object.entries(groupBy(profiles, (profile: Profile) => [profile.course, profile.role])).map(
-          ([course, courseProfiles]) => (
-            <CourseCard key={course} profiles={courseProfiles} />
-          )
+          ([course, courseProfiles]) => {
+            if (courseProfiles[0].role === ROLES.MENTOR) {
+              const courseProfilesWithSection = courseProfiles.filter((profile: Profile) => profile.sectionId);
+              if (courseProfilesWithSection.length > 0) {
+                return <CourseCard key={course} profiles={courseProfilesWithSection} />;
+              }
+              // otherwise, mentor with no section; do not show the course card
+            } else {
+              return <CourseCard key={course} profiles={courseProfiles} />;
+            }
+          }
         )}
       </div>
     );
+  } else if (profilesLoadError) {
+    // error during load
+    content = <h3>Profiles not found</h3>;
   } else {
     // fetching profiles
     content = <LoadingSpinner />;

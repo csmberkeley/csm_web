@@ -6,6 +6,7 @@ import Modal from "../Modal";
 import { ATTENDANCE_LABELS, InfoCard, ROLES, SectionDetail, SectionSpacetime } from "./Section";
 
 import XIcon from "../../../static/frontend/img/x.svg";
+import LoadingSpinner from "../LoadingSpinner";
 
 interface StudentSectionType {
   course: string;
@@ -139,9 +140,11 @@ interface StudentSectionAttendanceProps {
 }
 
 function StudentSectionAttendance({ associatedProfileId }: StudentSectionAttendanceProps) {
-  const { data: attendances, isSuccess: attendancesLoaded } = useStudentAttendances(associatedProfileId);
+  const { data: attendances, isSuccess: attendancesLoaded, isError: attendancesLoadError } = useStudentAttendances(
+    associatedProfileId
+  );
 
-  return !attendancesLoaded ? null : (
+  return attendancesLoaded ? (
     <table id="attendance-table" className="standalone-table">
       <thead>
         <tr>
@@ -163,5 +166,9 @@ function StudentSectionAttendance({ associatedProfileId }: StudentSectionAttenda
         })}
       </tbody>
     </table>
+  ) : attendancesLoadError ? (
+    <h3>Attendances could not be loaded</h3>
+  ) : (
+    <LoadingSpinner className="spinner-centered" />
   );
 }

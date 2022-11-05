@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { useCourses } from "../utils/queries/courses";
 import { useUserInfo } from "../utils/queries/base";
@@ -13,45 +13,42 @@ const CourseMenu = () => {
   /**
    * Transform JSON courses into a map of course IDs to course objects.
    */
-  const courses = useMemo<Map<number, CourseType>>(() => {
-    if (coursesLoaded) {
-      // We use a Map here instead of an object because we want the entries() iterator to reflect the order of insertion,
-      // which in turn reflects the sorting order returned by the backend
-      const coursesById = new Map<number, CourseType>();
-      for (const course of jsonCourses) {
-        coursesById.set(course.id, course);
-      }
-      return coursesById;
+  let courses: Map<number, CourseType> | null;
+  if (coursesLoaded) {
+    // We use a Map here instead of an object because we want the entries() iterator to reflect the order of insertion,
+    // which in turn reflects the sorting order returned by the backend
+    const coursesById = new Map<number, CourseType>();
+    for (const course of jsonCourses) {
+      coursesById.set(course.id, course);
     }
-    // not done loading yet
-    return undefined as never;
-  }, [jsonCourses]);
+    courses = coursesById;
+  } else {
+    courses = null;
+  }
 
   /**
    * Transform JSON user info into a user info object.
    */
-  const userInfo = useMemo<UserInfo>(() => {
-    if (userInfoLoaded) {
-      let priorityEnrollment = undefined;
-      if (jsonUserInfo.priorityEnrollment) {
-        priorityEnrollment = new Date(Date.parse(jsonUserInfo.priorityEnrollment));
-      }
-      const convertedUserInfo: UserInfo = {
-        ...jsonUserInfo,
-        priorityEnrollment
-      };
-      return convertedUserInfo;
+  let userInfo: UserInfo | null;
+  if (userInfoLoaded) {
+    let priorityEnrollment = undefined;
+    if (jsonUserInfo.priorityEnrollment) {
+      priorityEnrollment = new Date(Date.parse(jsonUserInfo.priorityEnrollment));
     }
+    const convertedUserInfo: UserInfo = {
+      ...jsonUserInfo,
+      priorityEnrollment
+    };
+    userInfo = convertedUserInfo;
+  } else {
     // not done loading yet
-    return undefined as never;
-  }, [jsonUserInfo]);
+    userInfo = null;
+  }
 
   let show_enrollment_times = false;
   const enrollment_times_by_course: Array<{ courseName: string; enrollmentDate: Date }> = [];
 
-  console.log(courses);
-
-  if (courses) {
+  if (courses !== null) {
     for (const course of courses.values()) {
       show_enrollment_times ||= !course.enrollmentOpen;
       if (!course.enrollmentOpen) {
@@ -61,7 +58,6 @@ const CourseMenu = () => {
         });
       }
     }
-    console.log(show_enrollment_times);
   }
 
   return (
@@ -69,10 +65,10 @@ const CourseMenu = () => {
       <Route
         path=":courseId/*"
         element={
-          coursesLoaded ? (
+          userInfoLoaded ? (
             <Course
               courses={courses}
-              priorityEnrollment={userInfo.priorityEnrollment}
+              priorityEnrollment={userInfo?.priorityEnrollment}
               enrollmentTimes={enrollment_times_by_course}
             />
           ) : (
@@ -85,12 +81,11 @@ const CourseMenu = () => {
         index
         element={
           <React.Fragment>
-            <EnrollmentMenu courses={courses} coursesLoaded={coursesLoaded} />
+            <EnrollmentMenu courses={courses} />
             <br />
             <EnrollmentTimes
               coursesLoaded={coursesLoaded}
               userInfo={userInfo}
-              userInfoLoaded={userInfoLoaded}
               enrollmentTimes={enrollment_times_by_course}
             />
           </React.Fragment>
@@ -102,8 +97,7 @@ const CourseMenu = () => {
 export default CourseMenu;
 
 interface EnrollmentMenuProps {
-  courses: Map<number, CourseType>;
-  coursesLoaded: boolean;
+  courses: Map<number, CourseType> | null;
 }
 
 /**
@@ -111,14 +105,14 @@ interface EnrollmentMenuProps {
  *
  * If courses have not been loaded, this component will display a loading spinner.
  */
-const EnrollmentMenu = ({ courses, coursesLoaded }: EnrollmentMenuProps) => {
+const EnrollmentMenu = ({ courses }: EnrollmentMenuProps) => {
   return (
     <React.Fragment>
       <h3 className="page-title center-title">Which course would you like to enroll in?</h3>
-      {coursesLoaded ? (
+      {courses !== null ? (
         <div id="course-menu">
           {Array.from(courses.entries()).map(([id, course]) => (
-            <Link className="csm-btn" to={`${location.pathname}/${id}`} key={id}>
+            <Link className="csm-btn" to={`${id}`} key={id}>
               {course.name}
             </Link>
           ))}
@@ -132,8 +126,7 @@ const EnrollmentMenu = ({ courses, coursesLoaded }: EnrollmentMenuProps) => {
 
 interface EnrollmentTimesProps {
   coursesLoaded: boolean;
-  userInfo: UserInfo;
-  userInfoLoaded: boolean;
+  userInfo: UserInfo | null;
   enrollmentTimes: Array<{ courseName: string; enrollmentDate: Date }>;
 }
 
@@ -147,8 +140,7 @@ interface EnrollmentTimesProps {
 const EnrollmentTimes = ({
   enrollmentTimes,
   coursesLoaded,
-  userInfo,
-  userInfoLoaded
+  userInfo
 }: EnrollmentTimesProps): React.ReactElement | null => {
   if (!coursesLoaded) {
     // if courses are still being loaded, we don't know if we want to render anything yet
@@ -175,7 +167,7 @@ const EnrollmentTimes = ({
   return (
     <React.Fragment>
       <h3 className="page-title center-title">Enrollment Times:</h3>
-      {userInfoLoaded ? (
+      {userInfo !== null ? (
         // done loading user info
         <div className="enrollment-container">
           {userInfo.priorityEnrollment && (

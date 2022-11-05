@@ -38,7 +38,7 @@ export default function MentorSectionInfo({
   id: sectionId,
   description
 }: MentorSectionInfoProps) {
-  const { data: students, isSuccess: studentsLoaded } = useSectionStudents(sectionId);
+  const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(sectionId);
 
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
@@ -100,9 +100,12 @@ export default function MentorSectionInfo({
                 <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} />
               )}
             </React.Fragment>
+          ) : studentsLoadError ? (
+            // error loading
+            <h3>Students could not be loaded</h3>
           ) : (
             // not done loading
-            <LoadingSpinner />
+            <LoadingSpinner className="spinner-centered" />
           )}
         </InfoCard>
         <div className="section-info-cards-right">

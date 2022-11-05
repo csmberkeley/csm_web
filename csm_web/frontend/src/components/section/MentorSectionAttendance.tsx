@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useRef } from "react";
-import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import React, { useState, useEffect } from "react";
 import { useUpdateStudentAttendancesMutation } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import { ATTENDANCE_LABELS } from "./Section";
@@ -27,13 +26,11 @@ const MentorSectionAttendance = ({
   const [stagedAttendances, setStagedAttendances] = useState(loaded ? attendances[selectedDate!] : undefined);
   const [showAttendanceSaveSuccess, setShowAttendanceSaveSuccess] = useState(false);
   const [showSaveSpinner, setShowSaveSpinner] = useState(false);
-  const prevLoaded = useRef(loaded);
 
-  const updateStudentAttendancesMutations = useUpdateStudentAttendancesMutation(sectionId);
+  const updateStudentAttendancesMutation = useUpdateStudentAttendancesMutation(sectionId);
 
   useEffect(() => {
-    prevLoaded.current = loaded;
-    if (loaded && !prevLoaded.current) {
+    if (loaded) {
       const newSelectedDate = Object.keys(attendances).sort(dateSort)[0];
       setSelectedDate(newSelectedDate);
       setStagedAttendances(attendances[newSelectedDate]);
@@ -53,15 +50,21 @@ const MentorSectionAttendance = ({
     if (!stagedAttendances) {
       return;
     }
-    //TODO: Handle API Failure
     setShowSaveSpinner(true);
-    stagedAttendances.map(({ id, presence, student: { id: studentId } }) =>
-      updateStudentAttendancesMutations.mutate({ studentId, body: { id, presence } })
+    // TODO: Handle API Failure
+    updateStudentAttendancesMutation.mutate(
+      {
+        attendances: stagedAttendances.map(({ id, presence }) => ({ id, presence }))
+      },
+      {
+        onSuccess: () => {
+          updateAttendance(selectedDate!, stagedAttendances);
+          setShowAttendanceSaveSuccess(true);
+          setShowSaveSpinner(false);
+          setTimeout(() => setShowAttendanceSaveSuccess(false), 1500);
+        }
+      }
     );
-    updateAttendance(selectedDate!, stagedAttendances);
-    setShowAttendanceSaveSuccess(true);
-    setShowSaveSpinner(false);
-    setTimeout(() => setShowAttendanceSaveSuccess(false), 1500);
   }
 
   function handleMarkAllPresent() {
@@ -135,7 +138,7 @@ const MentorSectionAttendance = ({
           </div>
         </React.Fragment>
       )}
-      {!loaded && <h5> Loading attendances...</h5>}
+      {!loaded && <LoadingSpinner />}
     </div>
   );
 };

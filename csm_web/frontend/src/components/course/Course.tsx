@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useCourseSections } from "../../utils/queries/courses";
 import { Course as CourseType } from "../../utils/types";
+import LoadingSpinner from "../LoadingSpinner";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
 import { SectionCard } from "./SectionCard";
@@ -41,17 +42,19 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
   /**
    * Sections grouped by day of the week, and whether the user is a corodinator.
    */
-  const { data: jsonSections, isSuccess: sectionsLoaded, refetch: reloadSections } = useCourseSections(
-    courseId ? parseInt(courseId) : undefined,
-    response => {
-      setCurrDayGroup(Object.keys(response.sections)[0]);
-    }
-  );
+  const {
+    data: jsonSections,
+    isSuccess: sectionsLoaded,
+    isError: sectionsLoadError,
+    refetch: reloadSections
+  } = useCourseSections(courseId ? parseInt(courseId) : undefined, response => {
+    setCurrDayGroup(Object.keys(response.sections)[0]);
+  });
 
   /**
    * The current selected day of the week.
    */
-  const [currDayGroup, setCurrDayGroup] = useState<string>("");
+  const [currDayGroup, setCurrDayGroup] = useState<string>(sectionsLoaded ? Object.keys(jsonSections.sections)[0] : "");
   /**
    * Whether to show unavailable (full) sections.
    */
@@ -82,21 +85,23 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
     }
   };
 
-  if (courses === null || !sectionsLoaded) {
-    // don't load if the courses or sections haven't been fetched yet
+  if (courses === null) {
+    // if courses not loaded, parent component deals with loading spinner
     return null;
+  } else if (!courses.has(parseInt(courseId!)) || sectionsLoadError) {
+    return <h3>Course not found</h3>;
+  } else if (!sectionsLoaded) {
+    console.log({ sectionsLoaded });
+    return <LoadingSpinner className="spinner-centered" />;
   }
 
   const { sections, userIsCoordinator } = jsonSections;
 
   /**
    * Course object from the courses map, retrieved from the course id.
+   * Checked prior, so this should always exist.
    */
-  const course = courses.get(parseInt(courseId!));
-  if (course === undefined) {
-    // exit early if the course doesn't exist or if the course id is not valid
-    return null;
-  }
+  const course = courses.get(parseInt(courseId!))!;
 
   let currDaySections = sections && sections[currDayGroup];
   if (currDaySections && !showUnavailable) {
@@ -114,8 +119,9 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
     timeZoneName: "short"
   };
 
-  const enrollmentDate = priorityEnrollment ? priorityEnrollment : enrollmentTimes.find(({ courseName }) => courseName == course.name)?.enrollmentDate;
-  const enrollmentTimeString = enrollmentDate?.toLocaleDateString("en-US", date_locale_string_options) ?? ""
+  const enrollmentDate =
+    priorityEnrollment ?? enrollmentTimes.find(({ courseName }) => courseName == course.name)?.enrollmentDate;
+  const enrollmentTimeString = enrollmentDate?.toLocaleDateString("en-US", date_locale_string_options) ?? "";
 
   return (
     <div id="course-section-selector">
@@ -179,7 +185,12 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
       <div id="course-section-list">
         {currDaySections && currDaySections.length > 0 ? (
           currDaySections.map(section => (
-            <SectionCard key={section.id} userIsCoordinator={userIsCoordinator} courseOpen={course.enrollmentOpen} {...section} />
+            <SectionCard
+              key={section.id}
+              userIsCoordinator={userIsCoordinator}
+              courseOpen={course.enrollmentOpen}
+              {...section}
+            />
           ))
         ) : (
           <h3 id="course-section-list-empty">No sections available, please select a different day</h3>
