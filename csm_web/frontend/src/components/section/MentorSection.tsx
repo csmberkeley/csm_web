@@ -6,7 +6,7 @@ import { groupBy } from "lodash";
 import MentorSectionAttendance from "./MentorSectionAttendance";
 import MentorSectionRoster from "./MentorSectionRoster";
 import MentorSectionInfo from "./MentorSectionInfo";
-import { useSectionAttendances, useSectionStudents } from "../../utils/queries/sections";
+import { useSectionAttendances } from "../../utils/queries/sections";
 
 interface MentorSectionProps {
   id: number;

@@ -10,7 +10,7 @@ interface MentorSectionRosterProps {
 }
 
 export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
-  const { data: students, isSuccess: studentsLoaded } = useSectionStudents(id);
+  const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(id);
   const [emailsCopied, setEmailsCopied] = useState(false);
   const handleCopyEmails = () => {
     if (studentsLoaded) {
@@ -44,6 +44,8 @@ export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
             ))}
           </tbody>
         </table>
+      ) : studentsLoadError ? (
+        <h3>Students could not be loaded</h3>
       ) : (
         <LoadingSpinner />
       )}

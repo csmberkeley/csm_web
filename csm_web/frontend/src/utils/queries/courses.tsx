@@ -5,20 +5,25 @@
 import { useQuery, UseQueryResult } from "@tanstack/react-query";
 import { fetchNormalized } from "../api";
 import { Course, Section } from "../types";
-import { handleError, ServerError } from "./helpers";
+import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
 
 /**
  * Hook to get all courses.
  */
 export const useCourses = (): UseQueryResult<Course[], ServerError> => {
-  const queryResult = useQuery<Course[], Error>(["courses"], async () => {
-    const response = await fetchNormalized("/courses");
-    if (response.ok) {
-      return await response.json();
-    } else {
-      throw new ServerError("Failed to fetch courses");
-    }
-  });
+  const queryResult = useQuery<Course[], Error>(
+    ["courses"],
+    async () => {
+      const response = await fetchNormalized("/courses");
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError("Failed to fetch courses");
+      }
+    },
+    { retry: handleRetry }
+  );
 
   handleError(queryResult);
   return queryResult;
@@ -39,16 +44,22 @@ export const useCourseSections = (
   const queryResult = useQuery<CourseSectionsQueryResponse, Error>(
     ["courses", id, "sections"],
     async () => {
+      // query disabled when id undefined
+      if (isNaN(id!)) {
+        throw new PermissionError("Invalid course id");
+      }
       const response = await fetchNormalized(`/courses/${id}/sections`);
       if (response.ok) {
         return await response.json();
       } else {
+        handlePermissionsError(response.status);
         throw new ServerError(`Failed to fetch course ${id} sections`);
       }
     },
     {
-      enabled: !!id,
-      onSuccess: onSuccess
+      enabled: id !== undefined,
+      onSuccess: onSuccess,
+      retry: handleRetry
     }
   );
 
