@@ -4,7 +4,7 @@
 
 import { useMutation, UseMutationResult, useQueryClient } from "@tanstack/react-query";
 import { fetchWithMethod, HTTP_METHODS } from "../api";
-import { handleError, ServerError } from "./helpers";
+import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
 
 /* ===== Mutations ===== */
 
@@ -28,6 +28,7 @@ export const useSpacetimeModifyMutation = (
       if (response.ok) {
         return;
       } else {
+        handlePermissionsError(response.status);
         throw new ServerError(`Failed to update spacetime ${spacetimeId} for section ${sectionId}`);
       }
     },
@@ -35,7 +36,39 @@ export const useSpacetimeModifyMutation = (
       onSuccess: () => {
         // invalidate all queries for the section
         queryClient.invalidateQueries(["sections", sectionId]);
+      },
+      retry: handleRetry
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
+
+/**
+ * Hook to delete a section's spacetime.
+ */
+export const useSpacetimeDeleteMutation = (
+  sectionId: number,
+  spacetimeId: number
+): UseMutationResult<void, Error, void> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, Error, void>(
+    async () => {
+      const response = await fetchWithMethod(`/spacetimes/${spacetimeId}`, HTTP_METHODS.DELETE);
+      if (response.ok) {
+        return;
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to delete spacetime ${spacetimeId} for section ${sectionId}`);
       }
+    },
+    {
+      onSuccess: () => {
+        // invalidate all queries for the section
+        queryClient.invalidateQueries(["sections", sectionId]);
+      },
+      retry: handleRetry
     }
   );
 
@@ -63,6 +96,7 @@ export const useSpacetimeOverrideMutation = (
       if (response.ok) {
         return;
       } else {
+        handlePermissionsError(response.status);
         throw new ServerError(`Failed to override spacetime ${spacetimeId} for section ${sectionId}`);
       }
     },
@@ -70,7 +104,42 @@ export const useSpacetimeOverrideMutation = (
       onSuccess: () => {
         // invalidate all queries for the section
         queryClient.invalidateQueries(["sections", sectionId]);
+      },
+      retry: handleRetry
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
+
+/**
+ * Hook to delete a section's spacetime override.
+ */
+export const useSpacetimeOverrideDeleteMutation = (
+  sectionId: number,
+  spacetimeId: number
+): UseMutationResult<void, Error, void> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, Error, void>(
+    async () => {
+      if (isNaN(sectionId) || isNaN(spacetimeId)) {
+        throw new PermissionError("Invalid section or spacetime ID");
       }
+      const response = await fetchWithMethod(`/spacetimes/${spacetimeId}/override`, HTTP_METHODS.DELETE);
+      if (response.ok) {
+        return;
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to delete spacetime override ${spacetimeId} for section ${sectionId}`);
+      }
+    },
+    {
+      onSuccess: () => {
+        // invalidate all queries for the section
+        queryClient.invalidateQueries(["sections", sectionId]);
+      },
+      retry: handleRetry
     }
   );
 

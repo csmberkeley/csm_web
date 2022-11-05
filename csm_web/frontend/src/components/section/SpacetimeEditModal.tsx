@@ -10,7 +10,6 @@ interface SpacetimeEditModalProps {
   sectionId: number;
   closeModal: () => void;
   defaultSpacetime: Spacetime;
-  reloadSection: () => void;
   editingOverride: boolean;
 }
 
@@ -18,7 +17,6 @@ const SpaceTimeEditModal = ({
   sectionId,
   closeModal,
   defaultSpacetime: { id: spacetimeId, startTime: timeString, location: prevLocation, dayOfWeek },
-  reloadSection,
   editingOverride
 }: SpacetimeEditModalProps): React.ReactElement => {
   const sliceIndex = timeString.split(":").length < 3 ? timeString.indexOf(":") : timeString.lastIndexOf(":");
@@ -49,7 +47,6 @@ const SpaceTimeEditModal = ({
           date: date
         });
     closeModal();
-    reloadSection();
   };
 
   const now = new Date();
