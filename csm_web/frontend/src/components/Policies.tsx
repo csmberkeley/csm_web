@@ -11,7 +11,6 @@ export default class Policies extends React.Component {
     const aff = SECTIONS.affinitySections;
     const forUnit = SECTIONS.csmForUnit;
     const faq = SECTIONS.faq;
-    console.log(SECTIONS);
     return (
       <div>
         <div className="policy-sections">
@@ -177,22 +176,20 @@ export default class Policies extends React.Component {
               {" "}
               <b> {faq.body.p7_b} </b>{" "}
             </p>
-            <p>
-              {faq.body.p8}
-              <ul>
-                <li> {faq.body.li1} </li>
-                <li> {faq.body.li2} </li>
-              </ul>
-            </p>
+            <p> {faq.body.p8} </p>
+            <ul>
+              <li> {faq.body.li1} </li>
+              <li> {faq.body.li2} </li>
+            </ul>
             <p>
               {faq.body.p9_1}
               <b> {faq.body.p9_b} </b>
               {faq.body.p9_2}
-              <ul>
-                <li> {faq.body.li3} </li>
-                <li> {faq.body.li4} </li>
-              </ul>
             </p>
+            <ul>
+              <li> {faq.body.li3} </li>
+              <li> {faq.body.li4} </li>
+            </ul>
             <p> {faq.body.p10} </p>
           </div>
         </div>
