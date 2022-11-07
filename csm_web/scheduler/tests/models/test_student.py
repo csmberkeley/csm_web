@@ -1,8 +1,9 @@
 import pytest
 
 from django.core.exceptions import ValidationError
+from django.urls import reverse
 from scheduler.models import Student, User
-from scheduler.factories import UserFactory, CourseFactory, SectionFactory, StudentFactory, MentorFactory
+from scheduler.factories import UserFactory, CourseFactory, SectionFactory, StudentFactory, MentorFactory, CoordinatorFactory
 
 
 @pytest.mark.django_db
@@ -46,3 +47,23 @@ def test_create_duplicate_student():
             course=course,
             section=section,
         )
+
+@pytest.mark.django_db
+def test_student_names(client):
+    mentor_user = UserFactory.create()
+    course = CourseFactory.create()
+    mentor = MentorFactory.create(course=course, user=mentor_user)
+    section = SectionFactory.create(mentor=mentor)
+    students = StudentFactory.create_batch(5, section=section, course=course)
+    coord = CoordinatorFactory.create(course=course)
+
+    client.force_login(coord.user)
+    url = reverse("student-student-names")
+    response = client.get(url)
+    print(response.data)
+    assert len(response.data) == 5 and type(response.data[0]) == str
+
+    client.force_login(students[0].user)
+    url = reverse("student-student-names")
+    response = client.get(url)
+    assert response.status_code == 403
