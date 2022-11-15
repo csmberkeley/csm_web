@@ -21,7 +21,6 @@ enum ModalStates {
 
 interface MentorSectionInfoProps {
   spacetimes: Spacetime[];
-  reloadSection: () => void;
   isCoordinator: boolean;
   mentor: Mentor;
   capacity: number;
@@ -31,7 +30,6 @@ interface MentorSectionInfoProps {
 
 export default function MentorSectionInfo({
   spacetimes,
-  reloadSection,
   isCoordinator,
   mentor,
   capacity,
@@ -47,11 +45,8 @@ export default function MentorSectionInfo({
 
   const closeModal = () => setShowModal(ModalStates.NONE);
 
-  const closeAddModal = (reload = false) => {
+  const closeAddModal = () => {
     setIsAddingStudent(false);
-    if (reload) {
-      reloadSection();
-    }
   };
 
   return (
@@ -193,7 +188,6 @@ export default function MentorSectionInfo({
                   <MetaEditModal
                     sectionId={sectionId}
                     closeModal={closeModal}
-                    reloadSection={reloadSection}
                     capacity={capacity}
                     description={description}
                   />

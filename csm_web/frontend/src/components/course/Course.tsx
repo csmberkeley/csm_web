@@ -91,7 +91,6 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
   } else if (!courses.has(parseInt(courseId!)) || sectionsLoadError) {
     return <h3>Course not found</h3>;
   } else if (!sectionsLoaded) {
-    console.log({ sectionsLoaded });
     return <LoadingSpinner className="spinner-centered" />;
   }
 

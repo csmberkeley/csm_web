@@ -15,14 +15,6 @@ export default function Section(): React.ReactElement | null {
 
   const { data: section, isSuccess: sectionLoaded, isError: sectionLoadError } = useSection(Number(id));
 
-  /**
-   * TODO: completely remove this function after migrating all requests to react-query
-   */
-  const reloadSection = () => {
-    console.log("reloading section");
-    queryClient.invalidateQueries(["sections", Number(id)], { refetchType: "all" });
-  };
-
   if (!sectionLoaded) {
     if (sectionLoadError) {
       return <h3>Section not found</h3>;
@@ -33,7 +25,7 @@ export default function Section(): React.ReactElement | null {
   switch (section.userRole) {
     case ROLES.COORDINATOR:
     case ROLES.MENTOR:
-      return <MentorSection reloadSection={reloadSection} {...section} />;
+      return <MentorSection {...section} />;
     case ROLES.STUDENT:
       return <StudentSection {...section} />;
   }

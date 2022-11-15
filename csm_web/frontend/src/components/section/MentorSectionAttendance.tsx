@@ -54,7 +54,11 @@ const MentorSectionAttendance = ({
     // TODO: Handle API Failure
     updateStudentAttendancesMutation.mutate(
       {
-        attendances: stagedAttendances.map(({ id, presence }) => ({ id, presence }))
+        attendances: stagedAttendances.map(({ id: attendanceId, presence, student: { id: studentId } }) => ({
+          attendanceId,
+          presence,
+          studentId
+        }))
       },
       {
         onSuccess: () => {
