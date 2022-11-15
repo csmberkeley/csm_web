@@ -5,7 +5,6 @@ import Modal from "../Modal";
 interface MetaEditModalProps {
   sectionId: number;
   closeModal: () => void;
-  reloadSection: () => void;
   capacity: number;
   description: string;
 }
@@ -13,7 +12,6 @@ interface MetaEditModalProps {
 export default function MetaEditModal({
   closeModal,
   sectionId,
-  reloadSection,
   capacity,
   description
 }: MetaEditModalProps): React.ReactElement {
@@ -31,7 +29,6 @@ export default function MetaEditModal({
     //TODO: Handle API Failure
     sectionUpdateMutation.mutate(formState);
     closeModal();
-    reloadSection();
   }
 
   return (

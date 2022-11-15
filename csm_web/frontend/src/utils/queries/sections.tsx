@@ -116,7 +116,8 @@ export const useStudentAttendances = (studentId: number): UseQueryResult<Attenda
 /* ===== Mutations ===== */
 
 export interface UpdateStudentAttendanceBody {
-  id: number; // attendance id
+  attendanceId: number;
+  studentId: number;
   presence: string;
 }
 export interface UpdateStudentAttendancesMutationParams {
@@ -133,11 +134,14 @@ export const useUpdateStudentAttendancesMutation = (
         throw new PermissionError("Invalid section id");
       }
       const responses = await Promise.all(
-        attendances.map(({ id, presence }) => {
-          if (isNaN(id)) {
+        attendances.map(({ attendanceId, studentId, presence }) => {
+          if (isNaN(studentId) || isNaN(attendanceId)) {
             throw new PermissionError("Invalid student id");
           }
-          return fetchWithMethod(`/sections/${sectionId}/attendances/`, HTTP_METHODS.PUT, { id, presence });
+          return fetchWithMethod(`/students/${studentId}/attendances/`, HTTP_METHODS.PUT, {
+            id: attendanceId,
+            presence
+          });
         })
       );
       // ensure all requests succeeded

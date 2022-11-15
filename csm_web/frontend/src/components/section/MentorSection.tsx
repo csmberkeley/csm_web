@@ -13,7 +13,6 @@ interface MentorSectionProps {
   course: string;
   courseTitle: string;
   spacetimes: Spacetime[];
-  reloadSection: () => void;
   userRole: string;
   mentor: Mentor;
   capacity: number;
@@ -31,7 +30,6 @@ export default function MentorSection({
   spacetimes,
   capacity,
   description,
-  reloadSection,
   userRole,
   mentor
 }: MentorSectionProps) {
@@ -102,7 +100,6 @@ export default function MentorSection({
             <MentorSectionInfo
               isCoordinator={userRole === ROLES.COORDINATOR}
               mentor={mentor}
-              reloadSection={reloadSection}
               spacetimes={spacetimes}
               capacity={capacity}
               description={description}
