@@ -52,7 +52,7 @@ export interface Touched {
  */
 export function emptyResource(): Resource {
   return {
-    weekNum: ("" as unknown) as number, // to trick typescript in accepting an empty string
+    weekNum: "" as unknown as number, // to trick typescript in accepting an empty string
     date: "",
     topics: "",
     worksheets: [],
@@ -67,8 +67,8 @@ export function emptyResource(): Resource {
  */
 export function emptyWorksheet(): Worksheet {
   return {
-    id: (null as unknown) as number,
-    resource: (null as unknown) as number,
+    id: null as unknown as number,
+    resource: null as unknown as number,
     name: "",
     worksheetFile: "",
     solutionFile: ""
@@ -77,8 +77,8 @@ export function emptyWorksheet(): Worksheet {
 
 export function emptyLink(): Link {
   return {
-    id: (null as unknown) as number,
-    resource: (null as unknown) as number,
+    id: null as unknown as number,
+    resource: null as unknown as number,
     name: "",
     url: "",
     deleted: false
