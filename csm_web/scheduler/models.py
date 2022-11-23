@@ -38,6 +38,10 @@ class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
+        # check restricted first
+        if course.is_restricted and not self.is_whitelisted_for(course):
+            return False
+
         is_associated = (self.student_set.filter(active=True, section__mentor__course=course).count() or
                          self.mentor_set.filter(section__mentor__course=course).count())
         if bypass_enrollment_time:
@@ -49,6 +53,9 @@ class User(AbstractUser):
             else:
                 is_valid_enrollment_time = course.is_open()
             return is_valid_enrollment_time and not is_associated
+
+    def is_whitelisted_for(self, course: "Course"):
+        return not course.is_restricted or self.whitelist.filter(pk=course.pk).exists()
 
     class Meta:
         indexes = (models.Index(fields=("email",)),)
@@ -135,6 +142,9 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
+
+    is_restricted = models.BooleanField(default=False)
+    whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
 
     def __str__(self):
         return self.name
@@ -302,6 +312,11 @@ class Resource(ValidatingModel):
 
     class Meta:
         ordering = ['week_num']
+
+    def clean(self):
+        super().clean()
+        if self.course.is_restricted:
+            raise NotImplementedError("Resources currently cannot be associated with a restricted course.")
 
 
 class Link(ValidatingModel):

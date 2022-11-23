@@ -2,15 +2,16 @@ import csv
 from itertools import groupby
 
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.db.models import Q, Count, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.http import HttpResponse
 from django.utils import timezone
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from ..models import Course, Section, Spacetime, Student, User
+from ..serializers import CourseSerializer, SectionSerializer, UserSerializer
 from .utils import get_object_or_error, viewset_with
-from ..models import Course, Student, Spacetime, Section
-from ..serializers import CourseSerializer, SectionSerializer
 
 
 class CourseViewSet(*viewset_with("list")):
@@ -27,6 +28,17 @@ class CourseViewSet(*viewset_with("list")):
             .filter(
                 Q(valid_until__gte=now.date()) | Q(coordinator__user=self.request.user)
             )
+            .filter(
+                # allow unrestricted or if associated
+                (
+                    Q(is_restricted=False)
+                    | Q(coordinator__user=self.request.user)
+                    | Q(mentor__user=self.request.user)
+                    | Q(student__user=self.request.user)
+                )
+                # filter out restricted courses
+                | (Q(is_restricted=True) & Q(whitelist=self.request.user))
+            )
             .distinct()
         )
         # Q(valid_until__gte=now.date(), enrollment_start__lte=now, enrollment_end__gt=now) | Q(coordinator__user=self.request.user)).distinct()
@@ -34,7 +46,8 @@ class CourseViewSet(*viewset_with("list")):
     def get_sections_by_day(self, course):
         sections = (
             # get all mentor sections
-            Section.objects.select_related('mentor').filter(mentor__course=course)
+            Section.objects.select_related("mentor")
+            .filter(mentor__course=course)
             .annotate(
                 day_key=ArrayAgg(
                     "spacetimes__day_of_week",
@@ -119,3 +132,46 @@ class CourseViewSet(*viewset_with("list")):
         for s in studs:
             writer.writerow([s.user.email])
         return response
+
+    @action(detail=True, methods=["get", "put", "delete"])
+    def whitelist(self, request, pk=None):
+        """
+        GET: Retrieve a list of users currently whitelisted for the course.
+        PUT: Add a list of emails to the course whitelist,
+            creating users if they do not already exist.
+        DELETE: Remove a list of emails from the course whitelist,
+            ignoring users that have not been whitelisted.
+        """
+        course = get_object_or_error(self.get_queryset(), pk=pk)
+
+        if request.method == "GET":
+            whitelisted = course.whitelist.all()
+            return Response(
+                {"users": UserSerializer(whitelisted, many=True).data},
+                status=status.HTTP_200_OK,
+            )
+        elif request.method == "PUT":
+            for email in request.data["emails"]:
+                if not email or "@" not in email:
+                    # invalid or blank email
+                    pass
+                else:
+                    username = email.split("@")[0]
+                    user, _ = User.objects.get_or_create(username=username, email=email)
+                    course.whitelist.add(user)
+            return Response({}, status=status.HTTP_200_OK)
+        elif request.method == "DELETE":
+            for email in request.data["emails"]:
+                if not email or "@" not in email:
+                    # invalid or blank email
+                    pass
+                else:
+                    username = email.split("@")[0]
+                    userQueryset = User.objects.filter(username=username, email=email)
+                    # do nothing if user is not whitelisted
+                    if userQueryset.exists():
+                        user = userQueryset.get()
+                        course.whitelist.remove(user)
+            return Response({}, status=status.HTTP_200_OK)
+
+        raise PermissionDenied()

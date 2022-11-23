@@ -6,6 +6,9 @@ import LoadingSpinner from "../LoadingSpinner";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
 import { SectionCard } from "./SectionCard";
+import { WhitelistModal } from "./WhitelistModal";
+
+import PencilIcon from "../../../static/frontend/img/pencil.svg";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",
@@ -19,7 +22,8 @@ const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
 
 const COURSE_MODAL_TYPE = Object.freeze({
   exportData: "csv",
-  createSection: "mksec"
+  createSection: "mksec",
+  whitelist: "whitelist"
 });
 
 interface CourseProps {
@@ -71,10 +75,10 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
   /**
    * Render the currently chosen modal.
    */
-  const renderModal = (): React.ReactElement => {
+  const renderModal = (): React.ReactElement | null => {
     if (whichModal == COURSE_MODAL_TYPE.exportData) {
       return <DataExportModal closeModal={() => setShowModal(false)} />;
-    } else {
+    } else if (whichModal == COURSE_MODAL_TYPE.createSection) {
       return (
         <CreateSectionModal
           reloadSections={reloadSections}
@@ -82,7 +86,10 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
           courseId={Number(courseId)}
         />
       );
+    } else if (whichModal == COURSE_MODAL_TYPE.whitelist) {
+      return <WhitelistModal course={course} closeModal={() => setShowModal(false)} />;
     }
+    return null;
   };
 
   if (courses === null) {
@@ -171,6 +178,18 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
             >
               Export Data
             </button>
+            {course.isRestricted && (
+              <button
+                className="csm-btn edit-whitelist-btn"
+                onClick={() => {
+                  setShowModal(true);
+                  setWhichModal(COURSE_MODAL_TYPE.whitelist);
+                }}
+              >
+                <PencilIcon className="icon" id="edit-whitelist-icon" />
+                Edit whitelist
+              </button>
+            )}
           </div>
         )}
         {!course.enrollmentOpen && (

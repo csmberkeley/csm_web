@@ -17,6 +17,7 @@ interface MentorSectionProps {
   mentor: Mentor;
   capacity: number;
   description: string;
+  courseRestricted: boolean;
 }
 
 type GroupedAttendances = {
@@ -26,6 +27,7 @@ type GroupedAttendances = {
 export default function MentorSection({
   id,
   course,
+  courseRestricted,
   courseTitle,
   spacetimes,
   capacity,
@@ -104,6 +106,7 @@ export default function MentorSection({
               capacity={capacity}
               description={description}
               id={id}
+              courseRestricted={courseRestricted}
             />
           }
         />

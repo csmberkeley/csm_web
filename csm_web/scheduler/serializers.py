@@ -95,7 +95,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ("id", "name", "enrollment_start", "enrollment_open", "user_can_enroll")
+        fields = ("id", "name", "enrollment_start", "enrollment_open", "user_can_enroll", "is_restricted")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -168,6 +168,7 @@ class SectionSerializer(serializers.ModelSerializer):
     course_title = serializers.CharField(source='mentor.course.title')
     user_role = serializers.SerializerMethodField()
     associated_profile_id = serializers.SerializerMethodField()
+    course_restricted = serializers.BooleanField(source='mentor.course.is_restricted')
 
     def get_num_students_enrolled(self, obj):
         return obj.num_students_annotation if hasattr(obj, 'num_students_annotation') else obj.current_student_count
@@ -199,7 +200,8 @@ class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = ("id", "spacetimes", "mentor", "capacity", "associated_profile_id",
-                  "num_students_enrolled", "description", "mentor", "course", "user_role", "course_title")
+                  "num_students_enrolled", "description", "mentor", "course", "user_role",
+                  "course_title", "course_restricted")
 
 
 class WorksheetSerializer(serializers.ModelSerializer):

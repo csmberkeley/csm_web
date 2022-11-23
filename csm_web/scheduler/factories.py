@@ -98,6 +98,14 @@ class StudentFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Student
 
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        if "user" in kwargs and "course" in kwargs:
+            # handle whitelist
+            if kwargs["course"].is_restricted:
+                kwargs["course"].whitelist.add(kwargs["user"])
+        return super()._create(model_class, *args, **kwargs)
+
     user = factory.SubFactory(UserFactory)
     course = factory.SubFactory(CourseFactory)
 
@@ -106,6 +114,14 @@ class MentorFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Mentor
 
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        if "user" in kwargs and "course" in kwargs:
+            # handle whitelist
+            if kwargs["course"].is_restricted:
+                kwargs["course"].whitelist.add(kwargs["user"])
+        return super()._create(model_class, *args, **kwargs)
+
     user = factory.SubFactory(UserFactory)
     course = factory.SubFactory(CourseFactory)
 
@@ -113,6 +129,14 @@ class MentorFactory(factory.django.DjangoModelFactory):
 class CoordinatorFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Coordinator
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        if "user" in kwargs and "course" in kwargs:
+            # handle whitelist
+            if kwargs["course"].is_restricted:
+                kwargs["course"].whitelist.add(kwargs["user"])
+        return super()._create(model_class, *args, **kwargs)
 
     user = factory.SubFactory(UserFactory)
     course = factory.SubFactory(CourseFactory)
@@ -209,26 +233,54 @@ def demoify_user(user, username):
 
 
 def create_demo_account():
-    demo_mentor = random.choice(Mentor.objects.annotate(
-        Count('section__spacetimes')).filter(section__spacetimes__count=2))
-    second_section = random.choice(Section.objects.filter(
-        mentor__course=demo_mentor.course).exclude(pk=demo_mentor.section.pk))
+    demo_mentor = random.choice(
+        Mentor.objects.annotate(
+            Count('section__spacetimes')
+        ).filter(section__spacetimes__count=2, course__is_restricted=False)
+    )
+    second_section = random.choice(
+        Section.objects.filter(
+            mentor__course=demo_mentor.course, mentor__course__is_restricted=False
+        ).exclude(pk=demo_mentor.section.pk)
+    )
     demo_mentor_2 = second_section.mentor
     demo_mentor_2.user = demo_mentor.user
     demo_mentor_2.save()
     demoify_user(demo_mentor.user, "demo_user")
-    demo_student = random.choice(Student.objects.exclude(course=demo_mentor.course))
+    demo_student = random.choice(Student.objects.filter(course__is_restricted=True).exclude(course=demo_mentor.course))
     demo_student.user = demo_mentor.user
+    demo_student.course.whitelist.add(demo_mentor.user)
     demo_student.save()
-    demo_coord = Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
-        Course.objects.exclude(pk__in=(demo_mentor.course.pk, demo_student.course.pk))))
+    demo_coord = Coordinator.objects.create(
+        user=demo_mentor.user,
+        course=random.choice(
+            Course.objects.filter(is_restricted=False).exclude(pk__in=(demo_mentor.course.pk, demo_student.course.pk))
+        )
+    )
+
+    # whitelist to a random selection of restricted courses
+    restricted_courses = Course.objects.filter(is_restricted=True)
+    first_whitelist_course = random.choice(restricted_courses)
+    second_whitelist_course = random.choice(restricted_courses.exclude(pk=first_whitelist_course.pk))
+    coord_whitelist_course = random.choice(restricted_courses.exclude(
+        pk__in=(first_whitelist_course.pk, second_whitelist_course.pk)))
+
+    first_whitelist_course.whitelist.add(demo_mentor.user)
+    second_whitelist_course.whitelist.add(demo_mentor.user)
+    coord_whitelist_course.whitelist.add(demo_mentor.user)
+    restricted_demo_coord = Coordinator.objects.create(
+        user=demo_mentor.user,
+        course=coord_whitelist_course
+    )
+
     print("""
     A demo account has been created with username 'demo_user' and password 'pass'
     Log in at localhost:8000/admin/
-    """
-          )
-    demo_coord_2 = Coordinator.objects.create(user=demo_mentor.user, course=random.choice(
-        Course.objects.exclude(pk__in=(demo_mentor.course.pk, demo_student.course.pk, demo_coord.course.pk))))
+    """)
+    coord_2_whitelist_course = random.choice(
+        Course.objects.exclude(pk__in=(demo_mentor.course.pk, demo_student.course.pk, demo_coord.course.pk))
+    )
+    demo_coord_2 = Coordinator.objects.create(user=demo_mentor.user, course=coord_2_whitelist_course)
     # delete all mentors associated with the second course
     Mentor.objects.filter(course=demo_coord_2.course).delete()
     # create new mentors associated with demo coord's course
@@ -263,7 +315,7 @@ def generate_test_data(preconfirm=False):
     if (not preconfirm) and (not confirm_run()):
         return
     management.call_command("flush", interactive=False)
-    course_names = ("CS61A", "CS61B", "CS61C", "CS70", "CS88", "EE16A", "EE16B")
+    course_names = ("CSM61A", "CSM61B", "CSM61C", "CSM70", "CSM88", "CSM16A", "CSM16B")
     course_titles = ("Structure and Interpretation of Computer Programs", "Data Structures", "Machine Structures",
                      "Discrete Mathematics and Probability Theory", "Computational Structures in Data Science", "Designing Information Devices and Systems I",
                      "Designing Information Devices and Systems II")
@@ -299,4 +351,31 @@ def generate_test_data(preconfirm=False):
             val = random.randint(1, 100)
             ResourceFactory.create(course=course, week_num=i+1, date=date, topics=f"Topic {val}")
         print("Done generating resources")
+
+    print("Generating restricted courses")
+    restricted_course_names = ("CS61A", "CS61B", "CS61C", "CS70", "CS88", "EECS16A", "EECS16B")
+    for course_name, course_title in zip(restricted_course_names, course_titles):
+        print(course_name + "...", end=" ")
+        course = CourseFactory.create(name=course_name, title=course_title, enrollment_start=enrollment_start, enrollment_end=enrollment_end,
+                                      valid_until=valid_until, is_restricted=True)
+        for _ in range(random.randint(5, 10)):
+            mentor = MentorFactory.create(course=course)
+            section = SectionFactory.create(mentor=mentor)
+
+            current_date = week_bounds(section.mentor.course.section_start)[0]
+            spacetime_days = [day_to_number(day_of_week)
+                              for day_of_week in section.spacetimes.values_list("day_of_week", flat=True)]
+            while current_date < section.mentor.course.valid_until:
+                for spacetime_day in spacetime_days:
+                    date = current_date + timedelta(days=spacetime_day)
+                    SectionOccurrenceFactory.create(section=section, date=date)
+                current_date += timedelta(weeks=1)
+
+            students = StudentFactory.create_batch(random.randint(0, section.capacity), section=section, course=course)
+            for student in students:
+                create_attendances_for(student)
+            section.students.set(students)
+            section.save()
+        print("Done generating sections")
+
     create_demo_account()
