@@ -3,7 +3,6 @@
  */
 
 import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
-import { request } from "http";
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
 import { Attendance, RawAttendance, Section, Spacetime, Student } from "../types";
 import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
@@ -167,6 +166,7 @@ export const useUpdateStudentAttendancesMutation = (
 
 export interface StudentDropMutationBody {
   banned: boolean;
+  blacklisted: boolean;
 }
 
 /**

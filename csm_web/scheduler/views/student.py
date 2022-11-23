@@ -37,6 +37,8 @@ class StudentViewSet(viewsets.GenericViewSet):
         student.active = False
         if is_coordinator:
             student.banned = request.data.get("banned", False)
+            if student.course.is_restricted and request.data.get("blacklisted", False):
+                student.course.whitelist.remove(student.user)
         student.save()
         logger.info(
             f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)} for Student user {log_str(student.user)}"

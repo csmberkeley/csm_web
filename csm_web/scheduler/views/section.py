@@ -174,6 +174,10 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                         - empty: default; will result in a 422 response if the student is banned
                         - 'UNBAN_SKIP': unban the student, but *do not* enroll
                         - 'UNBAN': unban the students and enroll them
+                    - 'restricted_action': what to do about the student if they are attempting to enroll in a restricted course that they are not whitelisted for
+                      possible values:
+                        - empty: default; will result in a 422 response if the student is not whitelisted
+                        - 'WHITELIST': whitelist the student to the course
                 request.data['actions']: dict of actions to take for misc errors
                     - request.data['actions']['capacity']: value is one of
                         - 'EXPAND': expand section
@@ -203,6 +207,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 - if user can't enroll:
                     detail = { 'reason': reason }
             - 'BANNED': student is currently banned from the course
+            - 'RESTRICTED': course is restricted and student is not whitelisted
 
             HTTP response status codes:
             - HTTP_422_UNPROCESSABLE_ENTITY: invalid input, or partially invalid input
@@ -226,6 +231,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             OK = "OK"
             CONFLICT = "CONFLICT"
             BANNED = "BANNED"
+            RESTRICTED = "RESTRICTED"
 
         class ConflictAction:
             """enum for actions to drop students"""
@@ -243,6 +249,11 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
             UNBAN_SKIP = "UNBAN_SKIP"
             UNBAN_ENROLL = "UNBAN_ENROLL"
+
+        class RestrictedAction:
+            """enum for actions about restricted courses"""
+
+            WHITELIST = "WHITELIST"
 
         data = request.data
 
@@ -266,7 +277,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         Possible items in db_actions:
         - ('capacity', 'EXPAND'): expand the section capacity
         - ('capacity', 'ENROLL'): enroll the students without expanding section capacity
-        - ('create', email): create a new student object with email (and create user if needed)
+        - ('create', email): create a new student object with email (and create user if needed), handling whitelists as well
         - ('enroll', student): modify the student object so they are now enrolled in this section (includes drop & enroll)
         - ('unban', student): unban the student from the course
         - ('unban_enroll', student): unban the student and enroll them in the section
@@ -326,23 +337,31 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
                 if (
                     student_user.id not in course_coords
-                    and student_user.can_enroll_in_course(section.mentor.course, bypass_enrollment_time=True)
+                    and student_user.can_enroll_in_course(student.course, bypass_enrollment_time=True)
                 ):
                     # student does not exist yet; we can always create it
                     db_actions.append(("create", email))
                     curstatus["status"] = Status.OK
                 else:
                     # user can't enroll; give details on the reason why
-                    any_invalid = True
                     curstatus["status"] = Status.CONFLICT
-                    reason = "other"
-                    if student_user.id in course_coords:
-                        reason = "coordinator"
-                    elif student_user.mentor_set.filter(
-                        course=section.mentor.course
-                    ).exists():
-                        reason = "mentor"
-                    curstatus["detail"] = {"reason": reason}
+                    if not student_user.is_whitelisted_for(student.course):
+                        if email_obj.get("restricted_action") == RestrictedAction.WHITELIST:
+                            db_actions.append(("create", email))
+                            curstatus["status"] = Status.OK
+                        else:
+                            any_invalid = True
+                            curstatus["status"] = Status.RESTRICTED
+                    else:
+                        any_invalid = True
+                        reason = "other"
+                        if student_user.id in course_coords:
+                            reason = "coordinator"
+                        elif student_user.mentor_set.filter(
+                            course=section.mentor.course
+                        ).exists():
+                            reason = "mentor"
+                        curstatus["detail"] = {"reason": reason}
             else:  # student_queryset.count() == 1
                 student = student_queryset.get()
 
@@ -373,8 +392,12 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                         curstatus["status"] = Status.BANNED
                 else:
                     # student is inactive (i.e. they've dropped a section)
-                    db_actions.append(("enroll", student))
-                    curstatus["status"] = Status.OK
+                    if not student.user.is_whitelisted_for(student.course) and email_obj.get("restricted_action") != RestrictedAction.WHITELIST:
+                        any_invalid = True
+                        curstatus["status"] = Status.RESTRICTED
+                    else:
+                        db_actions.append(("enroll", student))
+                        curstatus["status"] = Status.OK
             statuses.append(curstatus)
 
         if any_invalid:
@@ -395,6 +418,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 user, _ = User.objects.get_or_create(
                     email=email, username=email.split("@")[0]
                 )
+                # whitelist if necessary
+                if section.mentor.course.is_restricted:
+                    section.mentor.course.whitelist.add(user)
                 student = Student.objects.create(user=user, section=section, course=section.mentor.course)
                 logger.info(
                     f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}"
@@ -407,6 +433,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 old_section = student.section
                 student.section = section
                 student.active = True
+                # whitelist if not already
+                if not student.user.is_whitelisted_for(student.course):
+                    student.course.whitelist.add(student.user)
                 # generate new attendance objects for this student in all section occurrences past this date
                 now = timezone.now().astimezone(timezone.get_default_timezone())
                 future_sectionOccurrences = section.sectionoccurrence_set.filter(

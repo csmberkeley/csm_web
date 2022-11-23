@@ -49,6 +49,7 @@ export interface Section {
   course: string;
   userRole: string;
   courseTitle: string;
+  courseRestricted: boolean;
 }
 
 export interface Mentor {
@@ -64,6 +65,7 @@ export interface Course {
   enrollmentStart: string;
   enrollmentOpen: boolean;
   userCanEnroll: boolean;
+  isRestricted: boolean;
 }
 
 export interface Student {

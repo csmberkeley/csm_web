@@ -26,6 +26,7 @@ interface MentorSectionInfoProps {
   capacity: number;
   description: string;
   id: number;
+  courseRestricted: boolean;
 }
 
 export default function MentorSectionInfo({
@@ -34,7 +35,8 @@ export default function MentorSectionInfo({
   mentor,
   capacity,
   id: sectionId,
-  description
+  description,
+  courseRestricted
 }: MentorSectionInfoProps) {
   const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(sectionId);
 
@@ -71,7 +73,12 @@ export default function MentorSectionInfo({
                       <tr key={studentId}>
                         <td>
                           {isCoordinator && studentId !== -1 && (
-                            <StudentDropper name={name ? name : email} id={studentId} sectionId={sectionId} />
+                            <StudentDropper
+                              name={name ? name : email}
+                              id={studentId}
+                              sectionId={sectionId}
+                              courseRestricted={courseRestricted}
+                            />
                           )}
                           <span className="student-info">{name || email}</span>
                         </td>

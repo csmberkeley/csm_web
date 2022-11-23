@@ -39,15 +39,17 @@ export const Resources = (): React.ReactElement => {
     <div className="outer">
       <div className="tabs">
         <div className="tab-list">
-          {courses.map(course => (
-            <button
-              onClick={() => handleTabClick(course.id)}
-              key={course.id}
-              className={course.id === selectedCourseID ? "active tab" : "tab"}
-            >
-              {course.name}
-            </button>
-          ))}
+          {courses
+            .filter(course => !course.isRestricted)
+            .map(course => (
+              <button
+                onClick={() => handleTabClick(course.id)}
+                key={course.id}
+                className={course.id === selectedCourseID ? "active tab" : "tab"}
+              >
+                {course.name}
+              </button>
+            ))}
         </div>
       </div>
       <ResourceTable courseID={selectedCourseID} roles={roles} />

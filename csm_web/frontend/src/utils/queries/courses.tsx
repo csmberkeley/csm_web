@@ -2,10 +2,12 @@
  * Query hooks regarding courses.
  */
 
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { fetchNormalized } from "../api";
-import { Course, Section } from "../types";
+import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
+import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
+import { Course, RawUserInfo, Section } from "../types";
 import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
+
+/* ===== Queries ===== */
 
 /**
  * Hook to get all courses.
@@ -65,4 +67,104 @@ export const useCourseSections = (
 
   handleError(queryResult);
   return queryResult;
+};
+
+interface CourseWhitelistedEmailsResponse {
+  users: RawUserInfo[];
+}
+
+export const useCourseWhitelistedEmails = (
+  id: number
+): UseQueryResult<CourseWhitelistedEmailsResponse, ServerError> => {
+  const queryResult = useQuery<CourseWhitelistedEmailsResponse, Error>(
+    ["courses", id, "whitelist"],
+    async () => {
+      // query disabled when id undefined
+      if (isNaN(id!)) {
+        throw new PermissionError("Invalid course id");
+      }
+      const response = await fetchNormalized(`/courses/${id}/whitelist`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to fetch course ${id} whitelist`);
+      }
+    },
+    {
+      enabled: id !== undefined,
+      retry: handleRetry
+    }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+
+/* ===== Mutations ===== */
+
+interface CourseAddWhitelistMutationRequest {
+  emails: string[];
+}
+
+export const useCourseAddWhitelistMutation = (
+  courseId: number
+): UseMutationResult<void, ServerError, CourseAddWhitelistMutationRequest> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, Error, CourseAddWhitelistMutationRequest>(
+    async (body: CourseAddWhitelistMutationRequest) => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
+      const response = await fetchWithMethod(`/courses/${courseId}/whitelist`, HTTP_METHODS.PUT, body);
+      if (response.ok) {
+        return response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to update whitelist for course ${courseId}`);
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["courses", courseId, "whitelist"]);
+      },
+      retry: handleRetry
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
+
+interface CourseDeleteWhitelistMutationRequest {
+  emails: string[];
+}
+
+export const useCourseDeleteWhitelistMutation = (
+  courseId: number
+): UseMutationResult<void, ServerError, CourseDeleteWhitelistMutationRequest> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, Error, CourseDeleteWhitelistMutationRequest>(
+    async (body: CourseDeleteWhitelistMutationRequest) => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
+      const response = await fetchWithMethod(`/courses/${courseId}/whitelist`, HTTP_METHODS.DELETE, body);
+      if (response.ok) {
+        return;
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to update whitelist for course ${courseId}`);
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["courses", courseId, "whitelist"]);
+      },
+      retry: handleRetry
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
 };

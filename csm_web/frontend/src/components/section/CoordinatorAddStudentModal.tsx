@@ -234,12 +234,14 @@ export function CoordinatorAddStudentModal({
   const ADD_STATUS = {
     OK: "OK",
     CONFLICT: "CONFLICT",
-    BANNED: "BANNED"
+    BANNED: "BANNED",
+    RESTRICTED: "RESTRICTED"
   };
 
   const ok_arr = [];
   const conflict_arr = [];
   const banned_arr = [];
+  const restricted_arr = [];
 
   if (response && response.progress) {
     for (const email_obj of response.progress) {
@@ -252,6 +254,9 @@ export function CoordinatorAddStudentModal({
           break;
         case ADD_STATUS.BANNED:
           banned_arr.push(email_obj);
+          break;
+        case ADD_STATUS.RESTRICTED:
+          restricted_arr.push(email_obj);
           break;
       }
     }
@@ -375,6 +380,48 @@ export function CoordinatorAddStudentModal({
                         name={`unban-${email_obj.email}`}
                         value="UNBAN_SKIP"
                         onChange={e => updateResponseAction(e, email_obj.email, "ban_action")}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {restricted_arr.length > 0 && (
+            <div className="coordinator-email-response-container">
+              <div className="coordinator-email-response-head">
+                <div className="coordinator-email-response-head-left coordinator-email-response-status-banned">
+                  <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
+                  Course restricted
+                </div>
+                <div className="coordinator-email-response-head-right">
+                  <div className="coordinator-email-reaponse-head-right-item">
+                    Whitelist,
+                    <br /> Enroll
+                  </div>
+                </div>
+              </div>
+              <div className="coordinator-email-response-item-container">
+                {restricted_arr.map(email_obj => (
+                  <div key={email_obj.email} className="coordinator-email-response-item">
+                    <div className="coordinator-email-response-item-left">
+                      <div className="coordinator-email-response-item-left-email">
+                        <span
+                          className="inline-plus-sign"
+                          title="Remove"
+                          onClick={() => removeResponseEmail(email_obj.email)}
+                        >
+                          ×
+                        </span>
+                        {email_obj.email}
+                      </div>
+                    </div>
+                    <div className="coordinator-email-response-item-right">
+                      <input
+                        type="checkbox"
+                        name={`whitelist-${email_obj.email}`}
+                        value="WHITELIST"
+                        onChange={e => updateResponseAction(e, email_obj.email, "restricted_action")}
                       />
                     </div>
                   </div>

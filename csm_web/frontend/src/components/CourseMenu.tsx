@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 import { useCourses } from "../utils/queries/courses";
 import { useUserInfo } from "../utils/queries/base";
@@ -80,21 +80,111 @@ const CourseMenu = () => {
       <Route
         index
         element={
-          <React.Fragment>
-            <EnrollmentMenu courses={courses} />
-            <br />
-            <EnrollmentTimes
-              coursesLoaded={coursesLoaded}
-              userInfo={userInfo}
-              enrollmentTimes={enrollment_times_by_course}
-            />
-          </React.Fragment>
+          <CourseMenuContent
+            courses={courses}
+            coursesLoaded={coursesLoaded}
+            userInfo={userInfo}
+            enrollment_times_by_course={enrollment_times_by_course}
+          />
         }
       />
     </Routes>
   );
 };
 export default CourseMenu;
+
+interface CourseMenuContentProps {
+  courses: Map<number, CourseType> | null;
+  coursesLoaded: boolean;
+  userInfo: UserInfo | null;
+  enrollment_times_by_course: Array<{ courseName: string; enrollmentDate: Date }>;
+}
+
+enum CourseMenuSidebarTabs {
+  RESTRICTED = "RESTRICTED",
+  UNRESTRICTED = "UNRESTRICTED"
+}
+
+const CourseMenuContent = ({
+  courses,
+  coursesLoaded,
+  userInfo,
+  enrollment_times_by_course
+}: CourseMenuContentProps) => {
+  const [selectedTab, setSelectedTab] = useState<CourseMenuSidebarTabs>(CourseMenuSidebarTabs.RESTRICTED);
+  const [hasRestrictedCourses, setHasRestrictedCourses] = useState<boolean>(false);
+  const [unrestrictedCourses, setUnrestrictedCourses] = useState<Map<number, CourseType>>(new Map());
+  const [restrictedCourses, setRestrictedCourses] = useState<Map<number, CourseType>>(new Map());
+
+  useEffect(() => {
+    let curHasRestrictedCourses = false;
+    const curRestrictedCourses: Map<number, CourseType> = new Map();
+    const curUnrestrictedCourses: Map<number, CourseType> = new Map();
+
+    if (courses != null) {
+      for (const [courseId, course] of courses.entries()) {
+        curHasRestrictedCourses ||= course.isRestricted;
+        if (course.isRestricted) {
+          curRestrictedCourses.set(courseId, course);
+        } else {
+          curUnrestrictedCourses.set(courseId, course);
+        }
+      }
+    }
+
+    setHasRestrictedCourses(curHasRestrictedCourses);
+    setRestrictedCourses(curRestrictedCourses);
+    setUnrestrictedCourses(curUnrestrictedCourses);
+    if (!curHasRestrictedCourses) {
+      // reset to unrestricted courses
+      setSelectedTab(CourseMenuSidebarTabs.UNRESTRICTED);
+    } else {
+      setSelectedTab(CourseMenuSidebarTabs.RESTRICTED);
+    }
+  }, [courses, coursesLoaded]);
+
+  let sidebar = null;
+  if (hasRestrictedCourses) {
+    sidebar = (
+      <div className="course-menu-sidebar">
+        <button
+          className={"course-menu-sidebar-tab" + (selectedTab === CourseMenuSidebarTabs.RESTRICTED ? " active" : "")}
+          onClick={() => setSelectedTab(CourseMenuSidebarTabs.RESTRICTED)}
+        >
+          Restricted
+        </button>
+        <button
+          className={"course-menu-sidebar-tab" + (selectedTab === CourseMenuSidebarTabs.UNRESTRICTED ? " active" : "")}
+          onClick={() => setSelectedTab(CourseMenuSidebarTabs.UNRESTRICTED)}
+        >
+          Unrestricted
+        </button>
+      </div>
+    );
+  }
+  // courses to actually display
+  let displayCourses = new Map();
+  if (selectedTab === CourseMenuSidebarTabs.RESTRICTED) {
+    displayCourses = restrictedCourses;
+  } else if (selectedTab === CourseMenuSidebarTabs.UNRESTRICTED) {
+    displayCourses = unrestrictedCourses;
+  }
+
+  return (
+    <div className="course-menu-content">
+      {sidebar}
+      <div className="course-menu-main">
+        <EnrollmentMenu courses={displayCourses} />
+        <br />
+        <EnrollmentTimes
+          coursesLoaded={coursesLoaded}
+          userInfo={userInfo}
+          enrollmentTimes={enrollment_times_by_course}
+        />
+      </div>
+    </div>
+  );
+};
 
 interface EnrollmentMenuProps {
   courses: Map<number, CourseType> | null;
