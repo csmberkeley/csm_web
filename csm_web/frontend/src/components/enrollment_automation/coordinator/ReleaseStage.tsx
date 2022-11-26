@@ -124,9 +124,11 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
   /**
    * List of all mentors associated with the course that have no assigned section
    */
-  const { data: jsonMentorList, isSuccess: jsonMentorListLoaded, refetch: refetchMentorList } = useMatcherMentors(
-    profile.courseId
-  );
+  const {
+    data: jsonMentorList,
+    isSuccess: jsonMentorListLoaded,
+    refetch: refetchMentorList
+  } = useMatcherMentors(profile.courseId);
 
   const matcherConfigMutation = useMatcherConfigMutation(profile.courseId);
   const matcherMentorsMutation = useMatcherAddMentorsMutation(profile.courseId);
