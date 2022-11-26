@@ -7,6 +7,7 @@ import {
   useMatcherMentors,
   useMatcherRemoveMentorsMutation
 } from "../../../utils/queries/matcher";
+import LoadingSpinner from "../../LoadingSpinner";
 import Modal from "../../Modal";
 import { SearchBar } from "../../SearchBar";
 import { Tooltip } from "../../Tooltip";
@@ -16,6 +17,7 @@ import { Slot, SlotPreference } from "../EnrollmentAutomationTypes";
 import { formatInterval } from "../utils";
 
 import CheckIcon from "../../../../static/frontend/img/check.svg";
+import CheckCircleIcon from "../../../../static/frontend/img/check_circle.svg";
 import EyeIcon from "../../../../static/frontend/img/eye.svg";
 import SortDownIcon from "../../../../static/frontend/img/sort-down.svg";
 import SortUnknownIcon from "../../../../static/frontend/img/sort-unknown.svg";
@@ -107,6 +109,12 @@ interface MentorListProps {
   formIsOpen: boolean;
 }
 
+enum Status {
+  NONE,
+  LOADING,
+  SUCCESS
+}
+
 function MentorList({
   profile,
   prefByMentor,
@@ -143,13 +151,20 @@ function MentorList({
   /**
    * List of all mentors associated with the course that have no assigned section
    */
-  const { data: jsonMentorList, isSuccess: jsonMentorListLoaded, refetch: refetchMentorList } = useMatcherMentors(
-    profile.courseId
-  );
+  const {
+    data: jsonMentorList,
+    isSuccess: jsonMentorListLoaded,
+    refetch: refetchMentorList
+  } = useMatcherMentors(profile.courseId);
 
   const matcherConfigMutation = useMatcherConfigMutation(profile.courseId);
   const matcherMentorsMutation = useMatcherAddMentorsMutation(profile.courseId);
   const matcherRemoveMentorsMutation = useMatcherRemoveMentorsMutation(profile.courseId);
+
+  /**
+   * Status upon requesting to open/close the form
+   */
+  const [formStatus, setFormStatus] = useState<Status>(Status.NONE);
 
   /**
    * Reference to the search bar input field
@@ -182,13 +197,35 @@ function MentorList({
   }, [mentorList]);
 
   const openForm = (): void => {
+    setFormStatus(Status.LOADING);
     // send POST request to release form for mentors
-    matcherConfigMutation.mutate({ open: true });
+    matcherConfigMutation.mutate(
+      { open: true },
+      {
+        onSuccess: () => {
+          setFormStatus(Status.SUCCESS);
+          setInterval(() => {
+            setFormStatus(Status.NONE);
+          }, 1500);
+        }
+      }
+    );
   };
 
   const closeForm = () => {
+    setFormStatus(Status.LOADING);
     // send POST request to close form for mentors
-    matcherConfigMutation.mutate({ open: false });
+    matcherConfigMutation.mutate(
+      { open: false },
+      {
+        onSuccess: () => {
+          setFormStatus(Status.SUCCESS);
+          setInterval(() => {
+            setFormStatus(Status.NONE);
+          }, 1500);
+        }
+      }
+    );
   };
 
   const submitMentorList = () => {
@@ -343,6 +380,13 @@ function MentorList({
 
   const hasPreferences = (mentor: Mentor) => prefByMentor.has(mentor.id);
 
+  let formStatusIcon = null;
+  if (formStatus === Status.LOADING) {
+    formStatusIcon = <LoadingSpinner className="matcher-body-footer-status-icon" />;
+  } else if (formStatus === Status.SUCCESS) {
+    formStatusIcon = <CheckCircleIcon className="matcher-body-footer-status-icon" />;
+  }
+
   return (
     <React.Fragment>
       {showAddMentorsModal && (
@@ -394,7 +438,7 @@ function MentorList({
             </div>
           </div>
           <div className="mentor-list">
-            {filteredMentorList.map((mentor, index) => (
+            {filteredMentorList.map(mentor => (
               <MentorListItem
                 key={mentor.id}
                 mentor={mentor}
@@ -422,15 +466,18 @@ function MentorList({
             </button>
           )}
         </div>
-        {formIsOpen ? (
-          <button className="matcher-submit-btn" onClick={closeForm}>
-            Close Form
-          </button>
-        ) : (
-          <button className="matcher-submit-btn" onClick={openForm}>
-            Open Form
-          </button>
-        )}
+        <div className="matcher-body-footer-status-container">
+          {formStatusIcon}
+          {formIsOpen ? (
+            <button className="matcher-submit-btn" onClick={closeForm}>
+              Close Form
+            </button>
+          ) : (
+            <button className="matcher-submit-btn" onClick={openForm}>
+              Open Form
+            </button>
+          )}
+        </div>
       </div>
     </React.Fragment>
   );
