@@ -39,7 +39,20 @@ module.exports = (env, argv) => {
             {
               loader: "@svgr/webpack",
               // Always inline styles into svg attributes because <style> tags would violate our CSP
-              options: { svgoConfig: { plugins: [{ inlineStyles: { onlyMatchedOnce: false } }] } }
+              options: {
+                svgoConfig: {
+                  plugins: [
+                    {
+                      name: "preset-default",
+                      params: {
+                        overrides: {
+                          inlineStyles: { onlyMatchedOnce: false }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
             }
           ]
         }
