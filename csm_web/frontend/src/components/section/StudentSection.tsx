@@ -140,9 +140,11 @@ interface StudentSectionAttendanceProps {
 }
 
 function StudentSectionAttendance({ associatedProfileId }: StudentSectionAttendanceProps) {
-  const { data: attendances, isSuccess: attendancesLoaded, isError: attendancesLoadError } = useStudentAttendances(
-    associatedProfileId
-  );
+  const {
+    data: attendances,
+    isSuccess: attendancesLoaded,
+    isError: attendancesLoadError
+  } = useStudentAttendances(associatedProfileId);
 
   return attendancesLoaded ? (
     <table id="attendance-table" className="standalone-table">

@@ -770,9 +770,7 @@ const EditTableRow = ({
               {sortedSlots.map((slot: Slot) => (
                 <option key={slot.id} value={slot.id} className="matcher-assignment-section-times-option">
                   {(isAssigned ? `(${prefBySlot.get(slot.id!)}) ` : "") +
-                    slot.times
-                      .map<React.ReactNode>(time => displayTime(time))
-                      .join(" / ")}
+                    slot.times.map<React.ReactNode>(time => displayTime(time)).join(" / ")}
                 </option>
               ))}
             </select>
