@@ -7,12 +7,7 @@ import { Slot } from "./EnrollmentAutomationTypes";
 import { formatInterval, formatTime, MAX_PREFERENCE, parseTime } from "./utils";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
-import {
-  useMatcherConfig,
-  useMatcherPreferenceMutation,
-  useMatcherPreferences,
-  useMatcherSlots
-} from "../../utils/queries/matcher";
+import { useMatcherPreferenceMutation, useMatcherPreferences, useMatcherSlots } from "../../utils/queries/matcher";
 
 enum Status {
   NONE,
@@ -45,7 +40,6 @@ export function MentorSectionPreferences({
 
   const { data: jsonSlots, isSuccess: jsonSlotsLoaded } = useMatcherSlots(profile.courseId);
   const { data: jsonPreferences, isSuccess: jsonPreferencesLoaded } = useMatcherPreferences(profile.courseId);
-  const { data: matcherConfig, isSuccess: matcherConfigLoaded } = useMatcherConfig(profile.courseId);
 
   const matcherPreferenceMutation = useMatcherPreferenceMutation(profile.courseId);
 
@@ -84,10 +78,6 @@ export function MentorSectionPreferences({
 
     setSlots(newSlots);
   }, [jsonSlotsLoaded, jsonPreferencesLoaded]);
-
-  if (!matcherConfigLoaded) {
-    return <LoadingSpinner className="spinner-centered" />;
-  }
 
   const setPreference = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPreference = parseInt(e.target.value);
@@ -140,13 +130,8 @@ export function MentorSectionPreferences({
   };
 
   const setSelectedEventIndicesWrapper = (indices: number[]) => {
-    if (matcherConfig.open) {
-      setSelectedEventIndices(indices);
-      setSelectedEvents(indices.map(idx => slots[idx]));
-    } else {
-      setSelectedEventIndices([]);
-      setSelectedEvents([]);
-    }
+    setSelectedEventIndices(indices);
+    setSelectedEvents(indices.map(idx => slots[idx]));
   };
 
   const getEventDetails = (event: CalendarEventSingleTime): React.ReactElement => {
@@ -174,60 +159,55 @@ export function MentorSectionPreferences({
   };
 
   let sidebarContents;
-  if (matcherConfig.open) {
-    if (selectedEvents.length === 0) {
-      // no selected event
-      sidebarContents = <div>Click on a section to edit preferences.</div>;
-    } else {
-      const event = selectedEvents[0];
-      sidebarContents = (
-        <div className="matcher-sidebar-selected">
-          <div className="mathcer-sidebar-selected-top">
-            {selectedEvents.length === 1 ? (
-              // exactly one selected event
-              <React.Fragment>
-                <div className="matcher-sidebar-header">Section Time{event.times.length > 1 ? "s" : ""}:</div>
-                <ul className="matcher-selected-times">
-                  {event.times.map((time, time_idx) => (
-                    <li key={time_idx} className="matcher-selected-time-container">
-                      <span className="matcher-selected-time">
-                        {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </React.Fragment>
-            ) : (
-              // multiple selected events
-              <div className="matcher-sidebar-header">Multiple selected events</div>
-            )}
-            <label>
-              Preference:
-              <input
-                className="matcher-input"
-                type="number"
-                key={event.id}
-                defaultValue={event.preference}
-                onChange={setPreference}
-                autoFocus={true}
-                min={0}
-                max={MAX_PREFERENCE}
-              />
-            </label>
-          </div>
-          <div className="matcher-sidebar-create-footer">
-            <div className="matcher-sidebar-pref-help">
-              Rate your preferences from 0 to {MAX_PREFERENCE}.
-              <br />0 means unavailable, {MAX_PREFERENCE} means most preferred.
-            </div>
-            <div>Shift-click to select more slots.</div>
-          </div>
-        </div>
-      );
-    }
+  if (selectedEvents.length === 0) {
+    // no selected event
+    sidebarContents = <div>Click on a section to edit preferences.</div>;
   } else {
-    // matcher closed
-    sidebarContents = <div>The matcher is not currently open for preference submission.</div>;
+    const event = selectedEvents[0];
+    sidebarContents = (
+      <div className="matcher-sidebar-selected">
+        <div className="mathcer-sidebar-selected-top">
+          {selectedEvents.length === 1 ? (
+            // exactly one selected event
+            <React.Fragment>
+              <div className="matcher-sidebar-header">Section Time{event.times.length > 1 ? "s" : ""}:</div>
+              <ul className="matcher-selected-times">
+                {event.times.map((time, time_idx) => (
+                  <li key={time_idx} className="matcher-selected-time-container">
+                    <span className="matcher-selected-time">
+                      {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </React.Fragment>
+          ) : (
+            // multiple selected events
+            <div className="matcher-sidebar-header">Multiple selected events</div>
+          )}
+          <label>
+            Preference:
+            <input
+              className="matcher-input"
+              type="number"
+              key={event.id}
+              defaultValue={event.preference}
+              onChange={setPreference}
+              autoFocus={true}
+              min={0}
+              max={MAX_PREFERENCE}
+            />
+          </label>
+        </div>
+        <div className="matcher-sidebar-create-footer">
+          <div className="matcher-sidebar-pref-help">
+            Rate your preferences from 0 to {MAX_PREFERENCE}.
+            <br />0 means unavailable, {MAX_PREFERENCE} means most preferred.
+          </div>
+          <div>Shift-click to select more slots.</div>
+        </div>
+      </div>
+    );
   }
 
   let statusContent: React.ReactNode = "";
@@ -255,7 +235,7 @@ export function MentorSectionPreferences({
         <div className="mentor-sidebar-left">
           <div className="matcher-sidebar-left-top">{sidebarContents}</div>
           <div className="matcher-sidebar-left-bottom-row">
-            <button className="matcher-submit-btn" onClick={postPreferences} disabled={!matcherConfig.open}>
+            <button className="matcher-submit-btn" onClick={postPreferences}>
               Submit
             </button>
             <div className="matcher-submit-status-container">{statusContent}</div>

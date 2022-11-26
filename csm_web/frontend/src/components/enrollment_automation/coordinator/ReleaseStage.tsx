@@ -7,6 +7,7 @@ import {
   useMatcherMentors,
   useMatcherRemoveMentorsMutation
 } from "../../../utils/queries/matcher";
+import LoadingSpinner from "../../LoadingSpinner";
 import Modal from "../../Modal";
 import { SearchBar } from "../../SearchBar";
 import { Tooltip } from "../../Tooltip";
@@ -16,6 +17,7 @@ import { Slot, SlotPreference } from "../EnrollmentAutomationTypes";
 import { formatInterval } from "../utils";
 
 import CheckIcon from "../../../../static/frontend/img/check.svg";
+import CheckCircleIcon from "../../../../static/frontend/img/check_circle.svg";
 import EyeIcon from "../../../../static/frontend/img/eye.svg";
 import SortDownIcon from "../../../../static/frontend/img/sort-down.svg";
 import SortUnknownIcon from "../../../../static/frontend/img/sort-unknown.svg";
@@ -30,6 +32,8 @@ interface ReleaseStageProps {
    * Map from mentor id to their slot preferences
    */
   prefByMentor: Map<number, SlotPreference[]>;
+  formIsOpen: boolean;
+  prevStage: () => void;
 }
 
 /**
@@ -37,7 +41,13 @@ interface ReleaseStageProps {
  * - Add mentors to fill out the preference form
  * - View current submitted preferences from mentors
  */
-export function ReleaseStage({ profile, slots, prefByMentor }: ReleaseStageProps): React.ReactElement {
+export function ReleaseStage({
+  profile,
+  slots,
+  prefByMentor,
+  formIsOpen,
+  prevStage
+}: ReleaseStageProps): React.ReactElement {
   const [selectedMentor, setSelectedMentor] = useState<Mentor | undefined>(undefined);
 
   const [preferenceModalOpen, setPreferenceModalOpen] = useState<boolean>(false);
@@ -70,6 +80,8 @@ export function ReleaseStage({ profile, slots, prefByMentor }: ReleaseStageProps
         prefByMentor={prefByMentor}
         selectedMentor={selectedMentor}
         setSelectedMentor={handleSelectMentor}
+        prevStage={prevStage}
+        formIsOpen={formIsOpen}
       />
     </React.Fragment>
   );
@@ -93,9 +105,24 @@ interface MentorListProps {
   prefByMentor: Map<number, SlotPreference[]>;
   selectedMentor: Mentor | undefined;
   setSelectedMentor: (mentor: Mentor | undefined) => void;
+  prevStage: () => void;
+  formIsOpen: boolean;
 }
 
-function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }: MentorListProps): React.ReactElement {
+enum Status {
+  NONE,
+  LOADING,
+  SUCCESS
+}
+
+function MentorList({
+  profile,
+  prefByMentor,
+  selectedMentor,
+  setSelectedMentor,
+  prevStage,
+  formIsOpen
+}: MentorListProps): React.ReactElement {
   /**
    * List of all mentors associated with the course that have no assigned section
    */
@@ -135,6 +162,11 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
   const matcherRemoveMentorsMutation = useMatcherRemoveMentorsMutation(profile.courseId);
 
   /**
+   * Status upon requesting to open/close the form
+   */
+  const [formStatus, setFormStatus] = useState<Status>(Status.NONE);
+
+  /**
    * Reference to the search bar input field
    */
   const searchBar = useRef<HTMLInputElement>(null);
@@ -164,9 +196,36 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
     return count;
   }, [mentorList]);
 
+  const openForm = (): void => {
+    setFormStatus(Status.LOADING);
+    // send POST request to release form for mentors
+    matcherConfigMutation.mutate(
+      { open: true },
+      {
+        onSuccess: () => {
+          setFormStatus(Status.SUCCESS);
+          setInterval(() => {
+            setFormStatus(Status.NONE);
+          }, 1500);
+        }
+      }
+    );
+  };
+
   const closeForm = () => {
+    setFormStatus(Status.LOADING);
     // send POST request to close form for mentors
-    matcherConfigMutation.mutate({ open: false });
+    matcherConfigMutation.mutate(
+      { open: false },
+      {
+        onSuccess: () => {
+          setFormStatus(Status.SUCCESS);
+          setInterval(() => {
+            setFormStatus(Status.NONE);
+          }, 1500);
+        }
+      }
+    );
   };
 
   const submitMentorList = () => {
@@ -321,6 +380,13 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
 
   const hasPreferences = (mentor: Mentor) => prefByMentor.has(mentor.id);
 
+  let formStatusIcon = null;
+  if (formStatus === Status.LOADING) {
+    formStatusIcon = <LoadingSpinner className="matcher-body-footer-status-icon" />;
+  } else if (formStatus === Status.SUCCESS) {
+    formStatusIcon = <CheckCircleIcon className="matcher-body-footer-status-icon" />;
+  }
+
   return (
     <React.Fragment>
       {showAddMentorsModal && (
@@ -372,7 +438,7 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
             </div>
           </div>
           <div className="mentor-list">
-            {filteredMentorList.map((mentor, index) => (
+            {filteredMentorList.map(mentor => (
               <MentorListItem
                 key={mentor.id}
                 mentor={mentor}
@@ -389,15 +455,29 @@ function MentorList({ profile, prefByMentor, selectedMentor, setSelectedMentor }
       </div>
       <div className="matcher-body-footer-sticky matcher-body-footer">
         <div>
+          {mentorList.every(mentor => !hasPreferences(mentor)) && (
+            <button className="matcher-secondary-btn" onClick={prevStage}>
+              Back
+            </button>
+          )}
           {removedMentorList.length > 0 && (
             <button className="matcher-secondary-btn" onClick={submitMentorRemovals}>
               Update
             </button>
           )}
         </div>
-        <button className="matcher-submit-btn" onClick={closeForm}>
-          Close Form
-        </button>
+        <div className="matcher-body-footer-status-container">
+          {formStatusIcon}
+          {formIsOpen ? (
+            <button className="matcher-submit-btn" onClick={closeForm}>
+              Close Form
+            </button>
+          ) : (
+            <button className="matcher-submit-btn" onClick={openForm}>
+              Open Form
+            </button>
+          )}
+        </div>
       </div>
     </React.Fragment>
   );
