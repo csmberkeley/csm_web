@@ -7,11 +7,7 @@ import { Slot } from "./EnrollmentAutomationTypes";
 import { formatInterval, formatTime, MAX_PREFERENCE, parseTime } from "./utils";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
-import {
-  useMatcherPreferenceMutation,
-  useMatcherPreferences,
-  useMatcherSlots
-} from "../../utils/queries/matcher";
+import { useMatcherPreferenceMutation, useMatcherPreferences, useMatcherSlots } from "../../utils/queries/matcher";
 
 enum Status {
   NONE,
