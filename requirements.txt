@@ -28,7 +28,7 @@ gunicorn==20.1.0
 idna==3.2
 jmespath==0.10.0
 networkx==2.8.3
-oauthlib==3.1.1
+oauthlib==3.2.1
 psycopg2==2.9.1
 psycopg2-binary==2.9.1
 pycparser==2.20
