@@ -277,8 +277,8 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     # Content Security Policy
     MIDDLEWARE.append("csp.middleware.CSPMiddleware")
     CSP_DEFAULT_SRC = ("'none'", )
-    CSP_SCRIPT_SRC = ("'self'", "https://cdnjs.cloudflare.com/ajax/libs/react/",
-                      "https://cdnjs.cloudflare.com/ajax/libs/react-dom/")
+    CSP_SCRIPT_SRC = ("'self'", "https://unpkg.com/react@18/umd/",
+                      "https://unpkg.com/react-dom@18/umd/")
     CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")
     CSP_CONNECT_SRC = ("'self'",)
     CSP_IMG_SRC = ("'self'", "data:")
