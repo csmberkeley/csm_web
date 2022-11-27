@@ -1,5 +1,4 @@
 from django.core.exceptions import ValidationError
-from django.http.response import JsonResponse
 from drf_nested_forms.parsers import NestedJSONParser, NestedMultiPartParser
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -7,9 +6,8 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
-
-from ..models import Course, Resource, Link, Worksheet
-from ..serializers import ResourceSerializer
+from scheduler.models import Course, Link, Resource, Worksheet
+from scheduler.serializers import ResourceSerializer
 
 
 class ResourceViewSet(viewsets.GenericViewSet, APIView):
@@ -37,7 +35,9 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
 
         if request.method == "GET":
             # return all resources for current course as a response
-            return Response(ResourceSerializer(resources, many=True).data)
+            return Response(
+                ResourceSerializer(resources, many=True).data, status=status.HTTP_200_OK
+            )
 
         elif request.method in ("PUT", "POST"):
             # replace database entry for current course resources
@@ -77,18 +77,18 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
             try:  # validate
                 resource_obj.full_clean()
             except ValidationError as e:
-                return JsonResponse(e.message_dict, status=status.HTTP_400_BAD_REQUEST)
+                return Response(e.message_dict, status=status.HTTP_400_BAD_REQUEST)
             resource_obj.save()
 
             if "links" in resource:
                 for link in resource["links"]:
-                    if link["id"] != None:
+                    if link["id"] is not None:
                         link_obj = Link.objects.get(pk=link["id"])
                         if "deleted" in link and link["deleted"]:
                             num_deleted, _ = link_obj.delete()
                             if num_deleted == 0:
                                 raise ValueError(
-                                    f"Link was unable to be deleted: {request.data}; {worksheet_obj}"
+                                    f"Link was unable to be deleted: {request.data}; {link_obj}"
                                 )
                             continue
                     else:
@@ -102,7 +102,7 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                     try:  # validate
                         link_obj.full_clean()
                     except ValidationError as e:
-                        return JsonResponse(
+                        return Response(
                             e.message_dict, status=status.HTTP_400_BAD_REQUEST
                         )
 
@@ -111,7 +111,7 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
             if "worksheets" in resource:
                 # has edited worksheets
                 for worksheet in resource["worksheets"]:
-                    if worksheet["id"] != None:
+                    if worksheet["id"] is not None:
                         # worksheet exists
                         worksheet_obj = Worksheet.objects.get(pk=worksheet["id"])
                         # delete if specified
@@ -148,11 +148,14 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                     try:  # validate
                         worksheet_obj.full_clean()
                     except ValidationError as e:
-                        return JsonResponse(
+                        return Response(
                             e.message_dict, status=status.HTTP_400_BAD_REQUEST
                         )
 
                     worksheet_obj.save()
+            return Response(
+                ResourceSerializer(resource_obj).data, status=status.HTTP_200_OK
+            )
         elif request.method == "DELETE":
             # remove resource from db
             is_coordinator = course.coordinator_set.filter(user=request.user).exists()
@@ -167,10 +170,13 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                     f"Resource object to delete does not exist: {request.data}"
                 )
             else:
-                num_deleted, _ = resource_query.delete()
+                serialized = ResourceSerializer(resource_query.get()).data
+                num_deleted, deleted = resource_query.delete()
                 if num_deleted == 0:
                     raise ValueError(
                         f"Resource was unable to be deleted: {request.data}; {resource_query.get()}"
                     )
+                # return deleted resource
+                return Response(serialized, status=status.HTTP_200_OK)
 
-        return Response(status.HTTP_200_OK)
+        raise PermissionDenied()

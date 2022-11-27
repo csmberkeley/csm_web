@@ -1,21 +1,29 @@
 import datetime
 
 from django.db import transaction
-from django.db.models import Q, Prefetch
+from django.db.models import Prefetch, Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-
-from .utils import log_str, logger, get_object_or_error, viewset_with
-from ..models import Course, Section, Student, Spacetime, User, Attendance, Mentor
-from ..serializers import (
+from scheduler.models import (
+    Attendance,
+    Course,
+    Mentor,
+    Section,
+    Spacetime,
+    Student,
+    User,
+)
+from scheduler.serializers import (
     SectionOccurrenceSerializer,
     SectionSerializer,
     SpacetimeSerializer,
     StudentSerializer,
 )
+
+from .utils import get_object_or_error, log_str, logger, viewset_with
 
 
 class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
@@ -64,9 +72,12 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
             mentors_with_sections = course.mentor_set.filter(section__isnull=False)
             if mentors_with_sections.count() > 0:
-                duration = mentors_with_sections.first().section.spacetimes.first().duration
+                duration = (
+                    mentors_with_sections.first().section.spacetimes.first().duration
+                )
             else:
-                duration = datetime.timedelta(hours=1)  # default duration is 1 hour
+                # default duration is 1 hour
+                duration = datetime.timedelta(hours=1)
             spacetime_serializers = [
                 SpacetimeSerializer(data={**spacetime, "duration": str(duration)})
                 for spacetime in self.request.data["spacetimes"]
@@ -88,7 +99,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             section = Section.objects.create(
                 mentor=mentor,
                 description=self.request.data["description"],
-                capacity=self.request.data["capacity"]
+                capacity=self.request.data["capacity"],
             )
             section.spacetimes.set(spacetimes)
             section.save()
@@ -98,7 +109,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
     def partial_update(self, request, pk=None):
         section = get_object_or_error(self.get_queryset(), pk=pk)
-        if not section.mentor.course.coordinator_set.filter(user=self.request.user).count():
+        if not section.mentor.course.coordinator_set.filter(
+            user=self.request.user
+        ).count():
             raise PermissionDenied("Only coordinators can change section metadata")
         serializer = self.serializer_class(
             section,
@@ -113,7 +126,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             logger.info(
                 f"<Section:Meta:Success> Updated metadata on section {log_str(section)}"
             )
-            return Response(status=status.HTTP_202_ACCEPTED)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
             logger.info(
                 f"<Section:Meta:Failure> Failed to update metadata on section {log_str(section)}"
@@ -126,7 +139,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         return Response(
             SectionOccurrenceSerializer(
                 section.sectionoccurrence_set.all(), many=True
-            ).data
+            ).data,
+            status=status.HTTP_200_OK,
         )
 
     @action(detail=True, methods=["get", "put"])
@@ -139,7 +153,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     # , queryset=Attendance.objects.order_by("date")
                     .prefetch_related(Prefetch("attendance_set")).filter(active=True),
                     many=True,
-                ).data
+                ).data,
+                status=status.HTTP_200_OK,
             )
         # PUT
         with transaction.atomic():
@@ -149,7 +164,11 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             desired section. This allows us to assume that current_student_count is correct.
             """
             section = get_object_or_error(Section.objects, pk=pk)
-            section = Section.objects.select_for_update().prefetch_related('mentor__course').get(pk=section.pk)
+            section = (
+                Section.objects.select_for_update()
+                .prefetch_related("mentor__course")
+                .get(pk=section.pk)
+            )
             is_coordinator = bool(
                 section.mentor.course.coordinator_set.filter(user=request.user).count()
             )
@@ -293,7 +312,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
         statuses = []  # status for each email
         # set of coord users (contains user ids)
-        course_coords = section.mentor.course.coordinator_set.values_list("user", flat=True)
+        course_coords = section.mentor.course.coordinator_set.values_list(
+            "user", flat=True
+        )
 
         # Phase 1: go through emails and check for validity/conflicts
         for email_obj in emails:
@@ -324,7 +345,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 student_user = User.objects.get(email=email)
                 if (
                     student_user.id not in course_coords
-                    and student_user.can_enroll_in_course(section.mentor.course, bypass_enrollment_time=True)
+                    and student_user.can_enroll_in_course(
+                        section.mentor.course, bypass_enrollment_time=True
+                    )
                 ):
                     # student does not exist yet; we can always create it
                     db_actions.append(("create", email))
@@ -381,22 +404,27 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             return Response(response, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
 
         # Phase 2: everything's good to go; do the database actions
+        added_students = []
         expand_capacity = False
         for action in db_actions:
             action_type, obj = action
             if action_type == "capacity":
                 if obj == CapacityAction.EXPAND:
-                    expand_capacity = True  # expand after we've enrolled everybody so we know how many we're enrolling
+                    # expand after we've enrolled everybody so we know how many we're enrolling
+                    expand_capacity = True
             elif action_type == "create":  # obj=email, type str
                 email = obj
                 # create student
                 user, _ = User.objects.get_or_create(
                     email=email, username=email.split("@")[0]
                 )
-                student = Student.objects.create(user=user, section=section, course=section.mentor.course)
+                student = Student.objects.create(
+                    user=user, section=section, course=section.mentor.course
+                )
                 logger.info(
                     f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}"
                 )
+                added_students.append(student)
             elif action_type in ("enroll", "unban_enroll"):  # obj=student, type Student
                 student = obj
                 if action_type == "unban_enroll":  # unban student first
@@ -423,11 +451,13 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 logger.info(
                     f"<Enrollment:Success> User {log_str(student.user)} swapped into Section {log_str(section)} from Section {log_str(old_section)}"
                 )
+                added_students.append(student)
             elif action_type == "unban":  # obj=student, type Student
                 student = obj
                 # unban student
                 student.banned = False
                 student.save()
+                added_students.append(student)
 
         if expand_capacity:
             section.capacity = max(
@@ -435,7 +465,12 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
             section.save()
 
-        return Response(status=status.HTTP_200_OK)
+        student_serializer = StudentSerializer(added_students, many=True)
+        section_serializer = SectionSerializer(section)
+        return Response(
+            {"students": student_serializer.data, "section": section_serializer.data},
+            status=status.HTTP_200_OK,
+        )
 
     def _student_add(self, request, section):
         """
@@ -489,10 +524,14 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             logger.info(
                 f"<Enrollment:Success> User {log_str(student.user)} swapped into Section {log_str(section)} from Section {log_str(old_section)}"
             )
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            serializer = StudentSerializer(student)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         else:
-            student = Student.objects.create(user=request.user, section=section, course=section.mentor.course)
+            student = Student.objects.create(
+                user=request.user, section=section, course=section.mentor.course
+            )
             logger.info(
                 f"<Enrollment:Success> User {log_str(student.user)} enrolled in Section {log_str(section)}"
             )
-            return Response({"id": student.id}, status=status.HTTP_201_CREATED)
+            serializer = StudentSerializer(student)
+            return Response(serializer.data, status=status.HTTP_201_CREATED)

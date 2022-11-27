@@ -1,9 +1,9 @@
-from .utils import viewset_with
-
 from django.db.models.query import EmptyQuerySet
 from rest_framework.response import Response
+from rest_framework import status
+from scheduler.serializers import ProfileSerializer
 
-from ..serializers import ProfileSerializer
+from .utils import viewset_with
 
 
 class ProfileViewSet(*viewset_with("list")):
@@ -19,5 +19,6 @@ class ProfileViewSet(*viewset_with("list")):
                     *request.user.coordinator_set.all(),
                 ],
                 many=True,
-            ).data
+            ).data,
+            status=status.HTTP_200_OK
         )
