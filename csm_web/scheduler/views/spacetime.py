@@ -1,15 +1,14 @@
-from django.db.models import Q
 from django.db import transaction
+from django.db.models import Q
 from django.utils import timezone
-from rest_framework import status
+from rest_framework import status, viewsets
 from rest_framework.decorators import action
-from rest_framework.response import Response
 from rest_framework.exceptions import PermissionDenied
-from rest_framework import viewsets
+from rest_framework.response import Response
 
-from .utils import log_str, logger, get_object_or_error
 from ..models import Spacetime
-from ..serializers import SpacetimeSerializer, OverrideSerializer
+from ..serializers import OverrideSerializer, SpacetimeSerializer
+from .utils import get_object_or_error, log_str, logger
 
 
 class SpacetimeViewSet(viewsets.GenericViewSet):
@@ -31,14 +30,19 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
             logger.error(
                 f"<Spacetime Deletion:Failure> Could not delete spacetime, user {log_str(request.user)} does not have proper permissions"
             )
-            raise PermissionDenied("You must be a coordinator to delete this spacetime!")
+            raise PermissionDenied(
+                "You must be a coordinator to delete this spacetime!"
+            )
 
         has_multiple_spacetimes = section.spacetimes.count() > 1
         if not has_multiple_spacetimes:
             logger.error(
                 f"<Spacetime Deletion:Failure> Could not delete spacetime, only one spacetime exists"
             )
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "Only one spacetime left!"})
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"error": "Only one spacetime left!"},
+            )
 
         now = timezone.now().astimezone(timezone.get_default_timezone())
 
@@ -55,7 +59,8 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
             f"<Spacetime Deletion:Success> Deleted Spacetime {log_str(spacetime)}"
         )
 
-        return Response(status=status.HTTP_200_OK)
+        serializer = SpacetimeSerializer(spacetime)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["put"])
     def modify(self, request, pk=None):
@@ -67,7 +72,7 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
             logger.info(
                 f"<Spacetime:Success> Modified Spacetime {log_str(new_spacetime)} (previously {log_str(spacetime)})"
             )
-            return Response(status=status.HTTP_202_ACCEPTED)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         logger.error(
             f"<Spacetime:Failure> Could not modify Spacetime {log_str(spacetime)}, errors: {serializer.errors}"
         )
@@ -80,7 +85,7 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         if request.method == "PUT":
             if hasattr(spacetime, "_override"):  # update
                 serializer = OverrideSerializer(spacetime._override, data=request.data)
-                status_code = status.HTTP_202_ACCEPTED
+                status_code = status.HTTP_200_OK
             else:  # create
                 serializer = OverrideSerializer(
                     data={"overriden_spacetime": spacetime.pk, **request.data}
@@ -91,11 +96,13 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
                 logger.info(
                     f"<Override:Success> Overrode Spacetime {log_str(spacetime)} with Override {log_str(override)}"
                 )
-                return Response(status=status_code)
+                return Response(serializer.data, status=status_code)
             logger.error(
                 f"<Override:Failure> Could not override Spacetime {log_str(spacetime)}, errors: {serializer.errors}"
             )
-            return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            return Response(
+                serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY
+            )
 
         elif request.method == "DELETE":
             mentor = spacetime.section.mentor
@@ -107,13 +114,21 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
                 logger.error(
                     f"<Override Deletion:Failure> Could not delete override, user {log_str(request.user)} does not have proper permissions"
                 )
-                raise PermissionDenied("You must be a mentor or a coordinator to delete this spacetime override!")
+                raise PermissionDenied(
+                    "You must be a mentor or a coordinator to delete this spacetime override!"
+                )
 
             if hasattr(spacetime, "_override"):
                 override = spacetime._override
                 override.delete()
+            else:
+                return Response(
+                    {"error": "spacetime has no override"},
+                    status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+                )
 
             logger.info(
                 f"<Override Deletion:Success> Deleted override for {log_str(spacetime)}"
             )
-            return Response(status=status.HTTP_200_OK)
+            serializer = OverrideSerializer(override)
+            return Response(serializer.data, status=status.HTTP_200_OK)

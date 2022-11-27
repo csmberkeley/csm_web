@@ -1,37 +1,34 @@
 import datetime
 
+from django.db import transaction
+from django.db.models import Q
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework import status
-
-from django.db.models import Q
-from django.db import transaction
-
 from scheduler.models import (
-    User,
     Course,
-    Section,
-    Mentor,
     Matcher,
     MatcherPreference,
     MatcherSlot,
+    Mentor,
+    Section,
     Spacetime,
+    User,
 )
 from scheduler.serializers import (
     MatcherPreferenceSerializer,
     MatcherSlotSerializer,
     MentorSerializer,
 )
-from .utils import get_object_or_error, logger
-
 from scheduler.utils.match_solver import (
-    get_matches,
     MentorTuple,
-    SlotTuple,
     PreferenceTuple,
+    SlotTuple,
+    get_matches,
 )
 
+from .utils import get_object_or_error, logger
 
 DEFAULT_CAPACITY = 5
 TIME_FORMAT = "%H:%M"  # Assuming 24-hour format in hh:mm
@@ -72,7 +69,7 @@ def active(request):
         if add_course:
             activeCourses.append(course.id)
 
-    return Response(activeCourses)
+    return Response(activeCourses, status=status.HTTP_200_OK)
 
 
 @api_view(["GET", "POST"])
@@ -122,51 +119,53 @@ def slots(request, pk=None):
 
         """
         Request data:
-        [{"times": [{"day": str, "startTime": str, "endTime": str}], "numMentors": int}]
+        {"slots": [{"times": [{"day": str, "startTime": str, "endTime": str}], "numMentors": int}]}
         """
 
-        if "slots" in request.data:
-            request_slots = request.data["slots"]
-            request_times = [slot["times"] for slot in request_slots]
-            # delete slots that are not in the request
-            slots = MatcherSlot.objects.filter(matcher=matcher).exclude(
-                times__in=request_times
+        if "slots" not in request.data:
+            return Response(
+                {"error": "no slots in request"}, status=status.HTTP_400_BAD_REQUEST
             )
 
-            num_deleted, _ = slots.delete()
-            logger.info("<Matcher> Deleted %s slots.", num_deleted)
+        request_slots = request.data["slots"]
+        request_times = [slot["times"] for slot in request_slots]
+        # delete slots that are not in the request
+        slots = MatcherSlot.objects.filter(matcher=matcher).exclude(
+            times__in=request_times
+        )
 
-            for slot_json in request.data["slots"]:
-                times = slot_json["times"]
-                min_mentors = (
-                    slot_json["minMentors"] if "minMentors" in slot_json else 0
+        num_deleted, _ = slots.delete()
+        logger.info("<Matcher> Deleted %s slots.", num_deleted)
+
+        saved_slots = []
+        for slot_json in request.data["slots"]:
+            times = slot_json["times"]
+            min_mentors = slot_json["minMentors"] if "minMentors" in slot_json else 0
+            max_mentors = slot_json["maxMentors"] if "maxMentors" in slot_json else 10
+            if min_mentors > max_mentors:
+                return Response(
+                    {"error": "min mentors is greater than max mentors for some slot"},
+                    status=status.HTTP_400_BAD_REQUEST,
                 )
-                max_mentors = (
-                    slot_json["maxMentors"] if "maxMentors" in slot_json else 10
+
+            # update slot if it already exists with the same times
+            slot = MatcherSlot.objects.filter(matcher=matcher, times=times).first()
+            if slot is None:
+                slot = MatcherSlot.objects.create(
+                    matcher=matcher,
+                    times=times,
+                    min_mentors=min_mentors,
+                    max_mentors=max_mentors,
                 )
-                if min_mentors > max_mentors:
-                    return Response(
-                        {
-                            "error": "min mentors is greater than max mentors for some slot"
-                        },
-                        status=status.HTTP_400_BAD_REQUEST,
-                    )
+            else:
+                slot.min_mentors = min_mentors
+                slot.max_mentors = max_mentors
+                slot.save()
+            saved_slots.append(slot)
 
-                # update slot if it already exists with the same times
-                slot = MatcherSlot.objects.filter(matcher=matcher, times=times).first()
-                if slot is None:
-                    slot = MatcherSlot.objects.create(
-                        matcher=matcher,
-                        times=times,
-                        min_mentors=min_mentors,
-                        max_mentors=max_mentors,
-                    )
-                else:
-                    slot.min_mentors = min_mentors
-                    slot.max_mentors = max_mentors
-                    slot.save()
-
-        return Response(status=status.HTTP_202_ACCEPTED)
+        # return the created slot
+        serializer = MatcherSlotSerializer(saved_slots, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     return Response(status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
@@ -229,6 +228,7 @@ def preferences(request, pk=None):
         mentor = Mentor.objects.get(
             user=request.user, course=course, section__isnull=True
         )
+        saved_preferences = []
         for pref in request.data:
             curslot = MatcherSlot.objects.get(pk=pref["id"])
             existing_queryset = MatcherPreference.objects.filter(
@@ -240,16 +240,19 @@ def preferences(request, pk=None):
                 # update existing preference
                 existing.preference = pref["preference"]
                 existing.save()
+                saved_preferences.append(existing)
             else:
                 # create new preference
                 new_pref = MatcherPreference(
                     slot=curslot, mentor=mentor, preference=pref["preference"]
                 )
                 new_pref.save()
+                saved_preferences.append(new_pref)
         logger.info(
             f"<Matcher:Success> Updated mentor {mentor} preferences for {course}"
         )
-        return Response(status=status.HTTP_200_OK)
+        serializer = MatcherPreferenceSerializer(saved_preferences)
+        return Response(serializer.data, status=status.HTTP_200_OK)
     else:
         raise PermissionDenied()
 
@@ -292,7 +295,8 @@ def mentors(request, pk=None):
                 # invalid or blank email
                 skipped.append(email)
             else:
-                username = email.split("@")[0]  # username is everything before @
+                # username is everything before @
+                username = email.split("@")[0]
                 # use existing user, or create a new user if it doesnt exist
                 user, _ = User.objects.get_or_create(username=username, email=email)
                 # if mentor exists, skip
@@ -427,7 +431,15 @@ def configure(request, pk=None):
                 status=status.HTTP_200_OK,
             )
 
-        return Response(status=status.HTTP_200_OK)
+        # return the full config
+        slots = MatcherSlot.objects.filter(matcher=matcher)
+        return Response(
+            {
+                "open": matcher.is_open,
+                "slots": slots.values("id", "min_mentors", "max_mentors"),
+            },
+            status=status.HTTP_200_OK,
+        )
 
     raise PermissionDenied()
 
@@ -453,7 +465,7 @@ def assignment(request, pk=None):
         - coordinators only
         - input format: list of slot/mentor/section matching
             {
-                "assignment: [
+                "assignment": [
                     {"slot": int, "mentor": int,
                      "section": {"capacity": int, "description": str}},
                     ...
@@ -503,9 +515,8 @@ def assignment(request, pk=None):
             )
         matcher.assignment = assignments
         matcher.save()
-        return Response([], status=status.HTTP_202_ACCEPTED)
-
-    return Response([], status=status.HTTP_200_OK)
+        return Response({"assignment": assignments}, status=status.HTTP_200_OK)
+    raise PermissionDenied()
 
 
 def run_matcher(course: Course):
@@ -605,6 +616,7 @@ def create(request, pk=None):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    created_sections = []
     # create sections; atomic to create all sections at once
     with transaction.atomic():
         for cur in local_data:
@@ -615,6 +627,7 @@ def create(request, pk=None):
                 capacity=cur["section"]["capacity"],
                 description=cur["section"]["description"],
             )
+            created_sections.append(section)
             # create spacetimes
             slot = MatcherSlot.objects.get(pk=cur["slot"])
             for time in slot.times:
@@ -631,4 +644,4 @@ def create(request, pk=None):
         # close the matcher after sections have been created
         matcher.active = False
         matcher.save()
-    return Response(status=status.HTTP_201_CREATED)
+    return Response({"sections": created_sections}, status=status.HTTP_201_CREATED)

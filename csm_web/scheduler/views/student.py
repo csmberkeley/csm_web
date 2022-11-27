@@ -5,10 +5,10 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from scheduler.models import Student
+from scheduler.serializers import AttendanceSerializer, StudentSerializer
 
-from .utils import log_str, logger, get_object_or_error
-from ..models import Student
-from ..serializers import AttendanceSerializer, StudentSerializer
+from .utils import get_object_or_error, log_str, logger
 
 
 class StudentViewSet(viewsets.GenericViewSet):
@@ -52,14 +52,16 @@ class StudentViewSet(viewsets.GenericViewSet):
         logger.info(
             f"<Drop> Deleted {num_deleted} attendances for user {log_str(student.user)} in Section {log_str(student.section)} after {now.date()}"
         )
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        serializer = StudentSerializer(student)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     @action(detail=True, methods=["get", "put"])
     def attendances(self, request, pk=None):
         student = get_object_or_error(self.get_queryset(), pk=pk)
         if request.method == "GET":
             return Response(
-                AttendanceSerializer(student.attendance_set.all(), many=True).data
+                AttendanceSerializer(student.attendance_set.all(), many=True).data,
+                status=status.HTTP_200_OK,
             )
         # PUT
         if student.user == self.request.user:
@@ -86,7 +88,7 @@ class StudentViewSet(viewsets.GenericViewSet):
             logger.info(
                 f"<Attendance:Success> Attendance {log_str(attendance)} recorded for User {log_str(request.user)}"
             )
-            return Response(status=status.HTTP_204_NO_CONTENT)
+            return Response(serializer.data, status=status.HTTP_200_OK)
         logger.error(
             f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, errors: {serializer.errors}"
         )

@@ -2,15 +2,16 @@ import csv
 from itertools import groupby
 
 from django.contrib.postgres.aggregates import ArrayAgg
-from django.db.models import Q, Count, Prefetch
+from django.db.models import Count, Prefetch, Q
 from django.http import HttpResponse
 from django.utils import timezone
+from rest_framework import status
 from rest_framework.decorators import action
 from rest_framework.response import Response
+from scheduler.models import Course, Section, Spacetime, Student
+from scheduler.serializers import CourseSerializer, SectionSerializer
 
 from .utils import get_object_or_error, viewset_with
-from ..models import Course, Student, Spacetime, Section
-from ..serializers import CourseSerializer, SectionSerializer
 
 
 class CourseViewSet(*viewset_with("list")):
@@ -34,7 +35,8 @@ class CourseViewSet(*viewset_with("list")):
     def get_sections_by_day(self, course):
         sections = (
             # get all mentor sections
-            Section.objects.select_related('mentor').filter(mentor__course=course)
+            Section.objects.select_related("mentor")
+            .filter(mentor__course=course)
             .annotate(
                 day_key=ArrayAgg(
                     "spacetimes__day_of_week",
@@ -94,7 +96,8 @@ class CourseViewSet(*viewset_with("list")):
                     user=request.user
                 ).exists(),
                 "sections": sections_by_day,
-            }
+            },
+            status=status.HTTP_200_OK,
         )
 
     # get a list of student information (for a selection of courses) to add to coord interface -- currently only used for download
@@ -102,7 +105,7 @@ class CourseViewSet(*viewset_with("list")):
     def students(self, request):
         id_str = self.request.query_params.get("ids")
         if not id_str or id_str == "/":
-            return Response({"students": None})
+            return Response({"students": None}, status=status.HTTP_200_OK)
         if id_str[-1] == "/":
             id_str = id_str[:-1]
         ids = id_str.split(",")
