@@ -436,6 +436,7 @@ class WaitlistPosition(ValidatingModel):
     section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="waitlist_positions")
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     join_time = models.DateTimeField(auto_now_add=True)
+
     
 
 class MatcherSlot(ValidatingModel):
