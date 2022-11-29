@@ -99,7 +99,7 @@ describe("course menu", () => {
   };
 
   beforeEach(() => {
-    cy.clock(NOW); // set up clock
+    cy.clock(NOW, ["Date"]); // set up clock
     cy.login();
   });
 

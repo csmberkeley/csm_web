@@ -45,7 +45,7 @@ describe("coordinator section", () => {
   };
 
   beforeEach(() => {
-    cy.clock(NOW); // set up clock
+    cy.clock(NOW, ["Date"]); // set up clock
     cy.login();
   });
 
@@ -55,7 +55,7 @@ describe("coordinator section", () => {
       networkStubs();
 
       // visit the course section page
-      cy.visit("/courses/1/sections");
+      cy.visit("/courses/1");
     });
 
     it("should show correct course information", () => {
