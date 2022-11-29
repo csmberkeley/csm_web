@@ -8,9 +8,11 @@ interface SearchRowProps {
 
 export const SearchRow = ({ name, email, id }: SearchRowProps): React.ReactElement => {
   return (
-    <div>
-      {name} {email} {id}
-      <button> I do Nothing</button>
+    <div className="SearchRowFormat">
+      <div className="SearchRowElem">{name}</div>
+      <div className="SearchRowElem">{email}</div>
+      <div className="SearchRowElem">{id}</div>
+      <button className="SearchButton"> Additional Information</button>
     </div>
   );
 };

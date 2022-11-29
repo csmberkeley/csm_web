@@ -1909,3 +1909,28 @@ table tbody tr:last-child > td {
 .spacetimeDeleteDropper {
 	text-align: center;
 }
+
+.SearchRowFormat {
+	background-color: var(--csm-resources);
+	border-radius: 8px;
+	box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 0 -1px rgb(0 0 0 / 6%);
+	height: 100%;
+	margin: 16px auto;
+	display: flex;
+	justify-content: space-around;
+	padding: 24px 0;
+	flex-direction: row;
+	width: 80%;
+}
+
+button.SearchButton {
+	background-color: #9ae0b3;
+	border-width: 0;
+	padding: 10px;
+	border-radius: 25px;
+	color: white;
+}
+
+.SearchRowElem {
+	padding: 10px;
+}
