@@ -1,4 +1,4 @@
 {
   "presets": ["@babel/preset-react", "@babel/preset-typescript"],
-  "plugins": ["transform-class-properties", "lodash", "@babel/plugin-transform-runtime"]
+  "plugins": ["transform-class-properties", "lodash", "@babel/plugin-transform-runtime", "dynamic-import-node"]
 }
