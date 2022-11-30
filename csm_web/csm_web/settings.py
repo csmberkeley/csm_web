@@ -236,6 +236,14 @@ if DJANGO_ENV == DEVELOPMENT:
         "rest_framework.renderers.BrowsableAPIRenderer"
     )
 
+# Cache
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
+        'LOCATION': 'db_cache_table',
+    }
+}
+
 # Logging
 LOGGING = {
     'version': 1,

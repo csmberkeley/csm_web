@@ -1,111 +1,13 @@
+before(() => {
+  // initialize the database and cache
+  cy.initDB();
+});
+
 describe("course menu", () => {
-  // set date constants
-  const TWO_DAYS_AGO = new Date("2020-06-13T12:00:00");
-  const YESTERDAY = new Date("2020-06-14T12:00:00");
-  const NOW = new Date("2020-06-15T12:00:00");
-  const TOMORROW = new Date("2020-06-16T12:00:00");
-  // course data for mock endpoints
-  const COURSES_DATA = [
-    {
-      id: 1,
-      name: "CS61A",
-      enrollmentStart: TWO_DAYS_AGO.toISOString(),
-      enrollmentOpen: true,
-      userCanEnroll: false
-    },
-    {
-      id: 2,
-      name: "CS61B",
-      enrollmentStart: TWO_DAYS_AGO.toISOString(),
-      enrollmentOpen: true,
-      userCanEnroll: true
-    },
-    {
-      id: 3,
-      name: "CS61C",
-      enrollmentStart: TOMORROW.toISOString(),
-      enrollmentOpen: false,
-      userCanEnroll: false
-    }
-  ];
-
-  /**
-   * Set up network stubs.
-   */
-  const networkStubs = (priorityEnrollment = false) => {
-    cy.intercept({ method: "GET", url: "/api/profiles/" }, []).as("getProfiles");
-    cy.intercept({ method: "GET", url: "/api/matcher/active/" }, []).as("getMatcherActive");
-    cy.intercept({ method: "GET", url: "/api/courses/" }, COURSES_DATA).as("getCourses");
-    cy.intercept(
-      { method: "GET", url: "/api/courses/*/sections/" },
-      {
-        sections: {
-          "{Monday,Tuesday}": [
-            {
-              id: 1,
-              associatedProfileId: null,
-              capacity: 5,
-              course: "CS61A",
-              courseTitle: "Structure and Interpretation of Computer Programs",
-              description: "",
-              mentor: {
-                id: 101,
-                name: "Mentor 1",
-                section: 1,
-                email: "mentor_1@berkeley.edu"
-              },
-              numStudentsEnrolled: 0,
-              spacetimes: [
-                {
-                  id: 123,
-                  startTime: "11:00:00",
-                  dayOfWeek: "Monday",
-                  time: "Monday 11:00 AM-12:00 PM",
-                  location: "Cory 400",
-                  duration: "01:00:00",
-                  override: null
-                },
-                {
-                  id: 124,
-                  startTime: "11:00:00",
-                  dayOfWeek: "Tuesday",
-                  time: "Tuesday 11:00 AM-12:00 PM",
-                  location: "Cory 400",
-                  duration: "01:00:00",
-                  override: null
-                }
-              ]
-            }
-          ]
-        },
-        userIsCoordinator: false
-      }
-    ).as("getSection");
-
-    const baseUserInfo = {
-      id: 1,
-      email: "demo_user@berkeley.edu",
-      firstName: "Demo",
-      lastName: "User",
-      priorityEnrollment: null
-    };
-    if (priorityEnrollment) {
-      cy.intercept({ method: "GET", url: "/api/userinfo/" }, { ...baseUserInfo, priorityEnrollment: YESTERDAY }).as(
-        "getPriorityEnrollment"
-      );
-    } else {
-      cy.intercept({ method: "GET", url: "/api/userinfo/" }, baseUserInfo).as("getPriorityEnrollment");
-    }
-  };
-
-  beforeEach(() => {
-    cy.clock(NOW, ["Date"]); // set up clock
-    cy.login();
-  });
-
   it("should be accessible from home page", () => {
-    // network stubs
-    networkStubs();
+    // setup database
+    cy.setupDB("course-menu", "setup");
+    cy.login();
 
     // visit the home page
     cy.visit("/");
@@ -119,8 +21,9 @@ describe("course menu", () => {
 
   describe("should display courses and enrollment times", () => {
     it("with no priority enrollment", () => {
-      // network stubs
-      networkStubs();
+      // setup database
+      cy.setupDB("course-menu", "setup");
+      cy.login();
 
       // visit the courses page
       cy.visit("/courses");
@@ -130,15 +33,19 @@ describe("course menu", () => {
       cy.contains(/cs61b/i).should("be.visible");
       cy.contains(/cs61c/i).should("be.visible");
 
-      // check that CS61C shows in enrollment times, but not CS61A or CS61B
-      cy.get(".enrollment-container").contains(/cs61a/i).should("not.exist");
+      // check that CS61A and CS61C show in enrollment times, but not CS61B
+      // cs61a: NOW < start < end; too early
+      cy.get(".enrollment-container").contains(/cs61a/i).should("be.visible");
+      // cs61b: start < NOW < end; valid
       cy.get(".enrollment-container").contains(/cs61b/i).should("not.exist");
-      cy.get(".enrollment-container").contains(/cs61c/i).should("exist");
+      // cs61c: start < end < NOW; too late
+      cy.get(".enrollment-container").contains(/cs61c/i).should("be.visible");
     });
 
-    it("with priority enrollment", () => {
-      // network stubs
-      networkStubs(true);
+    it("with priority enrollment in the past", () => {
+      // setup database with priority enrollment
+      cy.setupDB("course-menu", "setup_priority_enrollment_past");
+      cy.login();
 
       // visit the courses page
       cy.visit("/courses");
@@ -148,20 +55,48 @@ describe("course menu", () => {
       cy.contains(/cs61b/i).should("be.visible");
       cy.contains(/cs61c/i).should("be.visible");
 
-      // check that CS61C shows in enrollment times, but not CS61A or CS61B
+      // check that CS61C show in enrollment times, but not CS61A or CS61B
+      // because priority enrollment should be active for all courses; still too late for CS61C
       cy.get(".enrollment-container").contains(/cs61a/i).should("not.exist");
       cy.get(".enrollment-container").contains(/cs61b/i).should("not.exist");
-      cy.get(".enrollment-container").contains(/cs61c/i).should("exist");
+      cy.get(".enrollment-container").contains(/cs61c/i).should("be.visible");
 
       // check that priority enrollment shows in enrollment times
       cy.get(".enrollment-container")
         .contains(/priority/i)
-        .should("exist");
+        .should("be.visible");
+    });
+
+    it("with priority enrollment in the future", () => {
+      // setup database with priority enrollment
+      cy.setupDB("course-menu", "setup_priority_enrollment_future");
+      cy.login();
+
+      // visit the courses page
+      cy.visit("/courses");
+
+      // check that CS61B, CS61C are all visible
+      cy.contains(/cs61a/i).should("be.visible");
+      cy.contains(/cs61b/i).should("be.visible");
+      cy.contains(/cs61c/i).should("be.visible");
+
+      // check that CS61A and CS61C show in enrollment times, but not CS61B
+      // because priority enrollment exists, but is not time yet
+      cy.get(".enrollment-container").contains(/cs61a/i).should("be.visible");
+      cy.get(".enrollment-container").contains(/cs61b/i).should("not.exist");
+      cy.get(".enrollment-container").contains(/cs61c/i).should("be.visible");
+
+      // check that priority enrollment shows in enrollment times
+      cy.get(".enrollment-container")
+        .contains(/priority/i)
+        .should("be.visible");
     });
   });
 
   it("should have buttons that navigate to course pages", () => {
-    networkStubs();
+    // setup database
+    cy.setupDB("course-menu", "setup");
+    cy.login();
 
     // visit the course menu
     cy.visit("/courses");
