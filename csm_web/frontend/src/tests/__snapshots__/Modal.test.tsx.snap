@@ -1,0 +1,99 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`Modal should close correctly when an external modal closer is clicked 1`] = `
+<DocumentFragment>
+  <div
+    class="modal-overlay"
+  />
+  <div
+    class="modal test-modal"
+  >
+    <div
+      class="modal-contents"
+    >
+      <div
+        class="modal-close-x"
+      >
+        <button
+          aria-label="close"
+          class="inline-plus-sign"
+        >
+          <span>
+            ×
+          </span>
+        </button>
+      </div>
+      <div>
+        Hello World
+      </div>
+      <div
+        class="modal-close"
+      >
+        Close
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`Modal should render correctly 1`] = `
+<DocumentFragment>
+  <div
+    class="modal-overlay"
+  />
+  <div
+    class="modal "
+  >
+    <div
+      class="modal-contents"
+    >
+      <div
+        class="modal-close-x"
+      >
+        <button
+          aria-label="close"
+          class="inline-plus-sign"
+        >
+          <span>
+            ×
+          </span>
+        </button>
+      </div>
+      <div>
+        Hello World
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;
+
+exports[`Modal should render correctly with className 1`] = `
+<DocumentFragment>
+  <div
+    class="modal-overlay"
+  />
+  <div
+    class="modal test-modal"
+  >
+    <div
+      class="modal-contents"
+    >
+      <div
+        class="modal-close-x"
+      >
+        <button
+          aria-label="close"
+          class="inline-plus-sign"
+        >
+          <span>
+            ×
+          </span>
+        </button>
+      </div>
+      <div>
+        Hello World
+      </div>
+    </div>
+  </div>
+</DocumentFragment>
+`;

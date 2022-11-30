@@ -32,3 +32,17 @@ jobs:
         eslint_extensions: js,jsx,ts,tsx
         prettier: true
         prettier_dir: csm_web/frontend/src
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [16.x]
+    steps:
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v1
+      with:
+        node-version: ${{ matrix.node-version }}
+    - run: npm ci
+    - run: npm run build --if-present
+    - run: npm run test
