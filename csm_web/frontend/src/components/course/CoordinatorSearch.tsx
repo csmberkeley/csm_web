@@ -9,23 +9,34 @@ import { SearchRow } from "./SearchRow";
 import { SearchTable } from "./SearchTable";
 
 export const CordinatorSeach = (): React.ReactElement => {
-  const testStudents = [
-    { id: 1, name: "a", email: "a@hi.com" },
-    { id: 2, name: "b", email: "b@hi.com" },
-    { id: 3, name: "c", email: "c@hi.com" },
-    { id: 4, name: "d", email: "d@hi.com" }
-  ];
-  const [allStudents, setStudents] = useState<Student[]>(testStudents);
+  const [allStudents, setStudents] = useState<Student[]>([]);
   const [selectedStudents, setSelectedStudents] = useState<Student[]>();
+
+  const reloadSearch = (): void => {
+    interface JSONResponseType {
+      students: Student[];
+    }
+
+    fetchJSON(`/student-students`).then(({ students }: JSONResponseType) => {
+      setStudents(students);
+    });
+  };
+
+  // reload sections upon first mount
+  useEffect(() => {
+    reloadSearch();
+  }, []);
 
   const handleChange = ({ target: { value } }: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void => {
     const validStudents = [];
-    for (let i = 0; i < allStudents.length; i++) {
-      const student = allStudents[i];
-      let str = student.name + student.email;
-      str += student.id;
-      if (str.includes(value)) {
-        validStudents.push(student);
+    if (value.length != 0) {
+      for (let i = 0; i < allStudents.length; i++) {
+        const student = allStudents[i];
+        let str = student.name + student.email;
+        str += student.id;
+        if (str.includes(value)) {
+          validStudents.push(student);
+        }
       }
     }
     setSelectedStudents(validStudents);
