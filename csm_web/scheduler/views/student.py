@@ -101,3 +101,12 @@ class StudentViewSet(viewsets.GenericViewSet):
             return Response([student.name for student in Student.objects.all()])
         return Response(status=status.HTTP_403_FORBIDDEN)
 
+    @action(detail=False, methods=["get"])
+    def students(self, request):
+        is_coordinator = Coordinator.objects.filter(
+            user=request.user
+        ).exists()
+        if is_coordinator:
+            return Response(StudentSerializer(Student.objects.all(), many=True).data)
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
