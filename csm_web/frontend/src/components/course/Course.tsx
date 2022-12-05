@@ -4,6 +4,10 @@ import { Section } from "../../utils/types";
 import { SectionCard } from "./SectionCard";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
+import { SearchBar } from "../SearchBar";
+import { SearchRow } from "./SearchRow";
+import { SearchTable } from "./SearchTable";
+import { CordinatorSeach } from "./CoordinatorSearch";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",
@@ -188,6 +192,13 @@ const Course = ({
         )}
       </div>
       {userIsCoordinator && showModal && renderModal()}
+      <div>
+        {userIsCoordinator && (
+          <div>
+            <CordinatorSeach></CordinatorSeach>
+          </div>
+        )}
+      </div>
     </div>
   );
 };
