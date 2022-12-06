@@ -7,7 +7,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from .utils import log_str, logger, get_object_or_error
-from ..models import Student
+from ..models import Student, Coordinator
 from ..serializers import AttendanceSerializer, StudentSerializer
 
 
@@ -91,3 +91,22 @@ class StudentViewSet(viewsets.GenericViewSet):
             f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, errors: {serializer.errors}"
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+    
+    @action(detail=False, methods=["get"])
+    def student_names(self, request):
+        is_coordinator = Coordinator.objects.filter(
+            user=request.user
+        ).exists()
+        if is_coordinator:
+            return Response([student.name for student in Student.objects.all()])
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
+    @action(detail=False, methods=["get"])
+    def students(self, request):
+        is_coordinator = Coordinator.objects.filter(
+            user=request.user
+        ).exists()
+        if is_coordinator:
+            return Response(StudentSerializer(Student.objects.all(), many=True).data)
+        return Response(status=status.HTTP_403_FORBIDDEN)
+
