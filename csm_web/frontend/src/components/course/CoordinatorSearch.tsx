@@ -17,7 +17,7 @@ export const CordinatorSeach = (): React.ReactElement => {
       students: Student[];
     }
 
-    fetchJSON(`/student-students`).then(({ students }: JSONResponseType) => {
+    fetchJSON(`/students/students`).then(({ students }: JSONResponseType) => {
       setStudents(students);
     });
   };
