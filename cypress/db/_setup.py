@@ -16,7 +16,7 @@ sys.path.append(os.path.join(CWD, "csm_web"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "csm_web.settings")
 
 
-def main(script_path: str, func_name: str, force=False, init=False):
+def main(script_path: str, func_name: str, force=False, mutate=False, init=False):
     if init:
         os.chdir("csm_web")
         django.setup()
@@ -52,7 +52,12 @@ def main(script_path: str, func_name: str, force=False, init=False):
     # run the function
     cypress_setup_func()
 
-    cache.set(CACHE_KEY, (script_path, func_name), CACHE_TIMEOUT)
+    if mutate:
+        # if we have a mutation, then the next test should always flush
+        # and set up the database again
+        cache.delete(CACHE_KEY)
+    else:
+        cache.set(CACHE_KEY, (script_path, func_name), CACHE_TIMEOUT)
 
 
 if __name__ == "__main__":
@@ -77,6 +82,9 @@ if __name__ == "__main__":
     )
     parser.add_argument(
         "--force", action="store_true", help="whether to force a database flush"
+    )
+    parser.add_argument(
+        "--mutate", action="store_true", help="whether the test modifies the database"
     )
     parser.add_argument(
         "--init",

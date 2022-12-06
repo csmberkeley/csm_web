@@ -23,7 +23,8 @@ Cypress.Commands.add("login", () => {
 });
 
 interface SetupDBOptions {
-  force: boolean;
+  force?: boolean;
+  mutate?: boolean;
 }
 
 /**
@@ -31,7 +32,7 @@ interface SetupDBOptions {
  */
 Cypress.Commands.add(
   "setupDB",
-  (script_path: string, func_name: string, options: SetupDBOptions = { force: false }) => {
+  (script_path: string, func_name: string, options: SetupDBOptions = { force: false, mutate: false }) => {
     // validate arguments
     expect(script_path.match(/[a-zA-Z0-9_\/\.\-]/)).to.not.be.null;
     expect(func_name.match(/[a-zA-Z0-9_]/)).to.not.be.null;
@@ -40,6 +41,9 @@ Cypress.Commands.add(
     let command = `python3 cypress/db/_setup.py "${script_path}" "${func_name}"`;
     if (options.force) {
       command += " --force";
+    }
+    if (options.mutate) {
+      command += " --mutate";
     }
     cy._exec(command);
   }

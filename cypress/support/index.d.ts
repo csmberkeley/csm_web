@@ -1,5 +1,6 @@
 interface SetupDBOptions {
-  force: boolean;
+  force?: boolean;
+  mutate?: boolean;
 }
 
 declare namespace Cypress {
