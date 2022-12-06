@@ -38,14 +38,6 @@ jobs:
     - name: Install npm dependencies
       run: |
         npm ci
-    - name: Setup Django test user
-      run: |
-        python csm_web/manage.py migrate
-        python csm_web/manage.py createtestuser
-      env:
-        SECRET_KEY: ${{ secrets.SECRET_KEY }}
-        DJANGO_ENV: dev
-        POSTGRES_PASSWORD: postgres
     - name: Run Cypress
       uses: cypress-io/github-action@v4
       with:
