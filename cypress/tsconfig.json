@@ -2,7 +2,8 @@
   "compilerOptions": {
     "allowJs": true,
     "baseUrl": "../node_modules",
-    "types": ["cypress"]
+    "types": ["cypress"],
+    "target": "es2019"
   },
   "include": ["**/*.*"]
 }

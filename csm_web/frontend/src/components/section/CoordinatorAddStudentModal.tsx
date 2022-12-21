@@ -210,7 +210,7 @@ export function CoordinatorAddStudentModal({
         </button>
         {
           /* Firefox doesn't support clipboard reads from sites; readText would be undefined */
-          navigator.clipboard.readText != undefined && (
+          navigator?.clipboard?.readText !== undefined && (
             <button className="coordinator-email-input-add" type="button" onClick={() => addEmailsFromClipboard()}>
               Add from clipboard
             </button>

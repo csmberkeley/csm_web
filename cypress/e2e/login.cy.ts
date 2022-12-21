@@ -1,3 +1,7 @@
+before(() => {
+  cy.initDB();
+});
+
 describe("login", () => {
   beforeEach(() => {
     cy.setupDB("login", "setup");

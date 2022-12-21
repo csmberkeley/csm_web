@@ -7,7 +7,18 @@ before(() => {
  * Converts a time of the form hh:mm a/pm into a Date object
  */
 const timeStringToDate = (time: string): Date => {
-  return new Date(Date.parse(`2020-01-01 ${time}`));
+  // extract hours, minutes, am/pm
+  const [_, hours_str, minutes, ampm] = time.match(/(\d\d?):(\d\d) (AM|PM)/);
+
+  let hours = parseInt(hours_str);
+  if (ampm === "PM" && hours !== 12) {
+    hours += 12;
+  } else if (ampm === "AM" && hours === 12) {
+    hours = 0;
+  }
+  const formatted_hours = hours.toString().padStart(2, "0");
+  // put in iso format to ensure parse succeeds
+  return new Date(Date.parse(`2020-01-01T${formatted_hours}:${minutes}:00.000`));
 };
 
 /**
