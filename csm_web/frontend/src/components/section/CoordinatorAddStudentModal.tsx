@@ -205,13 +205,13 @@ export function CoordinatorAddStudentModal({
         </div>
       </div>
       <div className="coordinator-email-input-buttons">
-        <button className="coordinator-email-input-add" onClick={() => addNewEmail()}>
+        <button className="coordinator-email-input-add" type="button" onClick={() => addNewEmail()}>
           Add email
         </button>
         {
           /* Firefox doesn't support clipboard reads from sites; readText would be undefined */
           navigator.clipboard.readText != undefined && (
-            <button className="coordinator-email-input-add" onClick={() => addEmailsFromClipboard()}>
+            <button className="coordinator-email-input-add" type="button" onClick={() => addEmailsFromClipboard()}>
               Add from clipboard
             </button>
           )
@@ -312,7 +312,7 @@ export function CoordinatorAddStudentModal({
                           >
                             ×
                           </span>
-                          {email_obj.email}
+                          <span>{email_obj.email}</span>
                         </div>
                         <div className="coordinator-email-response-item-left-detail">{conflictDetail}</div>
                       </div>
@@ -360,7 +360,7 @@ export function CoordinatorAddStudentModal({
                         >
                           ×
                         </span>
-                        {email_obj.email}
+                        <span>{email_obj.email}</span>
                       </div>
                     </div>
                     <div className="coordinator-email-response-item-right">
@@ -402,7 +402,7 @@ export function CoordinatorAddStudentModal({
                       >
                         ×
                       </span>
-                      {email_obj.email}
+                      <span>{email_obj.email}</span>
                     </div>
                     <div className="coordinator-email-response-item-right"></div>
                   </div>

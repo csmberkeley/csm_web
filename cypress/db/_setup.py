@@ -16,24 +16,7 @@ sys.path.append(os.path.join(CWD, "csm_web"))
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "csm_web.settings")
 
 
-def main(script_path: str, func_name: str, force=False, mutate=False, init=False):
-    if init:
-        os.chdir("csm_web")
-        django.setup()
-        call_command("migrate", verbosity=0)
-        call_command("createcachetable")
-        cache.delete(CACHE_KEY)
-        os.chdir("..")
-        return
-
-    # validate args
-    assert re.fullmatch(r"^$|^[a-zA-Z0-9_/\.\-]+$", script_path)
-    assert re.fullmatch(r"^[a-zA-Z0-9_]+$", func_name)
-
-    cache_val = cache.get(CACHE_KEY)
-    if not force and cache_val == (script_path, func_name):
-        return  # don't need to do anything
-
+def setup_database(script_path: str, func_name: str):
     # set up django settings
     django.setup()
 
@@ -51,6 +34,26 @@ def main(script_path: str, func_name: str, force=False, mutate=False, init=False
 
     # run the function
     cypress_setup_func()
+
+
+def main(script_path: str, func_name: str, force=False, mutate=False, init=False):
+    if init:
+        os.chdir("csm_web")
+        django.setup()
+        call_command("migrate", verbosity=0)
+        call_command("createcachetable")
+        cache.delete(CACHE_KEY)
+        os.chdir("..")
+        return
+
+    # validate args
+    assert re.fullmatch(r"^$|^[a-zA-Z0-9_/\.\-]+$", script_path)
+    assert re.fullmatch(r"^[a-zA-Z0-9_]+$", func_name)
+
+    cache_val = cache.get(CACHE_KEY)
+
+    if force or cache_val != (script_path, func_name):
+        setup_database(script_path, func_name)
 
     if mutate:
         # if we have a mutation, then the next test should always flush
@@ -94,4 +97,10 @@ if __name__ == "__main__":
 
     args = parser.parse_args()
 
-    main(args.script_path, args.func_name, force=args.force, init=args.init)
+    main(
+        args.script_path,
+        args.func_name,
+        force=args.force,
+        mutate=args.mutate,
+        init=args.init,
+    )

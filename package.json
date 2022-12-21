@@ -10,7 +10,8 @@
     "build": "npm run build:js && npm run build:css",
     "watch": "webpack --mode development --watch",
     "test": "jest",
-    "cypress:open": "cypress open"
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run --e2e --record=false --config video=false,screenshotOnRunFailure=false"
   },
   "heroku-run-build-script": true,
   "repository": {
