@@ -9,7 +9,9 @@
     "build:css": "csso ./csm_web/frontend/static/frontend/css/style.css --output ./csm_web/frontend/static/frontend/css/style.min.css",
     "build": "npm run build:js && npm run build:css",
     "watch": "webpack --mode development --watch",
-    "test": "jest"
+    "test": "jest",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run --e2e --record=false --config video=false,screenshotOnRunFailure=false"
   },
   "heroku-run-build-script": true,
   "repository": {
@@ -47,8 +49,10 @@
     "babel-polyfill": "^6.26.0",
     "css-loader": "^6.2.0",
     "csso-cli": "^3.0.0",
+    "cypress": "^12.2.0",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^7.2.0",
+    "eslint-plugin-cypress": "^2.12.1",
     "eslint-plugin-react": "^7.31.10",
     "eslint-plugin-react-hooks": "^4.6.0",
     "jest": "^28.1.1",

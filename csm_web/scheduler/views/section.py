@@ -321,7 +321,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
             elif student_queryset.count() == 0:
                 # check if the user can actually enroll in the section
-                student_user = User.objects.get(email=email)
+                student_user, _ = User.objects.get_or_create(
+                    username=email.split('@')[0], email=email
+                )
                 if (
                     student_user.id not in course_coords
                     and student_user.can_enroll_in_course(section.mentor.course, bypass_enrollment_time=True)

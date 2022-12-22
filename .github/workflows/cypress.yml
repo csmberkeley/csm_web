@@ -1,0 +1,117 @@
+name: Cypress E2E
+on:
+  push:
+    branches: [master]
+  pull_request:
+    branches: [master]
+jobs:
+  cypress-run-chrome:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+        containers: [1, 2]
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: csm_web_dev
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Install npm dependencies
+        run: |
+          npm ci
+      - name: Install Chrome 106
+        run: |
+          sudo wget --no-verbose -O /usr/src/google-chrome-stable_current_amd64.deb "http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_106.0.5249.91-1_amd64.deb" && \
+          sudo dpkg -i /usr/src/google-chrome-stable_current_amd64.deb ; \
+          sudo apt-get install -f -y && \
+          sudo rm -f /usr/src/google-chrome-stable_current_amd64.deb
+      - name: Run Cypress
+        uses: cypress-io/github-action@v4
+        with:
+          record: true
+          build: npm run build
+          start: python csm_web/manage.py runserver
+          wait-on: http://localhost:8000
+          browser: chrome
+          parallel: true
+          group: Tests on Chrome 106
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DJANGO_ENV: dev
+          POSTGRES_PASSWORD: postgres
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          # pass GitHub token to allow accurately detecting a build vs a re-run build
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # better cypress run titles
+          COMMIT_INFO_MESSAGE: ${{github.event.pull_request.title}}
+          COMMIT_INFO_SHA: ${{github.event.pull_request.head.sha}}
+  cypress-run-firefox:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.9]
+        containers: [1, 2]
+    services:
+      postgres:
+        image: postgres:14
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: csm_web_dev
+        ports: ["5432:5432"]
+        options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Install npm dependencies
+        run: |
+          npm ci
+      - name: Install Firefox 106
+        run: |
+          sudo wget --no-verbose -O /tmp/firefox.tar.bz2 https://download-installer.cdn.mozilla.net/pub/firefox/releases/106.0.2/linux-x86_64/en-US/firefox-106.0.2.tar.bz2 && \
+          sudo tar -C /opt -xjf /tmp/firefox.tar.bz2 && \
+          sudo rm /tmp/firefox.tar.bz2 && \
+          sudo ln -fs /opt/firefox/firefox /usr/bin/firefox
+      - name: Run Cypress
+        uses: cypress-io/github-action@v4
+        with:
+          record: true
+          build: npm run build
+          start: python csm_web/manage.py runserver
+          wait-on: http://localhost:8000
+          browser: firefox
+          parallel: true
+          group: Tests on Firefox 106
+        env:
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+          DJANGO_ENV: dev
+          POSTGRES_PASSWORD: postgres
+          CYPRESS_RECORD_KEY: ${{ secrets.CYPRESS_RECORD_KEY }}
+          # pass GitHub token to allow accurately detecting a build vs a re-run build
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # better cypress run titles
+          COMMIT_INFO_MESSAGE: ${{github.event.pull_request.title}}
+          COMMIT_INFO_SHA: ${{github.event.pull_request.head.sha}}

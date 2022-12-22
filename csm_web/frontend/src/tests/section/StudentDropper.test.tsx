@@ -3,6 +3,7 @@ import { act, fireEvent, render, waitFor } from "@testing-library/react";
 import React from "react";
 import StudentDropper from "../../components/section/StudentDropper";
 import * as api from "../../utils/api";
+import { testQueryClientWrapper } from "../utils";
 
 // mock modal
 jest.mock("../../components/Modal", () => {
@@ -21,14 +22,16 @@ jest.mock("../../components/Modal", () => {
 
 describe("StudentDropper", () => {
   it("should render correctly without interaction", () => {
-    const reloadSection = jest.fn();
-    const component = render(<StudentDropper id={1} name="John Doe" reloadSection={reloadSection} />);
+    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" />, {
+      wrapper: testQueryClientWrapper
+    });
     expect(component.asFragment()).toMatchSnapshot();
   });
 
   it("should render modal correctly after clicking x", () => {
-    const reloadSection = jest.fn();
-    const component = render(<StudentDropper id={1} name="Test Student" reloadSection={reloadSection} />);
+    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" />, {
+      wrapper: testQueryClientWrapper
+    });
 
     act(() => {
       // click drop button to bring up modal
@@ -39,8 +42,9 @@ describe("StudentDropper", () => {
   });
 
   it("should close modal correctly", () => {
-    const reloadSection = jest.fn();
-    const component = render(<StudentDropper id={1} name="Test Student" reloadSection={reloadSection} />);
+    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" />, {
+      wrapper: testQueryClientWrapper
+    });
 
     act(() => {
       // click drop button to bring up modal
@@ -68,8 +72,9 @@ describe("StudentDropper", () => {
       return null as any;
     });
 
-    const reloadSection = jest.fn();
-    const component = render(<StudentDropper id={1} name="Test Student" reloadSection={reloadSection} />);
+    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" />, {
+      wrapper: testQueryClientWrapper
+    });
 
     // click drop button to bring up modal
     act(() => {
@@ -108,7 +113,6 @@ describe("StudentDropper", () => {
     // wait for fetch to finish
     waitFor(() => {
       expect(spyFetchWithMethod).toHaveBeenCalled();
-      expect(reloadSection).toHaveBeenCalled();
     });
   });
 
@@ -125,8 +129,9 @@ describe("StudentDropper", () => {
       return null as any;
     });
 
-    const reloadSection = jest.fn();
-    const component = render(<StudentDropper id={1} name="Test Student" reloadSection={reloadSection} />);
+    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" />, {
+      wrapper: testQueryClientWrapper
+    });
 
     // click drop button to bring up modal
     act(() => {
@@ -179,7 +184,6 @@ describe("StudentDropper", () => {
     // wait for fetch to finish
     waitFor(() => {
       expect(spyFetchWithMethod).toHaveBeenCalled();
-      expect(reloadSection).toHaveBeenCalled();
     });
   });
 });
