@@ -189,10 +189,13 @@ function StudentSectionAttendance({ associatedProfileId }: StudentSectionAttenda
           // }}
           onChange={handleSelectedDateChange}
         >
-          {Object.keys(attendances)
+          {attendances
+            .map(({ date }) => date)
             .sort(dateSort)
             .map((date, idx) => (
-              <option key={idx} value={date}></option>
+              <option key={idx} value={date}>
+                {date}
+              </option>
             ))}
         </select>
         <input className="word-of-the-day-input" type="text" placeholder="Word of the Day"></input>
