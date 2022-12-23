@@ -5,14 +5,17 @@ from django.utils import timezone
 from scheduler.factories import StudentFactory
 from scheduler.models import Coordinator, Course, Mentor, Section, Spacetime, User
 
-MINUS_5 = timezone.now() - datetime.timedelta(days=5)
-MINUS_3 = timezone.now() - datetime.timedelta(days=3)
-MINUS_1 = timezone.now() - datetime.timedelta(days=1)
-PLUS_3 = timezone.now() + datetime.timedelta(days=3)
-PLUS_5 = timezone.now() + datetime.timedelta(days=5)
-PLUS_10 = timezone.now() + datetime.timedelta(days=10)
-PLUS_15 = timezone.now() + datetime.timedelta(days=15)
-PLUS_30 = timezone.now() + datetime.timedelta(days=30)
+NOW = timezone.now().astimezone(timezone.get_default_timezone())
+
+
+def now_minus(days: int):
+    """Get date `days` prior to now"""
+    return NOW - datetime.timedelta(days=days)
+
+
+def now_plus(days: int):
+    """Get date `days` after now"""
+    return NOW + datetime.timedelta(days=days)
 
 
 def _setup(cs61a):
@@ -139,10 +142,10 @@ def _setup_course_open():
         name="CS61A",
         title="Structure and Interpretation of Computer Programs",
         permitted_absences=2,
-        enrollment_start=MINUS_5,
-        section_start=MINUS_1,
-        enrollment_end=PLUS_15,
-        valid_until=PLUS_30,
+        enrollment_start=now_minus(5),
+        section_start=now_minus(1),
+        enrollment_end=now_plus(15),
+        valid_until=now_plus(30),
     )
 
 
@@ -151,10 +154,10 @@ def _setup_course_closed():
         name="CS61A",
         title="Structure and Interpretation of Computer Programs",
         permitted_absences=2,
-        enrollment_start=PLUS_5,
-        section_start=PLUS_10,
-        enrollment_end=PLUS_15,
-        valid_until=PLUS_30,
+        enrollment_start=now_plus(5),
+        section_start=now_plus(10),
+        enrollment_end=now_plus(15),
+        valid_until=now_plus(30),
     )
 
 
@@ -196,7 +199,7 @@ def coord_setup_closed_priority():
     coord_setup_closed()
 
     demo_user = User.objects.get(username="demo_user")
-    demo_user.priority_enrollment = PLUS_3
+    demo_user.priority_enrollment = now_plus(3)
     demo_user.save()
 
 
@@ -229,7 +232,7 @@ def student_setup_open_priority():
     student_setup_closed()
 
     demo_user = User.objects.get(username="demo_user")
-    demo_user.priority_enrollment = MINUS_3
+    demo_user.priority_enrollment = now_minus(3)
     demo_user.save()
 
 
@@ -240,5 +243,5 @@ def student_setup_closed_priority():
     student_setup_closed()
 
     demo_user = User.objects.get(username="demo_user")
-    demo_user.priority_enrollment = PLUS_3
+    demo_user.priority_enrollment = now_plus(3)
     demo_user.save()

@@ -1,9 +1,14 @@
 /// <reference types="cypress" />
 
+interface LoginInfo {
+  username: string;
+  password: string;
+}
+
 /**
  * Headless login
  */
-Cypress.Commands.add("login", () => {
+Cypress.Commands.add("login", (loginInfo: LoginInfo = { username: "demo_user", password: "pass" }) => {
   cy.request("/admin/login/")
     .its("headers")
     .then(headers => {
@@ -14,8 +19,7 @@ Cypress.Commands.add("login", () => {
         url: "/admin/login/",
         form: true,
         body: {
-          username: "demo_user",
-          password: "pass",
+          ...loginInfo,
           csrfmiddlewaretoken: csrfToken
         }
       });

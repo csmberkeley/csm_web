@@ -1,10 +1,12 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.utils import timezone
+from scheduler.models import Attendance, SectionOccurrence
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+import datetime
 
 from .utils import log_str, logger, get_object_or_error
 from ..models import Student
@@ -93,3 +95,4 @@ class StudentViewSet(viewsets.GenericViewSet):
             f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, errors: {serializer.errors}"
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+

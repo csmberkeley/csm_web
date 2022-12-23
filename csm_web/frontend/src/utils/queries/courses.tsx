@@ -168,3 +168,41 @@ export const useCourseDeleteWhitelistMutation = (
   handleError(mutationResult);
   return mutationResult;
 };
+
+interface CourseSettingsMutationBody {
+  // limit as duration in the form '[DD] [HH:[MM:]]ss[.uuuuuu]'
+  // if null, treated in backend as no limit
+  wordOfTheDayLimit: string | null;
+}
+
+/**
+ * Hook to update course settings.
+ */
+export const useCourseSettingsMutation = (
+  courseId: number
+): UseMutationResult<Course, ServerError, CourseSettingsMutationBody> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<Course, Error, CourseSettingsMutationBody>(
+    async (body: CourseSettingsMutationBody) => {
+      if (isNaN(courseId)) {
+        throw new PermissionError("Invalid course id");
+      }
+      const response = await fetchWithMethod(`/courses/${courseId}/config`, HTTP_METHODS.PUT, body);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to update course settings for course ${courseId}`);
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["courses"]);
+      },
+      retry: handleRetry
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};

@@ -112,6 +112,33 @@ export const useStudentAttendances = (studentId: number): UseQueryResult<Attenda
   return queryResult;
 };
 
+interface WordOfTheDayResponse {
+  id: number; // section occurrence id
+  wordOfTheDay: string;
+}
+
+export const useWordOfTheDay = (sectionId: number): UseQueryResult<WordOfTheDayResponse[], ServerError> => {
+  const queryResult = useQuery<WordOfTheDayResponse[], Error>(
+    ["wordoftheday", sectionId],
+    async () => {
+      if (isNaN(sectionId)) {
+        throw new PermissionError("Invalid section id");
+      }
+      const response = await fetchNormalized(`/sections/${sectionId}/wotd`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to fetch section ${sectionId} word of the day`);
+      }
+    },
+    { retry: handleRetry }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+
 /* ===== Mutations ===== */
 
 export interface UpdateStudentAttendanceBody {
@@ -161,6 +188,89 @@ export const useUpdateStudentAttendancesMutation = (
     }
   );
   handleError(mutationResult);
+  return mutationResult;
+};
+
+interface UpdateWordOfTheDayMutationBody {
+  sectionOccurrenceId: number;
+  wordOfTheDay: string;
+}
+
+/**
+ * Hook to update the word of the day for mentors.
+ *
+ * Invalidates any existing query for the word of the day.
+ */
+export const useUpdateWordOfTheDayMutation = (
+  sectionId: number
+): UseMutationResult<void, ServerError, UpdateWordOfTheDayMutationBody> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, Error, UpdateWordOfTheDayMutationBody>(
+    async (body: UpdateWordOfTheDayMutationBody) => {
+      if (isNaN(sectionId)) {
+        throw new PermissionError("Invalid section id");
+      }
+      const response = await fetchWithMethod(`sections/${sectionId}/wotd`, HTTP_METHODS.PUT, body);
+      if (response.ok) {
+        return;
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to update word of the day for section ${sectionId}`);
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["wordoftheday", sectionId]);
+      }
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
+
+interface StudentSubmitWordOfTheDayMutationBody {
+  attendanceId: number;
+  wordOfTheDay: string;
+}
+
+interface StudentSubmitWordOfTheDayMutationResponse {
+  detail: string;
+}
+
+/**
+ * Hook to submit the word of the day for students.
+ *
+ * Invalidates any existing query for the word of the day.
+ */
+export const useStudentSubmitWordOfTheDayMutation = (
+  sectionId: number
+): UseMutationResult<void, StudentSubmitWordOfTheDayMutationResponse, StudentSubmitWordOfTheDayMutationBody> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<
+    void,
+    StudentSubmitWordOfTheDayMutationResponse,
+    StudentSubmitWordOfTheDayMutationBody
+  >(
+    async (body: StudentSubmitWordOfTheDayMutationBody) => {
+      if (isNaN(sectionId)) {
+        throw new PermissionError("Invalid section id");
+      }
+      const response = await fetchWithMethod(`sections/${sectionId}/wotd`, HTTP_METHODS.PUT, body);
+      if (response.ok) {
+        return;
+      } else {
+        throw await response.json();
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["wordoftheday", sectionId]);
+      }
+    }
+  );
+
+  // handle error in component
   return mutationResult;
 };
 

@@ -7,6 +7,7 @@ import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
 import { SectionCard } from "./SectionCard";
 import { WhitelistModal } from "./WhitelistModal";
+import { SettingsModal } from "./SettingsModal";
 
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
 
@@ -23,7 +24,8 @@ const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
 const COURSE_MODAL_TYPE = Object.freeze({
   exportData: "csv",
   createSection: "mksec",
-  whitelist: "whitelist"
+  whitelist: "whitelist",
+  settings: "settings"
 });
 
 interface CourseProps {
@@ -88,6 +90,8 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
       );
     } else if (whichModal == COURSE_MODAL_TYPE.whitelist) {
       return <WhitelistModal course={course} closeModal={() => setShowModal(false)} />;
+    } else if (whichModal == COURSE_MODAL_TYPE.settings) {
+      return <SettingsModal courseId={Number(courseId)} closeModal={() => setShowModal(false)} />;
     }
     return null;
   };
@@ -177,6 +181,15 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
               }}
             >
               Export Data
+            </button>
+            <button
+              className="csm-btn course-settings-btn"
+              onClick={() => {
+                setShowModal(true);
+                setWhichModal(COURSE_MODAL_TYPE.settings);
+              }}
+            >
+              Settings
             </button>
             {course.isRestricted && (
               <button
