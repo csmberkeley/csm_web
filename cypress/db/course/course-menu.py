@@ -4,15 +4,17 @@ from django.core.management import call_command
 from django.utils import timezone
 from scheduler.models import Course, Mentor, Section, Spacetime, User
 
-MINUS_15 = timezone.now() - datetime.timedelta(days=15)
-MINUS_10 = timezone.now() - datetime.timedelta(days=10)
-PLUS_10 = timezone.now() + datetime.timedelta(days=10)
-PLUS_15 = timezone.now() + datetime.timedelta(days=15)
-PLUS_20 = timezone.now() + datetime.timedelta(days=20)
-PLUS_25 = timezone.now() + datetime.timedelta(days=25)
-# reserved for priority enrollment
-MINUS_5 = timezone.now() - datetime.timedelta(days=5)
-PLUS_5 = timezone.now() + datetime.timedelta(days=5)
+NOW = timezone.now().astimezone(timezone.get_default_timezone())
+
+
+def now_minus(days: int):
+    """Get date `days` prior to now"""
+    return NOW - datetime.timedelta(days=days)
+
+
+def now_plus(days: int):
+    """Get date `days` after now"""
+    return NOW + datetime.timedelta(days=days)
 
 
 def setup():
@@ -26,20 +28,20 @@ def setup():
         title="Structure and Interpretation of Computer Programs",
         permitted_absences=2,
         # NOW
-        enrollment_start=PLUS_10,
-        section_start=PLUS_15,
-        enrollment_end=PLUS_20,
-        valid_until=PLUS_25,
+        enrollment_start=now_plus(10),
+        section_start=now_plus(15),
+        enrollment_end=now_plus(20),
+        valid_until=now_plus(25),
     )
     # start < NOW < end
     Course.objects.create(
         name="CS61B",
         title="Data Structures",
-        enrollment_start=MINUS_15,
-        section_start=MINUS_10,
+        enrollment_start=now_minus(15),
+        section_start=now_minus(10),
         # NOW
-        enrollment_end=PLUS_10,
-        valid_until=PLUS_15,
+        enrollment_end=now_plus(10),
+        valid_until=now_plus(15),
         permitted_absences=2,
     )
     # start < end < NOW
@@ -47,11 +49,11 @@ def setup():
         name="CS61C",
         title="Machine Structures",
         permitted_absences=2,
-        enrollment_start=MINUS_15,
-        section_start=MINUS_10,
-        enrollment_end=MINUS_10,
+        enrollment_start=now_minus(15),
+        section_start=now_minus(10),
+        enrollment_end=now_minus(10),
         # NOW
-        valid_until=PLUS_15,
+        valid_until=now_plus(15),
     )
 
     mentor_1_user = User.objects.create(
@@ -88,7 +90,7 @@ def setup_priority_enrollment_past():
     """
     setup()
     user = User.objects.get(username="demo_user")
-    user.priority_enrollment = MINUS_5
+    user.priority_enrollment = now_minus(5)
     user.save()
 
 
@@ -98,5 +100,5 @@ def setup_priority_enrollment_future():
     """
     setup()
     user = User.objects.get(username="demo_user")
-    user.priority_enrollment = PLUS_5
+    user.priority_enrollment = now_plus(5)
     user.save()

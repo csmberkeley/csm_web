@@ -2,14 +2,12 @@ before(() => {
   cy.initDB();
 });
 
-const STUDENT_LIST = [/A Student/i, /B Student/i, /C Student/i, /D Student/i];
-
 /**
  * tests for accessing and viewing section details
  */
 describe("section details accessibility", () => {
   it("should be able to navigate to and view section details", () => {
-    cy.setupDB("mentor-section", "setup_mentor_section");
+    cy.setupDB("section/mentor-section", "setup_mentor_section");
     cy.login();
     cy.visit("/");
 
@@ -85,7 +83,7 @@ describe("section details accessibility", () => {
  */
 describe("attendances", () => {
   it("should be able to navigate to and view section attendances", () => {
-    cy.setupDB("mentor-section", "setup_mentor_section");
+    cy.setupDB("section/mentor-section", "setup_mentor_section");
     cy.login();
     cy.visit("/sections/1");
 
@@ -116,14 +114,14 @@ describe("attendances", () => {
 
   context("functional checks", () => {
     beforeEach(() => {
-      cy.setupDB("mentor-section", "setup_mentor_section", { mutate: true });
+      cy.setupDB("section/mentor-section", "setup_mentor_section", { mutate: true });
       cy.login();
     });
 
     it("should be able to mark all students as present", () => {
-      cy.visit("/sections/1/attendance");
       cy.intercept({ method: "GET", url: "/api/sections/1/attendance" }).as("section-attendance");
       cy.intercept({ method: "PUT", url: "/api/students/*/attendances" }).as("student-attendance");
+      cy.visit("/sections/1/attendance");
 
       // all attendances should start blank
       cy.get("#mentor-attendance-table select")
@@ -158,9 +156,9 @@ describe("attendances", () => {
     });
 
     it("should be able to mark a single student as absent", () => {
-      cy.visit("/sections/1/attendance");
       cy.intercept("/api/students/*/attendances").as("student-attendance");
       cy.intercept("/api/sections/1/attendance").as("section-attendance");
+      cy.visit("/sections/1/attendance");
 
       // all attendances should start blank
       cy.get("#mentor-attendance-table select")
@@ -200,459 +198,121 @@ describe("attendances", () => {
   });
 });
 
-/**
- * tests for modifying students in the section
- */
-describe("modifying students", () => {
-  const _commonSetup = () => {
+describe("word of the day", () => {
+  const WORD_OF_THE_DAY = "wordoftheday";
+
+  beforeEach(() => {
+    cy.setupDB("section/mentor-section", "setup_mentor_section", { mutate: true });
+
+    cy.intercept({ method: "GET", url: "/api/sections/1/wotd" }).as("get-wotd");
+    cy.intercept({ method: "PUT", url: "/api/sections/1/wotd" }).as("put-wotd");
+
     cy.login();
-    cy.visit("/sections/1");
-
-    cy.intercept({ method: "PUT", url: "/api/sections/1/students" }).as("add-student");
-    cy.intercept({ method: "GET", url: "/api/sections/1/students" }).as("section-students");
-    cy.intercept({ method: "PATCH", url: "/api/students/*/drop" }).as("drop-student");
-  };
-
-  const setupWithMutate = () => {
-    cy.setupDB("mentor-section", "setup_multiple_mentor_sections", { mutate: true });
-    _commonSetup();
-  };
-
-  const setupFullSection = () => {
-    cy.setupDB("mentor-section", "setup_full_section", { mutate: true });
-    _commonSetup();
-  };
-
-  context("valid operations", () => {
-    it("should allow adding new student to section", () => {
-      setupWithMutate();
-
-      cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
-
-      cy.get(".coordinator-add-student-modal").within(() => {
-        // input new student email
-        cy.get(".coordinator-email-input").type("testuser1@berkeley.edu");
-
-        // submit
-        cy.get(".coordinator-email-input-submit").click();
-      });
-
-      // wait for request to finish
-      cy.wait("@add-student").its("response.statusCode").should("eq", 200);
-      cy.wait("@section-students");
-
-      // modal should be closed
-      cy.get(".coordinator-add-student-modal").should("not.exist");
-
-      // student should appear in the roster
-      cy.contains("#students-table span.student-info", /test user 1/i).should("be.visible");
-
-      // reload page
-      cy.reload();
-      cy.wait("@section-students");
-
-      // student should still appear in the roster
-      cy.contains("#students-table span.student-info", /test user 1/i).should("be.visible");
-    });
-
-    it("should allow adding new student associated with a new user", () => {
-      setupWithMutate();
-
-      cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
-
-      cy.get(".coordinator-add-student-modal").within(() => {
-        // input new student email
-        cy.get(".coordinator-email-input").type("newuser@berkeley.edu");
-
-        // submit
-        cy.get(".coordinator-email-input-submit").click();
-      });
-
-      // wait for request to finish
-      cy.wait("@add-student").its("response.statusCode").should("eq", 200);
-      cy.wait("@section-students");
-
-      // modal should be closed
-      cy.get(".coordinator-add-student-modal").should("not.exist");
-
-      // student should appear in the roster
-      cy.contains("#students-table span.student-info", /newuser@berkeley\.edu/i).should("be.visible");
-
-      // reload page
-      cy.reload();
-      cy.wait("@section-students");
-
-      // student should still appear in the roster
-      cy.contains("#students-table span.student-info", /newuser@berkeley\.edu/i).should("be.visible");
-    });
-
-    it("should allow dropping existing student", () => {
-      setupWithMutate();
-
-      cy.wait("@section-students");
-
-      // drop student
-      cy.get("#students-table .student-dropper")
-        .first()
-        .parent() // get first table row
-        .within(() => {
-          cy.get(".student-info")
-            .invoke("text")
-            .should("match", /A Student/i);
-
-          cy.get(".student-dropper").click();
-        });
-
-      // perform the drop
-      cy.get(".studentDropper").within(() => {
-        cy.get("input#drop").click();
-        cy.get(".studentDropperSubmit").click();
-      });
-
-      cy.wait("@drop-student").its("response.statusCode").should("eq", 204);
-      cy.wait("@section-students");
-
-      // modal should disappear
-      cy.get(".studentDropper").should("not.exist");
-      // student should not appear in the list
-      cy.contains("#students-table .student-info", /A Student/i).should("not.exist");
-    });
-
-    it("should do nothing if no emails are given", () => {
-      // potential mutation if this fails
-      setupWithMutate();
-
-      cy.wait("@section-students");
-
-      // expected list of students (in order)
-      cy.get("#students-table span.student-info")
-        .should("have.length", 4)
-        .each(($text, idx) => {
-          expect($text.text()).to.match(STUDENT_LIST[idx]);
-        });
-
-      cy.get(".coordinator-email-modal-button").click();
-
-      cy.get(".coordinator-add-student-modal").within(() => {
-        cy.get(".coordinator-email-input-item").should("have.length", 1).get("[title='Remove']").click();
-        cy.get(".coordinator-email-input-submit").click();
-      });
-
-      cy.get(".coordinator-add-student-modal").should("not.exist");
-
-      // should have the same list of students
-      cy.get("#students-table span.student-info")
-        .should("have.length", 4)
-        .each(($text, idx) => {
-          expect($text.text()).to.match(STUDENT_LIST[idx]);
-        });
-    });
+    cy.visit("/sections/1/attendance");
   });
-  context("invalid operations", () => {
-    it("should retry when adding mentor for another section", () => {
-      // possible to mutate if fails
-      setupWithMutate();
-      const USERNAME = "user1@berkeley.edu";
 
-      cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+  it("should set word of the day", () => {
+    cy.wait("@get-wotd");
 
-      cy.get(".coordinator-add-student-modal")
-        .within(() => {
-          cy.get(".coordinator-email-input").type(USERNAME);
-          cy.get(".coordinator-email-input-submit").click();
+    cy.get("#word-of-the-day-container").within(() => {
+      cy.contains(".word-of-the-day-title", /word of the day/i).should("be.visible");
+      cy.contains(".word-of-the-day-status", /unselected/i).should("be.visible");
 
-          // wait for request; should fail
-          cy.wait("@add-student").its("response.statusCode").should("eq", 422);
+      // ensure no word is selected currently
+      cy.get(".word-of-the-day-input").invoke("val").should("be.empty");
+      cy.get(".word-of-the-day-submit").should("be.disabled");
 
-          cy.contains(".coordinator-email-response-container", /section conflict/i)
-            .within(() => {
-              // should display section conflict
-              cy.contains(".coordinator-email-response-status-conflict", /section conflict/i).should("be.visible");
+      // input a custom word of the day
+      cy.get(".word-of-the-day-input").type(WORD_OF_THE_DAY);
+      cy.get(".word-of-the-day-submit").click();
 
-              cy.contains(".coordinator-email-response-item", USERNAME)
-                .within(() => {
-                  // check text objects
-                  cy.contains("span", USERNAME).should("be.visible");
-                  cy.contains("div", /User is already a mentor for the course/i).should("be.visible");
-                  cy.get("input[type='checkbox'][value='DROP']").should("have.length", 1).should("be.disabled");
+      // wait for submission to process
+      cy.wait("@put-wotd");
 
-                  // remove email
-                  cy.get("span.inline-plus-sign").click().should("not.exist");
-                })
-                .should("not.exist"); // should disappear after click
-            })
-            .should("not.exist"); // should disappear after click
-
-          cy.contains(".coordinator-email-input-submit", /retry/i).click();
-          // no request, so no wait
-        })
-        .should("not.exist"); // should disappear after click
-
-      // students should stay the same
-      cy.get("#students-table span.student-info")
-        .should("have.length", 4)
-        .each(($text, idx) => {
-          expect($text.text()).to.match(STUDENT_LIST[idx]);
-        });
+      // input should update
+      cy.wait("@get-wotd");
+      cy.get(".word-of-the-day-input").invoke("val").should("eq", WORD_OF_THE_DAY);
+      cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
     });
 
-    it("should retry when adding student in another section", () => {
-      setupWithMutate();
-      const USERNAME = "user2@berkeley.edu";
+    // reload the page and ensure the submission is still there
+    cy.reload();
+    cy.wait("@get-wotd");
 
-      cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+    cy.get("#word-of-the-day-container").within(() => {
+      cy.contains(".word-of-the-day-title", /word of the day/i).should("be.visible");
+      cy.contains(".word-of-the-day-status", /selected/i).should("be.visible");
 
-      cy.get(".coordinator-add-student-modal")
-        .within(() => {
-          cy.get(".coordinator-email-input").type(USERNAME);
-          cy.get(".coordinator-email-input-submit").click();
+      // ensure word is retrieved correctly
+      cy.get(".word-of-the-day-input").invoke("val").should("eq", WORD_OF_THE_DAY);
+      cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
 
-          // wait for request; should fail
-          cy.wait("@add-student").its("response.statusCode").should("eq", 422);
-
-          cy.contains(".coordinator-email-response-container", /section conflict/i).within(() => {
-            // should display section conflict
-            cy.contains(".coordinator-email-response-status-conflict", /section conflict/i).should("be.visible");
-
-            cy.contains(".coordinator-email-response-item", USERNAME).within(() => {
-              // check text objects
-              cy.contains("span", USERNAME).should("be.visible");
-              cy.contains("div", /conflict: user one/i)
-                .should("be.visible")
-                .find("a")
-                .invoke("attr", "href")
-                .should("eq", "/sections/2");
-
-              // drop student from other section
-              cy.get("input[type='checkbox'][value='DROP']").should("have.length", 1).should("not.be.disabled").click();
-            });
-          });
-
-          cy.contains(".coordinator-email-input-submit", /retry/i).click();
-          cy.wait("@add-student").its("response.statusCode").should("eq", 200);
-        })
-        .should("not.exist"); // should disappear after click
-
-      cy.wait("@section-students");
-
-      // one more student should appear
-      cy.get("#students-table span.student-info")
-        .should("have.length", 5)
-        .each(($text, idx) => {
-          if (idx == 4) {
-            // should be at the end
-            expect($text.text()).to.match(/User Two/i);
-          } else {
-            expect($text.text()).to.match(STUDENT_LIST[idx]);
-          }
+      // change to a random word of the day
+      cy.get(".word-of-the-day-random").click();
+      cy.get(".word-of-the-day-input")
+        .invoke("val")
+        .then((value: string) => {
+          expect(value).to.not.be.eq(WORD_OF_THE_DAY);
+          cy.wrap(value).as("newWord");
         });
+      cy.get(".word-of-the-day-submit").click();
+
+      // wait for submission to process
+      cy.wait("@put-wotd");
+
+      // input should update
+      cy.wait("@get-wotd");
+      cy.get("@newWord").then(newWord => {
+        cy.get(".word-of-the-day-input").invoke("val").should("eq", newWord);
+      });
+      cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
     });
 
-    it("should retry when adding banned student", () => {
-      setupWithMutate();
-      const USERNAME = "banned_student@berkeley.edu";
+    // reload the page and ensure the submission is still there
+    cy.reload();
+    cy.wait("@get-wotd");
 
-      cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+    cy.get("#word-of-the-day-container").within(() => {
+      cy.contains(".word-of-the-day-title", /word of the day/i).should("be.visible");
+      cy.contains(".word-of-the-day-status", /selected/i).should("be.visible");
 
-      cy.get(".coordinator-add-student-modal")
-        .within(() => {
-          cy.get(".coordinator-email-input").type(USERNAME);
-          cy.get(".coordinator-email-input-submit").click();
-
-          // wait for request; should fail
-          cy.wait("@add-student").its("response.statusCode").should("eq", 422);
-
-          cy.contains(".coordinator-email-response-container", /student banned/i).within(() => {
-            cy.contains(".coordinator-email-response-status-banned", /student banned/i).should("be.visible");
-
-            cy.contains(".coordinator-email-response-item", USERNAME).within(() => {
-              // get actual text object
-              cy.contains("span", USERNAME).should("be.visible");
-              // unban and enroll student
-              cy.get("input[type='radio'][value='UNBAN_ENROLL']")
-                .should("have.length", 1)
-                .should("not.be.disabled")
-                .click();
-            });
-          });
-
-          cy.contains(".coordinator-email-input-submit", /retry/i).click();
-          cy.wait("@add-student").its("response.statusCode").should("eq", 200);
-        })
-        .should("not.exist"); // should disappear after click
-
-      cy.wait("@section-students");
-
-      // one more student should appear
-      const expected_list = [...STUDENT_LIST.slice(0, 2), /banned student/i, ...STUDENT_LIST.slice(2)];
-      cy.get("#students-table span.student-info")
-        .should("have.length", 5)
-        .each(($text, idx) => {
-          expect($text.text()).to.match(expected_list[idx]);
-        });
+      // ensure word is retrieved correctly
+      cy.get("@newWord").then(newWord => {
+        cy.get(".word-of-the-day-input").invoke("val").should("eq", newWord);
+      });
+      cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
     });
 
-    it("should retry when section is at capacity", () => {
-      setupFullSection();
+    // go to next day and should be unselected
+    cy.get("#attendance-date-tabs-container > :not(.active)")
+      .should("have.length", 1)
+      .click()
+      .should("have.class", "active");
 
-      cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+    cy.get("#word-of-the-day-container").within(() => {
+      cy.contains(".word-of-the-day-title", /word of the day/i).should("be.visible");
+      cy.contains(".word-of-the-day-status", /unselected/i).should("be.visible");
 
-      cy.get(".coordinator-add-student-modal")
-        .within(() => {
-          cy.get(".coordinator-email-input").type("testuser1@berkeley.edu");
-          cy.get(".coordinator-email-input-submit").click();
-
-          // wait for request; should fail
-          cy.wait("@add-student").its("response.statusCode").should("eq", 422);
-
-          cy.contains(".coordinator-email-response-capacity-container", /section capacity exceeded/i).within(() => {
-            // should display capacity exceeded
-            cy.contains(".coordinator-email-response-capacity", /section capacity exceeded/i).should("be.visible");
-
-            cy.get("input[type='radio'][value='EXPAND']").click();
-          });
-
-          cy.contains(".coordinator-email-input-submit", /retry/i).click();
-          cy.wait("@add-student").its("response.statusCode").should("eq", 200);
-        })
-        .should("not.exist");
-
-      cy.wait("@section-students");
-
-      const expected_list = [...STUDENT_LIST, /E Student/i, /Test User 1/i];
-      cy.get("#students-table span.student-info")
-        .should("have.length", 6)
-        .each(($text, idx) => {
-          expect($text.text()).to.match(expected_list[idx]);
-        });
-
-      // meta card should have new capacity
-      cy.get(".section-detail-info-card.meta")
-        .should("be.visible")
-        .find(".section-detail-info-card-contents")
-        .within(() => {
-          cy.contains(".meta-field", /capacity/i)
-            .parent()
-            .invoke("text")
-            .should("match", /6$/i);
-        });
+      // ensure no word is selected currently
+      cy.get(".word-of-the-day-input").invoke("val").should("be.empty");
+      cy.get(".word-of-the-day-submit").should("be.disabled");
     });
 
-    it("should retry with multiple kinds of errors", () => {
-      setupWithMutate();
+    // switch back and it should be selected again
+    cy.get("#attendance-date-tabs-container > :not(.active)")
+      .should("have.length", 1)
+      .click()
+      .should("have.class", "active");
 
-      cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+    cy.get("#word-of-the-day-container").within(() => {
+      cy.contains(".word-of-the-day-title", /word of the day/i).should("be.visible");
+      cy.contains(".word-of-the-day-status", /selected/i).should("be.visible");
 
-      cy.get(".coordinator-add-student-modal")
-        .within(() => {
-          // valid user
-          cy.get(".coordinator-email-input").last().type("testuser1@berkeley.edu");
-          cy.contains(".coordinator-email-input-add", /add email/i)
-            .focus()
-            .click();
-          // mentor for another section
-          cy.get(".coordinator-email-input").last().type("user1@berkeley.edu");
-          cy.contains(".coordinator-email-input-add", /add email/i).click();
-          // conflicting section
-          cy.get(".coordinator-email-input").last().type("user2@berkeley.edu");
-          cy.contains(".coordinator-email-input-add", /add email/i).click();
-          // banned user
-          cy.get(".coordinator-email-input").last().type("banned_student@berkeley.edu");
-
-          // submit and wait for request; should fail
-          cy.get(".coordinator-email-input-submit").click();
-          cy.wait("@add-student").its("response.statusCode").should("eq", 422);
-
-          cy.contains(".coordinator-email-response-container", /section conflict/i).within(() => {
-            // should display section conflict
-            cy.contains(".coordinator-email-response-status-conflict", /section conflict/i).should("be.visible");
-
-            // conflicting section
-            cy.contains(".coordinator-email-response-item", "user1@berkeley.edu").within(() => {
-              // check text objects
-              cy.contains("span", "user1@berkeley.edu").should("be.visible");
-              cy.contains("div", /User is already a mentor for the course/i).should("be.visible");
-              cy.get("input[type='checkbox'][value='DROP']").should("have.length", 1).should("be.disabled");
-
-              // remove email
-              cy.get("span.inline-plus-sign").click().should("not.exist");
-            });
-
-            // mentor for another section
-            cy.contains(".coordinator-email-response-item", "user2@berkeley.edu").within(() => {
-              // get actual text object
-              cy.contains("span", "user2@berkeley.edu").should("be.visible");
-              // check conflicting section link
-              cy.contains("div", /conflict: user one/i)
-                .should("be.visible")
-                .find("a")
-                .invoke("attr", "href")
-                .should("eq", "/sections/2");
-
-              // drop student from other section
-              cy.get("input[type='checkbox'][value='DROP']").should("have.length", 1).should("not.be.disabled").click();
-            });
-          });
-
-          cy.contains(".coordinator-email-response-container", /student banned/i).within(() => {
-            // should display section conflict
-            cy.contains(".coordinator-email-response-status-banned", /student banned/i).should("be.visible");
-
-            cy.contains(".coordinator-email-response-item", "banned_student@berkeley.edu").within(() => {
-              // get actual text object
-              cy.contains("span", "banned_student@berkeley.edu").should("be.visible");
-              // unban and enroll student
-              cy.get("input[type='radio'][value='UNBAN_ENROLL']")
-                .should("have.length", 1)
-                .should("not.be.disabled")
-                .click();
-            });
-          });
-
-          // valid user
-          cy.contains(".coordinator-email-response-container", /ok/i).within(() => {
-            cy.contains(".coordinator-email-response-status-ok", /ok/i).should("be.visible");
-            // not visible but should have visible text
-            cy.contains(".coordinator-email-response-item span", "testuser1@berkeley.edu").should("exist");
-          });
-
-          cy.contains(".coordinator-email-response-capacity-container", /section capacity exceeded/i).within(() => {
-            // should display capacity exceeded
-            cy.contains(".coordinator-email-response-capacity", /section capacity exceeded/i).should("be.visible");
-
-            cy.get("input[type='radio'][value='EXPAND']").click();
-          });
-
-          // submit form
-          cy.get(".coordinator-email-input-submit").click();
-          cy.wait("@add-student");
-        })
-        .should("not.exist");
-
-      cy.wait("@section-students");
-
-      // check student list
-      const expected_list = [
-        /A Student/i,
-        /B Student/i,
-        /banned student/i,
-        /C Student/i,
-        /D Student/i,
-        /Test User 1/i,
-        /User Two/i
-      ];
-      cy.get("#students-table span.student-info")
-        .should("have.length", 7)
-        .each(($text, idx) => {
-          expect($text.text()).to.match(expected_list[idx]);
-        });
+      // ensure word is retrieved correctly
+      cy.get("@newWord").then(newWord => {
+        cy.get(".word-of-the-day-input").invoke("val").should("eq", newWord);
+      });
+      cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
     });
   });
 });

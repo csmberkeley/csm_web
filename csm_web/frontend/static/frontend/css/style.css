@@ -8,6 +8,8 @@
 @import url("./policies.css");
 @import url("./spacetime_delete.css");
 @import url("./whitelist_modal.css");
+@import url("./word-of-the-day.css");
+@import url("./course-settings.css");
 
 html,
 body {
@@ -1297,6 +1299,10 @@ table tbody tr:last-child > td {
 	border-radius: 6px;
 }
 
+.mentor-attendance-page > div {
+	margin-bottom: 40px;
+}
+
 #section-detail-sidebar {
 	display: flex;
 	flex-wrap: wrap;
@@ -1679,8 +1685,9 @@ table tbody tr:last-child > td {
 }
 
 #mentor-attendance {
-	max-width: 700px;
+	max-width: 500px;
 	padding-top: 0;
+	padding-bottom: 30px;
 	overflow: hidden;
 	border-top: none;
 }
@@ -1772,6 +1779,12 @@ table tbody tr:last-child > td {
 
 .mark-all-present-btn:hover {
 	color: var(--csm-green-darkened);
+}
+
+.mentor-attendance-page {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
 }
 
 /* Loading Spinner */

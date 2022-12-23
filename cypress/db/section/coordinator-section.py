@@ -1,9 +1,7 @@
 import datetime
-from typing import Literal, Union
 
 from django.core.management import call_command
 from django.utils import timezone
-from scheduler.factories import MentorFactory, StudentFactory, UserFactory
 from scheduler.models import (
     Attendance,
     Coordinator,
@@ -16,18 +14,20 @@ from scheduler.models import (
     User,
 )
 
-NOW = timezone.now()
+NOW = timezone.now().astimezone(timezone.get_default_timezone())
 
 
-def NOW_MINUS(days: int):
-    return timezone.now() - datetime.timedelta(days=days)
+def now_minus(days: int):
+    """Get date `days` prior to now"""
+    return NOW - datetime.timedelta(days=days)
 
 
-def NOW_PLUS(days: int):
-    return timezone.now() + datetime.timedelta(days=days)
+def now_plus(days: int):
+    """Get date `days` after now"""
+    return NOW + datetime.timedelta(days=days)
 
 
-def _setup_common(role: Union[Literal["mentor"], Literal["coordinator"]]):
+def _setup_common():
     call_command("createtestuser", silent=True)
 
     user = User.objects.get(username="demo_user")
@@ -35,25 +35,21 @@ def _setup_common(role: Union[Literal["mentor"], Literal["coordinator"]]):
         name="CS61A",
         title="Structure and Interpretation of Computer Programs",
         permitted_absences=2,
-        enrollment_start=NOW_MINUS(30),
-        section_start=NOW_MINUS(15),
-        enrollment_end=NOW_PLUS(15),
-        valid_until=NOW_PLUS(30),
+        enrollment_start=now_minus(30),
+        section_start=now_minus(15),
+        enrollment_end=now_plus(15),
+        valid_until=now_plus(30),
     )
 
-    if role == "mentor":
-        # create mentor
-        mentor = Mentor.objects.create(user=user, course=cs61a)
-    elif role == "coordinator":
-        # create coordinator
-        Coordinator.objects.create(user=user, course=cs61a)
-        mentor_user = User.objects.create(
-            username="testmentor",
-            email="testmentor@berkeley.edu",
-            first_name="Test",
-            last_name="Mentor",
-        )
-        mentor = Mentor.objects.create(user=mentor_user, course=cs61a)
+    # create coordinator
+    Coordinator.objects.create(user=user, course=cs61a)
+    mentor_user = User.objects.create(
+        username="testmentor",
+        email="testmentor@berkeley.edu",
+        first_name="Test",
+        last_name="Mentor",
+    )
+    mentor = Mentor.objects.create(user=mentor_user, course=cs61a)
 
     # create section
     section = Section.objects.create(
@@ -95,9 +91,10 @@ def _setup_common(role: Union[Literal["mentor"], Literal["coordinator"]]):
 
 
 def setup_mentor_section():
-    _setup_common(role="mentor")
+    """Demo user as a coordinator for a section"""
+    _setup_common()
 
-    user = User.objects.get(username="demo_user")
+    user = User.objects.get(username="testmentor")
     section = Section.objects.get(mentor__user=user)
     students = section.students.all()
 
@@ -107,7 +104,7 @@ def setup_mentor_section():
     # replace with fixed section occurrences and attendances
     so_now = SectionOccurrence.objects.create(section=section, date=NOW.date())
     so_tomorrow = SectionOccurrence.objects.create(
-        section=section, date=NOW_PLUS(1).date()
+        section=section, date=now_plus(1).date()
     )
 
     # create attendances for each student
@@ -117,12 +114,12 @@ def setup_mentor_section():
             presence="PR", student=student, sectionOccurrence=so_now
         )
         # blank for tomorrow
-        Attendance.objects.create(
-            student=student, sectionOccurrence=so_tomorrow)
+        Attendance.objects.create(student=student, sectionOccurrence=so_tomorrow)
 
 
 def setup_multiple_mentor_sections():
-    _setup_common(role="coordinator")
+    """Multiple mentor sections with demo user as coordinator"""
+    _setup_common()
 
     cs61a = Course.objects.get(name="CS61A")
 
@@ -166,6 +163,7 @@ def setup_multiple_mentor_sections():
 
 
 def setup_full_section():
+    """Multiple mentor sections, with target section being full"""
     setup_multiple_mentor_sections()
     cs61a = Course.objects.get(name="CS61A")
     section = Section.objects.get(mentor__user__username="testmentor")

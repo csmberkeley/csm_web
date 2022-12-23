@@ -4,15 +4,17 @@ from django.core.management import call_command
 from django.utils import timezone
 from scheduler.models import Course, Mentor, Section, Spacetime, User
 
+NOW = timezone.now().astimezone(timezone.get_default_timezone())
+
 
 def now_minus(days: int):
     """Get date `days` prior to now"""
-    return timezone.now() - datetime.timedelta(days=days)
+    return NOW - datetime.timedelta(days=days)
 
 
 def now_plus(days: int):
     """Get date `days` after now"""
-    return timezone.now() + datetime.timedelta(days=days)
+    return NOW + datetime.timedelta(days=days)
 
 
 def setup_unrelated_section(enrollment_open=True):

@@ -66,6 +66,7 @@ export interface Course {
   enrollmentOpen: boolean;
   userCanEnroll: boolean;
   isRestricted: boolean;
+  wordOfTheDayLimit: string;
 }
 
 export interface Student {
@@ -79,6 +80,8 @@ export interface Attendance {
   date: string;
   student: Student;
   presence: string;
+  occurrenceId: number;
+  wordOfTheDayDeadline: string;
 }
 
 export interface RawAttendance {
@@ -92,5 +95,6 @@ export interface RawAttendance {
     studentName: string;
     studentId: number;
     studentEmail: string;
+    wordOfTheDayDeadline: string;
   }>;
 }

@@ -10,7 +10,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        containers: [1, 2]
+        containers: [1, 2, 3, 4]
     services:
       postgres:
         image: postgres:14
@@ -65,7 +65,7 @@ jobs:
     strategy:
       matrix:
         python-version: [3.9]
-        containers: [1, 2]
+        containers: [1, 2, 3, 4]
     services:
       postgres:
         image: postgres:14

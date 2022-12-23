@@ -4,14 +4,12 @@ import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";
 import { Override, Spacetime } from "../../utils/types";
 import { useSection } from "../../utils/queries/sections";
-import { useQueryClient } from "@tanstack/react-query";
 import LoadingSpinner from "../LoadingSpinner";
 
 export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
 export default function Section(): React.ReactElement | null {
   const { id } = useParams();
-  const queryClient = useQueryClient();
 
   const { data: section, isSuccess: sectionLoaded, isError: sectionLoadError } = useSection(Number(id));
 
