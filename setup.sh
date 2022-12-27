@@ -11,7 +11,7 @@ then
 fi
 
 echo 'Beginning setup, this may take a minute or so...'
-sleep 1 # Give user time to read above message 
+sleep 1 # Give user time to read above message
 
 # Node and Python requirements
 npm i
@@ -88,10 +88,11 @@ function run() {
 npm run dev
 source .env # need the relevant env variables for django, but can't count on the Heroku CLI being installed
 python csm_web/manage.py migrate
-python csm_web/manage.py createtestdata --yes 
+python csm_web/manage.py createtestdata --yes
 
 echo "Installing pre-commit hook..."
-ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
+#ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
+pre-commit install
 
 target_version=$(sed 's/[^0-9.]//g' runtime.txt)
 installed_version=$(python3 --version | sed 's/[^0-9.]//g')

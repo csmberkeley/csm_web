@@ -3,9 +3,19 @@ profile = "black"
 
 [tool.pylint.MASTER]
 load-plugins = "pylint_django"
+#ignore-paths = [
+#    ".*/migrations", # ignore migration files
+#]
+# allow snake_case names of any length
+variable-rgx = "^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$"
+argument-rgx = "^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$"
+
 
 [tool.pylint."MESSAGES CONTROL"]
-disable = "design"
+# design: num. branches, num. lines, etc
+# similarities: simiar chunks of code
+# C0114: missing module docstring
+disable = "design,similarities,C0114"
 
 [tool.pylint.PYLINT_DJANGO]
 django-settings-module = "csm_web.settings"
