@@ -1,0 +1,4 @@
+# use common requirements
+-r common.txt
+
+### production requirements ###

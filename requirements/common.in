@@ -1,0 +1,28 @@
+### common requirements ###
+
+# aws
+boto3
+
+# miscellaneous
+networkx
+
+# Django
+Django
+django-csp
+django-extensions
+django-heroku
+django-postgres-extra
+django-storages
+djangorestframework
+djangorestframework-camel-case
+drf-nested-forms
+psycopg2-binary
+python-social-auth
+social-auth-app-django
+
+# heroku
+gunicorn
+sentry-sdk
+
+# factories
+factory-boy

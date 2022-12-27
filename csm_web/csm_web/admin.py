@@ -1,4 +1,5 @@
 from django.contrib.admin import AdminSite as DefaultAdminSite
+from django.utils.decorators import method_decorator
 from django.views.decorators.cache import never_cache
 from django.conf import settings
 from django.shortcuts import redirect
@@ -9,7 +10,7 @@ class AdminSite(DefaultAdminSite):
     site_title = "CSM Scheduler Admin"
     index_title = ""
 
-    @never_cache
+    @method_decorator(never_cache)
     def login(self, request, extra_context=None):
         if settings.DJANGO_ENV not in (settings.DEVELOPMENT, settings.STAGING):
             """

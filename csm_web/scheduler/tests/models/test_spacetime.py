@@ -19,7 +19,7 @@ from scheduler.factories import (
 
 import zoneinfo
 
-DEFAULT_TZ = zoneinfo.ZoneInfo(timezone.get_default_timezone().zone)
+DEFAULT_TZ = timezone.get_default_timezone()
 
 
 @pytest.fixture

@@ -1,0 +1,11 @@
+[tool.isort]
+profile = "black"
+
+[tool.pylint.MASTER]
+load-plugins = "pylint_django"
+
+[tool.pylint."MESSAGES CONTROL"]
+disable = "design"
+
+[tool.pylint.PYLINT_DJANGO]
+django-settings-module = "csm_web.settings"

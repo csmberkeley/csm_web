@@ -106,9 +106,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProfileSerializer(serializers.Serializer):
     class VariableSourceCourseField(serializers.Field):
-        def __init__(self, *args, **kwargs):
+        def __init__(self, **kwargs):
             self.target = kwargs.pop('target')
-            super().__init__(self, *args, **kwargs)
+            super().__init__(**kwargs)
 
         def to_representation(self, value):
             return getattr(value.course, self.target)

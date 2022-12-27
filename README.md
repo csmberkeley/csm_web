@@ -7,33 +7,31 @@ If you're unfamiliar with CSM and/or its web applications, check out [this repos
 ### Requirements
 We don't know what specific minimum version you would need for any of the following software, but the most recent version of any of the below should work.
 
-* Python 3.8
-  * [virtualenv](https://packaging.python.org/guides/installing-using-pip-and-virtualenv/) (`pip install virtualenv`)
-  * [autopep8](https://pypi.org/project/autopep8/) (`pip install autopep8`)
-* [npm](https://www.npmjs.com/get-npm)
-  * [prettier](https://prettier.io/) (`npm install -g prettier`)
-  * [eslint](https://eslint.org/) (`npm install -g eslint`; `npm install -g eslint-plugin-react`)
-* Postgresql (`brew install postgresql && brew services start postgresql`)
-* [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install) (`brew tap heroku/brew && brew install heroku`)
+* Python 3.9.13
+  * It is recommended that you use [`pyenv`](https://github.com/pyenv/pyenv) to manage python versions, so that you can use a consistent python version for `csm_web`, and another python version for your other projects.
+* `npm`
+  * It is recommended that you use [`nvm`](https://github.com/nvm-sh/nvm) to manage node/npm versions, so that you can use a consistent node/npm version for `csm_web`, and another verison for your other projects.
+* [PostgreSQL](https://www.postgresql.org/download/)
+* [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install)
   * Create an account on [Heroku](https://id.heroku.com/login) and [login](https://devcenter.heroku.com/articles/heroku-cli#getting-started)
-* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) (`brew install awscli`)
+* [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
   * We use an S3 bucket to store course resources. See [here](https://aws.amazon.com/s3/) to get started.
-* Log in to AWS CLI (`aws configure `) This will prompt an interactive session to enter login credentials.
+* Log in to AWS CLI (`aws configure`) This will prompt an interactive session to enter login credentials.
   * AWS Access Key ID: (ask tech chair)
   * AWS Secret Access Key: (ask tech chair)
-  * Default region name: us-east-1
-  * Default output format: json
+  * Default region name: `us-east-1`
+  * Default output format: `json`
 
 Other miscellaneous requirements will be installed by the commands below.
 
 ### Setup
-To ensure package version consistency and avoid polluting your global package installations, we highly recommend running the server with [virtualenv](https://virtualenv.pypa.io/en/stable/) (`pip install virtualenv`).
+To ensure package version consistency and avoid polluting your global package installations, we highly recommend running the server with a virtual environment. Python's standard library includes [venv](https://docs.python.org/3/library/venv.html), so you do not need to install anything new here.
 
-From a terminal in the top level of the project directory, run `python3 -m virtualenv venv`.
+From a terminal in the top level of the project directory, run `python3 -m venv venv`. This will initialize a new virtual environment in the `venv/` folder.
 
 To activate the environment, run `source venv/bin/activate`. You will need to run this command every time you open a new terminal.
 
-Finally, run `./setup.sh`. This will install additional requirements needed by the server, and set up some necessary environment variables.
+Finally, run `./setup.sh`. This will install additional requirements needed by the server, and set up some necessary environment variables. You should *not* be running this script after it has succeeded and set up the environment for the first time.
 
 ## Running
 To start the Django server, run `python csm_web/manage.py runserver` and visit `localhost:8000` in your browser.
@@ -72,7 +70,7 @@ Error: pg_config executable not found.
 ### How do I access the `/admin` page?
   * The `./setup.sh` script will create a user with username `demo_user` and password `pass`. You can access it by signing in through the admin page.
   * If you wish to assign admin permissions to an account that uses OAuth (such as your Berkeley email), run the following commands in the Django shell (accessible by running `python3 csm_web/manage.py shell`):
-```
+```py
 from scheduler.models import *
 # replace "my_username" with the prefix of your Berkeley email, as in "my_username@berkeley.edu"
 user = User.objects.get(username="my_username")

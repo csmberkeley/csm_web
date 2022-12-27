@@ -16,7 +16,7 @@ sleep 1 # Give user time to read above message
 # Node and Python requirements
 npm i
 # The LDFLAGS are specified so that heroku's implicit psycopg2 (*not* binary) dependency will build successfully on macOS
-LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib" pip3 install --no-cache-dir -r requirements.txt
+LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib" pip3 install --no-cache-dir -r requirements/dev.txt
 
 # Set up environment variables
 echo "Setting up environment variables..."
