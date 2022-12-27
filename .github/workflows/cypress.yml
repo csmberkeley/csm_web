@@ -2,9 +2,9 @@ name: Cypress E2E
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 env:
   PYTHON_VERSION: 3.9
@@ -15,7 +15,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        containers: [ 1, 2, 3, 4 ]
+        containers: [1, 2, 3, 4]
     services:
       postgres:
         image: postgres:14
@@ -23,7 +23,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: csm_web_dev
-        ports: [ "5432:5432" ]
+        ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Checkout
@@ -71,7 +71,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        containers: [ 1, 2, 3, 4 ]
+        containers: [1, 2, 3, 4]
     services:
       postgres:
         image: postgres:14
@@ -79,7 +79,7 @@ jobs:
           POSTGRES_USER: postgres
           POSTGRES_PASSWORD: postgres
           POSTGRES_DB: csm_web_dev
-        ports: [ "5432:5432" ]
+        ports: ["5432:5432"]
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Checkout
