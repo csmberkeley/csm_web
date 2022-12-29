@@ -11,5 +11,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-python@v3
-      - uses: pre-commit/action@v3.0.0
+      - name: Parse Python version from runtime.txt
+        run: |
+          sed 's/[^0-9.]//g' runtime.txt | head > .python-version
+      - name: Set up Python
+        uses: actions/setup-python@v4
+      - name: Install Poetry
+        run: |
+          python3 -m venv /opt/poetry
+          /opt/poetry/bin/pip install poetry
+      - name: Install dependencies with Poetry
+        run: |
+          /opt/poetry/bin/poetry install --no-root --with=dev
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.0
