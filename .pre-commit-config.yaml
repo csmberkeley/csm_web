@@ -3,7 +3,6 @@ repos:
     rev: v4.4.0
     hooks:
       - id: check-merge-conflict
-      - id: detect-aws-credentials
       - id: detect-private-key
       - id: end-of-file-fixer
       - id: mixed-line-ending
