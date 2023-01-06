@@ -69,7 +69,7 @@ const checkCardOrder = () => {
 
 describe("coordinator course view", () => {
   it("should display all section information when course is open", () => {
-    cy.setupDB("coordinator-student-course", "coord_setup_open");
+    cy.setupDB("course/coordinator-student-course", "coord_setup_open");
     cy.login();
 
     // visit the course section page
@@ -263,7 +263,7 @@ describe("coordinator course view", () => {
     // these tests are less comprehensive,
     // under the assumption that basically all of the layout should stay the same
     it("should display information with no priority enrollment", () => {
-      cy.setupDB("coordinator-student-course", "coord_setup_closed");
+      cy.setupDB("course/coordinator-student-course", "coord_setup_closed");
       cy.login();
       cy.visit("/courses/1");
 
@@ -284,7 +284,7 @@ describe("coordinator course view", () => {
     });
 
     it("should display information with priority enrollment", () => {
-      cy.setupDB("coordinator-student-course", "coord_setup_closed_priority");
+      cy.setupDB("course/coordinator-student-course", "coord_setup_closed_priority");
       cy.login();
       cy.visit("/courses/1");
 

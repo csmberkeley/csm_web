@@ -6,7 +6,7 @@ before(() => {
 describe("course menu", () => {
   it("should be accessible from home page, can navigate to course pages", () => {
     // setup database
-    cy.setupDB("course-menu", "setup");
+    cy.setupDB("course/course-menu", "setup");
     cy.login();
 
     // visit the home page
@@ -46,7 +46,7 @@ describe("course menu", () => {
   describe("should display courses and enrollment times", () => {
     it("with no priority enrollment", () => {
       // setup database
-      cy.setupDB("course-menu", "setup");
+      cy.setupDB("course/course-menu", "setup");
       cy.login();
 
       // visit the courses page
@@ -68,7 +68,7 @@ describe("course menu", () => {
 
     it("with priority enrollment in the past", () => {
       // setup database with priority enrollment
-      cy.setupDB("course-menu", "setup_priority_enrollment_past");
+      cy.setupDB("course/course-menu", "setup_priority_enrollment_past");
       cy.login();
 
       // visit the courses page
@@ -91,7 +91,7 @@ describe("course menu", () => {
 
     it("with priority enrollment in the future", () => {
       // setup database with priority enrollment
-      cy.setupDB("course-menu", "setup_priority_enrollment_future");
+      cy.setupDB("course/course-menu", "setup_priority_enrollment_future");
       cy.login();
 
       // visit the courses page

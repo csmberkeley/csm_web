@@ -16,6 +16,7 @@ PLUS_5 = timezone.now() + datetime.timedelta(days=5)
 
 
 def setup():
+    """Set up courses and sections for course menu."""
     # create demo_user
     call_command("createtestuser", silent=True)
 
@@ -82,6 +83,9 @@ def setup():
 
 
 def setup_priority_enrollment_past():
+    """
+    Set up user with past priority enrollment time.
+    """
     setup()
     user = User.objects.get(username="demo_user")
     user.priority_enrollment = MINUS_5
@@ -89,6 +93,9 @@ def setup_priority_enrollment_past():
 
 
 def setup_priority_enrollment_future():
+    """
+    Set up user wtih future priority enrollment time.
+    """
     setup()
     user = User.objects.get(username="demo_user")
     user.priority_enrollment = PLUS_5

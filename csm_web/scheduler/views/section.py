@@ -337,7 +337,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
                 if (
                     student_user.id not in course_coords
-                    and student_user.can_enroll_in_course(student.course, bypass_enrollment_time=True)
+                    and student_user.can_enroll_in_course(section.mentor.course, bypass_enrollment_time=True)
                 ):
                     # student does not exist yet; we can always create it
                     db_actions.append(("create", email))
@@ -345,7 +345,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 else:
                     # user can't enroll; give details on the reason why
                     curstatus["status"] = Status.CONFLICT
-                    if not student_user.is_whitelisted_for(student.course):
+                    if not student_user.is_whitelisted_for(section.mentor.course):
                         if email_obj.get("restricted_action") == RestrictedAction.WHITELIST:
                             db_actions.append(("create", email))
                             curstatus["status"] = Status.OK
