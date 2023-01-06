@@ -170,17 +170,17 @@ const CourseMenuContent = ({
     displayCourses = unrestrictedCourses;
   }
 
+  // get set of all course names to display
+  const displayCourseNames = new Set<string>(Array.from(displayCourses.values()).map(course => course.name));
+  const displayEnrollmentTimes = enrollment_times_by_course.filter(course => displayCourseNames.has(course.courseName));
+
   return (
     <div className="course-menu-content">
       {sidebar}
       <div className="course-menu-main">
         <EnrollmentMenu courses={displayCourses} />
         <br />
-        <EnrollmentTimes
-          coursesLoaded={coursesLoaded}
-          userInfo={userInfo}
-          enrollmentTimes={enrollment_times_by_course}
-        />
+        <EnrollmentTimes coursesLoaded={coursesLoaded} userInfo={userInfo} enrollmentTimes={displayEnrollmentTimes} />
       </div>
     </div>
   );

@@ -6,7 +6,7 @@
  * for the course menus.
  */
 
-const checkEnrollButtons = (expectDisabled: boolean = false) => {
+const checkEnrollButtons = (expectDisabled = false) => {
   cy.get(".day-btn").should("have.length", 3).should("be.visible");
 
   cy.get(".day-btn").each($btn => {
@@ -143,7 +143,7 @@ describe("student course view", () => {
     context("with the course open", () => {
       it("should see enroll button for all sections", () => {
         // setup
-        cy.setupDB("coordinator-student-course", "student_setup_open");
+        cy.setupDB("course/coordinator-student-course", "student_setup_open");
         cy.login();
         cy.visit("/courses/1");
 
@@ -152,7 +152,7 @@ describe("student course view", () => {
 
       it("should be able to enroll in a section", () => {
         // setup (mutates the database)
-        cy.setupDB("coordinator-student-course", "student_setup_open", { mutate: true });
+        cy.setupDB("course/coordinator-student-course", "student_setup_open", { mutate: true });
         cy.login();
         cy.visit("/courses/1");
 
@@ -162,7 +162,7 @@ describe("student course view", () => {
 
     context("with the course closed", () => {
       it("should see disabled enroll button and enrollment time for all sections", () => {
-        cy.setupDB("coordinator-student-course", "student_setup_closed");
+        cy.setupDB("course/coordinator-student-course", "student_setup_closed");
         cy.login();
         cy.visit("/courses/1");
 
@@ -182,7 +182,7 @@ describe("student course view", () => {
 
       it("should not be able to enroll in any section", () => {
         // if fails, could mutate the database
-        cy.setupDB("coordinator-student-course", "student_setup_closed", { mutate: true });
+        cy.setupDB("course/coordinator-student-course", "student_setup_closed", { mutate: true });
         cy.login();
         cy.visit("/courses/1");
 
@@ -194,7 +194,7 @@ describe("student course view", () => {
   context("with priority enrollment", () => {
     context("with the course open", () => {
       it("should see enroll button for any section", () => {
-        cy.setupDB("coordinator-student-course", "student_setup_open_priority");
+        cy.setupDB("course/coordinator-student-course", "student_setup_open_priority");
         cy.login();
         cy.visit("/courses/1");
 
@@ -203,7 +203,7 @@ describe("student course view", () => {
 
       it("should be able to enroll in a section", () => {
         // will mutate the database
-        cy.setupDB("coordinator-student-course", "student_setup_open_priority", { mutate: true });
+        cy.setupDB("course/coordinator-student-course", "student_setup_open_priority", { mutate: true });
         cy.login();
         cy.visit("/courses/1");
 
@@ -213,7 +213,7 @@ describe("student course view", () => {
 
     context("with the course closed", () => {
       it("should see disabled enroll button and priority enrollment text for all sections", () => {
-        cy.setupDB("coordinator-student-course", "student_setup_closed_priority");
+        cy.setupDB("course/coordinator-student-course", "student_setup_closed_priority");
         cy.login();
         cy.visit("/courses/1");
 
@@ -233,7 +233,7 @@ describe("student course view", () => {
 
       it("should not be able to enroll in any section", () => {
         // if fails, could mutate the database
-        cy.setupDB("coordinator-student-course", "student_setup_closed_priority", { mutate: true });
+        cy.setupDB("course/coordinator-student-course", "student_setup_closed_priority", { mutate: true });
         cy.login();
         cy.visit("/courses/1");
 

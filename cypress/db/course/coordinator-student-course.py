@@ -158,12 +158,13 @@ def _setup_course_closed():
     )
 
 
-"""
-Coordinator setup functions
-"""
+# Coordinator setup functions
 
 
 def coord_setup_open():
+    """
+    Coordinator in open course; no priority enrollment
+    """
     _setup_user()
     cs61a = _setup_course_open()
 
@@ -175,6 +176,9 @@ def coord_setup_open():
 
 
 def coord_setup_closed():
+    """
+    Coordinator in closed course; no priority enrollment
+    """
     _setup_user()
     cs61a = _setup_course_closed()
 
@@ -186,6 +190,9 @@ def coord_setup_closed():
 
 
 def coord_setup_closed_priority():
+    """
+    Coordinator in closed course, even with priority enrollment
+    """
     coord_setup_closed()
 
     demo_user = User.objects.get(username="demo_user")
@@ -193,9 +200,7 @@ def coord_setup_closed_priority():
     demo_user.save()
 
 
-"""
-Student setup functions
-"""
+# Student setup functions
 
 
 def student_setup_open():
@@ -219,7 +224,7 @@ def student_setup_closed():
 def student_setup_open_priority():
     """
     Open course because prior priority enrollment;
-    otherwise the course should be clsoed
+    otherwise the course should be closed
     """
     student_setup_closed()
 

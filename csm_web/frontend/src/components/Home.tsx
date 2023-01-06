@@ -23,15 +23,7 @@ const Home = () => {
       <div className="course-cards-container">
         {Object.entries(groupBy(profiles, (profile: Profile) => [profile.course, profile.role]))
           .sort(([courseNameA, courseProfilesA], [courseNameB, courseProfilesB]) => {
-            const compare = (a: string, b: string) => {
-              if (a < b) {
-                return -1;
-              } else if (a > b) {
-                return 1;
-              } else {
-                return 0;
-              }
-            };
+            const compare = (a: string, b: string) => a.localeCompare(b);
             const courseA = coursesById.get(courseProfilesA[0].courseId);
             const courseB = coursesById.get(courseProfilesB[0].courseId);
             if (courseA === undefined || courseB === undefined) {
