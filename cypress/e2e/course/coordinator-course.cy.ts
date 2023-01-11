@@ -8,7 +8,7 @@ before(() => {
  */
 const timeStringToDate = (time: string): Date => {
   // extract hours, minutes, am/pm
-  const [_, hours_str, minutes, ampm] = time.match(/(\d\d?):(\d\d) (AM|PM)/);
+  const [, hours_str, minutes, ampm] = time.match(/(\d\d?):(\d\d) (AM|PM)/);
 
   let hours = parseInt(hours_str);
   if (ampm === "PM" && hours !== 12) {
@@ -24,7 +24,7 @@ const timeStringToDate = (time: string): Date => {
 /**
  * Check that the capacity of a section card is as expected
  */
-const checkCapacity = (text: string, isFull: boolean = false) => {
+const checkCapacity = (text: string, isFull = false) => {
   const groups = text.trim().match(/^(\d+)\/(\d+)$/i);
   if (isFull) {
     expect(parseInt(groups[1]) / parseInt(groups[2])).to.be.eq(1);
