@@ -100,9 +100,10 @@ describe("attendances", () => {
       .should("have.length", 2)
       // click second (inactive) tab
       .last()
-      .should("not.have.class", "active")
-      .click()
-      .should("have.class", "active");
+      .then($tab => {
+        cy.wrap($tab).should("not.have.class", "active").click();
+        cy.wrap($tab).should("have.class", "active");
+      });
 
     // attendances in the second tab should all be present
     cy.get("#mentor-attendance-table select")
@@ -284,10 +285,10 @@ describe("word of the day", () => {
     });
 
     // go to next day and should be unselected
-    cy.get("#attendance-date-tabs-container > :not(.active)")
-      .should("have.length", 1)
-      .click()
-      .should("have.class", "active");
+    cy.get("#attendance-date-tabs-container > :not(.active)").then($tab => {
+      cy.wrap($tab).should("have.length", 1).click();
+      cy.wrap($tab).should("have.class", "active");
+    });
 
     cy.get("#word-of-the-day-container").within(() => {
       cy.contains(".word-of-the-day-title", /word of the day/i).should("be.visible");
@@ -299,10 +300,10 @@ describe("word of the day", () => {
     });
 
     // switch back and it should be selected again
-    cy.get("#attendance-date-tabs-container > :not(.active)")
-      .should("have.length", 1)
-      .click()
-      .should("have.class", "active");
+    cy.get("#attendance-date-tabs-container > :not(.active)").then($tab => {
+      cy.wrap($tab).should("have.length", 1).click();
+      cy.wrap($tab).should("have.class", "active");
+    });
 
     cy.get("#word-of-the-day-container").within(() => {
       cy.contains(".word-of-the-day-title", /word of the day/i).should("be.visible");
