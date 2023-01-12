@@ -53,21 +53,29 @@ freezegun = "^1.2.2"
 [tool.isort]
 profile = "black"
 
+[tool.black]
+preview = true
+
 [tool.pylint.MASTER]
 load-plugins = "pylint_django"
 #ignore-paths = [
 #    ".*/migrations", # ignore migration files
 #]
 # allow snake_case names of any length
-variable-rgx = "^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$"
-argument-rgx = "^[a-z][a-z0-9]*((_[a-z0-9]+)*)?$"
+variable-rgx = "^[a-z_][a-z0-9]*((_[a-z0-9]+)*)?$"
+argument-rgx = "^[a-z_][a-z0-9]*((_[a-z0-9]+)*)?$"
+# don't enforce module naming
+module-naming-style = "any"
+# ensure app imports are handled correctly
+init-hook = "import sys; sys.path.insert(0, 'csm_web')"
 
 
 [tool.pylint."MESSAGES CONTROL"]
 # design: num. branches, num. lines, etc
 # similarities: simiar chunks of code
 # C0114: missing module docstring
-disable = "design,similarities,C0114"
+# C0115: missing class docstring
+disable = "design,similarities,C0114,C0115"
 
 [tool.pylint.PYLINT_DJANGO]
 django-settings-module = "csm_web.settings"
