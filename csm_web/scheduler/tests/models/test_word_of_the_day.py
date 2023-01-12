@@ -1,5 +1,4 @@
 import datetime
-import zoneinfo
 
 import pytest
 from django.urls import reverse
@@ -14,7 +13,7 @@ from scheduler.factories import (
 )
 from scheduler.models import Attendance, SectionOccurrence, Student
 
-DEFAULT_TZ = zoneinfo.ZoneInfo(timezone.get_default_timezone().zone)
+DEFAULT_TZ = timezone.get_default_timezone()
 
 
 # avoid pylint warning redefining name in outer scope
