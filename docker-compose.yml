@@ -1,0 +1,65 @@
+services:
+  postgres:
+    image: postgres:14
+    healthcheck:
+      test: /usr/bin/pg_isready
+      interval: 5s
+      timeout: 10s
+      retries: 120
+    environment:
+      POSTGRES_DB: csm_web_dev
+      PGUSER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+  node:
+    build:
+      context: .
+      dockerfile: Dockerfile.node
+    command: npm run watch
+    volumes:
+      # mount source files
+      - type: bind
+        source: ./
+        target: /opt/csm_web/app
+        read_only: true
+      # compiled file
+      - type: bind
+        source: ./csm_web/frontend/static/frontend/main.js
+        target: /opt/csm_web/app/csm_web/frontend/static/frontend/main.js
+      # mount package files
+      - type: bind
+        source: ./package.json
+        target: /opt/csm_web/package.json
+        read_only: true
+      - type: bind
+        source: ./package-lock.json
+        target: /opt/csm_web/package-lock.json
+        read_only: true
+      # prevent node modules from being overwritten on host
+      - notused:/opt/csm_web/app/node_modules
+  django:
+    tty: true
+    build:
+      context: .
+      dockerfile: Dockerfile.django
+    env_file: .env
+    environment:
+      POSTGRES_DB: csm_web_dev
+      POSTGRES_USER: postgres
+      POSTGRES_HOST: postgres
+    ports:
+      - 8000:8000
+    volumes:
+      - type: bind
+        source: ./csm_web
+        target: /opt/csm_web/csm_web
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+networks:
+  default:
+    name: csm_web_default
+
+# volume to exclude files from being mounted
+volumes:
+  notused:

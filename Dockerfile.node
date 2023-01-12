@@ -1,0 +1,17 @@
+FROM node:18
+
+# install inotify-tools for webpack reloading
+# RUN apt install inotify-tools
+
+RUN mkdir /opt/csm_web && chown node:node /opt/csm_web
+
+WORKDIR /opt/csm_web
+
+USER node
+
+# install npm dependencies
+COPY --chown=node:node package.json package-lock.json ./
+RUN npm install && npm cache clean --force
+ENV PATH /opt/csm_web/node_modules/.bin:$PATH
+
+WORKDIR /opt/csm_web/app

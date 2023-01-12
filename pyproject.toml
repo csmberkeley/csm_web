@@ -10,7 +10,7 @@ readme = "README.md"
 ### dependencies ###
 
 [tool.poetry.dependencies]
-python = "3.9.13"
+python = "~3.9.13"
 # AWS
 boto3 = "^1.26.39"
 # django
