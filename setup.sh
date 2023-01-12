@@ -4,8 +4,8 @@
 
 # check directory
 { [ ! -d 'csm_web' ] || [ ! -f 'package.json' ]; } && echo 'You are in the wrong directory!' 1>&2 && exit 1
-# should have virtual environment enabled
-[ -z "$VIRTUAL_ENV" ] && echo 'You must activate your virtualenv first!' 1>&2 && exit 1
+# should not have virtual environment enabled
+[ -n "$VIRTUAL_ENV" ] && echo 'You must not be in a vritual environment!' 1>&2 && exit 1
 
 # check all required dependencies are installed
 if ! ( command -v npm ) > /dev/null
@@ -24,6 +24,14 @@ elif ! ( command -v psql ) > /dev/null
 then
     echo 'You must have postgres installed before running this script! (See https://www.postgresql.org/download)' 1>&2
     exit 1
+elif ! (command -v docker) > /dev/null
+then
+    echo 'You must have docker installed before running this script! (See https://www.docker.com)' 1>&2
+    exit 1
+elif [[ "$(docker info 2>&1)" =~ "Cannot connect to the Docker daemon" ]]
+then
+    echo "The docker daemon must be running; make sure you've started Docker Desktop, or manually through the terminal." 1>&2
+    exit 1
 fi
 
 # check python version
@@ -33,17 +41,18 @@ if [[ "$EXPECTED_PYTHON_VERSION" != "$ACTUAL_PYTHON_VERSION" ]]
 then
     echo "Expected python version $EXPECTED_PYTHON_VERSION, got $ACTUAL_PYTHON_VERSION; make sure you have the right python version installed." 1>&2
     echo "It is recommended to use pyenv to manage python versions; see https://github.com/pyenv/pyenv#installation. make sure you've created the virtual environment with the correct python version."
-    echo "If your system Python version is not $EXPECTED_PYTHON_VERSION, make sure you created the virtual environment with the prefix: PYENV_VERSION=$EXPECTED_PYTHON_VERSION"
     exit 1
 fi
 
-echo 'Beginning setup, this may take a minute or so...'
+echo 'Beginning setup, this may take a while...'
 sleep 1 # Give user time to read above message
 
 # Node and Python requirements
 npm ci
 # The LDFLAGS are specified so that heroku's implicit psycopg2 (*not* binary) dependency will build successfully on macOS
 LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib" poetry install --no-root --with=dev
+# Activate virtual environment (only local to this script)
+source $(poetry env info --path)/bin/activate
 
 # Set up environment variables
 echo "Setting up environment variables..."
@@ -81,33 +90,17 @@ pwd > "$VIRTUAL_ENV/.project_dir"
 # Add env variables to virutalenv activate script so that not everything needs to be run with 'heroku local'
 echo 'set -a; source $(cat $VIRTUAL_ENV/.project_dir)/.env; set +a' >> "$VIRTUAL_ENV/bin/activate"
 
-# Setup postgres DB if needed
-if ! psql -lt | grep -q '^ *csm_web_dev *'
-then
-	createdb csm_web_dev
-	psql csm_web_dev -c 'CREATE ROLE postgres LOGIN SUPERUSER;'
-fi
-
-# Utility function for running the dev server
-echo '
-function run() {
-	start_dir=$(pwd)
-	project_dir=$(cat "$VIRTUAL_ENV/.project_dir")
-	trap "pkill -P $$ heroku npm python; stty sane; cd $startdir; return" SIGINT
-	cd "$project_dir" && npm run dev && python csm_web/manage.py runserver
-	cd "$start_dir"
-}' >> "$VIRTUAL_ENV/bin/activate"
-
-# Initialize for local development
-npm run dev
-source .env # need the relevant env variables for django, but can't count on the Heroku CLI being installed
-python3 csm_web/manage.py migrate
-python3 csm_web/manage.py createtestdata --yes
-
 echo "Installing pre-commit hook..."
 #ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
 pre-commit install
 
+# Setup environment variables
+set +a; source .env; set -a
+
+# Build docker containers
+docker compose build
+docker compose up -d
+
 echo
 echo "Done installing."
-echo "Please reactivate the virtual environment before running other commands."
+echo "Please activate the virtual environment before running other commands."

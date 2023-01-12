@@ -59,6 +59,7 @@ module.exports = (env, argv) => {
       ]
     },
     watchOptions: {
+      poll: 1000,
       ignored: /node_modules/
     },
     plugins: plugins,
