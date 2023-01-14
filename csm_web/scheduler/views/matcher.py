@@ -1,37 +1,34 @@
 import datetime
 
+from django.db import transaction
+from django.db.models import Q
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework import status
-
-from django.db.models import Q
-from django.db import transaction
-
 from scheduler.models import (
-    User,
     Course,
-    Section,
-    Mentor,
     Matcher,
     MatcherPreference,
     MatcherSlot,
+    Mentor,
+    Section,
     Spacetime,
+    User,
 )
 from scheduler.serializers import (
     MatcherPreferenceSerializer,
     MatcherSlotSerializer,
     MentorSerializer,
 )
-from .utils import get_object_or_error, logger
-
 from scheduler.utils.match_solver import (
-    get_matches,
     MentorTuple,
-    SlotTuple,
     PreferenceTuple,
+    SlotTuple,
+    get_matches,
 )
 
+from .utils import get_object_or_error, logger
 
 DEFAULT_CAPACITY = 5
 TIME_FORMAT = "%H:%M"  # Assuming 24-hour format in hh:mm
@@ -86,11 +83,11 @@ def slots(request, pk=None):
     POST: Creates new matcher slots for the given course.
         - coordinators only
         - delete all existing slots when receiving this POST request
-        - maybe update with a PUT request?
-        - format: [{"times": [{"day": str, "startTime": str, "endTime": str}], "numMentors": int}]
-
-        - to release/close preference submissions:
-            {"release": bool}
+        - format: [{
+            "times": [{"day": str, "startTime": str, "endTime": str, "location": str}],
+            "minMentors": int,
+            "maxMentors": int,
+          }]
     """
     course = get_object_or_error(Course.objects, pk=pk)
     matcher = course.matcher
@@ -119,11 +116,6 @@ def slots(request, pk=None):
         if matcher is None:
             # create matcher
             matcher = Matcher.objects.create(course=course)
-
-        """
-        Request data:
-        [{"times": [{"day": str, "startTime": str, "endTime": str}], "numMentors": int}]
-        """
 
         if "slots" in request.data:
             request_slots = request.data["slots"]
@@ -621,12 +613,13 @@ def create(request, pk=None):
                 start = datetime.datetime.strptime(time["start_time"], TIME_FORMAT)
                 end = datetime.datetime.strptime(time["end_time"], TIME_FORMAT)
                 duration = end - start
+                location = time.get("location", DEFAULT_LOCATION)
                 Spacetime.objects.create(
                     section=section,
                     duration=duration,
                     start_time=start,
                     day_of_week=time["day"],
-                    location=DEFAULT_LOCATION,
+                    location=location,
                 )
         # close the matcher after sections have been created
         matcher.active = False

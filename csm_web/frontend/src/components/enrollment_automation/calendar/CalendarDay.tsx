@@ -9,6 +9,7 @@ interface NumberTime {
   startTime: number;
   endTime: number;
   isLinked: boolean;
+  location: string;
 }
 
 enum EventType {

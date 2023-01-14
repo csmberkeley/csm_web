@@ -703,7 +703,7 @@ const EditTableRow = ({
    * Format a datetime as a string for display.
    */
   const displayTime = (time: Time) => {
-    return `${DAYS_ABBREV[time.day]} ${formatTime(time.startTime)}\u2013${formatTime(time.endTime)}`;
+    return `${DAYS_ABBREV[time.day]} ${formatTime(time.startTime)}\u2013${formatTime(time.endTime)} (${time.location})`;
   };
 
   /**

@@ -10,7 +10,9 @@ import { formatInterval, formatTime, parseTime, serializeTime } from "../utils";
 
 import InfoIcon from "../../../../static/frontend/img/info.svg";
 import XIcon from "../../../../static/frontend/img/x.svg";
-import { useMatcherConfigMutation, useMatcherSlotsMutation } from "../../../utils/queries/matcher";
+import { useMatcherSlotsMutation } from "../../../utils/queries/matcher";
+
+const DEFAULT_LOCATION = "TBD";
 
 interface TileDetails {
   days: string[];
@@ -18,6 +20,7 @@ interface TileDetails {
   startTime: number;
   endTime: number;
   length: number;
+  location: string;
 }
 
 interface CreateStageProps {
@@ -61,7 +64,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     daysLinked: true,
     startTime: -1,
     endTime: -1,
-    length: 60
+    length: 60,
+    location: DEFAULT_LOCATION
   });
 
   /**
@@ -69,7 +73,6 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
    */
   const [edited, setEdited] = useState<boolean>(false);
 
-  const matcherConfigMutation = useMatcherConfigMutation(profile.courseId);
   const matcherSlotsMutation = useMatcherSlotsMutation(profile.courseId);
 
   /**
@@ -87,7 +90,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     startTime: React.createRef<HTMLInputElement>(),
     endTime: React.createRef<HTMLInputElement>(),
     length: React.createRef<HTMLInputElement>(),
-    toggle: React.createRef<HTMLInputElement>()
+    toggle: React.createRef<HTMLInputElement>(),
+    location: React.createRef<HTMLInputElement>()
   };
 
   /**
@@ -114,7 +118,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
             startTime: t,
             endTime: t + tileDetails.length,
             // linked only if there are multiple days and user wants to link them
-            isLinked: tileDetails.daysLinked && tileDetails.days.length > 1
+            isLinked: tileDetails.daysLinked && tileDetails.days.length > 1,
+            location: tileDetails.location
           });
         }
       }
@@ -130,7 +135,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
       const times = slot.times.map(time => ({
         day: time.day,
         startTime: serializeTime(time.startTime),
-        endTime: serializeTime(time.endTime)
+        endTime: serializeTime(time.endTime),
+        location: time.location
       }));
       return {
         ...slot,
@@ -254,6 +260,22 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     setCurCreatedTimes(newTimes);
   };
 
+  /**
+   * Edit the location field of an event
+   *
+   * @param index index of time to edit
+   * @param newLocation new location value
+   */
+  const editTime_location = (index: number, newLocation: string) => {
+    const newTimes = [...curCreatedTimes];
+    if (newLocation.trim() === "") {
+      newTimes[index]["location"] = DEFAULT_LOCATION;
+    } else {
+      newTimes[index]["location"] = newLocation;
+    }
+    setCurCreatedTimes(newTimes);
+  };
+
   const toggleCreatingTiledEvents = (e: React.ChangeEvent<HTMLInputElement>): void => {
     // current value of checkbox after click
     const checked = e.target.checked;
@@ -297,6 +319,10 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     setTileDetails({ ...tileDetails, daysLinked: e.target.checked });
   };
 
+  const editTiled_location = (value: string): void => {
+    setTileDetails({ ...tileDetails, location: value });
+  };
+
   const saveTiledEvents = () => {
     const newSlots = [];
     for (let t = tileDetails.startTime; t <= tileDetails.endTime - tileDetails.length; t += tileDetails.length) {
@@ -307,17 +333,28 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
             day: day,
             startTime: t,
             endTime: t + tileDetails.length,
-            isLinked: tileDetails.days.length > 1
+            isLinked: tileDetails.days.length > 1,
+            location: tileDetails.location
           });
         }
         newSlots.push(newEvent);
       } else {
         for (const day of tileDetails.days) {
-          newSlots.push({ times: [{ day: day, startTime: t, endTime: t + tileDetails.length, isLinked: false }] });
+          newSlots.push({
+            times: [
+              {
+                day: day,
+                startTime: t,
+                endTime: t + tileDetails.length,
+                isLinked: false,
+                location: tileDetails.location
+              }
+            ]
+          });
         }
       }
     }
-    setSlots([...slots, ...newSlots]);
+    setSlots([...slots, ...newSlots] as Slot[]);
     // stop creating tiled events
     tileRefs.toggle.current!.checked = false;
     toggleCreatingTiledEvents({ target: tileRefs.toggle.current! } as React.ChangeEvent<HTMLInputElement>);
@@ -327,7 +364,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
    * Save the newly created event and times
    */
   const saveEvent = () => {
-    const newEvent = { times: curCreatedTimes };
+    const newEvent: Slot = { times: curCreatedTimes };
     setSlots([...slots, newEvent]);
     setCurCreatedTimes([]);
     setSavedExistingEvent(null);
@@ -340,7 +377,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
    */
   const cancelEvent = () => {
     if (savedExistingEvent !== null) {
-      setSlots([...slots, savedExistingEvent]);
+      setSlots([...slots, savedExistingEvent] as Slot[]);
       setSavedExistingEvent(null);
     }
     // proceed with resetting current event
@@ -472,6 +509,16 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
               />
               mins
             </div>
+            <div className="matcher-tiling-location-container">
+              <div className="matcher-tiling-subheader">Location:</div>
+              <input
+                className="matcher-tiling-locatoin-input"
+                type="text"
+                ref={tileRefs.location}
+                defaultValue={tileDetails.location}
+                onChange={e => editTiled_location(e.target.value)}
+              />
+            </div>
           </div>
         </div>
         <div className="matcher-sidebar-tiling-bottom">
@@ -494,32 +541,43 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                   <XIcon className="icon matcher-remove-time-icon" onClick={() => deleteTime(time_idx)} />
                 </div>
                 <div className="matcher-created-time">
-                  <select
-                    defaultValue={time.day}
-                    key={`day_${time_idx}/${selectedEventIndices}`}
-                    onChange={e => editTime_day(time_idx, e.target.value)}
-                  >
-                    {DAYS.map(day => (
-                      <option key={day} value={day}>
-                        {DAYS_ABBREV[day]}
-                      </option>
-                    ))}
-                  </select>
-                  <input
-                    type="time"
-                    key={`start_${time_idx}/${selectedEventIndices}`}
-                    defaultValue={serializeTime(time.startTime)}
-                    step="900"
-                    onChange={e => editTime_startTime(time_idx, e.target.value)}
-                  />
-                  &#8211;
-                  <input
-                    type="time"
-                    key={`end_${time_idx}/${selectedEventIndices}`}
-                    defaultValue={serializeTime(time.endTime)}
-                    step="900"
-                    onChange={e => editTime_endTime(time_idx, e.target.value)}
-                  />
+                  <div className="matcher-created-time-detail">
+                    <select
+                      defaultValue={time.day}
+                      key={`day_${time_idx}/${selectedEventIndices}`}
+                      onChange={e => editTime_day(time_idx, e.target.value)}
+                    >
+                      {DAYS.map(day => (
+                        <option key={day} value={day}>
+                          {DAYS_ABBREV[day]}
+                        </option>
+                      ))}
+                    </select>
+                    <input
+                      type="time"
+                      key={`start_${time_idx}/${selectedEventIndices}`}
+                      defaultValue={serializeTime(time.startTime)}
+                      step="900"
+                      onChange={e => editTime_startTime(time_idx, e.target.value)}
+                    />
+                    &#8211;
+                    <input
+                      type="time"
+                      key={`end_${time_idx}/${selectedEventIndices}`}
+                      defaultValue={serializeTime(time.endTime)}
+                      step="900"
+                      onChange={e => editTime_endTime(time_idx, e.target.value)}
+                    />
+                  </div>
+                  <div className="matcher-created-time-location">
+                    <span>Location:</span>
+                    <input
+                      type="text"
+                      key={`location_${time_idx}/${selectedEventIndices}`}
+                      defaultValue={time.location}
+                      onChange={e => editTime_location(time_idx, e.target.value)}
+                    />
+                  </div>
                 </div>
               </div>
             ))}
@@ -558,6 +616,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                     <span className="matcher-selected-time">
                       {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
                     </span>
+                    <br />
+                    <span className="matcher-selected-location">(location: {time.location})</span>
                   </li>
                 ))}
               </ul>

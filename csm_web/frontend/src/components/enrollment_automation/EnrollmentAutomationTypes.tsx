@@ -3,6 +3,7 @@ export interface Time {
   startTime: number;
   endTime: number;
   isLinked: boolean;
+  location: string;
 }
 
 export interface Slot {
