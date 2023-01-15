@@ -27,8 +27,9 @@ from .models import (
 )
 
 
-def evaluate_faker(faker):
-    return faker.evaluate(None, None, {"locale": None})
+def evaluate_faker(faker_obj: factory.Faker):
+    """Evaluate a faker object with all defaults"""
+    return faker_obj.evaluate(None, None, {"locale": None})
 
 
 COMPSCI_WORDS = (
@@ -51,7 +52,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Course
 
-    name = factory.Sequence(lambda n: "CS%d" % n)
+    name = factory.Sequence(lambda n: f"CS{n}")
     valid_until = factory.Faker("date_between", start_date="+5w", end_date="+18w")
     enrollment_start = factory.LazyAttribute(
         lambda o: timezone.make_aware(
@@ -81,6 +82,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
 
     @factory.lazy_attribute
     def title(self):
+        """Construct random course title"""
         words = random.sample(COMPSCI_WORDS, 3)
         return f"{words[0]} for {words[1]} {words[2]}"
 
@@ -93,7 +95,7 @@ class SpacetimeFactory(factory.django.DjangoModelFactory):
         model = Spacetime
 
     location = factory.LazyFunction(
-        lambda: "%s %d" % (random.choice(BUILDINGS), random.randint(1, 500))
+        lambda: f"{random.choice(BUILDINGS)} {random.randint(1, 500)}"
     )
     start_time = factory.Faker("time_object")
     duration = factory.LazyFunction(lambda: timedelta(minutes=random.choice((60, 90))))
@@ -111,9 +113,9 @@ class UserFactory(factory.django.DjangoModelFactory):
         lambda: evaluate_faker(factory.Faker("name")).split()[-1]
     )
     username = factory.LazyAttributeSequence(
-        lambda o, n: "%s_%s%d" % (o.first_name, o.last_name, n)
+        lambda o, n: f"{o.first_name}_{o.last_name}{n}"
     )
-    email = factory.LazyAttribute(lambda o: "%s@berkeley.edu" % o.username)
+    email = factory.LazyAttribute(lambda o: f"{o.username}@berkeley.edu")
 
 
 class StudentFactory(factory.django.DjangoModelFactory):
@@ -211,16 +213,17 @@ class OverrideFactory(factory.django.DjangoModelFactory):
         model = Override
 
     @factory.lazy_attribute
-    def date(obj):
+    def date(self):
+        """Override to be a random date"""
         date = evaluate_faker(
             factory.Faker(
                 "date_between_dates",
-                date_start=obj.overriden_spacetime.section.mentor.course.enrollment_start.date(),
-                date_end=obj.overriden_spacetime.section.mentor.course.valid_until,
+                date_start=self.overriden_spacetime.section.mentor.course.enrollment_start.date(),
+                date_end=self.overriden_spacetime.section.mentor.course.valid_until,
             )
         )
         return date + timedelta(
-            days=(day_to_number(obj.spacetime.day_of_week) - date.weekday())
+            days=(day_to_number(self.spacetime.day_of_week) - date.weekday())
         )
 
     spacetime = factory.SubFactory(SpacetimeFactory)
@@ -231,34 +234,41 @@ class ResourceFactory(factory.django.DjangoModelFactory):
         model = Resource
 
 
-def create_attendances_for(student):
+def build_attendances_for(student):
+    """
+    Build attendance objects for the student, associated with each existing section occurrence.
+    """
     today = timezone.datetime.today().date()
-    current_date = week_bounds(student.course.section_start)[0]
-    spacetime_days = [
-        day_to_number(day_of_week)
-        for day_of_week in student.section.spacetimes.values_list(
-            "day_of_week", flat=True
-        )
-    ]
+    section_start_week = week_bounds(student.course.section_start)[0]
     existing_attendance_dates = set(
         student.attendance_set.values_list("sectionOccurrence__date", flat=True)
     )
-    while current_date < student.course.valid_until:
-        for spacetime_day in spacetime_days:
-            date = current_date + timedelta(days=spacetime_day)
-            if date not in existing_attendance_dates:
-                so = student.section.sectionoccurrence_set.get(date=date)
-                if current_date < today:
-                    AttendanceFactory.create(student=student, sectionOccurrence=so)
-                else:
-                    # Students cannot have attended or not attended sections that haven't happened yet
-                    AttendanceFactory.create(
-                        student=student, sectionOccurrence=so, presence=""
-                    )
-        current_date += timedelta(weeks=1)
+    attendance_objects = []
+    for so in student.section.sectionoccurrence_set.all():
+        date = so.date
+        if (
+            date < section_start_week
+            or date >= student.course.valid_until
+            or date in existing_attendance_dates
+        ):
+            continue
+        week_start = week_bounds(date)[0]
+        if week_start < today:
+            attendance_objects.append(
+                AttendanceFactory.build(student=student, sectionOccurrence=so)
+            )
+        else:
+            # Students cannot have attended or not attended sections that haven't happened yet
+            attendance_objects.append(
+                AttendanceFactory.build(
+                    student=student, sectionOccurrence=so, presence=""
+                )
+            )
+    return attendance_objects
 
 
 def demoify_user(user, username):
+    """Make the user an admin."""
     user.is_staff = True
     user.is_superuser = True
     user.username = username
@@ -273,11 +283,25 @@ def demoify_user(user, username):
 
 
 def create_demo_account():
+    """
+    Create a new demo account as:
+    - student for one course's section
+    - mentor for another course's section
+    - coordinator for a third course
+    - whitelist for three random restricted courses
+
+    Also create a new demo mentor account associated with a new course
+    that the first demo_user account is a coordindator for.
+    This last account would primarily be used for matcher testing,
+    as 50 other mentors (not associated with any section) are created for this course.
+    """
+    # get a random mentor with 2 spacetimes
     demo_mentor = random.choice(
         Mentor.objects.annotate(Count("section__spacetimes")).filter(
             section__spacetimes__count=2, course__is_restricted=False
         )
     )
+    # associate it with a second section (take over another mentor)
     second_section = random.choice(
         Section.objects.filter(
             mentor__course=demo_mentor.course, mentor__course__is_restricted=False
@@ -286,7 +310,11 @@ def create_demo_account():
     demo_mentor_2 = second_section.mentor
     demo_mentor_2.user = demo_mentor.user
     demo_mentor_2.save()
+
+    # make user admin and change username
     demoify_user(demo_mentor.user, "demo_user")
+
+    # associate user as student in another section (take over another student)
     demo_student = random.choice(
         Student.objects.filter(course__is_restricted=True).exclude(
             course=demo_mentor.course
@@ -295,6 +323,8 @@ def create_demo_account():
     demo_student.user = demo_mentor.user
     demo_student.course.whitelist.add(demo_mentor.user)
     demo_student.save()
+
+    # associate user as coordinator of another course (create a new coordinator)
     demo_coord = Coordinator.objects.create(
         user=demo_mentor.user,
         course=random.choice(
@@ -329,9 +359,15 @@ def create_demo_account():
     Log in at localhost:8000/admin/
     """
     )
+    # make demo_user a coord for one more course
     coord_2_whitelist_course = random.choice(
         Course.objects.exclude(
-            pk__in=(demo_mentor.course.pk, demo_student.course.pk, demo_coord.course.pk)
+            pk__in=(
+                demo_mentor.course.pk,
+                demo_student.course.pk,
+                demo_coord.course.pk,
+                restricted_demo_coord.course.pk,
+            )
         )
     )
     demo_coord_2 = Coordinator.objects.create(
@@ -340,7 +376,7 @@ def create_demo_account():
     # delete all mentors associated with the second course
     Mentor.objects.filter(course=demo_coord_2.course).delete()
     # create new mentors associated with demo coord's course
-    mentors = [MentorFactory.create(course=demo_coord_2.course) for _ in range(50)]
+    mentors = MentorFactory.create_batch(50, course=demo_coord_2.course)
 
     # allow one mentor to login through admin menu
     demoify_user(mentors[0].user, "demo_mentor")
@@ -353,6 +389,7 @@ def create_demo_account():
 
 
 def confirm_run():
+    """Display warning message for user to confirm flushing the database."""
     choice = input(
         """You have requested a flush of the database.
             This will DELETE EVERYTHING IN THE DATABASE, and return all tables to an empty state.
@@ -367,112 +404,136 @@ def confirm_run():
 
 
 def generate_test_data(preconfirm=False):
+    """Generate random test data."""
     if settings.DJANGO_ENV == settings.PRODUCTION:
         print("This cannot be run in production! Aborting.")
         return
-    if (not preconfirm) and (not confirm_run()):
+    if not preconfirm and not confirm_run():
         return
     management.call_command("flush", interactive=False)
-    course_names = ("CSM61A", "CSM61B", "CSM61C", "CSM70", "CSM88", "CSM16A", "CSM16B")
-    course_titles = (
-        "Structure and Interpretation of Computer Programs",
-        "Data Structures",
-        "Machine Structures",
-        "Discrete Mathematics and Probability Theory",
-        "Computational Structures in Data Science",
-        "Designing Information Devices and Systems I",
-        "Designing Information Devices and Systems II",
-    )
+
+    course_info = [
+        # (name, title, is_restricted)
+        ("CSM61A", "Structure and Interpretation of Computer Programs", False),
+        ("CSM61B", "Data Structures", False),
+        ("CSM61C", "Machine Structures", False),
+        ("CSM70", "Discrete Mathematics and Probability Theory", False),
+        ("CSM88", "Computational Structures in Data Science", False),
+        ("CSM16A", "Designing Information Devices and Systems I", False),
+        ("CSM16B", "Designing Information Devices and Systems II", False),
+        ("CS61A", "Structure and Interpretation of Computer Programs", True),
+        ("CS61B", "Data Structures", True),
+        ("CS61C", "Machine Structures", True),
+        ("CS70", "Discrete Mathematics and Probability Theory", True),
+        ("CS88", "Computational Structures in Data Science", True),
+        ("EECS16A", "Designing Information Devices and Systems I", True),
+        ("EECS16B", "Designing Information Devices and Systems II", True),
+    ]
+
     print("Generating test data...")
     enrollment_start = timezone.now() - timedelta(days=14)
     enrollment_end = timezone.now() + timedelta(days=50)
     valid_until = timezone.now() + timedelta(days=100)
-    for course_name, course_title in zip(course_names, course_titles):
-        course = CourseFactory.create(
+
+    user_objects = []
+    course_objects = []
+    mentor_objects = []
+    section_objects = []
+    spacetime_objects = []
+    section_occurrence_objects = []
+    student_objects = []
+
+    print("Creating model instances...")
+    for course_name, course_title, course_restricted in course_info:
+        course = CourseFactory.build(
             name=course_name,
             title=course_title,
             enrollment_start=enrollment_start,
             enrollment_end=enrollment_end,
             valid_until=valid_until,
+            is_restricted=course_restricted,
         )
-        print(course_name + "...", end=" ")
+        course_objects.append(course)
         for _ in range(random.randint(5, 10)):
-            mentor = MentorFactory.create(course=course)
-            section = SectionFactory.create(mentor=mentor)
+            mentor_user = UserFactory.build()
+            user_objects.append(mentor_user)
+            mentor = MentorFactory.build(course=course, user=mentor_user)
+            mentor_objects.append(mentor)
+            section = SectionFactory.build(mentor=mentor)
+            section_objects.append(section)
+
+            # spacetimes for section; manually create because facotyr._create is not called
+            num_spacetimes = random.randint(1, 2)
+            # We want to ensure that if there are 2 spacetimes for a section
+            # that they are for different days of the week
+            spacetime_days = random.sample(DayOfWeekField.DAYS, num_spacetimes)
+            for day in spacetime_days:
+                spacetime_objects.append(
+                    SpacetimeFactory.build(section=section, day_of_week=day)
+                )
 
             current_date = week_bounds(section.mentor.course.section_start)[0]
-            spacetime_days = [
-                day_to_number(day_of_week)
-                for day_of_week in section.spacetimes.values_list(
-                    "day_of_week", flat=True
-                )
+            spacetime_day_numbers = [
+                day_to_number(day_of_week) for day_of_week in spacetime_days
             ]
             while current_date < section.mentor.course.valid_until:
-                for spacetime_day in spacetime_days:
+                for spacetime_day in spacetime_day_numbers:
                     date = current_date + timedelta(days=spacetime_day)
-                    SectionOccurrenceFactory.create(section=section, date=date)
+                    section_occurrence_objects.append(
+                        SectionOccurrenceFactory.build(section=section, date=date)
+                    )
                 current_date += timedelta(weeks=1)
 
-            students = StudentFactory.create_batch(
-                random.randint(0, section.capacity), section=section, course=course
-            )
-            for student in students:
-                create_attendances_for(student)
-            section.students.set(students)
-            section.save()
-        print("Done generating sections")
+            student_users = UserFactory.build_batch(random.randint(0, section.capacity))
+            user_objects.extend(student_users)
+            students = []
+            for student_user in student_users:
+                students.append(
+                    StudentFactory.build(
+                        section=section, course=course, user=student_user
+                    )
+                )
+            student_objects.extend(students)
+
+    print("Saving models to database...")
+    User.objects.bulk_create(user_objects)
+    Course.objects.bulk_create(course_objects)
+    Mentor.objects.bulk_create(mentor_objects)
+    Section.objects.bulk_create(section_objects)
+    Spacetime.objects.bulk_create(spacetime_objects)
+    SectionOccurrence.objects.bulk_create(section_occurrence_objects)
+    Student.objects.bulk_create(student_objects)
+
+    # reload students, fetching related fields to optimize attendance creation
+    prefetched_student_objects = Student.objects.select_related(
+        "section", "course"
+    ).prefetch_related(
+        "section__sectionoccurrence_set",
+        "attendance_set__sectionoccurrence",
+    )
+
+    print("Generating attendances...")
+    attendance_objects = []
+    for student in prefetched_student_objects:
+        attendance_objects.extend(build_attendances_for(student))
+    Attendance.objects.bulk_create(attendance_objects)
+
+    print("Generating resources...")
+    resource_objects = []
+    for course in course_objects:
+        # don't create resources for restricted courses
+        if course.is_restricted:
+            continue
         for i in range(random.randint(3, 5)):
             date = enrollment_start + timedelta(days=7 * i)
             val = random.randint(1, 100)
-            ResourceFactory.create(
-                course=course, week_num=i + 1, date=date, topics=f"Topic {val}"
-            )
-        print("Done generating resources")
-
-    print("Generating restricted courses")
-    restricted_course_names = (
-        "CS61A",
-        "CS61B",
-        "CS61C",
-        "CS70",
-        "CS88",
-        "EECS16A",
-        "EECS16B",
-    )
-    for course_name, course_title in zip(restricted_course_names, course_titles):
-        print(course_name + "...", end=" ")
-        course = CourseFactory.create(
-            name=course_name,
-            title=course_title,
-            enrollment_start=enrollment_start,
-            enrollment_end=enrollment_end,
-            valid_until=valid_until,
-            is_restricted=True,
-        )
-        for _ in range(random.randint(5, 10)):
-            mentor = MentorFactory.create(course=course)
-            section = SectionFactory.create(mentor=mentor)
-
-            current_date = week_bounds(section.mentor.course.section_start)[0]
-            spacetime_days = [
-                day_to_number(day_of_week)
-                for day_of_week in section.spacetimes.values_list(
-                    "day_of_week", flat=True
+            resource_objects.append(
+                ResourceFactory.build(
+                    course=course, week_num=i + 1, date=date, topics=f"Topic {val}"
                 )
-            ]
-            while current_date < section.mentor.course.valid_until:
-                for spacetime_day in spacetime_days:
-                    date = current_date + timedelta(days=spacetime_day)
-                    SectionOccurrenceFactory.create(section=section, date=date)
-                current_date += timedelta(weeks=1)
-
-            students = StudentFactory.create_batch(
-                random.randint(0, section.capacity), section=section, course=course
             )
-            for student in students:
-                create_attendances_for(student)
-            section.students.set(students)
-            section.save()
-        print("Done generating sections")
+    Resource.objects.bulk_create(resource_objects)
+
+    print("Done.\n")
 
     create_demo_account()

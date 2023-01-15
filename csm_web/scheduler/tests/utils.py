@@ -7,7 +7,6 @@ from scheduler.factories import (
     UserFactory,
     StudentFactory,
     SectionFactory,
-    create_attendances_for,
 )
 
 COURSE_NAMES = ("CS88", "CS61A", "CS61B", "CS70", "CS61C", "EE16A", "EE16B")
