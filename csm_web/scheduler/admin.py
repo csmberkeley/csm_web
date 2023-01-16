@@ -450,7 +450,7 @@ class CourseAdmin(CoordAdmin):
             "number_of_students",
             "number_of_mentors",
         )
-        if obj.is_restricted:
+        if obj is not None and obj.is_restricted:
             all_fields += ("whitelist",)
         return all_fields
 
@@ -533,10 +533,10 @@ class DayEndFilter(admin.SimpleListFilter):
 
 @admin.register(SectionOccurrence)
 class SectionOccurrenceAdmin(CoordAdmin):
-    fields = ("section", "date")
-    list_display = ("id", "section", "date")
+    fields = ("section", "date", "word_of_the_day")
+    list_display = ("id", "section", "date", "word_of_the_day")
     list_filter = ("date",)
-    search_fields = ("section__mentor__user__first_name", "section__mentor__user__last_name", "date")
+    search_fields = ("section__mentor__user__first_name", "section__mentor__user__last_name", "date", "word_of_the_day")
 
 
 @admin.register(Attendance)
