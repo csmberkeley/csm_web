@@ -104,13 +104,17 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
       setOccurrenceMap(newOccurrenceMap);
       setSortedOccurrences(newSortedOccurrences);
 
+      let newAttendances = null;
       if (selectedOccurrence === null) {
         // only update selected occurrence if it has not been set before
         setSelectedOcurrence(newSortedOccurrences[0]);
-        setStagedAttendances(newOccurrenceMap.get(newSortedOccurrences[0].id)!.attendances);
+        newAttendances = newOccurrenceMap.get(newSortedOccurrences[0]?.id)?.attendances;
       } else {
         // otherwise use existing selectedOccurrence
-        setStagedAttendances(newOccurrenceMap.get(selectedOccurrence.id)!.attendances);
+        newAttendances = newOccurrenceMap.get(selectedOccurrence.id)!.attendances;
+      }
+      if (newAttendances) {
+        setStagedAttendances(newAttendances);
       }
     }
   }, [jsonAttendances]);
