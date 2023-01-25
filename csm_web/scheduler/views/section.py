@@ -477,6 +477,27 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 student = Student.objects.create(
                     user=user, section=section, course=section.mentor.course
                 )
+                # generate new attendance objects for this student
+                # in all section occurrences past this date
+                now = timezone.now().astimezone(timezone.get_default_timezone())
+                future_section_occurrences = section.sectionoccurrence_set.filter(
+                    Q(date__gte=now.date())
+                )
+                for section_occurrence in future_section_occurrences:
+                    att, created = Attendance.objects.get_or_create(
+                        student=student,
+                        sectionOccurrence=section_occurrence,
+                    )
+                    if created:
+                        att.presence = ""
+                        att.save()
+                logger.info(
+                    "<Enrollment> Created %s new attendances for user %s in Section %s",
+                    len(future_section_occurrences),
+                    log_str(student.user),
+                    log_str(section),
+                )
+                student.save()
                 logger.info(
                     "<Enrollment:Success> User %s enrolled in Section %s",
                     log_str(student.user),
@@ -500,11 +521,13 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     Q(date__gte=now.date())
                 )
                 for section_occurrence in future_section_occurrences:
-                    Attendance(
+                    att, created = Attendance.objects.get_or_create(
                         student=student,
                         sectionOccurrence=section_occurrence,
-                        presence="",
-                    ).save()
+                    )
+                    if created:
+                        att.presence = ""
+                        att.save()
                 logger.info(
                     "<Enrollment> Created %s new attendances for user %s in Section %s",
                     len(future_section_occurrences),

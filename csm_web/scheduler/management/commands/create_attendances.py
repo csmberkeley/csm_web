@@ -28,6 +28,11 @@ class Command(BaseCommand):
                     "section": section} for section in sections for spacetime in section.spacetimes.all()]
             sos_models = []  # list of section occurrence models
             for so in sos:
+                section = so["section"]
+                date = so["date"]
+                if date < section.mentor.course.section_start:
+                    # skip section occurrence if it's before section start date
+                    continue
                 try:
                     cur, _ = SectionOccurrence.objects.get_or_create(**so)
                     sos_models.append(cur)
