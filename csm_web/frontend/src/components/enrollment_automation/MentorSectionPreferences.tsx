@@ -7,6 +7,7 @@ import { Slot } from "./EnrollmentAutomationTypes";
 import { formatInterval, formatTime, MAX_PREFERENCE, parseTime } from "./utils";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
+import ErrorCircle from "../../../static/frontend/img/x_circle.svg";
 import { useMatcherPreferenceMutation, useMatcherPreferences, useMatcherSlots } from "../../utils/queries/matcher";
 
 enum Status {
@@ -203,6 +204,9 @@ export function MentorSectionPreferences({
           <div className="matcher-sidebar-pref-help">
             Rate your preferences from 0 to {MAX_PREFERENCE}.
             <br />0 means unavailable, {MAX_PREFERENCE} means most preferred.
+            <br />
+            <br />
+            <b>Please provide nonzero preferences for at least 3 slots.</b>
           </div>
           <div>Shift-click to select more slots.</div>
         </div>
@@ -217,6 +221,10 @@ export function MentorSectionPreferences({
       break;
     case Status.SUCCESS:
       statusContent = <CheckCircle className="icon matcher-submit-status-icon" />;
+      break;
+    case Status.ERROR:
+      statusContent = <ErrorCircle className="icon matcher-submit-status-icon error error" />;
+      break;
   }
 
   return (

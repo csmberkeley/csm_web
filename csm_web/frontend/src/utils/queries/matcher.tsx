@@ -209,6 +209,8 @@ export const useMatcherPreferenceMutation = (
       const response = await fetchWithMethod(`/matcher/${courseId}/preferences`, HTTP_METHODS.POST, body);
       if (!response.ok && response.status === 500) {
         throw new ServerError(`Failed to update matcher preferences for course ${courseId}`);
+      } else if (!response.ok && response.status >= 400 && response.status < 500) {
+        throw new PermissionError("Permission denied");
       }
       return response.ok;
     },

@@ -229,6 +229,10 @@ def preferences(request, pk=None):
         mentor = Mentor.objects.get(
             user=request.user, course=course, section__isnull=True
         )
+
+        if len([pref for pref in request.data if pref["preference"] > 0]) < 3:
+            raise PermissionDenied("Less than 3 nonzero preferences provided.")
+
         for pref in request.data:
             curslot = MatcherSlot.objects.get(pk=pref["id"])
             existing_queryset = MatcherPreference.objects.filter(
