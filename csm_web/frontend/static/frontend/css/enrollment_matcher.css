@@ -163,6 +163,10 @@
 	height: 1.5em !important;
 }
 
+.matcher-submit-status-icon.error {
+	color: var(--csm-danger);
+}
+
 .matcher-detail-time {
 	font-size: 0.9rem;
 }
