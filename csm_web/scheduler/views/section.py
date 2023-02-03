@@ -9,7 +9,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from .utils import log_str, logger, get_object_or_error, viewset_with
-from ..models import Course, Section, Student, Spacetime, User, Attendance, Mentor
+from ..models import Course, Section, Student, Spacetime, User, Attendance, Mentor, WaitlistPosition
 from ..serializers import (
     SectionOccurrenceSerializer,
     SectionSerializer,
