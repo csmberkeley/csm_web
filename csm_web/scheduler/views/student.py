@@ -1,4 +1,4 @@
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db.models import Q
 from django.utils import timezone
 from scheduler.models import Attendance, SectionOccurrence
@@ -70,29 +70,21 @@ class StudentViewSet(viewsets.GenericViewSet):
             raise PermissionDenied("You cannot record your own attendance (nice try)")
         try:  # update
             attendance = student.attendance_set.get(pk=request.data["id"])
-            serializer = AttendanceSerializer(
-                attendance,
-                data={
-                    "student_id": student.id,
-                    "student_name": student.name,
-                    "student_email": student.user.email,
-                    "presence": request.data["presence"],
-                },
-            )
+            presence = request.data["presence"]
+            if presence not in ["PR", "UN", "EX"]:
+                logger.error(
+                    f"<Attendance:Failure> Could not record attendance for User {log_str(student)}, submitted invalid presence.")
+                return Response(status=status.HTTP_400_BAD_REQUEST)
+            attendance.presence = presence
+            try:
+                attendance.save()
+                logger.info(
+                    f"<Attendance:Success> Attendance {log_str(attendance)} recorded for User {log_str(request.user)}")
+            except ValidationError:
+                return Response(status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            return Response(status=status.HTTP_204_NO_CONTENT)
         except ObjectDoesNotExist:
             logger.error(
-                f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, used non-existent attendance id {request.data['id']}"
+                f"<Attendance:Failure> Could not record attendance for User {log_str(student)}, used non-existent attendance id {request.data['id']}"
             )
             return Response(status=status.HTTP_400_BAD_REQUEST)
-
-        if serializer.is_valid():
-            attendance = serializer.save()
-            logger.info(
-                f"<Attendance:Success> Attendance {log_str(attendance)} recorded for User {log_str(request.user)}"
-            )
-            return Response(status=status.HTTP_204_NO_CONTENT)
-        logger.error(
-            f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, errors: {serializer.errors}"
-        )
-        return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
