@@ -34,8 +34,8 @@ def week_bounds(date):
     return week_start, week_end
 
 class Swap(models.Model):
-	sender = models.ForeignKey(Student, on_delete=models.CASCADE)
-	receiver = models.ForeignKey(Student, on_delete=models.CASCADE)
+	sender = models.ForeignKey("Student", on_delete=models.CASCADE, related_name = "sender")
+	receiver = models.ForeignKey("Student", on_delete=models.CASCADE, related_name = "receiver")
 
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)

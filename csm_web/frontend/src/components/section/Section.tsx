@@ -67,6 +67,19 @@ export function SectionSidebar({ links }: SectionSidebarProps) {
   );
 }
 
+export function SectionSwapbar() {
+  return (
+    <div>Hi</div>
+    // <nav id="section-swap-sidebar">
+    //   {links.map(([label, href]) => (
+    //     <NavLink end to={href} key={href}>
+    //       {label}
+    //     </NavLink>
+    //   ))}
+    // </nav>
+  );
+}
+
 interface LocationProps {
   location?: string;
 }
@@ -143,6 +156,9 @@ export function SectionDetail({ course, courseTitle, userRole, links, children }
       <SectionHeader course={course} courseTitle={courseTitle} userRole={userRole} />
       <div id="section-detail-body">
         <SectionSidebar links={links} />
+        <div id="dev">
+          <SectionSwapbar />
+        </div>
         <div id="section-detail-main">{children}</div>
       </div>
     </section>
