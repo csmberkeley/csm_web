@@ -33,9 +33,6 @@ def week_bounds(date):
     week_end = week_start + datetime.timedelta(weeks=1)
     return week_start, week_end
 
-class Swap(models.Model):
-	sender = models.ForeignKey(Student, on_delete=models.CASCADE)
-	receiver = models.ForeignKey(Student, on_delete=models.CASCADE)
 
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
@@ -117,7 +114,7 @@ class Attendance(ValidatingModel):
     class Meta:
         unique_together = ("sectionOccurrence", "student")
         ordering = ("sectionOccurrence",)
-        #indexes = (models.Index(fields=("date",)),)
+        # indexes = (models.Index(fields=("date",)),)
 
 
 class SectionOccurrence(ValidatingModel):
@@ -243,9 +240,18 @@ class Student(Profile):
         unique_together = ("user", "section")
 
 
+class Swap(models.Model):
+    """
+    Represents a given "instance" of a swap. Every time a swap is requested between two users, 
+    a Swap instance is initialized containing references to the respective students.
+    """
+    sender = models.ForeignKey(Student, related_name="sender", on_delete=models.CASCADE)
+    receiver = models.ForeignKey(Student, related_name="receiver", on_delete=models.CASCADE)
+
+
 class Mentor(Profile):
     """
-    Represents a given "instance" of a mentor. Every section a mentor teaches in every course should
+    Represents a given "instance" of a mentor. Every section a mentor teaches in every ccurse should
     have a new Mentor profile.
     """
 
