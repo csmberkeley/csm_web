@@ -17,12 +17,14 @@ from scheduler.models import (
     Spacetime,
     Student,
     User,
+    Swap,
 )
 from scheduler.serializers import (
     SectionOccurrenceSerializer,
     SectionSerializer,
     SpacetimeSerializer,
     StudentSerializer,
+    SwapSerializer,
 )
 
 from .utils import get_object_or_error, log_str, logger, viewset_with
@@ -779,3 +781,25 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             return Response({}, status=status.HTTP_200_OK)
 
         raise PermissionDenied()
+
+    @action(detail=True, methods=["GET", "POST"])
+    def swap(self, request, pk=None):
+        """
+        GET: Returns all relevant Swap objects for current user.
+
+        POST: Handles creating a new Swap instance when a Swap a requested.
+        """
+        section = get_object_or_error(Section.objects, pk=pk)
+
+        if request.method == "GET":
+            student_id = request.data["student_id"]
+            if student_id == "":
+                raise PermissionDenied("The `student_id` field in the request cannot be empty, please specify student.")
+            student_swaps = Swap.objects.filter(sender__id=student_id)
+            return Response(
+                SwapSerializer(
+                    student_swaps
+                ).data
+            )
+        if request.method == "POST":
+            pass
