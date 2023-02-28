@@ -253,7 +253,7 @@ class Section(ValidatingModel):
         help_text='A brief note to add some extra information about the section, e.g. "EOP" or '
         '"early start".'
     )
-    waitlist_capacity = models.PositiveSmallIntegerField()
+    waitlist_capacity = models.PositiveSmallIntegerField(default=5)
 
     # @functional.cached_property
     # def course(self):
@@ -437,7 +437,6 @@ class WaitlistPosition(ValidatingModel):
     student = models.ForeignKey(Student, on_delete=models.CASCADE)
     join_time = models.DateTimeField(auto_now_add=True)
 
-    
 
 class MatcherSlot(ValidatingModel):
     matcher = models.ForeignKey(Matcher, on_delete=models.CASCADE)
