@@ -69,7 +69,28 @@ export function SectionSidebar({ links }: SectionSidebarProps) {
 
 export function SectionSwapbar() {
   return (
-    <div>Hi</div>
+    <div id="section-swap">
+      <div className="swap-dashboard">
+        <div className="my-request">
+          <div className="swap-title">My Swap Requests</div>
+        </div>
+        <div className="received-request">
+          <div className="swap-title">Receive Swap Requests</div>
+        </div>
+      </div>
+
+      <form className="create-swap-request">
+        <label>
+          Name:
+          <input type="text" name="name" />
+        </label>
+        <label>
+          Email:
+          <input type="text" name="email" />
+        </label>
+        <input type="submit" value="Submit" />
+      </form>
+    </div>
     // <nav id="section-swap-sidebar">
     //   {links.map(([label, href]) => (
     //     <NavLink end to={href} key={href}>
@@ -156,10 +177,10 @@ export function SectionDetail({ course, courseTitle, userRole, links, children }
       <SectionHeader course={course} courseTitle={courseTitle} userRole={userRole} />
       <div id="section-detail-body">
         <SectionSidebar links={links} />
-        <div id="dev">
-          <SectionSwapbar />
-        </div>
+
         <div id="section-detail-main">{children}</div>
+
+        <SectionSwapbar />
       </div>
     </section>
   );

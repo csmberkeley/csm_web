@@ -1303,6 +1303,52 @@ table tbody tr:last-child > td {
 	margin-bottom: 40px;
 }
 
+#section-swap {
+	width: 500px;
+	display: flex;
+	border: black;
+	border-style: solid;
+	border-width: 1px;
+
+	flex-direction: column;
+	width: -moz-fit-content;
+	margin-left: auto;
+}
+
+.create-swap-request {
+	align-self: left;
+	flex-direction: column;
+	display: flex;
+	flex-direction: column;
+}
+
+.swap-title {
+	text-align: center;
+	border: black;
+	border-style: solid;
+	border-width: 1px;
+	height: 20%;
+}
+.swap-dashboard {
+	display: flex;
+	width: 100%;
+	height: 80%;
+}
+
+.my-request {
+	width: 50%;
+	border: black;
+	border-style: solid;
+	border-width: 1px;
+}
+
+.received-request {
+	width: 50%;
+	border: black;
+	border-style: solid;
+	border-width: 1px;
+}
+
 #section-detail-sidebar {
 	display: flex;
 	flex-wrap: wrap;
