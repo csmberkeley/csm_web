@@ -1975,3 +1975,17 @@ table tbody tr:last-child > td {
 .spacetimeDeleteDropper {
 	text-align: center;
 }
+
+.containers {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	padding: 10px;
+	margin: 10px 10px px 10px;
+}
+
+.profile-box {
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+}
