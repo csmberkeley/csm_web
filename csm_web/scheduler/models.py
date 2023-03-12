@@ -37,6 +37,11 @@ def week_bounds(date):
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
+    # profile-relevant fields
+    bio = models.CharField(max_length=1000, blank=True)
+    pronouns = models.CharField(max_length=50, blank=True)
+    pronunciation = models.CharField(max_length=50, blank=True)
+    is_private = models.BooleanField()
     # init lol
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
