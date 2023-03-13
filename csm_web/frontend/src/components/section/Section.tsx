@@ -67,85 +67,6 @@ export function SectionSidebar({ links }: SectionSidebarProps) {
   );
 }
 
-interface RequestProps {
-  sender: string;
-  receiver: string;
-  id: number;
-}
-
-export function SectionSwapbar() {
-  const [myRequest, setMyRequest] = useState<Swap[]>([]);
-  const [sendRequest, setSendRequest] = useState<Swap[]>([]);
-  const [email, setEmail] = useState();
-  const [name, setName] = useState();
-  // How to get the id of the student?
-  const { id } = useParams<string>();
-
-  // Need API endpoints
-  useEffect(() => {
-    fetch(`/api/sections/students/`)
-      .then(res => res.json())
-      .then(data => {
-        setMyRequest(data);
-      });
-  }, []);
-
-  return (
-    <div id="section-swap">
-      <div className="swap-dashboard">
-        <div className="my-request">
-          <div className="swap-title">My Swap Requests</div>
-        </div>
-        <div className="received-request">
-          <div className="swap-title">Receive Swap Requests</div>
-          <ul>
-            {myRequest.map(request => (
-              <li key={request.id}>
-                {request.sender.user.first_name} {request.sender.user.last_name} (id: {request.sender.id})
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      <ul>
-        {myRequest.map(request => (
-          <li key={request.id}>
-            {request.sender.user.first_name} {request.sender.user.last_name} (id: {request.sender.id})
-          </li>
-        ))}
-      </ul>
-      <form className="create-swap-request">
-        <label>
-          Name:
-          <input type="text" name="name" onInput={e => setName(e.target.value)} />
-        </label>
-        <label>
-          Email:
-          <input type="text" name="email" onInput={e => setEmail(e.target.value)} />
-        </label>
-        <input type="submit" value="Submit" />
-        <button
-          type="submit"
-          onClick={event => {
-            const data = {
-              value: id,
-              requestedEmail: email
-            };
-            // POST end points
-            fetch(`/api/sections/students/`, {
-              method: "POST",
-              // headers: {'Content-Type': 'application/json', 'X-CSRFToken':`${csrftoken}`},
-              body: JSON.stringify(data)
-            }).then(res => {
-              console.log("Request complete! response:", res);
-            });
-          }}
-        ></button>
-      </form>
-    </div>
-  );
-}
-
 interface LocationProps {
   location?: string;
 }
@@ -222,10 +143,7 @@ export function SectionDetail({ course, courseTitle, userRole, links, children }
       <SectionHeader course={course} courseTitle={courseTitle} userRole={userRole} />
       <div id="section-detail-body">
         <SectionSidebar links={links} />
-
         <div id="section-detail-main">{children}</div>
-
-        <SectionSwapbar />
       </div>
     </section>
   );

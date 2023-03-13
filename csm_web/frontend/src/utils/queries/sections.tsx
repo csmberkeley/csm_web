@@ -274,6 +274,33 @@ export const useStudentSubmitWordOfTheDayMutation = (
   return mutationResult;
 };
 
+export interface SectionSwapMutationBody {
+  email: string;
+}
+
+/**
+ * Hook to request a swap with another student
+ */
+export const useSwapRequestMutation = (
+  sectionId: number
+): UseMutationResult<Section, ServerError, SectionSwapMutationBody> => {
+  const mutationResult = useMutation<Section, Error, SectionSwapMutationBody>(
+    async (body: SectionSwapMutationBody) => {
+      const response = await fetchWithMethod(`sections/${sectionId}/swap`, HTTP_METHODS.POST, body);
+      if (response.ok) {
+        return response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to request swap`);
+      }
+    },
+    { retry: handleRetry }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
+
 export interface StudentDropMutationBody {
   banned: boolean;
   blacklisted: boolean;

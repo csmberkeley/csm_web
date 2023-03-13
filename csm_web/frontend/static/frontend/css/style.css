@@ -879,6 +879,12 @@ main {
 	margin: 0 0 20px;
 }
 
+.section-detail-info-card.swap-section {
+	flex-basis: 100%;
+	display: flex;
+	text-align: center;
+}
+
 .section-detail-info-card.drop-section {
 	flex-basis: 100%;
 	display: flex;
@@ -1313,6 +1319,46 @@ table tbody tr:last-child > td {
 	flex-direction: column;
 	width: -moz-fit-content;
 	margin-left: auto;
+}
+
+.view-swap-btn {
+	display: block;
+	border: none;
+	margin: auto;
+	cursor: pointer;
+	background-color: var(--csm-green);
+	border-radius: 6px;
+	color: white;
+	font-size: 14px;
+	padding: 10px 27px;
+}
+
+.swap-display {
+	width: 750px;
+	height: 1000px;
+	text-align: center;
+}
+
+#swap-request-form {
+	display: flex;
+	flex-direction: row;
+}
+
+#swap-request-form-contents {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	margin: auto;
+	max-width: max-content;
+}
+
+#swap-request-form-contents > * {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+	align-items: center;
+	margin-bottom: 20px;
 }
 
 .create-swap-request {

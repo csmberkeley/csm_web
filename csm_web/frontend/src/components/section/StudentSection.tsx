@@ -8,6 +8,7 @@ import {
 import { Mentor, Override, Spacetime } from "../../utils/types";
 import Modal from "../Modal";
 import { ATTENDANCE_LABELS, InfoCard, ROLES, SectionDetail, SectionSpacetime } from "./Section";
+import { SwapSectionModal } from "./SwapSectionModal";
 import { dateSortWord, formatDateISOToWord } from "./utils";
 
 import XIcon from "../../../static/frontend/img/x.svg";
@@ -52,6 +53,7 @@ export default function StudentSection({
           index
           element={
             <StudentSectionInfo
+              id={id}
               mentor={mentor}
               spacetimes={spacetimes}
               override={override}
@@ -65,6 +67,7 @@ export default function StudentSection({
 }
 
 interface StudentSectionInfoProps {
+  id: number;
   mentor: Mentor;
   spacetimes: Spacetime[];
   override?: Override;
@@ -72,7 +75,7 @@ interface StudentSectionInfoProps {
 }
 
 // eslint-disable-next-line no-unused-vars
-function StudentSectionInfo({ mentor, spacetimes, override, associatedProfileId }: StudentSectionInfoProps) {
+function StudentSectionInfo({ id, mentor, spacetimes, override, associatedProfileId }: StudentSectionInfoProps) {
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">My Section</h3>
@@ -92,10 +95,38 @@ function StudentSectionInfo({ mentor, spacetimes, override, associatedProfileId 
             override={override}
           />
         ))}
+        <SwapSection sectionId={id} />
         <DropSection profileId={associatedProfileId} />
       </div>
     </React.Fragment>
   );
+}
+
+interface SwapSectionProps {
+  sectionId: number;
+}
+
+enum SwapSectionStage {
+  INITIAL = "INITIAL",
+  DISPLAY = "DISPLAY"
+}
+
+export function SwapSection({ sectionId }: SwapSectionProps) {
+  const [stage, setStage] = useState<SwapSectionStage>(SwapSectionStage.INITIAL);
+
+  switch (stage) {
+    case SwapSectionStage.INITIAL:
+      return (
+        <InfoCard title="Swap Section" showTitle={false}>
+          <h5>Swap Section</h5>
+          <button className="view-swap-btn" onClick={() => setStage(SwapSectionStage.DISPLAY)}>
+            Swap
+          </button>
+        </InfoCard>
+      );
+    case SwapSectionStage.DISPLAY:
+      return <SwapSectionModal sectionId={sectionId} closeModal={() => setStage(SwapSectionStage.INITIAL)} />;
+  }
 }
 
 interface DropSectionProps {
