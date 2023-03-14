@@ -42,7 +42,6 @@ class User(AbstractUser):
     pronouns = models.CharField(max_length=50, blank=True)
     pronunciation = models.CharField(max_length=50, blank=True)
     is_private = models.BooleanField()
-    # init lol
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         # check restricted first

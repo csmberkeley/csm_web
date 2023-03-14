@@ -16,6 +16,7 @@ urlpatterns = router.urls
 
 urlpatterns += [
     path("userinfo/", views.userinfo, name="userinfo"),
+    path("userprofile/", views.userprofile, name="userprofile"),
     path("matcher/active/", views.matcher.active),
     path("matcher/<int:pk>/slots/", views.matcher.slots),
     path("matcher/<int:pk>/preferences/", views.matcher.preferences),

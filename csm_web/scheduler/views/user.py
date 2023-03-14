@@ -27,14 +27,13 @@ class UserViewSet(*viewset_with("list")):
 def userinfo(request):
     """
     Get user info for request user
-
-    TODO: perhaps replace this with a viewset when we establish profiles
+    Put user info for request user
     """
     if request.method == "GET":
         serializer = UserSerializer(request.user)
         return Response(serializer.data, status=status.HTTP_200_OK)
     elif request.method == "PUT":
-        user = User.objects.get(id=request.user)
+        user = request.user
         bio = request.data.get("bio")
         pronunciation = request.data.get("pronunciation")
         pronouns = request.data.get("pronouns")
@@ -49,3 +48,13 @@ def userinfo(request):
             user.is_private = is_private
         user.save()
         return Response(status=status.HTTP_201_CREATED)
+
+
+@api_view(["GET"])
+def userprofile(request, user_id):
+    """
+    Get the user information (for profiles) of other people (user_id)
+    """
+    user = User.objects.get(id=user_id)
+    serializer = UserSerializer(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
