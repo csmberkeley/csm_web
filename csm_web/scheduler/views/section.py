@@ -648,28 +648,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
 
             # Send swap email
-            try:
-                email_swap(student)
-                logger.info(
-                    f"<Enrollment Email:Success> Email for {student} swapping sent"
-                )
-            except NoEmailError:
-                mentor = student.section.mentor
-                logger.info(
-                    f"<Enrollment Email:Failure> Email address for {mentor} not found"
-                )
-            except EmailFormattingError:
-                logger.info(
-                    f"<Enrollment Email:Failure> Email has not been formatted correctly for sending"
-                )
-            except EmailAuthError:
-                logger.info(
-                    f"<Enrollment Email:Failure> Cannot log into CSM email"
-                )
-            except HttpError:
-                logger.info(
-                    f"<Enrollment Email:Failure> Email failed to send"
-                )
+            email_swap(student, logger)
 
             return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -684,28 +663,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         )
 
         # Send enroll email
-        try:
-            email_enroll(student)
-            logger.info(
-                f"<Enrollment Email:Success> Email for {student} enrolling sent"
-            )
-        except NoEmailError:
-            mentor = student.section.mentor
-            logger.info(
-                f"<Enrollment Email:Failure> Email address for {mentor} not found"
-            )
-        except EmailFormattingError:
-            logger.info(
-                f"<Enrollment Email:Failure> Email has not been formatted correctly for sending"
-            )
-        except EmailAuthError:
-            logger.info(
-                f"<Enrollment Email:Failure> Cannot log into CSM email"
-            )
-        except HttpError:
-            logger.info(
-                f"<Enrollment Email:Failure> Email for {student} enrolling failed to send"
-            )
+        email_enroll(student, logger)
 
         return Response({"id": student.id}, status=status.HTTP_201_CREATED)
 

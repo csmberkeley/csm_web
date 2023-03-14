@@ -12,12 +12,12 @@ from .utils import log_str, logger, get_object_or_error
 from ..models import Student
 from ..serializers import AttendanceSerializer, StudentSerializer
 from ..email.email_utils import (email_coordinator_drop,
-    email_student_drop,
-    EmailFormattingError,
-    NoEmailError,
-    EmailAuthError,
-    HttpError
-)
+                                 email_student_drop,
+                                 EmailFormattingError,
+                                 NoEmailError,
+                                 EmailAuthError,
+                                 HttpError
+                                 )
 
 
 class StudentViewSet(viewsets.GenericViewSet):
@@ -68,50 +68,11 @@ class StudentViewSet(viewsets.GenericViewSet):
         if is_coordinator:
             coordinator = student.course.coordinator_set.get(user=request.user)
             mentor = student.section.mentor
-            try:
-                email_coordinator_drop(student)
-                logger.info(
-                    f"<Drop Email:Success> Email for coord {coordinator} dropping student {student} sent"
-                )
-            except NoEmailError:
-                logger.info(
-                    f"<Drop Email:Failure> Email address for {student} or {mentor} not found"
-                )
-            except EmailFormattingError:
-                logger.info(
-                    f"<Drop Email:Failure> Email for coord {coordinator} dropping student {student} has not been formatted correctly for sending"
-                )
-            except EmailAuthError:
-                logger.info(
-                    f"<Drop Email:Failure> Cannot log into CSM email"
-                )
-            except HttpError:
-                logger.info(
-                    f"<Drop Email:Failure> Email for coord {coordinator} dropping student {student} failed to send"
-                )
+            email_coordinator_drop(student, logger)
+
         else:
             mentor = student.section.mentor
-            try:
-                email_student_drop(student)
-                logger.info(
-                    f"<Drop Email:Success> Email for student {student} dropping section sent"
-                )
-            except NoEmailError:
-                logger.info(
-                    f"<Drop Email:Failure> Email address for {student} or {mentor} not found"
-                )
-            except EmailFormattingError:
-                logger.info(
-                    f"<Drop Email:Failure> Email for student {student} dropping section has not been formatted correctly for sending"
-                )
-            except EmailAuthError:
-                logger.info(
-                    f"<Drop Email:Failure> Cannot log into CSM email"
-                )
-            except HttpError:
-                logger.info(
-                    f"<Drop Email:Failure> Email for student {student} dropping section failed to send"
-                )
+            email_student_drop(student, logger)
 
         return Response(status=status.HTTP_204_NO_CONTENT)
 
@@ -152,4 +113,3 @@ class StudentViewSet(viewsets.GenericViewSet):
             f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, errors: {serializer.errors}"
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-

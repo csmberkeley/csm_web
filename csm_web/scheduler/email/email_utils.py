@@ -9,9 +9,12 @@ from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from .email_errors import EmailFormattingError, NoEmailError, EmailAuthError
+from .email_errors import EmailFormattingError, NoEmailError, EmailAuthError, email_error_handling
+
+# Email error handling wrapper adds logger argument as last argument
 
 
+@email_error_handling
 def email_enroll(student):
     """Sends the corresponding mentor an email notification that the STUDENT enrolled in their section"""
 
@@ -41,7 +44,10 @@ def email_enroll(student):
         )
         _email_send_message(f"[CSM - {course_title}] Section Enrollment Confirmation", body, student_email)
 
+# Email error handling wrapper adds logger argument as last argument
 
+
+@email_error_handling
 def email_swap(student):
     """Sends the corresponding mentor an email notification that the STUDENT has swapped into their section"""
 
@@ -71,7 +77,10 @@ def email_swap(student):
         )
         _email_send_message(f"[CSM - {course_title}] Section Swap Confirmation", body, student_email)
 
+# Email error handling wrapper adds logger argument as last argument
 
+
+@email_error_handling
 def email_student_drop(student):
     """Sends the corresponding mentor an email notification that the STUDENT dropped out of their section"""
 
@@ -101,7 +110,10 @@ def email_student_drop(student):
         )
         _email_send_message(f"[CSM - {course_title}] Section Drop Confirmation", body, student_email)
 
+# Email error handling wrapper adds logger argument as last argument
 
+
+@email_error_handling
 def email_coordinator_drop(student):
     """Sends the corresponding mentor and STUDENT an email notification that
         the student has been dropped out of the section by the coordinator"""
