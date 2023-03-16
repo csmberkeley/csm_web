@@ -34,3 +34,8 @@ def test_create_user():
     assert example.pronouns == pronouns
     assert example.pronunciation == pronounciation
     assert not example.is_private
+
+# TODO test getting a user
+# TODO test updating a user's information
+# TODO features: sanitizing input (frontend job?), any characters django can't handle, how long should each filed be
+# TODO edge cases: can't think of any now
