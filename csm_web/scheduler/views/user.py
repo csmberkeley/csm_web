@@ -47,7 +47,7 @@ def userinfo(request):
         if is_private is not None:
             user.is_private = is_private
         user.save()
-        return Response(status=status.HTTP_201_CREATED)
+        return Response(status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
