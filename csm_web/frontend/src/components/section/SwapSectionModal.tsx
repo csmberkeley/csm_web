@@ -84,9 +84,9 @@ export const SwapRequestForm = ({ sectionId }: SwapRequestFormProps) => {
             value={email}
             autoFocus
           />
-          <datalist id="swap-student-email-list">
+          {/* <datalist id="swap-student-email-list">
             {userEmailsLoaded ? userEmails.map(email => <option key={email} value={email} />) : null}
-          </datalist>
+          </datalist> */}
         </label>
         <input type="submit" value="Request Swap" />
       </div>
