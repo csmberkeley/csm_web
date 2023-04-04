@@ -103,6 +103,19 @@
 	background: linear-gradient(to bottom, #ffffff99 0%, #ffffff 50%);
 }
 
+.matcher-body-footer-status-container {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+	gap: 4px;
+}
+
+.matcher-body-footer-status-icon {
+	width: 2em !important;
+	height: 2em !important;
+}
+
 .mentor-sidebar-left,
 .coordinator-sidebar-left {
 	display: flex;
@@ -410,6 +423,10 @@
 
 .matcher-tiling-toggle {
 	margin-bottom: 3px;
+}
+
+.matcher-tooltip-container {
+	position: relative;
 }
 
 .matcher-tooltip-info-icon {

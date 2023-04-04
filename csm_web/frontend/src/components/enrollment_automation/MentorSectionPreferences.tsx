@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 import { Profile } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { Calendar } from "./calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime } from "./calendar/CalendarTypes";
 import { Slot } from "./EnrollmentAutomationTypes";
-import { MAX_PREFERENCE, formatTime, parseTime, formatInterval } from "./utils";
+import { formatInterval, formatTime, MAX_PREFERENCE, parseTime } from "./utils";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
+import { useMatcherPreferenceMutation, useMatcherPreferences, useMatcherSlots } from "../../utils/queries/matcher";
 
 enum Status {
   NONE,
@@ -32,62 +32,52 @@ export function MentorSectionPreferences({
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedEvents, setSelectedEvents] = useState<CalendarEvent[]>([]);
   const [selectedEventIndices, setSelectedEventIndices] = useState<number[]>([]);
-  const [matcherOpen, setMatcherOpen] = useState<boolean>(false);
 
   /**
    * Status after submitting preferences
    */
   const [submitStatus, setSubmitStatus] = useState<Status>(Status.NONE);
 
+  const { data: jsonSlots, isSuccess: jsonSlotsLoaded } = useMatcherSlots(profile.courseId);
+  const { data: jsonPreferences, isSuccess: jsonPreferencesLoaded } = useMatcherPreferences(profile.courseId);
+
+  const matcherPreferenceMutation = useMatcherPreferenceMutation(profile.courseId);
+
   useEffect(() => {
-    getSlots();
-    getMatcherOpen();
-  }, [profile]);
+    // wait for all data to be loaded
+    if (!jsonSlotsLoaded || !jsonPreferencesLoaded) {
+      return;
+    }
 
-  const getSlots = () => {
-    fetchJSON(`matcher/${profile.courseId}/slots`)
-      .then(data => {
-        const newSlots: Slot[] = [];
-        for (const slot of data.slots) {
-          const times = [];
-          for (const time of slot.times) {
-            times.push({
-              day: time.day,
-              startTime: parseTime(time.startTime),
-              endTime: parseTime(time.endTime),
-              isLinked: time.isLinked
-            });
-          }
-          const parsed_slot: Slot = {
-            id: slot.id,
-            // replace single quotes for JSON
-            times: times,
-            preference: 0
-          };
-          newSlots.push(parsed_slot);
-        }
-        return newSlots;
-      })
-      .then(newSlots => {
-        // also fetch existing mentor preferences
-        fetchJSON(`matcher/${profile.courseId}/preferences`).then(data => {
-          for (const pref of data.responses) {
-            const slotIndex = newSlots.findIndex(slot => slot.id === pref.slot);
-            if (slotIndex !== -1) {
-              newSlots[slotIndex].preference = pref.preference;
-            }
-          }
-
-          setSlots(newSlots);
+    const newSlots: Slot[] = [];
+    for (const slot of jsonSlots.slots) {
+      const times = [];
+      for (const time of slot.times) {
+        times.push({
+          day: time.day,
+          startTime: parseTime(time.startTime),
+          endTime: parseTime(time.endTime),
+          isLinked: time.isLinked
         });
-      });
-  };
+      }
+      const parsed_slot: Slot = {
+        id: slot.id,
+        // replace single quotes for JSON
+        times: times,
+        preference: 0
+      };
+      newSlots.push(parsed_slot);
+    }
 
-  const getMatcherOpen = () => {
-    fetchJSON(`matcher/${profile.courseId}/configure`).then(data => {
-      setMatcherOpen(data.open);
-    });
-  };
+    for (const pref of jsonPreferences.responses) {
+      const slotIndex = newSlots.findIndex(slot => slot.id === pref.slot);
+      if (slotIndex !== -1) {
+        newSlots[slotIndex].preference = pref.preference;
+      }
+    }
+
+    setSlots(newSlots);
+  }, [jsonSlotsLoaded, jsonPreferencesLoaded]);
 
   const setPreference = (e: React.ChangeEvent<HTMLInputElement>) => {
     const newPreference = parseInt(e.target.value);
@@ -96,12 +86,16 @@ export function MentorSectionPreferences({
     }
 
     const selectedEventIds = selectedEvents.map(event => event.id);
+    let intPreference = parseInt(e.target.value);
+
+    // clamp preference value
+    intPreference = Math.min(MAX_PREFERENCE, Math.max(0, intPreference));
 
     const newSlots = slots.map(slot => {
       if (selectedEventIds.includes(slot.id)) {
         return {
           ...slot,
-          preference: parseInt(e.target.value)
+          preference: intPreference
         };
       }
       return slot;
@@ -115,36 +109,29 @@ export function MentorSectionPreferences({
     for (const slot of slots) {
       const cleaned_slot = {
         id: slot.id!,
-        preference: slot.preference
+        preference: Math.min(MAX_PREFERENCE, Math.max(0, slot.preference))
       };
       cleaned_preferences.push(cleaned_slot);
     }
     setSubmitStatus(Status.LOADING);
-    fetchWithMethod(`matcher/${profile.courseId}/preferences`, HTTP_METHODS.POST, cleaned_preferences)
-      .then(response => {
-        if (response.ok) {
-          setSubmitStatus(Status.SUCCESS);
-          // clear after 1.5 seconds
-          setTimeout(() => {
-            setSubmitStatus(Status.NONE);
-          }, 1500);
-        } else {
-          setSubmitStatus(Status.ERROR);
-        }
-      })
-      .catch(() => {
+
+    matcherPreferenceMutation.mutate(cleaned_preferences, {
+      onSuccess: () => {
+        setSubmitStatus(Status.SUCCESS);
+        // clear after 1.5 seconds
+        setTimeout(() => {
+          setSubmitStatus(Status.NONE);
+        }, 1500);
+      },
+      onError: () => {
         setSubmitStatus(Status.ERROR);
-      });
+      }
+    });
   };
 
   const setSelectedEventIndicesWrapper = (indices: number[]) => {
-    if (matcherOpen) {
-      setSelectedEventIndices(indices);
-      setSelectedEvents(indices.map(idx => slots[idx]));
-    } else {
-      setSelectedEventIndices([]);
-      setSelectedEvents([]);
-    }
+    setSelectedEventIndices(indices);
+    setSelectedEvents(indices.map(idx => slots[idx]));
   };
 
   const getEventDetails = (event: CalendarEventSingleTime): React.ReactElement => {
@@ -172,60 +159,55 @@ export function MentorSectionPreferences({
   };
 
   let sidebarContents;
-  if (matcherOpen) {
-    if (selectedEvents.length === 0) {
-      // no selected event
-      sidebarContents = <div>Click on a section to edit preferences.</div>;
-    } else {
-      const event = selectedEvents[0];
-      sidebarContents = (
-        <div className="matcher-sidebar-selected">
-          <div className="mathcer-sidebar-selected-top">
-            {selectedEvents.length === 1 ? (
-              // exactly one selected event
-              <React.Fragment>
-                <div className="matcher-sidebar-header">Section Time{event.times.length > 1 ? "s" : ""}:</div>
-                <ul className="matcher-selected-times">
-                  {event.times.map((time, time_idx) => (
-                    <li key={time_idx} className="matcher-selected-time-container">
-                      <span className="matcher-selected-time">
-                        {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </React.Fragment>
-            ) : (
-              // multiple selected events
-              <div className="matcher-sidebar-header">Multiple selected events</div>
-            )}
-            <label>
-              Preference:
-              <input
-                className="matcher-input"
-                type="number"
-                key={event.id}
-                defaultValue={event.preference}
-                onChange={setPreference}
-                autoFocus={true}
-                min={0}
-                max={MAX_PREFERENCE}
-              />
-            </label>
-          </div>
-          <div className="matcher-sidebar-create-footer">
-            <div className="matcher-sidebar-pref-help">
-              Rate your preferences from 0 to {MAX_PREFERENCE}.
-              <br />0 means unavailable, {MAX_PREFERENCE} means most preferred.
-            </div>
-            <div>Shift-click to select more slots.</div>
-          </div>
-        </div>
-      );
-    }
+  if (selectedEvents.length === 0) {
+    // no selected event
+    sidebarContents = <div>Click on a section to edit preferences.</div>;
   } else {
-    // matcher closed
-    sidebarContents = <div>The matcher is not currently open for preference submission.</div>;
+    const event = selectedEvents[0];
+    sidebarContents = (
+      <div className="matcher-sidebar-selected">
+        <div className="mathcer-sidebar-selected-top">
+          {selectedEvents.length === 1 ? (
+            // exactly one selected event
+            <React.Fragment>
+              <div className="matcher-sidebar-header">Section Time{event.times.length > 1 ? "s" : ""}:</div>
+              <ul className="matcher-selected-times">
+                {event.times.map((time, time_idx) => (
+                  <li key={time_idx} className="matcher-selected-time-container">
+                    <span className="matcher-selected-time">
+                      {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </React.Fragment>
+          ) : (
+            // multiple selected events
+            <div className="matcher-sidebar-header">Multiple selected events</div>
+          )}
+          <label>
+            Preference:
+            <input
+              className="matcher-input"
+              type="number"
+              key={event.id}
+              defaultValue={event.preference}
+              onChange={setPreference}
+              autoFocus={true}
+              min={0}
+              max={MAX_PREFERENCE}
+            />
+          </label>
+        </div>
+        <div className="matcher-sidebar-create-footer">
+          <div className="matcher-sidebar-pref-help">
+            Rate your preferences from 0 to {MAX_PREFERENCE}.
+            <br />0 means unavailable, {MAX_PREFERENCE} means most preferred.
+          </div>
+          <div>Shift-click to select more slots.</div>
+        </div>
+      </div>
+    );
   }
 
   let statusContent: React.ReactNode = "";
@@ -253,7 +235,7 @@ export function MentorSectionPreferences({
         <div className="mentor-sidebar-left">
           <div className="matcher-sidebar-left-top">{sidebarContents}</div>
           <div className="matcher-sidebar-left-bottom-row">
-            <button className="matcher-submit-btn" onClick={postPreferences} disabled={!matcherOpen}>
+            <button className="matcher-submit-btn" onClick={postPreferences}>
               Submit
             </button>
             <div className="matcher-submit-status-container">{statusContent}</div>

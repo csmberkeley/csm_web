@@ -66,6 +66,18 @@ class CoordAdmin(admin.ModelAdmin):
 
 # Custom views
 
+class CourseInline(admin.TabularInline):
+    model = Course.whitelist.through
+    extra = 0
+    verbose_name = "whitelist"
+    verbose_name_plural = "whitelists"
+
+    def formfield_for_foreignkey(self, db_field, request=None, **kwargs):
+        if db_field.name == "course":
+            # only give restricted courses
+            kwargs["queryset"] = Course.objects.filter(is_restricted=True)
+        return super().formfield_for_foreignkey(db_field, request, **kwargs)
+
 
 @admin.register(User)
 class UserAdmin(CoordAdmin):
@@ -73,6 +85,7 @@ class UserAdmin(CoordAdmin):
     search_fields = ("email",)
     list_display = ("name", "email")
     list_filter = ("is_active",)
+    inlines = (CourseInline,)
 
     def name(self, obj):
         if obj.first_name and obj.last_name:
@@ -412,26 +425,34 @@ class SpacetimeAdmin(CoordAdmin):
 
 @admin.register(Course)
 class CourseAdmin(CoordAdmin):
-    fields = (
-        "name",
-        "title",
-        "valid_until",
-        "enrollment_start",
-        "enrollment_end",
-        "section_start",
-        "permitted_absences",
-        "number_of_sections",
-        "number_of_students",
-        "number_of_mentors",
-    )
     readonly_fields = (
         "number_of_sections",
         "number_of_students",
         "number_of_mentors",
     )
+    filter_horizontal = ("whitelist",)
+    list_display = ("name", "title", "is_restricted", "number_of_sections", "number_of_students")
 
     def get_queryset(self, request):
         return super().get_queryset(request).prefetch_related("mentor_set")
+
+    def get_fields(self, request, obj=None):
+        all_fields = (
+            "name",
+            "title",
+            "valid_until",
+            "enrollment_start",
+            "enrollment_end",
+            "section_start",
+            "permitted_absences",
+            "is_restricted",
+            "number_of_sections",
+            "number_of_students",
+            "number_of_mentors",
+        )
+        if obj is not None and obj.is_restricted:
+            all_fields += ("whitelist",)
+        return all_fields
 
     def number_of_sections(self, obj):
         return obj.mentor_set.count()  # one-to-one between mentor objects and sections
@@ -512,10 +533,10 @@ class DayEndFilter(admin.SimpleListFilter):
 
 @admin.register(SectionOccurrence)
 class SectionOccurrenceAdmin(CoordAdmin):
-    fields = ("section", "date")
-    list_display = ("id", "section", "date")
+    fields = ("section", "date", "word_of_the_day")
+    list_display = ("id", "section", "date", "word_of_the_day")
     list_filter = ("date",)
-    search_fields = ("section__mentor__user__first_name", "section__mentor__user__last_name", "date")
+    search_fields = ("section__mentor__user__first_name", "section__mentor__user__last_name", "date", "word_of_the_day")
 
 
 @admin.register(Attendance)

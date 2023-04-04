@@ -1,16 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useHistory } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-import { fetchJSON, fetchWithMethod } from "../../../utils/api";
+import {
+  useMatcherAssignmentMutation,
+  useMatcherCreateSectionsMutation,
+  useMatcherMentors
+} from "../../../utils/queries/matcher";
 import { Mentor, Profile } from "../../../utils/types";
 import Modal from "../../Modal";
 import { SearchBar } from "../../SearchBar";
+import { Tooltip } from "../../Tooltip";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime, DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
 import { Assignment, Slot, SlotPreference, Time } from "../EnrollmentAutomationTypes";
 import { formatInterval, formatTime } from "../utils";
-
-import { Tooltip } from "../../Tooltip";
 
 import ErrorIcon from "../../../../static/frontend/img/error_outline.svg";
 import InfoIcon from "../../../../static/frontend/img/info.svg";
@@ -69,7 +72,6 @@ interface EditStageProps {
   slots: Slot[];
   assignments: Assignment[];
   prefByMentor: Map<number, SlotPreference[]>;
-  refreshAssignments: () => void;
   prevStage: () => void;
 }
 
@@ -78,8 +80,7 @@ export const EditStage = ({
   slots,
   assignments,
   prefByMentor,
-  prevStage,
-  refreshAssignments
+  prevStage
 }: EditStageProps): React.ReactElement => {
   /**
    * Table of mentor information and section metadata for editing.
@@ -153,21 +154,27 @@ export const EditStage = ({
 
   const [errorMessage, setErrorMessage] = useState<string>("");
 
+  const { data: jsonMentors, isSuccess: jsonMentorsLoaded } = useMatcherMentors(profile.courseId);
+  const matcherAssignmentMutation = useMatcherAssignmentMutation(profile.courseId);
+  const matcherCreateSectionsMutation = useMatcherCreateSectionsMutation(profile.courseId);
+
   /**
    * History for redirection after section creation.
    */
-  const history = useHistory();
+  const navigate = useNavigate();
 
-  /* Fetch mentor data */
+  /**
+   * Process mentor json data.
+   */
   useEffect(() => {
-    fetchJSON(`/matcher/${profile.courseId}/mentors`).then((data: any) => {
-      const newMentorsById = new Map<number, Mentor>();
-      data.mentors.forEach((mentor: Mentor) => {
-        newMentorsById.set(mentor.id, mentor);
-      });
-      setMentorsById(newMentorsById);
+    if (!jsonMentorsLoaded) return;
+
+    const newMentorsById = new Map<number, Mentor>();
+    jsonMentors.mentors.forEach((mentor: Mentor) => {
+      newMentorsById.set(mentor.id, mentor);
     });
-  }, []);
+    setMentorsById(newMentorsById);
+  }, [jsonMentors]);
 
   /* Sort slots by earliest day and then by earliest start time */
   useEffect(() => {
@@ -422,12 +429,7 @@ export const EditStage = ({
    */
   const saveAssignment = () => {
     const newAssignments = gatherAssignments();
-
-    fetchWithMethod(`/matcher/${profile.courseId}/assignment`, "PUT", {
-      assignment: newAssignments
-    }).then(() => {
-      refreshAssignments();
-    });
+    matcherAssignmentMutation.mutate({ assignment: newAssignments });
   };
 
   /**
@@ -436,18 +438,19 @@ export const EditStage = ({
   const createSections = () => {
     const newAssignments = gatherAssignments();
 
-    fetchWithMethod(`/matcher/${profile.courseId}/create`, "POST", {
-      assignment: newAssignments
-    }).then(async response => {
-      if (response.ok) {
-        history.push("/");
-      } else {
-        const json = await response.json();
-        console.error(json);
-        setErrorMessage(json.error ?? "Error creating sections");
-        setCreateConfirmModalOpen(false);
+    matcherCreateSectionsMutation.mutate(
+      { assignment: newAssignments },
+      {
+        onSuccess: () => {
+          navigate("/");
+        },
+        onError: response => {
+          console.error(response);
+          setErrorMessage(response.error ?? "Error creating sections");
+          setCreateConfirmModalOpen(false);
+        }
       }
-    });
+    );
   };
 
   const handleSearchChange = (term?: string) => {
@@ -767,9 +770,7 @@ const EditTableRow = ({
               {sortedSlots.map((slot: Slot) => (
                 <option key={slot.id} value={slot.id} className="matcher-assignment-section-times-option">
                   {(isAssigned ? `(${prefBySlot.get(slot.id!)}) ` : "") +
-                    slot.times
-                      .map<React.ReactNode>(time => displayTime(time))
-                      .join(" / ")}
+                    slot.times.map<React.ReactNode>(time => displayTime(time)).join(" / ")}
                 </option>
               ))}
             </select>

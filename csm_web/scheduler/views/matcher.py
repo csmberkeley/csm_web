@@ -44,6 +44,8 @@ def active(request):
     Endpoint: /api/matcher/active
 
     GET: Returns a list of course ids for active matchers related to the user.
+        - if the user is a mentor (with no section) in a course that is not open,
+          the course id will not be listed
         - only gives information about matchers for courses that the user is
           a coordinator or mentor for
         - format: [int, int, ...]
@@ -59,7 +61,18 @@ def active(request):
         & (Q(matcher__active=True) | Q(matcher__isnull=True))
     ).distinct()
 
-    return Response(courses.values_list("id", flat=True))
+    activeCourses = []
+    for course in courses:
+        add_course = True
+        is_coord = course.coordinator_set.filter(user=user).exists()
+        is_mentor = course.mentor_set.filter(user=user).exists()
+        if not is_coord and is_mentor:
+            add_course = course.matcher.is_open if course.matcher else False
+
+        if add_course:
+            activeCourses.append(course.id)
+
+    return Response(activeCourses)
 
 
 @api_view(["GET", "POST"])
@@ -275,15 +288,19 @@ def mentors(request, pk=None):
         # users already associated with the course as a mentor
         users_with_course = User.objects.filter(mentor__course=course)
         for email in request.data["mentors"]:
-            username = email.split("@")[0]  # username is everything before @
-            # use existing user, or create a new user if it doesnt exist
-            user, _ = User.objects.get_or_create(username=username, email=email)
-            # if mentor exists, skip
-            if user in users_with_course:
+            if not email or "@" not in email:
+                # invalid or blank email
                 skipped.append(email)
-                continue
-            # create new mentor
-            created = Mentor.objects.create(user=user, course=course)
+            else:
+                username = email.split("@")[0]  # username is everything before @
+                # use existing user, or create a new user if it doesnt exist
+                user, _ = User.objects.get_or_create(username=username, email=email)
+                # if mentor exists, skip
+                if user in users_with_course:
+                    skipped.append(email)
+                    continue
+                # create new mentor
+                created = Mentor.objects.create(user=user, course=course)
         return Response({"skipped": skipped}, status=status.HTTP_200_OK)
     elif request.method == "DELETE":
         # delete mentors from course
@@ -338,7 +355,7 @@ def configure(request, pk=None):
         if is_coordinator:
             if matcher is None:
                 # haven't set up the matcher yet
-                return Response([], status=status.HTTP_200_OK)
+                return Response({"open": False, "slots": []}, status=status.HTTP_200_OK)
 
             slots = MatcherSlot.objects.filter(matcher=matcher)
             return Response(

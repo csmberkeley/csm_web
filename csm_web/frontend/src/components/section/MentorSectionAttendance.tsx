@@ -1,140 +1,264 @@
-import React from "react";
-import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import React, { useState, useEffect } from "react";
+import {
+  useSectionAttendances,
+  useUpdateStudentAttendancesMutation,
+  useUpdateWordOfTheDayMutation,
+  useWordOfTheDay
+} from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import { ATTENDANCE_LABELS } from "./Section";
-import { dateSort, formatDate } from "./utils";
+import { dateSortISO, formatDateISO } from "./utils";
 import { Attendance } from "../../utils/types";
+import randomWords from "random-words";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 
 interface MentorSectionAttendanceProps {
-  loaded: boolean;
-  attendances: {
-    [date: string]: Attendance[];
-  };
-  updateAttendance: (updatedDate: string, updatedDateAttendances: Attendance[]) => void;
+  sectionId: number;
 }
 
-interface MentorSectionAttendanceState {
-  selectedDate?: string;
-  stagedAttendances?: Attendance[];
-  showAttendanceSaveSuccess: boolean;
-  showSaveSpinner: boolean;
+interface SectionOccurrence {
+  id: number;
+  date: string;
 }
 
-export default class MentorSectionAttendance extends React.Component<
-  MentorSectionAttendanceProps,
-  MentorSectionAttendanceState
-> {
-  attendanceTitle: React.RefObject<HTMLHeadingElement>;
+enum ResponseStatus {
+  NONE,
+  LOADING,
+  OK
+}
 
-  constructor(props: MentorSectionAttendanceProps) {
-    super(props);
+const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): React.ReactElement => {
+  const { data: jsonAttendances, isSuccess: jsonAttendancesLoaded } = useSectionAttendances(sectionId);
+  const { data: wotd, isSuccess: wotdLoaded, isError: wotdError } = useWordOfTheDay(sectionId);
 
-    const state: MentorSectionAttendanceState = {
-      selectedDate: undefined,
-      stagedAttendances: undefined,
-      showAttendanceSaveSuccess: false,
-      showSaveSpinner: false
-    };
+  /**
+   * Map of section occurrence ids to the corresponding list of attendances;
+   * only null on first load, displays a loading spinner when null
+   */
+  const [occurrenceMap, setOccurrenceMap] = useState<Map<number, { date: string; attendances: Attendance[] }> | null>(
+    null
+  );
+  /**
+   * Sorted section occurrences by date
+   */
+  const [sortedOccurrences, setSortedOccurrences] = useState<SectionOccurrence[]>([]);
 
-    if (props.loaded) {
-      // update selected date if already loaded
-      state.selectedDate = Object.keys(props.attendances).sort(dateSort)[0];
-      state.stagedAttendances = props.attendances[state.selectedDate!];
+  /**
+   * Currently selected date; only null on first load
+   */
+  const [selectedOccurrence, setSelectedOcurrence] = useState<SectionOccurrence | null>(null);
+
+  /**
+   * Staged attendances for the current date
+   */
+  const [stagedAttendances, setStagedAttendances] = useState<Attendance[]>([]);
+  /**
+   * Indicators when saving attendnace
+   */
+  const [showAttendanceSaveSuccess, setShowAttendanceSaveSuccess] = useState(false);
+  const [showSaveSpinner, setShowSaveSpinner] = useState(false);
+
+  /**
+   * Initial word of the day fetched from the database,
+   * corresponding to the current selected occurrence
+   */
+  const [initialWordOfTheDay, setInitialWordOfTheDay] = useState("");
+  /**
+   * Current word of the day, displayed in the input box
+   */
+  const [wordOfTheDay, setWordOfTheDay] = useState("");
+
+  const updateStudentAttendancesMutation = useUpdateStudentAttendancesMutation(sectionId);
+  const updateWordOfTheDayMutation = useUpdateWordOfTheDayMutation(sectionId);
+
+  const [responseStatus, setResponseStatus] = useState<ResponseStatus>(ResponseStatus.NONE);
+  const [responseText, setResponseText] = useState<string | null>(null);
+
+  /**
+   * Update state based on new fetched attendances
+   */
+  useEffect(() => {
+    if (jsonAttendancesLoaded) {
+      const newOccurrenceMap = new Map<number, { date: string; attendances: Attendance[] }>();
+      for (const occurrence of jsonAttendances) {
+        const attendances: Attendance[] = occurrence.attendances
+          .map(({ id, presence, date, studentId, studentName, studentEmail, wordOfTheDayDeadline }) => ({
+            id,
+            presence,
+            date,
+            occurrenceId: occurrence.id,
+            wordOfTheDayDeadline: wordOfTheDayDeadline,
+            student: { id: studentId, name: studentName, email: studentEmail }
+          }))
+          .sort((att1, att2) => att1.student.name.toLowerCase().localeCompare(att2.student.name.toLowerCase()));
+        newOccurrenceMap.set(occurrence.id, { date: occurrence.date, attendances });
+      }
+
+      const newSortedOccurrences = Array.from(newOccurrenceMap.entries())
+        .sort((aOccurrence, bOccurrence) => {
+          return dateSortISO(aOccurrence[1].date, bOccurrence[1].date);
+        })
+        .map(([occurrenceId, { date: occurrenceDate }]) => ({ id: occurrenceId, date: occurrenceDate }));
+
+      setOccurrenceMap(newOccurrenceMap);
+      setSortedOccurrences(newSortedOccurrences);
+
+      if (selectedOccurrence === null) {
+        // only update selected occurrence if it has not been set before
+        setSelectedOcurrence(newSortedOccurrences[0]);
+        setStagedAttendances(newOccurrenceMap.get(newSortedOccurrences[0].id)!.attendances);
+      } else {
+        // otherwise use existing selectedOccurrence
+        setStagedAttendances(newOccurrenceMap.get(selectedOccurrence.id)!.attendances);
+      }
     }
-    this.state = state;
+  }, [jsonAttendances]);
 
-    this.handleAttendanceChange = this.handleAttendanceChange.bind(this);
-    this.handleSaveAttendance = this.handleSaveAttendance.bind(this);
-    this.handleMarkAllPresent = this.handleMarkAllPresent.bind(this);
-    this.attendanceTitle = React.createRef<HTMLHeadingElement>();
-  }
-
-  componentDidMount(): void {
-    if (this.attendanceTitle.current) {
-      this.attendanceTitle.current.scrollIntoView();
+  /**
+   * Whenever user changes tab or the fetched word of the day changes,
+   * update the initial and current word of the day to display
+   */
+  useEffect(() => {
+    if (wotdLoaded) {
+      for (const wotdEntry of wotd) {
+        if (wotdEntry.id === selectedOccurrence?.id) {
+          setWordOfTheDay(wotdEntry.wordOfTheDay);
+          setInitialWordOfTheDay(wotdEntry.wordOfTheDay);
+          return;
+        }
+      }
     }
+  }, [selectedOccurrence, wotd]);
+
+  /**
+   * Select a new tab, updating the various states
+   *
+   * Here, occurrenceMap will never be null, as the corresponding parent element
+   * is only rendered when occurrenceMap has been defined
+   */
+  function handleSelectOccurrence(occurrence: SectionOccurrence) {
+    setSelectedOcurrence(occurrence);
+    setStagedAttendances(occurrenceMap!.get(occurrence.id)!.attendances);
+    setResponseText(null);
   }
 
-  handleAttendanceChange({ target: { name: id, value } }: React.ChangeEvent<HTMLSelectElement>): void {
-    this.setState((prevState, props) => {
-      const prevStagedAttendances = prevState.stagedAttendances || Object.values(props.attendances)[0];
-      return {
-        stagedAttendances: prevStagedAttendances.map(attendance =>
-          attendance.id == Number(id) ? { ...attendance, presence: value } : attendance
-        )
-      };
-    });
+  /**
+   * Change a student's attendance
+   *
+   * Here, occurrenceMap will never be null, as the corresponding parent elmenet
+   * is only rendered when occurrenceMap has been defined
+   */
+  function handleAttendanceChange({ target: { name: id, value } }: React.ChangeEvent<HTMLSelectElement>): void {
+    const newStagedAttendances = stagedAttendances || occurrenceMap!.get(sortedOccurrences[0].id);
+    setStagedAttendances(
+      newStagedAttendances?.map(attendance =>
+        attendance.id == Number(id) ? { ...attendance, presence: value } : attendance
+      )
+    );
   }
 
-  componentDidUpdate(prevProps: MentorSectionAttendanceProps): void {
-    // if the attendances have now loaded, select the most recent attendance date
-    if (!prevProps.loaded && this.props.loaded) {
-      const selectedDate = Object.keys(this.props.attendances).sort(dateSort)[0];
-      const stagedAttendances = this.props.attendances[selectedDate];
-      this.setState({ selectedDate, stagedAttendances });
-    }
-  }
-
-  handleSaveAttendance() {
-    const { stagedAttendances, selectedDate } = this.state;
+  /**
+   * Save the current staged attendances
+   */
+  function handleSaveAttendance() {
     if (!stagedAttendances) {
       return;
     }
-    //TODO: Handle API Failure
-    this.setState({ showSaveSpinner: true });
-    Promise.all(
-      stagedAttendances.map(({ id, presence, student: { id: studentId } }) =>
-        fetchWithMethod(`students/${studentId}/attendances/`, HTTP_METHODS.PUT, { id, presence })
-      )
-    ).then(() => {
-      this.props.updateAttendance(selectedDate!, stagedAttendances);
-      this.setState({ showAttendanceSaveSuccess: true, showSaveSpinner: false });
-      setTimeout(() => this.setState({ showAttendanceSaveSuccess: false }), 1500);
-    });
+    setShowSaveSpinner(true);
+    // TODO: Handle API Failure
+    updateStudentAttendancesMutation.mutate(
+      {
+        attendances: stagedAttendances.map(({ id: attendanceId, presence, student: { id: studentId } }) => ({
+          attendanceId,
+          presence,
+          studentId
+        }))
+      },
+      {
+        onSuccess: () => {
+          setShowAttendanceSaveSuccess(true);
+          setShowSaveSpinner(false);
+          setTimeout(() => setShowAttendanceSaveSuccess(false), 1500);
+        }
+      }
+    );
   }
 
-  handleMarkAllPresent() {
-    if (!this.state.stagedAttendances) {
-      const [selectedDate, stagedAttendances] = Object.entries(this.props.attendances)[0];
-      this.setState({ selectedDate, stagedAttendances });
+  /**
+   * Mark all students as present
+   */
+  function handleMarkAllPresent() {
+    if (!stagedAttendances) {
+      const newSelectedOccurrence = sortedOccurrences[0];
+      const newStagedAttendances = occurrenceMap!.get(newSelectedOccurrence.id)!.attendances;
+      setSelectedOcurrence(newSelectedOccurrence);
+      setStagedAttendances(newStagedAttendances);
     }
-    this.setState(prevState => ({
-      stagedAttendances: prevState.stagedAttendances!.map(attendance => ({ ...attendance, presence: "PR" }))
-    }));
+    setStagedAttendances(stagedAttendances.map(attendance => ({ ...attendance, presence: "PR" })));
   }
 
-  render() {
-    const { attendances, loaded } = this.props;
-    // use state selected date, or if undefined, use most recent date from props
-    const selectedDate = this.state.selectedDate || (loaded && Object.keys(attendances).sort(dateSort)[0]);
-    const stagedAttendances = this.state.stagedAttendances || (selectedDate ? attendances[selectedDate] : []);
-    const { showAttendanceSaveSuccess, showSaveSpinner } = this.state;
-    return (
-      <React.Fragment>
-        <h3 ref={this.attendanceTitle} className="section-detail-page-title">
-          Attendance
-        </h3>
-        {loaded && (
+  /**
+   * Submit a new word of the day for a given occurrence
+   */
+  function handleSubmitWord() {
+    if (selectedOccurrence && wordOfTheDay) {
+      setResponseStatus(ResponseStatus.LOADING);
+      setResponseText(null);
+
+      // first check validity
+      if (wordOfTheDay.trim().match(/\s/)) {
+        setResponseStatus(ResponseStatus.NONE);
+        setResponseText("Invalid word chosen (no whitespace)");
+        return;
+      }
+
+      updateWordOfTheDayMutation.mutate(
+        { sectionOccurrenceId: selectedOccurrence.id, wordOfTheDay },
+        {
+          onSuccess: () => {
+            setResponseStatus(ResponseStatus.OK);
+            setTimeout(() => setResponseStatus(ResponseStatus.NONE), 1500);
+          },
+          onError: () => {
+            setResponseText("Invalid word chosen (no whitespace)");
+            setResponseStatus(ResponseStatus.NONE);
+          }
+        }
+      );
+    } else {
+      setResponseText("Invalid input");
+    }
+  }
+
+  /**
+   * Pick a new random word for the word of the day
+   */
+  function handlePickRandomWord() {
+    setWordOfTheDay(randomWords(1)[0]);
+  }
+
+  return (
+    <React.Fragment>
+      <h3 className="section-detail-page-title">Attendance</h3>
+      <div className="mentor-attendance-page">
+        {jsonAttendancesLoaded && occurrenceMap !== null ? (
           <React.Fragment>
             <div id="mentor-attendance">
               <div id="attendance-date-tabs-container">
-                {Object.keys(attendances)
-                  .sort(dateSort)
-                  .map(date => (
-                    <div
-                      key={date}
-                      className={date === selectedDate ? "active" : ""}
-                      onClick={() => this.setState({ selectedDate: date, stagedAttendances: attendances[date] })}
-                    >
-                      {formatDate(date)}
-                    </div>
-                  ))}
+                {sortedOccurrences.map(({ id, date }) => (
+                  <div
+                    key={id}
+                    className={id === selectedOccurrence!.id ? "active" : ""}
+                    onClick={() => handleSelectOccurrence({ id, date })}
+                  >
+                    {formatDateISO(date)}
+                  </div>
+                ))}
               </div>
               <table id="mentor-attendance-table">
                 <tbody>
-                  {selectedDate &&
+                  {selectedOccurrence &&
                     stagedAttendances.map(({ id, student, presence }) => (
                       <tr key={id}>
                         <td>{student.name}</td>
@@ -146,7 +270,7 @@ export default class MentorSectionAttendance extends React.Component<
                             style={{
                               backgroundColor: `var(--csm-attendance-${ATTENDANCE_LABELS[presence][1]})`
                             }}
-                            onChange={this.handleAttendanceChange}
+                            onChange={handleAttendanceChange}
                           >
                             {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
                               <option key={value} value={value} disabled={!value}>
@@ -159,21 +283,77 @@ export default class MentorSectionAttendance extends React.Component<
                     ))}
                 </tbody>
               </table>
-            </div>
-            <div id="mentor-attendance-controls">
-              <button className="csm-btn save-attendance-btn" onClick={this.handleSaveAttendance}>
-                Save
-              </button>
-              <button className="mark-all-present-btn" onClick={this.handleMarkAllPresent}>
-                Mark All As Present
-              </button>
-              {showSaveSpinner && <LoadingSpinner />}
-              {showAttendanceSaveSuccess && <CheckCircle height="2em" width="2em" />}
+              <div id="mentor-attendance-controls">
+                <button className="csm-btn save-attendance-btn" onClick={handleSaveAttendance}>
+                  Save
+                </button>
+                <button className="mark-all-present-btn" onClick={handleMarkAllPresent}>
+                  Mark All As Present
+                </button>
+                {showSaveSpinner && <LoadingSpinner />}
+                {showAttendanceSaveSuccess && <CheckCircle height="2em" width="2em" />}
+              </div>
+              <div id="word-of-the-day-container">
+                <h4 className="word-of-the-day-title">
+                  Word of the Day ({selectedOccurrence ? formatDateISO(selectedOccurrence.date) : "unselected"})
+                </h4>
+                {wotdLoaded ? (
+                  <React.Fragment>
+                    <p className="word-of-the-day-text">
+                      Status:{" "}
+                      {initialWordOfTheDay ? (
+                        <span className="word-of-the-day-status selected">Selected</span>
+                      ) : (
+                        <span className="word-of-the-day-status unselected">Unselected</span>
+                      )}
+                    </p>
+                    <div className="word-of-the-day-input-container">
+                      <div>
+                        <input
+                          className="word-of-the-day-input"
+                          type="text"
+                          placeholder="Word of the Day"
+                          value={wordOfTheDay}
+                          onChange={e => {
+                            setWordOfTheDay(e.target.value);
+                          }}
+                        />
+                        <button className="word-of-the-day-random" onClick={handlePickRandomWord}>
+                          Random
+                        </button>
+                      </div>
+                      <div className="word-of-the-day-submit-container">
+                        {responseStatus === ResponseStatus.LOADING ? (
+                          <LoadingSpinner />
+                        ) : responseStatus === ResponseStatus.OK ? (
+                          <CheckCircle className="word-of-the-day-icon" />
+                        ) : null}
+                        <button
+                          className="csm-btn word-of-the-day-submit"
+                          onClick={handleSubmitWord}
+                          disabled={!wordOfTheDay || initialWordOfTheDay == wordOfTheDay}
+                        >
+                          {initialWordOfTheDay ? "Update" : "Submit"}
+                        </button>
+                      </div>
+                    </div>
+                    <div className="word-of-the-day-status-bar">{responseText}</div>
+                  </React.Fragment>
+                ) : wotdError ? (
+                  <h3>Error loading word of the day</h3>
+                ) : (
+                  <LoadingSpinner />
+                )}
+              </div>
+              {!jsonAttendancesLoaded && <LoadingSpinner />}
             </div>
           </React.Fragment>
+        ) : (
+          <LoadingSpinner />
         )}
-        {!loaded && <h5> Loading attendances...</h5>}
-      </React.Fragment>
-    );
-  }
-}
+      </div>
+    </React.Fragment>
+  );
+};
+
+export default MentorSectionAttendance;

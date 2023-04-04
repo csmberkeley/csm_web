@@ -1,54 +1,31 @@
-import React, { useEffect, useState } from "react";
-import { NavLink } from "react-router-dom";
-import { fetchJSON } from "../../utils/api";
+import React from "react";
+import { NavLink, useParams } from "react-router-dom";
 import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";
-import { Override, Section as SectionType, Spacetime } from "../../utils/types";
+import { Override, Spacetime } from "../../utils/types";
+import { useSection } from "../../utils/queries/sections";
+import LoadingSpinner from "../LoadingSpinner";
 
 export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
-interface SectionProps {
-  match: {
-    url: string;
-    params: {
-      id: string;
-    };
-  };
-}
+export default function Section(): React.ReactElement | null {
+  const { id } = useParams();
 
-interface SectionState {
-  section: Omit<SectionType, "id">; // id specified by props
-  loaded: boolean;
-}
+  const { data: section, isSuccess: sectionLoaded, isError: sectionLoadError } = useSection(Number(id));
 
-export default function Section({
-  match: {
-    url,
-    params: { id }
+  if (!sectionLoaded) {
+    if (sectionLoadError) {
+      return <h3>Section not found</h3>;
+    }
+    return <LoadingSpinner className="spinner-centered" />;
   }
-}: SectionProps): React.ReactElement | null {
-  const [{ section, loaded }, setState] = useState<SectionState>({
-    section: (null as unknown) as SectionType, // type coersion to avoid future type errors
-    loaded: false
-  });
-  const reloadSection = () => {
-    setState({ section: (null as unknown) as SectionType, loaded: false });
-    fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
-  };
-  useEffect(() => {
-    fetchJSON(`/sections/${id}`).then(section => setState({ section, loaded: true }));
-  }, [id]);
-  if (!loaded) {
-    return null;
-  }
-  switch (
-    section!.userRole // section can't be null here because loaded would be false
-  ) {
+
+  switch (section.userRole) {
     case ROLES.COORDINATOR:
     case ROLES.MENTOR:
-      return <MentorSection reloadSection={reloadSection} url={url} id={Number(id)} {...section} />;
+      return <MentorSection {...section} />;
     case ROLES.STUDENT:
-      return <StudentSection url={url} {...section} />;
+      return <StudentSection {...section} />;
   }
   return null;
 }
@@ -82,7 +59,7 @@ export function SectionSidebar({ links }: SectionSidebarProps) {
   return (
     <nav id="section-detail-sidebar">
       {links.map(([label, href]) => (
-        <NavLink exact to={href} key={href}>
+        <NavLink end to={href} key={href}>
           {label}
         </NavLink>
       ))}

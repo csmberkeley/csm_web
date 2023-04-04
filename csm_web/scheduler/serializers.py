@@ -95,7 +95,7 @@ class CourseSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Course
-        fields = ("id", "name", "enrollment_start", "enrollment_open", "user_can_enroll")
+        fields = ("id", "name", "enrollment_start", "enrollment_open", "user_can_enroll", "is_restricted", "word_of_the_day_limit")
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -134,19 +134,37 @@ class MentorSerializer(serializers.ModelSerializer):
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
-    date = serializers.DateField(source='sectionOccurrence.date', format="%b. %-d, %Y", read_only=True)
-    student_name = serializers.CharField(source='student.name')
-    student_id = serializers.IntegerField(source='student.id')
-    student_email = serializers.CharField(source='student.user.email')
+    date = serializers.DateField(
+        source="sectionOccurrence.date", format="%b. %-d, %Y", read_only=True
+    )
+    student_name = serializers.CharField(source="student.name")
+    student_id = serializers.IntegerField(source="student.id")
+    student_email = serializers.CharField(source="student.user.email")
+    word_of_the_day_deadline = serializers.SerializerMethodField()
+
+    def get_word_of_the_day_deadline(self, obj):
+        """Compute deadline for the word of the day."""
+        limit = obj.sectionOccurrence.section.mentor.course.word_of_the_day_limit
+        if limit is None:
+            return None
+        return obj.sectionOccurrence.date + limit
 
     class Meta:
         model = Attendance
-        fields = ("id", "date", "presence", "student_name", "student_id", "student_email")
-        extra_kwargs = {'student': {'write_only': True}}
+        fields = (
+            "id",
+            "date",
+            "presence",
+            "student_name",
+            "student_id",
+            "student_email",
+            "word_of_the_day_deadline",
+        )
+        extra_kwargs = {"student": {"write_only": True}}
 
     def update(self, instance, validated_data):
         # only update the attendance date
-        instance.presence = validated_data.get('presence')
+        instance.presence = validated_data.get("presence")
         instance.save()
         return instance
 
@@ -168,6 +186,7 @@ class SectionSerializer(serializers.ModelSerializer):
     course_title = serializers.CharField(source='mentor.course.title')
     user_role = serializers.SerializerMethodField()
     associated_profile_id = serializers.SerializerMethodField()
+    course_restricted = serializers.BooleanField(source='mentor.course.is_restricted')
 
     def get_num_students_enrolled(self, obj):
         return obj.num_students_annotation if hasattr(obj, 'num_students_annotation') else obj.current_student_count
@@ -199,7 +218,8 @@ class SectionSerializer(serializers.ModelSerializer):
     class Meta:
         model = Section
         fields = ("id", "spacetimes", "mentor", "capacity", "associated_profile_id",
-                  "num_students_enrolled", "description", "mentor", "course", "user_role", "course_title")
+                  "num_students_enrolled", "description", "mentor", "course", "user_role",
+                  "course_title", "course_restricted")
 
 
 class WorksheetSerializer(serializers.ModelSerializer):
@@ -225,7 +245,6 @@ class ResourceSerializer(serializers.ModelSerializer):
 
 class SectionOccurrenceSerializer(serializers.ModelSerializer):
     attendances = AttendanceSerializer(source='attendance_set', many=True)
-    section = SectionSerializer()
 
     class Meta:
         model = SectionOccurrence

@@ -1,29 +1,32 @@
-import React, { useState, useEffect } from "react";
-import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import React, { useEffect, useState } from "react";
+
+import {
+  useCreateResourceMutation,
+  useDeleteResourceMutation,
+  useResources,
+  useUpdateResourceMutation
+} from "../../utils/queries/resources";
+import { Roles } from "../../utils/user";
+import LoadingSpinner from "../LoadingSpinner";
 import ResourceRow from "./ResourceRow";
 import { emptyResource, Link, Resource, Worksheet } from "./ResourceTypes";
-import { Roles } from "../../utils/user";
 
 import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
-import { url } from "inspector";
 
 interface ResourceTableProps {
   courseID: number;
   roles: Roles;
-  getResources: () => Promise<Array<Resource>>;
-  updateResources: () => Promise<Array<Resource>>;
 }
 
 /**
  * React component representing the entire resource table, managing all resource rows.
  */
-export const ResourceTable = ({
-  courseID,
-  roles,
-  getResources,
-  updateResources
-}: ResourceTableProps): React.ReactElement => {
-  const [resources, setResources] = useState<Array<Resource>>([]);
+export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.ReactElement => {
+  const { data: resources, isSuccess: resourcesLoaded } = useResources(courseID);
+  const createResourceMutation = useCreateResourceMutation(courseID);
+  const updateResourceMutation = useUpdateResourceMutation(courseID);
+  const deleteResourceMutation = useDeleteResourceMutation(courseID);
+
   const [canEdit, setCanEdit] = useState<boolean>(false);
   const [viewEdit, setViewEdit] = useState<boolean>(false);
   const [addingResource, setAddingResource] = useState<boolean>(false);
@@ -33,10 +36,11 @@ export const ResourceTable = ({
    */
   useEffect(() => {
     setCanEdit(roles["COORDINATOR"].has(courseID));
-    getResources().then(data => {
-      setResources(data);
-    });
   }, [courseID, roles]);
+
+  if (!resourcesLoaded) {
+    return <LoadingSpinner className="spinner-centered" />;
+  }
 
   /**
    * Merges fileFormData and newWorksheets with other resource attributes.
@@ -171,17 +175,7 @@ export const ResourceTable = ({
     newLinks: Array<Link>
   ) {
     const resourceFormData = getResourceFormData(newResource, fileFormDataMap, linkMap, newWorksheets, newLinks);
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.POST, resourceFormData, true).then(response => {
-      if (response.status === 400) {
-        // Bad request; input invalid
-        response.json().then(data => {
-          console.error(data);
-        });
-      }
-      updateResources().then(data => {
-        setResources(data);
-      });
-    });
+    createResourceMutation.mutate(resourceFormData);
     setAddingResource(false);
   }
 
@@ -204,17 +198,7 @@ export const ResourceTable = ({
     newLinks: Array<Link>
   ) {
     const resourceFormData = getResourceFormData(newResource, fileFormDataMap, linkMap, newWorksheets, newLinks);
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.PUT, resourceFormData, true).then(response => {
-      if (response.status === 400) {
-        // Bad request; input invalid
-        response.json().then(data => {
-          console.error(data);
-        });
-      }
-      updateResources().then(data => {
-        setResources(data);
-      });
-    });
+    updateResourceMutation.mutate(resourceFormData);
   }
 
   /**
@@ -222,19 +206,7 @@ export const ResourceTable = ({
    * @param resourceId - numerical id of resource
    */
   function handleDeleteResource(resourceId: number) {
-    fetchWithMethod(`resources/${courseID}/resources/`, HTTP_METHODS.DELETE, { id: resourceId }, false).then(
-      response => {
-        if (response.status === 400) {
-          // Bad request; input invalid
-          response.json().then(data => {
-            console.error(data);
-          });
-        }
-        updateResources().then(data => {
-          setResources(data);
-        });
-      }
-    );
+    deleteResourceMutation.mutate({ id: resourceId });
   }
 
   /**
@@ -243,6 +215,10 @@ export const ResourceTable = ({
    */
   function getNextResource() {
     const newResource = emptyResource();
+
+    if (!resourcesLoaded) {
+      return newResource;
+    }
     // return empty resource if first resource to be added
     if (resources.length == 0) {
       return newResource;

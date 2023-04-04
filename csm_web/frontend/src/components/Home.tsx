@@ -1,20 +1,62 @@
-import React, { useEffect, useState } from "react";
+import React from "react";
 import { Link } from "react-router-dom";
 import { groupBy } from "lodash";
-import { fetchJSON } from "../utils/api";
+import { useProfiles } from "../utils/queries/base";
+import { useCourses } from "../utils/queries/courses";
 import { ROLES } from "./section/Section";
-import { Profile } from "../utils/types";
+import { Profile, Course } from "../utils/types";
+import LoadingSpinner from "./LoadingSpinner";
 
 const Home = () => {
-  const [profiles, setProfiles] = useState<Profile[]>([]);
-  const [profilesLoaded, setProfilesLoaded] = useState<boolean>(false);
+  const { data: profiles, isSuccess: profilesLoaded, isError: profilesLoadError } = useProfiles();
+  const { data: courses, isSuccess: coursesLoaded, isError: coursesLoadError } = useCourses();
 
-  useEffect(() => {
-    fetchJSON("/profiles").then(profiles => {
-      setProfiles(profiles);
-      setProfilesLoaded(true);
-    });
-  }, []);
+  let content = null;
+  if (profilesLoaded && coursesLoaded) {
+    // loaded, no error
+    const coursesById: Map<number, Course> = new Map();
+    for (const courseObj of courses) {
+      coursesById.set(courseObj.id, courseObj);
+    }
+
+    content = (
+      <div className="course-cards-container">
+        {Object.entries(groupBy(profiles, (profile: Profile) => [profile.course, profile.role]))
+          .sort(([courseNameA, courseProfilesA], [courseNameB, courseProfilesB]) => {
+            const compare = (a: string, b: string) => a.localeCompare(b);
+            const courseA = coursesById.get(courseProfilesA[0].courseId);
+            const courseB = coursesById.get(courseProfilesB[0].courseId);
+            if (courseA === undefined || courseB === undefined) {
+              return compare(courseNameA, courseNameB);
+            } else if (courseA.isRestricted !== courseB.isRestricted) {
+              return courseA.isRestricted ? -1 : 1;
+            } else {
+              return compare(courseNameA, courseNameB);
+            }
+          })
+          .map(([course, courseProfiles]) => {
+            if (courseProfiles[0].role === ROLES.MENTOR) {
+              const courseProfilesWithSection = courseProfiles.filter((profile: Profile) => profile.sectionId);
+              if (courseProfilesWithSection.length > 0) {
+                return <CourseCard key={course} profiles={courseProfilesWithSection} />;
+              }
+              // otherwise, mentor with no section; do not show the course card
+            } else {
+              return <CourseCard key={course} profiles={courseProfiles} />;
+            }
+          })}
+      </div>
+    );
+  } else if (profilesLoadError) {
+    // error during load
+    content = <h3>Profiles not found</h3>;
+  } else if (coursesLoadError) {
+    // error during load
+    content = <h3>Courses not found</h3>;
+  } else {
+    // fetching profiles/courses
+    content = <LoadingSpinner />;
+  }
 
   return (
     <div id="home-courses">
@@ -24,23 +66,7 @@ const Home = () => {
           <span className="inline-plus-sign">+ </span>Add Course
         </Link>
       </div>
-      {profilesLoaded && (
-        <div className="course-cards-container">
-          {Object.entries(groupBy(profiles, (profile: Profile) => [profile.course, profile.role])).map(
-            ([course, courseProfiles]) => {
-              if (courseProfiles[0].role === ROLES.MENTOR) {
-                const courseProfilesWithSection = courseProfiles.filter((profile: Profile) => profile.sectionId);
-                if (courseProfilesWithSection.length > 0) {
-                  return <CourseCard key={course} profiles={courseProfilesWithSection} />;
-                }
-                // otherwise, mentor with no section; do not show the course card
-              } else {
-                return <CourseCard key={course} profiles={courseProfiles} />;
-              }
-            }
-          )}
-        </div>
-      )}
+      {content}
     </div>
   );
 };

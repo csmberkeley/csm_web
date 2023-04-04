@@ -38,6 +38,10 @@ class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
+        # check restricted first
+        if course.is_restricted and not self.is_whitelisted_for(course):
+            return False
+
         is_associated = (self.student_set.filter(active=True, section__mentor__course=course).count() or
                          self.mentor_set.filter(section__mentor__course=course).count())
         if bypass_enrollment_time:
@@ -49,6 +53,9 @@ class User(AbstractUser):
             else:
                 is_valid_enrollment_time = course.is_open()
             return is_valid_enrollment_time and not is_associated
+
+    def is_whitelisted_for(self, course: "Course"):
+        return not course.is_restricted or self.whitelist.filter(pk=course.pk).exists()
 
     class Meta:
         indexes = (models.Index(fields=("email",)),)
@@ -118,6 +125,7 @@ class SectionOccurrence(ValidatingModel):
     """
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
+    word_of_the_day = models.CharField(max_length=50, blank=True)
 
     def __str__(self):
         return f"SectionOccurrence for {self.section} at {self.date}"
@@ -135,6 +143,12 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
+    # time limit for wotd submission;
+    # section occurrence date + day limit, rounded to EOD
+    word_of_the_day_limit = models.DurationField(null=True, blank=True)
+
+    is_restricted = models.BooleanField(default=False)
+    whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
 
     def __str__(self):
         return self.name
@@ -147,6 +161,13 @@ class Course(ValidatingModel):
             raise ValidationError("enrollment_end must be after enrollment_start")
         if self.valid_until < self.enrollment_end.date():
             raise ValidationError("valid_until must be after enrollment_end")
+
+        # check word of the day limit is in days
+        if (
+            isinstance(self.word_of_the_day_limit, datetime.timedelta)
+            and self.word_of_the_day_limit.seconds > 0
+        ):
+            raise ValidationError("word of the day limit must be in days")
 
     def is_open(self):
         now = timezone.now().astimezone(timezone.get_default_timezone())
@@ -303,6 +324,11 @@ class Resource(ValidatingModel):
 
     class Meta:
         ordering = ['week_num']
+
+    def clean(self):
+        super().clean()
+        if self.course.is_restricted:
+            raise NotImplementedError("Resources currently cannot be associated with a restricted course.")
 
 
 class Link(ValidatingModel):

@@ -1,0 +1,82 @@
+.course-settings-btn {
+	font-size: 16px;
+	border: none;
+	cursor: pointer;
+	margin: 0 5px;
+	display: block;
+}
+
+.course-settings-content {
+	display: flex;
+	flex-direction: column;
+	height: 90%;
+}
+
+.course-settings-container {
+	flex: 1;
+	display: flex;
+	flex-direction: column;
+	margin-top: 10px;
+	padding: 0 25px;
+}
+
+.course-settings-row {
+	display: flex;
+	flex-direction: row;
+	justify-content: space-between;
+}
+
+.course-settings-label-container {
+	flex: 1;
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-start;
+	align-items: center;
+}
+
+.course-settings-tooltip-container {
+	position: relative;
+	margin-left: 5px;
+}
+
+.course-settings-tooltip-info-icon {
+	width: 1em;
+	color: #888;
+}
+
+.course-settings-tooltip-info-icon:hover {
+	color: #aaa;
+}
+
+.course-settings-input-container {
+	flex: 1;
+	display: flex;
+	flex-direction: row;
+	justify-content: flex-end;
+	align-items: center;
+}
+
+.course-settings-input {
+	font-family: inherit;
+	width: 50%;
+}
+
+.course-settings-input-post {
+	margin-left: 5px;
+}
+
+.course-settings-footer {
+	display: flex;
+	flex-direction: row;
+	justify-content: center;
+	align-items: center;
+}
+
+.course-settings-submit {
+	background-color: var(--csm-green);
+	color: white;
+	border: none;
+	border-radius: 10px;
+	user-select: none;
+	padding: 8px 15px !important;
+}

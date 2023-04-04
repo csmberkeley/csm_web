@@ -31,7 +31,7 @@ export function fetchWithMethod(endpoint: string, method: string, data: any = {}
       method: method,
       credentials: "same-origin",
       headers: {
-        "X-CSRFToken": Cookies.get("csrftoken")
+        "X-CSRFToken": Cookies.get("csrftoken") ?? ""
       },
       body: data
     });
@@ -40,12 +40,19 @@ export function fetchWithMethod(endpoint: string, method: string, data: any = {}
     method: method,
     credentials: "same-origin",
     headers: {
-      "X-CSRFToken": Cookies.get("csrftoken"),
+      "X-CSRFToken": Cookies.get("csrftoken") ?? "",
       Accept: "application/json",
       "Content-Type": "application/json"
     },
     body: JSON.stringify(data)
   });
+}
+
+/**
+ * Fetch data from normalized endpoint.
+ */
+export async function fetchNormalized(endpoint: string) {
+  return await fetch(normalizeEndpoint(endpoint), { credentials: "same-origin" });
 }
 
 export async function fetchJSON(endpoint: string) {

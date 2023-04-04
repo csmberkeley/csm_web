@@ -1,8 +1,8 @@
-import React, { useEffect, useState } from "react";
-import { fetchJSON, normalizeEndpoint } from "../../utils/api";
+import React, { useEffect, useMemo, useState } from "react";
+import { normalizeEndpoint } from "../../utils/api";
+import { useCourses } from "../../utils/queries/courses";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
-import { Course as CourseType } from "../../utils/types";
 
 interface DataExportModalProps {
   closeModal: () => void;
@@ -12,33 +12,37 @@ interface DataExportModalProps {
  * Modal that coords use to export a csv of student emails in selected courses.
  */
 export const DataExportModal = ({ closeModal }: DataExportModalProps): React.ReactElement => {
+  const { data: courses, isSuccess: coursesLoaded } = useCourses();
+
+  const [courseChecks, setCourseChecks] = useState<Map<number, boolean>>(new Map());
+
   /**
    * Map of course id to course name.
    */
-  const [courseMap, setCourseMap] = useState<Map<number, string>>(new Map());
-  /**
-   * Whether course data has been loaded.
-   */
-  const [courseLoaded, setCourseLoaded] = useState<boolean>(false);
-  /**
-   * Map of course id to boolean (whether the course is checked)
-   */
-  const [courseChecks, setCourseChecks] = useState<Map<number, boolean>>(new Map());
-
-  // fetch all courses and construct maps upon first mount
-  useEffect(() => {
-    fetchJSON("/courses").then((courses: CourseType[]) => {
+  const courseMap = useMemo(() => {
+    if (coursesLoaded) {
       const coursesById = new Map<number, string>();
-      const courseCheckbyId = new Map<number, boolean>();
       for (const course of courses) {
         coursesById.set(course.id, course.name);
+      }
+      return coursesById;
+    }
+    // not done loading yet
+    return undefined as never;
+  }, [courses]);
+
+  /**
+   * Initialize map of course id to boolean (whether the course is checked)
+   */
+  useEffect(() => {
+    if (coursesLoaded) {
+      const courseCheckbyId = new Map<number, boolean>();
+      for (const course of courses) {
         courseCheckbyId.set(course.id, false);
       }
-      setCourseMap(coursesById);
       setCourseChecks(courseCheckbyId);
-      setCourseLoaded(true);
-    });
-  }, []);
+    }
+  }, [courses]);
 
   /**
    * Download a csv of student emails in selected courses.
@@ -74,7 +78,7 @@ export const DataExportModal = ({ closeModal }: DataExportModalProps): React.Rea
    */
   const renderCheck = (i: number): React.ReactElement => {
     return (
-      <div className="data-export-checkbox">
+      <div key={i} className="data-export-checkbox">
         <label>
           <input
             type="checkbox"
@@ -94,7 +98,7 @@ export const DataExportModal = ({ closeModal }: DataExportModalProps): React.Rea
       <div className="data-export-modal">
         <div className="data-export-modal-header">Download csv of student emails in selected courses</div>
         <div className="data-export-modal-selection">
-          {!courseLoaded ? <LoadingSpinner id="course-menu-loading-spinner" /> : renderCheckGrid()}
+          {coursesLoaded ? renderCheckGrid() : <LoadingSpinner id="course-menu-loading-spinner" />}
         </div>
         <div className="data-export-modal-download">
           <button className="csm-btn export-data-btn" onClick={getStudentEmails}>

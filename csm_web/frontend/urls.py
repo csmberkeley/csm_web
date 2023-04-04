@@ -1,4 +1,4 @@
-from django.urls import path
+from django.urls import re_path
 from . import views
 
-urlpatterns = [path("", views.index)]
+urlpatterns = [re_path(r"^(?!api/)", views.index)]

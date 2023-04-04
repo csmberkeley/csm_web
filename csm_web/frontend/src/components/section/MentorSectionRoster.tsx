@@ -1,27 +1,29 @@
 import React, { useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
-import { Student } from "../../utils/types";
 
 import CopyIcon from "../../../static/frontend/img/copy.svg";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
+import { useSectionStudents } from "../../utils/queries/sections";
 
 interface MentorSectionRosterProps {
-  students: Student[];
-  loaded: boolean;
+  id: number;
 }
 
-export default function MentorSectionRoster({ students, loaded }: MentorSectionRosterProps) {
+export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
+  const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(id);
   const [emailsCopied, setEmailsCopied] = useState(false);
   const handleCopyEmails = () => {
-    navigator.clipboard.writeText(students.map(({ email }) => email).join("\n")).then(() => {
-      setEmailsCopied(true);
-      setTimeout(() => setEmailsCopied(false), 1500);
-    });
+    if (studentsLoaded) {
+      navigator.clipboard.writeText(students.map(({ email }) => email).join("\n")).then(() => {
+        setEmailsCopied(true);
+        setTimeout(() => setEmailsCopied(false), 1500);
+      });
+    }
   };
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">Roster</h3>
-      {loaded && (
+      {studentsLoaded ? (
         <table className="standalone-table">
           <thead>
             <tr>
@@ -42,8 +44,11 @@ export default function MentorSectionRoster({ students, loaded }: MentorSectionR
             ))}
           </tbody>
         </table>
+      ) : studentsLoadError ? (
+        <h3>Students could not be loaded</h3>
+      ) : (
+        <LoadingSpinner />
       )}
-      {!loaded && <LoadingSpinner />}
     </React.Fragment>
   );
 }

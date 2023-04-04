@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../../utils/api";
 
+import { useMatcherConfig, useMatcherConfigMutation } from "../../../utils/queries/matcher";
 import { Profile } from "../../../utils/types";
 import LoadingSpinner from "../../LoadingSpinner";
 import { Calendar } from "../calendar/Calendar";
@@ -21,10 +21,14 @@ enum Status {
 interface ConfigureStageProps {
   profile: Profile;
   slots: Slot[];
-  refreshStage: () => void;
+  /**
+   * Force the matcher to recompute the current stage,
+   * even if data did not change.
+   */
+  recomputeStage: () => void;
 }
 
-export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageProps) => {
+export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStageProps) => {
   const [selectedEventIndices, setSelectedEventIndices] = useState<number[]>([]);
   // slot id -> min mentors
   const [minMentorMap, setMinMentorMap] = useState<Map<number, number>>(new Map());
@@ -34,22 +38,26 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
   const [matcherError, setMatcherError] = useState<string>("");
   const [configError, setConfigError] = useState<string>("");
 
+  const { data: matcherConfig, isSuccess: matcherConfigLoaded } = useMatcherConfig(profile.courseId);
+  const matcherConfigMutation = useMatcherConfigMutation(profile.courseId);
+  const runMatcherMutation = useMatcherConfigMutation(profile.courseId, true);
+
   const selectAllRef = useRef<HTMLInputElement>(null);
 
-  const updateMentorMaps = () => {
+  useEffect(() => {
+    if (!matcherConfigLoaded) {
+      return;
+    }
+
     const minMentorMap = new Map();
     const maxMentorMap = new Map();
-    fetchJSON(`/matcher/${profile.courseId}/configure`).then((data: any) => {
-      data.slots.forEach((slot: any) => {
-        minMentorMap.set(slot.id, slot.minMentors);
-        maxMentorMap.set(slot.id, slot.maxMentors);
-      });
-      setMinMentorMap(minMentorMap);
-      setMaxMentorMap(maxMentorMap);
+    matcherConfig.slots.forEach((slot: any) => {
+      minMentorMap.set(slot.id, slot.minMentors);
+      maxMentorMap.set(slot.id, slot.maxMentors);
     });
-  };
-
-  useEffect(updateMentorMaps, [slots]);
+    setMinMentorMap(minMentorMap);
+    setMaxMentorMap(maxMentorMap);
+  }, [matcherConfig]);
 
   const setSelectedEventIdxWrapper = (indices: number[]) => {
     setSelectedEventIndices(indices);
@@ -120,23 +128,23 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
   };
 
   const runMatcher = () => {
-    fetchWithMethod(`/matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { run: true }).then(async response => {
-      if (response.ok) {
-        setMatcherError("");
-        refreshStage();
-      } else {
-        const json = await response.json();
-        setMatcherError(json.error ?? "An error has occurred when running the matcher.");
+    runMatcherMutation.mutate(
+      { run: true },
+      {
+        onSuccess: () => {
+          setMatcherError("");
+          recomputeStage();
+        },
+        onError: response => {
+          setMatcherError(response.error ?? "An error has occurred when running the matcher.");
+        }
       }
-    });
+    );
   };
 
   const reopenForm = () => {
     // send POST request to reopen form for mentors
-    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { open: true }).then(() => {
-      // recompute stage
-      refreshStage();
-    });
+    matcherConfigMutation.mutate({ open: true });
   };
 
   const saveConfig = () => {
@@ -146,25 +154,23 @@ export const ConfigureStage = ({ profile, slots, refreshStage }: ConfigureStageP
       maxMentors: maxMentorMap.get(slot.id!)
     }));
     setSubmitStatus(Status.LOADING);
-    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { slots: formatted })
-      .then(async response => {
-        if (response.ok) {
+    matcherConfigMutation.mutate(
+      { slots: formatted },
+      {
+        onSuccess: () => {
           setConfigError("");
-          updateMentorMaps();
           setSubmitStatus(Status.SUCCESS);
           // clear after 1.5 seconds
           setTimeout(() => {
             setSubmitStatus(Status.NONE);
           }, 1500);
-        } else {
-          const json = await response.json();
+        },
+        onError: response => {
+          setConfigError(response.error ?? "An error has occurred when saving configurations.");
           setSubmitStatus(Status.ERROR);
-          setConfigError(json.error ?? "An error has occurred when saving configurations.");
         }
-      })
-      .catch(() => {
-        setSubmitStatus(Status.ERROR);
-      });
+      }
+    );
   };
 
   let statusContent: React.ReactNode = "";

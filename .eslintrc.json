@@ -15,7 +15,8 @@
   ],
   "rules": {
     "react/prop-types": [2],
-    "react-hooks/rules-of-hooks": "error"
+    "react-hooks/rules-of-hooks": "error",
+    "@typescript-eslint/no-non-null-assertion": "off"
   },
   "env": {
     "es6": true,
@@ -23,7 +24,7 @@
   },
   "settings": {
     "react": {
-      "version": "16.13"
+      "version": "18.2"
     }
   }
 }

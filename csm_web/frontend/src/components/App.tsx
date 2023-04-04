@@ -1,27 +1,21 @@
 import React, { useEffect, useState } from "react";
-import { HashRouter as Router, Route, Switch, Link, NavLinkProps } from "react-router-dom";
-import { NavLink } from "react-router-dom";
-import ReactDOM from "react-dom";
+import { Link, NavLink, NavLinkProps, Outlet, Route, Routes, useLocation } from "react-router-dom";
+import { useProfiles } from "../utils/queries/base";
+import { useMatcherActiveCourses } from "../utils/queries/matcher";
+import { emptyRoles, Roles } from "../utils/user";
 import CourseMenu from "./CourseMenu";
+import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 import Home from "./Home";
-import Section from "./section/Section";
 import Policies from "./Policies";
 import { Resources } from "./resource_aggregation/Resources";
-import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
+import Section from "./section/Section";
 
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
-import { emptyRoles, Roles } from "../utils/user";
-import { fetchJSON } from "../utils/api";
-import { Profile } from "../utils/types";
 
 interface ErrorType {
   message: string;
   stack: string;
-}
-
-interface AppState {
-  error: ErrorType | null;
 }
 
 interface ErrorPageProps {
@@ -29,95 +23,111 @@ interface ErrorPageProps {
   clearError: () => void;
 }
 
-export default class App extends React.Component {
-  state: AppState = { error: null };
+const App = () => {
+  return (
+    <ErrorBoundary>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route index element={<Home />} />
+          <Route path="sections/:id/*" element={<Section />} />
+          <Route path="courses/*" element={<CourseMenu />} />
+          <Route path="resources/*" element={<Resources />} />
+          <Route path="matcher/*" element={<EnrollmentMatcher />} />
+          <Route path="policies/*" element={<Policies />} />
+          <Route path="*" element={<NotFound />} />
+        </Route>
+      </Routes>
+    </ErrorBoundary>
+  );
+};
+export default App;
 
-  static getDerivedStateFromError(error: ErrorType): { error: ErrorType } {
-    return { error };
-  }
-
-  clearError = (): void => {
-    this.setState({ error: null });
-  };
-
-  render(): React.ReactNode {
-    if (this.state.error) {
-      return <ErrorPage error={this.state.error} clearError={this.clearError} />;
-    }
-
-    return (
-      <Router>
-        <React.Fragment>
-          <Header />
-          <main>
-            <Switch>
-              <Route exact path="/" component={Home} />
-              <Route path="/sections/:id" component={Section} />
-              <Route path="/courses" component={CourseMenu} />
-              <Route path="/resources" component={Resources} />
-              <Route path="/matcher" component={EnrollmentMatcher} />
-              <Route path="/policies" component={Policies} />
-            </Switch>
-          </main>
-        </React.Fragment>
-      </Router>
-    );
-  }
-}
+/**
+ * Layout for the main app.
+ */
+const AppLayout = () => {
+  return (
+    <React.Fragment>
+      <Header />
+      <main>
+        <Outlet />
+      </main>
+    </React.Fragment>
+  );
+};
 
 function Header(): React.ReactElement {
+  const location = useLocation();
+
   /**
-   * Helper function to determine whether or not "Scheduler" should be active.
-   * That is, it should always be active unless we're in a location prefixed by /resources or /matcher
+   * Helper function to determine class name for a NavLink component
+   * depending on whether it is currently active.
    */
-  const schedulerActive: NavLinkProps["isActive"] = (match, location): boolean => {
-    return (
-      !location.pathname.startsWith("/resources") &&
-      !location.pathname.startsWith("/matcher") &&
-      !location.pathname.startsWith("/policies")
-    );
+  const navlinkClass: NavLinkProps["className"] = ({ isActive }): string => {
+    return `site-title-link ${isActive ? "is-active" : ""}`;
+  };
+
+  const navlinkClassSubtitle: NavLinkProps["className"] = ({ isActive }): string => {
+    return `site-subtitle-link ${isActive ? "is-active" : ""}`;
+  };
+
+  /**
+   * Helper function to determine class name for the home NavLInk component;
+   * is always active unless we're in another tab.
+   */
+  const homeNavlinkClass = () => {
+    let isActive = true;
+    if (
+      location.pathname.startsWith("/resources") ||
+      location.pathname.startsWith("/matcher") ||
+      location.pathname.startsWith("/policies")
+    ) {
+      isActive = false;
+    }
+    return navlinkClass({ isActive });
   };
 
   const [activeMatcherRoles, setActiveMatcherRoles] = useState<Roles>(emptyRoles());
 
+  const { data: profiles, isSuccess: profilesLoaded } = useProfiles();
+  const { data: matcherActiveCourses, isSuccess: matcherActiveCoursesLoaded } = useMatcherActiveCourses();
+
   useEffect(() => {
-    Promise.all([fetchJSON("/profiles"), fetchJSON("/matcher/active")]).then(
-      ([profiles, activeMatcherCourses]: [Profile[], number[]]) => {
-        const roles = emptyRoles();
-        // get roles, but only if coordinator or mentor with no section
-        for (const profile of profiles) {
-          if (!activeMatcherCourses.includes(profile.courseId)) {
-            // ignore if not active
-            continue;
-          }
-          if (profile.role === "COORDINATOR") {
-            roles["COORDINATOR"].add(profile.courseId);
-          } else if (profile.role === "MENTOR" && profile.sectionId === undefined) {
-            roles["MENTOR"].add(profile.courseId);
-          }
-        }
-        setActiveMatcherRoles(roles);
+    if (!profilesLoaded || !matcherActiveCoursesLoaded) return;
+
+    const roles = emptyRoles();
+    // get roles, but only if coordinator or mentor with no section
+    for (const profile of profiles) {
+      if (!matcherActiveCourses.includes(profile.courseId)) {
+        // ignore if not active
+        continue;
       }
-    );
-  }, []);
+      if (profile.role === "COORDINATOR") {
+        roles["COORDINATOR"].add(profile.courseId);
+      } else if (profile.role === "MENTOR" && profile.sectionId === undefined) {
+        roles["MENTOR"].add(profile.courseId);
+      }
+    }
+    setActiveMatcherRoles(roles);
+  }, [profiles, matcherActiveCourses]);
 
   return (
     <header>
       <Link to="/">
         <LogoNoText id="logo" />
       </Link>
-      <NavLink isActive={schedulerActive} to="/" className="site-title-link" activeClassName="is-active">
+      <NavLink className={homeNavlinkClass} to="/">
         <h3 className="site-title">Scheduler</h3>
       </NavLink>
-      <NavLink to="/resources" className="site-title-link" activeClassName="is-active">
+      <NavLink to="/resources" className={navlinkClass}>
         <h3 className="site-title">Resources</h3>
       </NavLink>
       {activeMatcherRoles["COORDINATOR"].size > 0 || activeMatcherRoles["MENTOR"].size > 0 ? (
-        <NavLink to="/matcher" className="site-title-link" activeClassName="is-active">
+        <NavLink to="/matcher" className={navlinkClass}>
           <h3 className="site-title">Matcher</h3>
         </NavLink>
       ) : null}
-      <NavLink to="/policies" className="site-subtitle-link" activeClassName="is-active">
+      <NavLink to="/policies" className={navlinkClassSubtitle}>
         <h3 className="site-subtitle">Policies</h3>
       </NavLink>
       <a id="logout-btn" href="/logout" title="Log out">
@@ -125,6 +135,57 @@ function Header(): React.ReactElement {
       </a>
     </header>
   );
+}
+
+/**
+ * 404 not found page.
+ */
+const NotFound = () => {
+  return <h3>Page not found</h3>;
+};
+
+interface ErrorBoundaryProps {
+  children: React.ReactNode;
+}
+
+interface ErrorBoundaryState {
+  error: ErrorType | null;
+}
+
+interface ErrorType {
+  message: string;
+  stack: string;
+}
+
+interface ErrorPageProps {
+  error: ErrorType;
+  clearError: () => void;
+}
+
+/**
+ * Error boundary component; must be a class component,
+ * as there is currently no equivalent hook.
+ */
+class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+  constructor(props: ErrorBoundaryProps) {
+    super(props);
+    this.state = { error: null };
+  }
+
+  static getDerivedStateFromError(error: ErrorType): { error: ErrorType } {
+    return { error };
+  }
+
+  clearError(): void {
+    this.setState({ error: null });
+  }
+
+  render() {
+    if (this.state.error !== null) {
+      return <ErrorPage error={this.state.error} clearError={this.clearError} />;
+    }
+    return this.props.children;
+  }
 }
 
 function ErrorPage({ error: { message, stack }, clearError }: ErrorPageProps) {
@@ -160,6 +221,3 @@ function ErrorPage({ error: { message, stack }, clearError }: ErrorPageProps) {
     </React.Fragment>
   );
 }
-
-const wrapper: HTMLElement | null = document.getElementById("app");
-wrapper ? ReactDOM.render(<App />, wrapper) : null;

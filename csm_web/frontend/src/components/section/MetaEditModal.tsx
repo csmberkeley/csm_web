@@ -1,11 +1,10 @@
 import React, { useState } from "react";
-import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import { useSectionUpdateMutation } from "../../utils/queries/sections";
 import Modal from "../Modal";
 
 interface MetaEditModalProps {
   sectionId: number;
   closeModal: () => void;
-  reloadSection: () => void;
   capacity: number;
   description: string;
 }
@@ -13,12 +12,13 @@ interface MetaEditModalProps {
 export default function MetaEditModal({
   closeModal,
   sectionId,
-  reloadSection,
   capacity,
   description
-}: MetaEditModalProps) {
+}: MetaEditModalProps): React.ReactElement {
   // use existing capacity and description as initial values
   const [formState, setFormState] = useState({ capacity: capacity, description: description });
+
+  const sectionUpdateMutation = useSectionUpdateMutation(sectionId);
 
   function handleChange({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) {
     setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
@@ -27,10 +27,8 @@ export default function MetaEditModal({
   function handleSubmit(event: React.ChangeEvent<HTMLFormElement>) {
     event.preventDefault();
     //TODO: Handle API Failure
-    fetchWithMethod(`/sections/${sectionId}/`, HTTP_METHODS.PATCH, formState).then(() => {
-      closeModal();
-      reloadSection();
-    });
+    sectionUpdateMutation.mutate(formState);
+    closeModal();
   }
 
   return (

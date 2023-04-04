@@ -8,7 +8,9 @@ function handleInvalid({ target }: React.ChangeEvent<HTMLInputElement>): void {
 }
 
 // A fully cross-browser compatible time input, providing a shim for browsers like Safari that don't have <input type="time">
-export default function TimeInput(props: React.HTMLProps<HTMLInputElement>): React.ReactElement {
+export default function TimeInput(props: React.InputHTMLAttributes<HTMLInputElement>): React.ReactElement {
+  // eslint complains about onChange type validation not existing
+  // eslint-disable-next-line react/prop-types
   const { onChange, ...otherProps } = props;
   function handleChange(event: React.ChangeEvent<HTMLInputElement>) {
     if (event.target.type === "text") {

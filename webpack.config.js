@@ -4,7 +4,7 @@ const plugins = [new LodashModuleReplacementPlugin()];
 
 module.exports = (env, argv) => {
   const config = {
-    entry: "./csm_web/frontend/src/index.js",
+    entry: "./csm_web/frontend/src/index.tsx",
     output: {
       path: path.resolve(__dirname, "./csm_web/frontend/static/frontend/")
     },
@@ -39,7 +39,20 @@ module.exports = (env, argv) => {
             {
               loader: "@svgr/webpack",
               // Always inline styles into svg attributes because <style> tags would violate our CSP
-              options: { svgoConfig: { plugins: [{ inlineStyles: { onlyMatchedOnce: false } }] } }
+              options: {
+                svgoConfig: {
+                  plugins: [
+                    {
+                      name: "preset-default",
+                      params: {
+                        overrides: {
+                          inlineStyles: { onlyMatchedOnce: false }
+                        }
+                      }
+                    }
+                  ]
+                }
+              }
             }
           ]
         }

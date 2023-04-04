@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import { useUserEmails } from "../../utils/queries/base";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import ErrorCircle from "../../../static/frontend/img/error_outline.svg";
+import { useEnrollStudentMutation } from "../../utils/queries/sections";
 
 enum CoordModalStates {
   INITIAL = "INITIAL",
@@ -16,7 +17,6 @@ enum CoordModalStates {
 
 interface CoordinatorAddStudentModalProps {
   closeModal: (arg0?: boolean) => void;
-  userEmails: string[];
   sectionId: number;
 }
 
@@ -46,9 +46,11 @@ interface ActionType {
 
 export function CoordinatorAddStudentModal({
   closeModal,
-  userEmails,
   sectionId
 }: CoordinatorAddStudentModalProps): React.ReactElement {
+  const { data: userEmails, isSuccess: userEmailsLoaded } = useUserEmails();
+  const enrollStudentMutation = useEnrollStudentMutation(sectionId);
+
   const [emailsToAdd, setEmailsToAdd] = useState<string[]>([""]);
   const [response, setResponse] = useState<ResponseType>({} as ResponseType);
   /**
@@ -121,28 +123,26 @@ export function CoordinatorAddStudentModal({
       request.actions["capacity"] = responseActions.get("capacity") as string;
     }
 
-    fetchWithMethod(`sections/${sectionId}/students/`, HTTP_METHODS.PUT, request).then(response => {
-      if (!response.ok) {
-        if (response.status === 500) {
+    enrollStudentMutation.mutate(request, {
+      onError: ({ status, json }) => {
+        if (status === 500) {
           // internal error
-          response.text().then(() => {
-            setResponse({
-              errors: { critical: `A internal error occurred. Please report this error to #tech-bugs immediately.` }
-            });
-            setAddStage(CoordModalStates.ERROR);
+          setResponse({
+            errors: { critical: `A internal error occurred. Please report this error to #tech-bugs immediately.` }
           });
+          setAddStage(CoordModalStates.ERROR);
         } else {
-          response.json().then(body => {
-            setResponse(body);
-            if (body.errors.critical) {
-              setAddStage(CoordModalStates.ERROR);
-            } else {
-              setAddStage(CoordModalStates.WARNING);
-            }
-          });
+          // other error
+          setResponse(json);
+          if (json.errors?.critical) {
+            setAddStage(CoordModalStates.ERROR);
+          } else {
+            setAddStage(CoordModalStates.WARNING);
+          }
         }
         setValidationEnabled(false); // reset validation
-      } else {
+      },
+      onSuccess: () => {
         // close modal and refresh the page
         closeModal(true);
       }
@@ -200,20 +200,18 @@ export function CoordinatorAddStudentModal({
             </div>
           ))}
           <datalist id="user-emails-list">
-            {userEmails.map(email => (
-              <option key={email} value={email} />
-            ))}
+            {userEmailsLoaded && userEmails.map(email => <option key={email} value={email} />)}
           </datalist>
         </div>
       </div>
       <div className="coordinator-email-input-buttons">
-        <button className="coordinator-email-input-add" onClick={() => addNewEmail()}>
+        <button className="coordinator-email-input-add" type="button" onClick={() => addNewEmail()}>
           Add email
         </button>
         {
           /* Firefox doesn't support clipboard reads from sites; readText would be undefined */
-          navigator.clipboard.readText != undefined && (
-            <button className="coordinator-email-input-add" onClick={() => addEmailsFromClipboard()}>
+          navigator?.clipboard?.readText !== undefined && (
+            <button className="coordinator-email-input-add" type="button" onClick={() => addEmailsFromClipboard()}>
               Add from clipboard
             </button>
           )
@@ -236,12 +234,14 @@ export function CoordinatorAddStudentModal({
   const ADD_STATUS = {
     OK: "OK",
     CONFLICT: "CONFLICT",
-    BANNED: "BANNED"
+    BANNED: "BANNED",
+    RESTRICTED: "RESTRICTED"
   };
 
   const ok_arr = [];
   const conflict_arr = [];
   const banned_arr = [];
+  const restricted_arr = [];
 
   if (response && response.progress) {
     for (const email_obj of response.progress) {
@@ -254,6 +254,9 @@ export function CoordinatorAddStudentModal({
           break;
         case ADD_STATUS.BANNED:
           banned_arr.push(email_obj);
+          break;
+        case ADD_STATUS.RESTRICTED:
+          restricted_arr.push(email_obj);
           break;
       }
     }
@@ -314,7 +317,7 @@ export function CoordinatorAddStudentModal({
                           >
                             ×
                           </span>
-                          {email_obj.email}
+                          <span>{email_obj.email}</span>
                         </div>
                         <div className="coordinator-email-response-item-left-detail">{conflictDetail}</div>
                       </div>
@@ -362,7 +365,7 @@ export function CoordinatorAddStudentModal({
                         >
                           ×
                         </span>
-                        {email_obj.email}
+                        <span>{email_obj.email}</span>
                       </div>
                     </div>
                     <div className="coordinator-email-response-item-right">
@@ -377,6 +380,48 @@ export function CoordinatorAddStudentModal({
                         name={`unban-${email_obj.email}`}
                         value="UNBAN_SKIP"
                         onChange={e => updateResponseAction(e, email_obj.email, "ban_action")}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {restricted_arr.length > 0 && (
+            <div className="coordinator-email-response-container">
+              <div className="coordinator-email-response-head">
+                <div className="coordinator-email-response-head-left coordinator-email-response-status-banned">
+                  <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
+                  Course restricted
+                </div>
+                <div className="coordinator-email-response-head-right">
+                  <div className="coordinator-email-reaponse-head-right-item">
+                    Whitelist,
+                    <br /> Enroll
+                  </div>
+                </div>
+              </div>
+              <div className="coordinator-email-response-item-container">
+                {restricted_arr.map(email_obj => (
+                  <div key={email_obj.email} className="coordinator-email-response-item">
+                    <div className="coordinator-email-response-item-left">
+                      <div className="coordinator-email-response-item-left-email">
+                        <span
+                          className="inline-plus-sign"
+                          title="Remove"
+                          onClick={() => removeResponseEmail(email_obj.email)}
+                        >
+                          ×
+                        </span>
+                        {email_obj.email}
+                      </div>
+                    </div>
+                    <div className="coordinator-email-response-item-right">
+                      <input
+                        type="checkbox"
+                        name={`whitelist-${email_obj.email}`}
+                        value="WHITELIST"
+                        onChange={e => updateResponseAction(e, email_obj.email, "restricted_action")}
                       />
                     </div>
                   </div>
@@ -404,7 +449,7 @@ export function CoordinatorAddStudentModal({
                       >
                         ×
                       </span>
-                      {email_obj.email}
+                      <span>{email_obj.email}</span>
                     </div>
                     <div className="coordinator-email-response-item-right"></div>
                   </div>

@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { NavLink, Redirect, Route, Switch } from "react-router-dom";
-import { fetchJSON } from "../../utils/api";
+import { Navigate, NavLink, Route, Routes, useParams } from "react-router-dom";
+import { useProfiles } from "../../utils/queries/base";
+import { useMatcherActiveCourses } from "../../utils/queries/matcher";
 import { Profile } from "../../utils/types";
 
 import { emptyRoles, Roles } from "../../utils/user";
@@ -22,54 +23,60 @@ export function EnrollmentMatcher(): JSX.Element {
 
   const [overrideProfile, setOverrideProfile] = useState<Map<number, "COORDINATOR" | "MENTOR">>(new Map());
 
+  const { data: profiles, isSuccess: profilesLoaded } = useProfiles();
+  const { data: activeCourses, isSuccess: activeCoursesLoaded } = useMatcherActiveCourses();
+
   useEffect(() => {
-    Promise.all([fetchJSON("/profiles"), fetchJSON("/matcher/active")]).then(([profiles, activeCourses]) => {
-      const newCourses: Array<MatcherProfile> = [];
-      const newRoles: Roles = emptyRoles();
-      const newCoordProfileMap: Map<number, Profile> = new Map();
-      const newMentorProfileMap: Map<number, Profile> = new Map();
-      const newOverrideProfile: Map<number, "COORDINATOR" | "MENTOR"> = new Map();
+    // wait until all data is loaded
+    if (!profilesLoaded || !activeCoursesLoaded) {
+      return;
+    }
 
-      profiles.map((profile: Profile) => {
+    const newCourses: Array<MatcherProfile> = [];
+    const newRoles: Roles = emptyRoles();
+    const newCoordProfileMap: Map<number, Profile> = new Map();
+    const newMentorProfileMap: Map<number, Profile> = new Map();
+    const newOverrideProfile: Map<number, "COORDINATOR" | "MENTOR"> = new Map();
+
+    profiles.map((profile: Profile) => {
+      if (profile.role === "COORDINATOR") {
+        newCoordProfileMap.set(profile.courseId, profile);
+      } else if (profile.role === "MENTOR") {
+        newMentorProfileMap.set(profile.courseId, profile);
+      }
+
+      if (profile.role === "COORDINATOR" || (profile.role === "MENTOR" && profile.sectionId == null)) {
+        if (!activeCourses.includes(profile.courseId)) {
+          // ignore if not active
+          return;
+        }
+        newCourses.push({
+          courseId: profile.courseId,
+          courseName: profile.course,
+          courseTitle: profile.courseTitle,
+          role: profile.role
+        });
+        newRoles[profile.role].add(profile.courseId);
+
         if (profile.role === "COORDINATOR") {
-          newCoordProfileMap.set(profile.courseId, profile);
+          newOverrideProfile.set(profile.courseId, "COORDINATOR");
         } else if (profile.role === "MENTOR") {
-          newMentorProfileMap.set(profile.courseId, profile);
+          newOverrideProfile.set(profile.courseId, "MENTOR");
         }
-
-        if (profile.role === "COORDINATOR" || (profile.role === "MENTOR" && profile.sectionId == null)) {
-          if (!activeCourses.includes(profile.courseId)) {
-            // ignore if not active
-            return;
-          }
-          newCourses.push({
-            courseId: profile.courseId,
-            courseName: profile.course,
-            courseTitle: profile.courseTitle,
-            role: profile.role
-          });
-          newRoles[profile.role].add(profile.courseId);
-
-          if (profile.role === "COORDINATOR") {
-            newOverrideProfile.set(profile.courseId, "COORDINATOR");
-          } else if (profile.role === "MENTOR") {
-            newOverrideProfile.set(profile.courseId, "MENTOR");
-          }
-        }
-      });
-
-      setRoles(newRoles);
-      setCoordProfileMap(newCoordProfileMap);
-      setMentorProfileMap(newMentorProfileMap);
-      setOverrideProfile(newOverrideProfile);
-
-      // sort by course name
-      newCourses.sort((a, b) => {
-        return a.courseName.localeCompare(b.courseName);
-      });
-      setStaffCourses(newCourses);
+      }
     });
-  }, []);
+
+    setRoles(newRoles);
+    setCoordProfileMap(newCoordProfileMap);
+    setMentorProfileMap(newMentorProfileMap);
+    setOverrideProfile(newOverrideProfile);
+
+    // sort by course name
+    newCourses.sort((a, b) => {
+      return a.courseName.localeCompare(b.courseName);
+    });
+    setStaffCourses(newCourses);
+  }, [profiles, activeCourses]);
 
   const switchProfile = (courseId: number) => {
     if (overrideProfile.has(courseId)) {
@@ -87,6 +94,13 @@ export function EnrollmentMatcher(): JSX.Element {
     return <div>No matchers found</div>;
   }
 
+  let defaultMatcher = <div>No valid roles found.</div>;
+  if (roles["COORDINATOR"].size > 0) {
+    defaultMatcher = <Navigate to={"/matcher/" + roles["COORDINATOR"].values().next().value} replace={true} />;
+  } else if (roles["MENTOR"].size > 0) {
+    defaultMatcher = <Navigate to={"/matcher/" + roles["MENTOR"].values().next().value} replace={true} />;
+  }
+
   return (
     <div id="matcher-contents">
       <nav id="matcher-sidebar">
@@ -95,54 +109,70 @@ export function EnrollmentMatcher(): JSX.Element {
       <div id="matcher-body">
         <div id="matcher-header"></div>
         <div id="matcher-main">
-          <Switch>
+          <Routes>
             <Route
-              exact
-              path="/matcher/:courseId"
-              render={(routeProps: any) => {
-                const courseId = parseInt(routeProps.match.params.courseId);
-                const coordAndMentor = roles["COORDINATOR"].has(courseId) && roles["MENTOR"].has(courseId);
-                const role = overrideProfile.get(courseId);
-
-                if (role === "COORDINATOR") {
-                  return (
-                    <CoordinatorMatcherForm
-                      profile={coordProfileMap.get(courseId)!}
-                      switchProfileEnabled={coordAndMentor}
-                      switchProfile={() => switchProfile(courseId)}
-                    />
-                  );
-                } else if (role === "MENTOR") {
-                  return (
-                    <MentorSectionPreferences
-                      profile={mentorProfileMap.get(courseId)!}
-                      switchProfileEnabled={coordAndMentor}
-                      switchProfile={() => switchProfile(courseId)}
-                    />
-                  );
-                } else {
-                  return <div></div>;
-                }
-              }}
+              path=":courseId"
+              element={
+                <MatcherCourseWrapper
+                  roles={roles}
+                  overrideProfile={overrideProfile}
+                  mentorProfileMap={mentorProfileMap}
+                  coordProfileMap={coordProfileMap}
+                  switchProfile={switchProfile}
+                />
+              }
             />
-            <Route
-              path="/matcher"
-              render={() => {
-                if (roles["COORDINATOR"].size > 0) {
-                  return <Redirect to={"/matcher/" + roles["COORDINATOR"].values().next().value} push={false} />;
-                } else if (roles["MENTOR"].size > 0) {
-                  return <Redirect to={"/matcher/" + roles["MENTOR"].values().next().value} push={false} />;
-                } else {
-                  return <div>No valid roles found.</div>;
-                }
-              }}
-            />
-          </Switch>
+            {/* for any other path, resort to default */}
+            <Route path="*" element={defaultMatcher} />
+          </Routes>
         </div>
       </div>
     </div>
   );
 }
+
+interface MatcherCourseWrapperProps {
+  roles: Roles;
+  overrideProfile: Map<number, "COORDINATOR" | "MENTOR">;
+  mentorProfileMap: Map<number, Profile>;
+  coordProfileMap: Map<number, Profile>;
+  switchProfile: (courseId: number) => void;
+}
+
+const MatcherCourseWrapper = ({
+  roles,
+  overrideProfile,
+  mentorProfileMap,
+  coordProfileMap,
+  switchProfile
+}: MatcherCourseWrapperProps) => {
+  const params = useParams();
+  const courseId = parseInt(params.courseId!);
+  const coordAndMentor = roles["COORDINATOR"].has(courseId) && roles["MENTOR"].has(courseId);
+  const role = overrideProfile.get(courseId);
+
+  if (role === "COORDINATOR") {
+    return (
+      <CoordinatorMatcherForm
+        key={courseId} // key to force re-render upon profile switch
+        profile={coordProfileMap.get(courseId)!}
+        switchProfileEnabled={coordAndMentor}
+        switchProfile={() => switchProfile(courseId)}
+      />
+    );
+  } else if (role === "MENTOR") {
+    return (
+      <MentorSectionPreferences
+        key={courseId}
+        profile={mentorProfileMap.get(courseId)!}
+        switchProfileEnabled={coordAndMentor}
+        switchProfile={() => switchProfile(courseId)}
+      />
+    );
+  } else {
+    return <div></div>;
+  }
+};
 
 interface MatcherSidebarProps {
   courses: Array<MatcherProfile>;
@@ -158,7 +188,11 @@ function MatcherSidebar({ courses }: MatcherSidebarProps): JSX.Element {
       {Array.from(uniqueCourseMap.values()).map(({ courseId, courseName }) => {
         return (
           <React.Fragment key={courseId}>
-            <NavLink to={`/matcher/${courseId}`} key={courseId} className="matcher-link" activeClassName="active">
+            <NavLink
+              to={`/matcher/${courseId}`}
+              key={courseId}
+              className={({ isActive }) => `matcher-link ${isActive ? "active" : ""}`}
+            >
               {courseName}
             </NavLink>
           </React.Fragment>

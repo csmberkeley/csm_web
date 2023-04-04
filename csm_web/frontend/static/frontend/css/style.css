@@ -7,6 +7,9 @@
 @import url("./tooltip.css");
 @import url("./policies.css");
 @import url("./spacetime_delete.css");
+@import url("./whitelist_modal.css");
+@import url("./word-of-the-day.css");
+@import url("./course-settings.css");
 
 html,
 body {
@@ -35,15 +38,13 @@ button {
 	--csm-green: #9ae0b3;
 	--csm-green-darkened: #75b38a;
 	--csm-green-lightened: #d7ffe5;
-	--csm-theme-cs61a: var(--csm-green);
-	--csm-theme-cs61b: #63c5ff;
-	--csm-theme-cs61c: #797c99;
-	--csm-theme-cs70: #ff7070;
-	--csm-theme-cs88: #e46495;
-	--csm-theme-ee16a: #707eff;
-	--csm-theme-eecs16a: var(--csm-theme-ee16a);
-	--csm-theme-ee16b: #ffe070;
-	--csm-theme-eecs16b: var(--csm-theme-ee16b);
+	--csm-theme-csm61a: var(--csm-green);
+	--csm-theme-csm61b: #63c5ff;
+	--csm-theme-csm61c: #797c99;
+	--csm-theme-csm70: #ff7070;
+	--csm-theme-csm88: #e46495;
+	--csm-theme-csm16a: #707eff;
+	--csm-theme-csm16b: #ffe070;
 	--csm-mentor: var(--csm-green);
 	--csm-coordinator: #6517b3;
 	--csm-student: #ffab2e;
@@ -400,6 +401,40 @@ header {
 	width: 50px;
 }
 
+.course-menu-content {
+	display: flex;
+	flex-direction: column;
+}
+
+.course-menu-sidebar {
+	display: flex;
+	flex-direction: row;
+	align-items: center;
+	justify-content: center;
+}
+
+.course-menu-sidebar-tab {
+	background-color: var(--csm-neutral);
+	border: none;
+	border-radius: 8px;
+	color: white;
+	font-size: 1rem;
+	margin: 8px;
+	padding: 12px;
+}
+
+.course-menu-sidebar-tab.active {
+	background-color: var(--csm-green);
+}
+
+.course-menu-sidebar-tab.active:hover {
+	background-color: var(--csm-green);
+}
+
+.course-menu-sidebar-tab:hover {
+	background-color: var(--csm-neutral-darkened);
+}
+
 .enrollment-container {
 	display: grid;
 	justify-content: center;
@@ -559,6 +594,19 @@ header {
 	justify-content: center;
 	width: 40%;
 	align-items: center;
+}
+
+.edit-whitelist-btn {
+	font-size: 1rem;
+	border: none;
+	cursor: pointer;
+	display: block;
+	padding: 8px;
+	margin-left: 5px;
+}
+
+#edit-whitelist-icon {
+	margin: 0 4px;
 }
 
 #course-section-controls {
@@ -1277,6 +1325,10 @@ table tbody tr:last-child > td {
 	border-radius: 6px;
 }
 
+.mentor-attendance-page > div {
+	margin-bottom: 40px;
+}
+
 #section-detail-sidebar {
 	display: flex;
 	flex-wrap: wrap;
@@ -1659,8 +1711,9 @@ table tbody tr:last-child > td {
 }
 
 #mentor-attendance {
-	max-width: 700px;
+	max-width: 500px;
 	padding-top: 0;
+	padding-bottom: 30px;
 	overflow: hidden;
 	border-top: none;
 }
@@ -1754,7 +1807,20 @@ table tbody tr:last-child > td {
 	color: var(--csm-green-darkened);
 }
 
+.mentor-attendance-page {
+	display: flex;
+	align-items: center;
+	flex-wrap: wrap;
+}
+
 /* Loading Spinner */
+
+.spinner-centered {
+	margin: auto;
+	height: 50px;
+	width: 50px;
+}
+
 .sk-fading-circle {
 	width: 35px;
 	height: 35px;

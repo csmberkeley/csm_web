@@ -1,22 +1,29 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { fetchJSON, fetchWithMethod, HTTP_METHODS } from "../../../utils/api";
 import { Mentor, Profile } from "../../../utils/types";
 
+import {
+  useMatcherAddMentorsMutation,
+  useMatcherConfigMutation,
+  useMatcherMentors,
+  useMatcherRemoveMentorsMutation
+} from "../../../utils/queries/matcher";
+import LoadingSpinner from "../../LoadingSpinner";
 import Modal from "../../Modal";
 import { SearchBar } from "../../SearchBar";
+import { Tooltip } from "../../Tooltip";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
 import { Slot, SlotPreference } from "../EnrollmentAutomationTypes";
 import { formatInterval } from "../utils";
 
 import CheckIcon from "../../../../static/frontend/img/check.svg";
+import CheckCircleIcon from "../../../../static/frontend/img/check_circle.svg";
 import EyeIcon from "../../../../static/frontend/img/eye.svg";
 import SortDownIcon from "../../../../static/frontend/img/sort-down.svg";
 import SortUnknownIcon from "../../../../static/frontend/img/sort-unknown.svg";
 import SortUpIcon from "../../../../static/frontend/img/sort-up.svg";
 import UndoIcon from "../../../../static/frontend/img/undo.svg";
 import XIcon from "../../../../static/frontend/img/x.svg";
-import { Tooltip } from "../../Tooltip";
 
 interface ReleaseStageProps {
   profile: Profile;
@@ -25,7 +32,8 @@ interface ReleaseStageProps {
    * Map from mentor id to their slot preferences
    */
   prefByMentor: Map<number, SlotPreference[]>;
-  refreshStage: () => void;
+  formIsOpen: boolean;
+  prevStage: () => void;
 }
 
 /**
@@ -33,7 +41,13 @@ interface ReleaseStageProps {
  * - Add mentors to fill out the preference form
  * - View current submitted preferences from mentors
  */
-export function ReleaseStage({ profile, slots, prefByMentor, refreshStage }: ReleaseStageProps): React.ReactElement {
+export function ReleaseStage({
+  profile,
+  slots,
+  prefByMentor,
+  formIsOpen,
+  prevStage
+}: ReleaseStageProps): React.ReactElement {
   const [selectedMentor, setSelectedMentor] = useState<Mentor | undefined>(undefined);
 
   const [preferenceModalOpen, setPreferenceModalOpen] = useState<boolean>(false);
@@ -66,7 +80,8 @@ export function ReleaseStage({ profile, slots, prefByMentor, refreshStage }: Rel
         prefByMentor={prefByMentor}
         selectedMentor={selectedMentor}
         setSelectedMentor={handleSelectMentor}
-        refreshStage={refreshStage}
+        prevStage={prevStage}
+        formIsOpen={formIsOpen}
       />
     </React.Fragment>
   );
@@ -90,7 +105,14 @@ interface MentorListProps {
   prefByMentor: Map<number, SlotPreference[]>;
   selectedMentor: Mentor | undefined;
   setSelectedMentor: (mentor: Mentor | undefined) => void;
-  refreshStage: () => void;
+  prevStage: () => void;
+  formIsOpen: boolean;
+}
+
+enum Status {
+  NONE,
+  LOADING,
+  SUCCESS
 }
 
 function MentorList({
@@ -98,7 +120,8 @@ function MentorList({
   prefByMentor,
   selectedMentor,
   setSelectedMentor,
-  refreshStage
+  prevStage,
+  formIsOpen
 }: MentorListProps): React.ReactElement {
   /**
    * List of all mentors associated with the course that have no assigned section
@@ -126,6 +149,24 @@ function MentorList({
   const [sortBy, setSortBy] = useState<SortByType>({ attr: "name", dir: SortDirection.ASCENDING });
 
   /**
+   * List of all mentors associated with the course that have no assigned section
+   */
+  const {
+    data: jsonMentorList,
+    isSuccess: jsonMentorListLoaded,
+    refetch: refetchMentorList
+  } = useMatcherMentors(profile.courseId);
+
+  const matcherConfigMutation = useMatcherConfigMutation(profile.courseId);
+  const matcherMentorsMutation = useMatcherAddMentorsMutation(profile.courseId);
+  const matcherRemoveMentorsMutation = useMatcherRemoveMentorsMutation(profile.courseId);
+
+  /**
+   * Status upon requesting to open/close the form
+   */
+  const [formStatus, setFormStatus] = useState<Status>(Status.NONE);
+
+  /**
    * Reference to the search bar input field
    */
   const searchBar = useRef<HTMLInputElement>(null);
@@ -135,8 +176,11 @@ function MentorList({
   const addMentorTextArea = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
-    fetchMentors();
-  }, [profile]);
+    if (jsonMentorListLoaded) {
+      setMentorList(jsonMentorList.mentors);
+    }
+    sortTable();
+  }, [jsonMentorList]);
 
   useEffect(() => {
     updateSearch(searchBar.current?.value);
@@ -152,29 +196,36 @@ function MentorList({
     return count;
   }, [mentorList]);
 
-  const closeForm = () => {
-    // send POST request to close form for mentors
-    fetchWithMethod(`matcher/${profile.courseId}/configure`, HTTP_METHODS.POST, { open: false }).then(() => {
-      // recompute stage
-      refreshStage();
-    });
+  const openForm = (): void => {
+    setFormStatus(Status.LOADING);
+    // send POST request to release form for mentors
+    matcherConfigMutation.mutate(
+      { open: true },
+      {
+        onSuccess: () => {
+          setFormStatus(Status.SUCCESS);
+          setInterval(() => {
+            setFormStatus(Status.NONE);
+          }, 1500);
+        }
+      }
+    );
   };
 
-  /**
-   * Fetches the mentor list from the server, sorted to put mentors
-   * that have not filled in the preference form first
-   *
-   * @returns {Promise<void>}
-   */
-  const fetchMentors = (): Promise<void> => {
-    /**
-     * Data format:
-     * { "mentors": [{mentor model}, ...] }
-     */
-    return fetchJSON(`matcher/${profile.courseId}/mentors`).then(data => {
-      setMentorList(data.mentors);
-      sortTable();
-    });
+  const closeForm = () => {
+    setFormStatus(Status.LOADING);
+    // send POST request to close form for mentors
+    matcherConfigMutation.mutate(
+      { open: false },
+      {
+        onSuccess: () => {
+          setFormStatus(Status.SUCCESS);
+          setInterval(() => {
+            setFormStatus(Status.NONE);
+          }, 1500);
+        }
+      }
+    );
   };
 
   const submitMentorList = () => {
@@ -194,27 +245,32 @@ function MentorList({
       // split by newline
       newMentors = newMentorsString.split("\n").map(email => email.trim());
     }
+    // filter empty emails
+    newMentors = newMentors.filter(email => email.length > 0);
+
+    if (newMentors.length == 0) {
+      // nothing to request
+      return;
+    }
 
     // submit mentor list to add to course
-    fetchWithMethod(`matcher/${profile.courseId}/mentors`, HTTP_METHODS.POST, {
-      mentors: newMentors
-    }).then(response => {
-      response
-        .json()
-        .then(data => {
-          if (data.skipped) {
-            console.log(data);
+    matcherMentorsMutation.mutate(
+      { mentors: newMentors },
+      {
+        onSuccess: response => {
+          if (response.skipped) {
+            console.log(response.skipped);
           }
-        })
-        .then(() => {
+
           if (addMentorTextArea.current) {
             // reset text area
             addMentorTextArea.current.value = "";
           }
           // refetch mentors
-          fetchMentors();
-        });
-    });
+          refetchMentorList();
+        }
+      }
+    );
   };
 
   /**
@@ -310,16 +366,26 @@ function MentorList({
       return;
     }
     // submit mentors to remove from course
-    fetchWithMethod(`matcher/${profile.courseId}/mentors`, HTTP_METHODS.DELETE, {
-      mentors: removedMentorList
-    }).then(() => {
-      setRemovedMentorList([]);
-      // refresh mentor list
-      fetchMentors();
-    });
+    matcherRemoveMentorsMutation.mutate(
+      { mentors: removedMentorList },
+      {
+        onSuccess: () => {
+          setRemovedMentorList([]);
+          // refresh mentor list
+          refetchMentorList();
+        }
+      }
+    );
   };
 
   const hasPreferences = (mentor: Mentor) => prefByMentor.has(mentor.id);
+
+  let formStatusIcon = null;
+  if (formStatus === Status.LOADING) {
+    formStatusIcon = <LoadingSpinner className="matcher-body-footer-status-icon" />;
+  } else if (formStatus === Status.SUCCESS) {
+    formStatusIcon = <CheckCircleIcon className="matcher-body-footer-status-icon" />;
+  }
 
   return (
     <React.Fragment>
@@ -372,7 +438,7 @@ function MentorList({
             </div>
           </div>
           <div className="mentor-list">
-            {filteredMentorList.map((mentor, index) => (
+            {filteredMentorList.map(mentor => (
               <MentorListItem
                 key={mentor.id}
                 mentor={mentor}
@@ -389,15 +455,29 @@ function MentorList({
       </div>
       <div className="matcher-body-footer-sticky matcher-body-footer">
         <div>
+          {mentorList.every(mentor => !hasPreferences(mentor)) && (
+            <button className="matcher-secondary-btn" onClick={prevStage}>
+              Back
+            </button>
+          )}
           {removedMentorList.length > 0 && (
             <button className="matcher-secondary-btn" onClick={submitMentorRemovals}>
               Update
             </button>
           )}
         </div>
-        <button className="matcher-submit-btn" onClick={closeForm}>
-          Close Form
-        </button>
+        <div className="matcher-body-footer-status-container">
+          {formStatusIcon}
+          {formIsOpen ? (
+            <button className="matcher-submit-btn" onClick={closeForm}>
+              Close Form
+            </button>
+          ) : (
+            <button className="matcher-submit-btn" onClick={openForm}>
+              Open Form
+            </button>
+          )}
+        </div>
       </div>
     </React.Fragment>
   );

@@ -21,6 +21,7 @@ import CheckCircle from "../../../static/frontend/img/check-circle-solid.svg";
 import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
 import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
 import ResourceLinkEdit from "./ResourceLinkEdit";
+import { Tooltip } from "../Tooltip";
 
 interface ResourceEditProps {
   resource: Resource;
@@ -693,13 +694,22 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
               </div>
               <div className="resourceInfoEdit">
                 <div className="resourceEditHeadItem">Topics</div>
-                <input
-                  type="text"
-                  defaultValue={resource.topics}
-                  placeholder="Topics"
-                  onChange={e => onChange(e, "topics")}
-                  onBlur={() => handleBlur("topics")}
-                />
+                <div className="topicsTooltipWrapper">
+                  <Tooltip
+                    placement="bottom"
+                    source={
+                      <input
+                        type="text"
+                        defaultValue={resource.topics}
+                        placeholder="Topics"
+                        onChange={e => onChange(e, "topics")}
+                        onBlur={() => handleBlur("topics")}
+                      />
+                    }
+                  >
+                    Topics should be delimited by semicolons
+                  </Tooltip>
+                </div>
                 <div className="resourceValidationError">
                   {formErrors.topics && <ExclamationCircle className="icon exclamationIcon" />}
                   {formErrors.topics}
