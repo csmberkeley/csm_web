@@ -21,6 +21,8 @@
 from __future__ import print_function
 
 import os.path
+import json
+import dotenv
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -42,6 +44,19 @@ def main():
     # time.
     if os.path.exists('token.json'):
         creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    else:  # Attempt to load from .env variables
+        creds = Credentials.from_authorized_user_info(
+            {
+                "token": os.getenv("GMAIL_TOKEN"),
+                "refresh_token": os.getenv("GMAIL_REFRESH_TOKEN"),
+                "token_uri": os.getenv("GMAIL_TOKEN_URI"),
+                "client_id": os.getenv("GMAIL_CLIENT_ID"),
+                "client_secret": os.getenv("GMAIL_CLIENT_SECRET"),
+                "scopes": SCOPES,
+                "expiry": os.getenv("GMAIL_EXPIRY")
+            }
+        )
+
     # If there are no (valid) credentials available, let the user log in.
     if not creds or not creds.valid:
         if creds and creds.expired and creds.refresh_token:
@@ -51,25 +66,20 @@ def main():
                 'credentials.json', SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
-        with open('token.json', 'w') as token:
-            token.write(creds.to_json())
+        creds_dict = json.loads(creds.to_json())
+        dotenv_file = dotenv.find_dotenv()
+        os.environ["GMAIL_TOKEN"] = creds_dict["token"]
+        os.environ["GMAIL_REFRESH_TOKEN"] = creds_dict["refresh_token"]
+        os.environ["GMAIL_TOKEN_URL"] = creds_dict["token_uri"]
+        os.environ["GMAIL_CLIENT_ID"] = creds_dict["client_id"]
+        os.environ["GMAIL_CLIENT_SECRET"] = creds_dict["client_secret"]
+        os.environ["GMAIL_EXPIRY"] = creds_dict["expiry"]
 
-    try:
-        # Call the Gmail API
-        service = build('gmail', 'v1', credentials=creds)
-        results = service.users().labels().list(userId='me').execute()
-        labels = results.get('labels', [])
+        for key in ("GMAIL_TOKEN", "GMAIL_REFRESH_TOKEN", "GMAIL_TOKEN_URL",
+                    "GMAIL_CLIENT_ID", "GMAIL_CLIENT_SECRET", "GMAIL_EXPIRY"):
+            dotenv.set_key(dotenv_file, key, os.environ[key])
 
-        if not labels:
-            print('No labels found.')
-            return
-        print('Labels:')
-        for label in labels:
-            print(label['name'])
-
-    except HttpError as error:
-        # TODO(developer) - Handle errors from gmail API.
-        print(f'An error occurred: {error}')
+        print("Please restart your environment to load the new email environment variables")
 
 
 if __name__ == '__main__':

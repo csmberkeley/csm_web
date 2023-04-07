@@ -11,6 +11,8 @@ from googleapiclient.errors import HttpError
 
 from .email_errors import EmailFormattingError, NoEmailError, EmailAuthError, email_error_handling
 
+PROFILE_URL = "https://scheduler.csmentors.org/profile"
+
 # Email error handling wrapper adds logger argument as last argument
 
 
@@ -155,7 +157,7 @@ def _render_template(filepaths):
             body += file.read()
 
     with open(os.path.join(settings.BASE_DIR, "scheduler/email/email_content/signature.html"), 'r') as file:
-        body += file.read()
+        body += file.read().format(PROFILE_URL=html.escape(PROFILE_URL))
 
     return "<html><body>" + body + "</html></body>"
 
@@ -180,13 +182,13 @@ def _email_send_message(subject, body, to_emails=[], cc_emails=[], bcc_emails=[]
     try:
         creds = Credentials.from_authorized_user_info(
             {
-                "token": os.environ["GMAIL_TOKEN"],
-                "refresh_token": os.environ["GMAIL_REFRESH_TOKEN"],
-                "token_uri": os.environ["GMAIL_TOKEN_URI"],
-                "client_id": os.environ["GMAIL_CLIENT_ID"],
-                "client_secret": os.environ["GMAIL_CLIENT_SECRET"],
+                "token": os.getenv("GMAIL_TOKEN"),
+                "refresh_token": os.getenv("GMAIL_REFRESH_TOKEN"),
+                "token_uri": os.getenv("GMAIL_TOKEN_URI"),
+                "client_id": os.getenv("GMAIL_CLIENT_ID"),
+                "client_secret": os.getenv("GMAIL_CLIENT_SECRET"),
                 "scopes": ["https://www.googleapis.com/auth/gmail.modify"],
-                "expiry": os.environ["GMAIL_EXPIRY"]
+                "expiry": os.getenv("GMAIL_EXPIRY")
             }
         )
     except:
