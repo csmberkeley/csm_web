@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink, useParams } from "react-router-dom";
 import StudentSection from "./StudentSection";
 import MentorSection from "./MentorSection";
