@@ -1,7 +1,12 @@
 import React, { useEffect, useState } from "react";
 import Modal from "../Modal";
 import { useUserEmails } from "../../utils/queries/base";
-import { useSwapRequestMutation } from "../../utils/queries/sections";
+import {
+  useSwapRequestQuery,
+  useSwapPostMutation,
+  useReceivedSwapRequestQuery,
+  useAllSwapRequestQuery
+} from "../../utils/queries/sections";
 
 interface SwapSectionModalProps {
   sectionId: number;
@@ -10,23 +15,24 @@ interface SwapSectionModalProps {
 
 export const SwapSectionModal = ({ sectionId, closeModal }: SwapSectionModalProps) => {
   // Need API endpoints
-  useEffect(() => {
-    fetch(`/api/sections/students/`)
-      .then(res => res.json())
-      .then(data => {
-        // setMyRequest(data);
-      });
-  }, []);
 
   return (
     <Modal className="swap-display" closeModal={closeModal}>
-      <SwapRequestDashboard />
+      <SwapRequestDashboard sectionId={sectionId} />
       <SwapRequestForm sectionId={sectionId} />
     </Modal>
   );
 };
 
-export const SwapRequestDashboard = () => {
+export const SwapRequestDashboard = ({ sectionId }: SwapRequestDashBoardProps) => {
+  const [myRequest, setMyRequest] = useState<string[]>([]);
+  const [sendRequest, setSendRequest] = useState<string[]>([]);
+  const requests = useAllSwapRequestQuery(sectionId, studentId).data;
+  const send_requests = useReceivedSwapRequestQuery(sectionId, studentId).data;
+  useEffect(() => {
+    // How do i get student id?
+  }, []);
+
   return (
     <div className="swap-dashboard">
       <div className="my-request">
@@ -52,17 +58,21 @@ export const SwapRequestDashboard = () => {
     </div>
   );
 };
+interface SwapRequestDashBoardProps {
+  sectionId: number;
+}
 
 interface SwapRequestFormProps {
   sectionId: number;
+  email: string;
 }
 
 export const SwapRequestForm = ({ sectionId }: SwapRequestFormProps) => {
   const { data: userEmails, isSuccess: userEmailsLoaded } = useUserEmails();
-  const swapSectionMutation = useSwapRequestMutation(sectionId);
-  // const [myRequest, setMyRequest] = useState<Swap[]>([]);
-  // const [sendRequest, setSendRequest] = useState<Swap[]>([]);
-  const [email, setEmail] = useState();
+  // const swapSectionMutation = useSwapRequestMutation(sectionId); can be changed, not too sure
+  const [email, setEmail] = useState<string>();
+  const body = { sectionId: sectionId, email: email };
+  const studentDropMutation = useSwapPostMutation(sectionId, email);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
     event.preventDefault();
@@ -74,7 +84,9 @@ export const SwapRequestForm = ({ sectionId }: SwapRequestFormProps) => {
         <label>
           Email
           <input
-            onChange={event => setEmail(event.target.value)}
+            onChange={event => {
+              setEmail(event.target.value);
+            }}
             type="email"
             list="swap-student-email-list"
             required

@@ -280,33 +280,8 @@ export interface SectionSwapMutationBody {
 
 /**
  * Hook to request a swap with another student
+ * Wait, what is this for? I wrote another one for posting a new request below this. -Kevin
  */
-export const useSwapRequestMutation = (
-  sectionId: number
-): UseMutationResult<Section, ServerError, SectionSwapMutationBody> => {
-  const queryClient = useQueryClient();
-  const mutationResult = useMutation<Section, Error, SectionSwapMutationBody>(
-    async (body: SectionSwapMutationBody) => {
-      const response = await fetchWithMethod(`sections/${sectionId}/swap`, HTTP_METHODS.POST, body);
-      if (response.ok) {
-        return response.json();
-      } else {
-        handlePermissionsError(response.status);
-        throw new ServerError(`Failed to request swap`);
-      }
-    },
-    {
-      retry: handleRetry,
-      onSuccess: () => {
-        queryClient.invalidateQueries(["section_swap", sectionId]);
-      }
-    }
-  );
-
-  handleError(mutationResult);
-  return mutationResult;
-};
-
 export const useSwapRequestQuery = (
   sectionId: number
 ): UseMutationResult<Section, ServerError, SectionSwapMutationBody> => {
@@ -333,10 +308,101 @@ export const useSwapRequestQuery = (
   return queryResult;
 };
 
+/*
+ *Posting new queries
+ */
+
+export const useSwapPostMutation = (
+  sectionId: number,
+  email: string
+): UseMutationResult<Section, ServerError, SectionSwapMutationBody> => {
+  const queryClient = useQueryClient();
+  const queryResult = useMutation<Section, Error, SectionSwapMutationBody>(
+    async (body: SectionSwapMutationBody) => {
+      const response = await fetchWithMethod(`sections/${sectionId}}/swap`, HTTP_METHODS.POST, body);
+      if (response.ok) {
+        return response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to load swap`);
+      }
+    },
+    {
+      retry: handleRetry,
+      onSuccess: () => {
+        queryClient.invalidateQueries(["section_swap", sectionId]);
+      }
+    }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+
 export interface StudentDropMutationBody {
   banned: boolean;
   blacklisted: boolean;
 }
+
+/**
+ * Get all swap requests where the user is the receiver
+ */
+export const useAllSwapRequestQuery = (
+  sectionId: number,
+  studentId: number
+): UseMutationResult<Section, ServerError, SectionSwapMutationBody> => {
+  const queryClient = useQueryClient();
+  const queryResult = useMutation<Section, Error, SectionSwapMutationBody>(
+    async (body: SectionSwapMutationBody) => {
+      const response = await fetchWithMethod(`sections/${sectionId}/my_swap`, HTTP_METHODS.GET, body);
+      if (response.ok) {
+        return response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to load swap`);
+      }
+    },
+    {
+      retry: handleRetry,
+      onSuccess: () => {
+        queryClient.invalidateQueries(["section_swap", sectionId]);
+      }
+    }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+
+/**
+ * Get all swap requests where the user is the receiver
+ */
+export const useReceivedSwapRequestQuery = (
+  sectionId: number,
+  studentId: number
+): UseMutationResult<Section, ServerError, SectionSwapMutationBody> => {
+  const queryClient = useQueryClient();
+  const queryResult = useMutation<Section, Error, SectionSwapMutationBody>(
+    async (body: SectionSwapMutationBody) => {
+      const response = await fetchWithMethod(`sections/${sectionId}/my_swap`, HTTP_METHODS.GET, body);
+      if (response.ok) {
+        return response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to load swap`);
+      }
+    },
+    {
+      retry: handleRetry,
+      onSuccess: () => {
+        queryClient.invalidateQueries(["section_swap", sectionId]);
+      }
+    }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
 
 /**
  * Hook to drop a student from their section.
