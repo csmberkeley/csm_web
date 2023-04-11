@@ -6,7 +6,7 @@ from django.db.models import Prefetch, Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.response import Response
 from scheduler.models import (
     Attendance,
@@ -782,24 +782,58 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
         raise PermissionDenied()
 
-    @action(detail=True, methods=["GET", "POST"])
+    @action(detail=True, methods=["GET", "PUT", "DELETE"])
     def swap(self, request, pk=None):
         """
         GET: Returns all relevant Swap objects for current user.
+            Request format:
+                { student_id: int }
+            Response format:
+                {
+                    receiver: [`List of Swap objects`], 
+                    sender: [`List of Swap objects`]
+                }
+                Where each Swap object has the following format:
+                {
+                    swap_id: int,
+                    name: string,
+                    mentor_name: string,
+                    time: DateTime,
+                }
 
         POST: Handles creating a new Swap instance when a Swap a requested.
+            Request format:
+                { email: string }
+                `email` is the email of the student who will be receiving the swap request.
+            Response format:
+                {}
+                With status code of 201 if successful, 400 if not.
         """
-        section = get_object_or_error(Section.objects, pk=pk)
+        student_id = 1  # Change to request.data["student_id"]
+        if student_id == "":
+            raise PermissionDenied("The `student_id` field in the request cannot be empty, please specify student.")
+        student = get_object_or_error(Student.objects, id=student_id)
 
         if request.method == "GET":
-            student_id = request.data["student_id"]
-            if student_id == "":
-                raise PermissionDenied("The `student_id` field in the request cannot be empty, please specify student.")
-            student_swaps = Swap.objects.filter(sender__id=student_id)
-            return Response(
-                SwapSerializer(
-                    student_swaps
-                ).data
-            )
-        if request.method == "POST":
-            pass
+            try:
+                outgoing_swaps = get_object_or_error(Swap.objects, sender=student)
+                incoming_swaps = get_object_or_error(Swap.objects, receiver=student)
+            except Exception as e:
+                raise NotFound("No swaps found for student with id: " + str(student_id))
+
+            student_swaps = {
+                "sender": SwapSerializer(outgoing_swaps).data,
+                "receiver": SwapSerializer(incoming_swaps).data,
+            }
+
+            return Response(student_swaps, status=status.HTTP_200_OK)
+
+        if request.method == "PUT":
+            receiver_email = request.data["email"]
+            receiver = get_object_or_error(Student.objects, email=receiver_email)
+            try:
+                swap = Swap.objects.create(sender=student, receiver=receiver)
+            except Exception as e:
+                raise NotFound("Could not create swap for student with id: " + str(student_id))
+
+            return Response(SwapSerializer(swap).data, status=status.HTTP_201_CREATED)
