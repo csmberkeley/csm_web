@@ -251,7 +251,7 @@ class Swap(models.Model):
 
 class Mentor(Profile):
     """
-    Represents a given "instance" of a mentor. Every section a mentor teaches in every ccurse should
+    Represents a given "instance" of a mentor. Every section a mentor teaches in every course should
     have a new Mentor profile.
     """
 
