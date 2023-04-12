@@ -830,10 +830,17 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
         if request.method == "PUT":
             receiver_email = request.data["email"]
-            receiver = get_object_or_error(Student.objects, email=receiver_email)
+            receiver = get_object_or_error(Student.objects, user__email=receiver_email)
             try:
                 swap = Swap.objects.create(sender=student, receiver=receiver)
             except Exception as e:
                 raise NotFound("Could not create swap for student with id: " + str(student_id))
 
-            return Response(SwapSerializer(swap).data, status=status.HTTP_201_CREATED)
+            # Successful Swap
+            logger.info(
+                "<Swap> User %s requested a swap with %s",
+                log_str(student.user),
+                log_str(receiver),
+            )
+
+            return Response({}, status=status.HTTP_201_CREATED)
