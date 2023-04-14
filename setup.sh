@@ -81,23 +81,6 @@ pwd > "$VIRTUAL_ENV/.project_dir"
 # Add env variables to virutalenv activate script so that not everything needs to be run with 'heroku local'
 echo 'set -a; source $(cat $VIRTUAL_ENV/.project_dir)/.env; set +a' >> "$VIRTUAL_ENV/bin/activate"
 
-# Setup postgres DB if needed
-if ! psql -lt | grep -q '^ *csm_web_dev *'
-then
-	createdb csm_web_dev
-	psql csm_web_dev -c 'CREATE ROLE postgres LOGIN SUPERUSER;'
-fi
-
-# Utility function for running the dev server
-echo '
-function run() {
-	start_dir=$(pwd)
-	project_dir=$(cat "$VIRTUAL_ENV/.project_dir")
-	trap "pkill -P $$ heroku npm python; stty sane; cd $startdir; return" SIGINT
-	cd "$project_dir" && npm run dev && python csm_web/manage.py runserver
-	cd "$start_dir"
-}' >> "$VIRTUAL_ENV/bin/activate"
-
 # Initialize for local development
 npm run dev
 source .env # need the relevant env variables for django, but can't count on the Heroku CLI being installed

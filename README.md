@@ -16,15 +16,20 @@ We don't know what specific minimum version you would need for any of the follow
 - `npm`
   - It is recommended that you use [`nvm`](https://github.com/nvm-sh/nvm) to manage node/npm versions, so that you can use a consistent node/npm version for `csm_web`, and another verison for your other projects.
 - [PostgreSQL](https://www.postgresql.org/download/)
-- [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install)
+  - This should not be necessary now that we have migrated to Docker, but install it if any issues arise when editing.
+- [Docker](https://www.docker.com)
+  - Your development environment will be hosted through docker containers, so that you do not need to do much local setup.
+- [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install) (optional)
   - Create an account on [Heroku](https://id.heroku.com/login) and [login](https://devcenter.heroku.com/articles/heroku-cli#getting-started)
+  - This is not completely necessary for the application to work locally; it is only used for interactions with the production/staging environment.
 - [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
   - We use an S3 bucket to store course resources. See [here](https://aws.amazon.com/s3/) to get started.
-- Log in to AWS CLI (`aws configure`) This will prompt an interactive session to enter login credentials.
-  - AWS Access Key ID: (ask tech chair)
-  - AWS Secret Access Key: (ask tech chair)
-  - Default region name: `us-east-1`
-  - Default output format: `json`
+  - Log in to AWS CLI (`aws configure`) This will prompt an interactive session to enter login credentials.
+    - AWS Access Key ID: (ask tech chair)
+    - AWS Secret Access Key: (ask tech chair)
+    - Default region name: `us-east-1`
+    - Default output format: `json`
+  - This is not completely necessary for the application to work locally; it is only used for interactions with the resources page in production/staging.
 
 Other miscellaneous requirements will be installed by the commands below.
 
@@ -42,15 +47,14 @@ Finally, run `./setup.sh`. This will install additional requirements needed by t
 
 ## Running
 
-To start the Django server, run `python3 csm_web/manage.py runserver` and visit `localhost:8000` in your browser.
+To start the Django server and other services, run `docker compose up -d`. This will start Django, automatically compile and watch frontend files, and start a development database. (The `-d` puts the process in the background.)
 
-Run `python3 csm_web/manage.py createtestdata` to generate some test data. If you ran `./setup.sh`,
-this was done for you.
+To generate test data, run `docker compose exec django python3 csm_web/manage.py runserver`. In general, if you'd like to run any commands in the Django docker container, run `docker compose exec django <command>`.
 
-_If you are working on the frontend_:
+If all of the above has worked, visit `http://localhost:8000` in your browser and you should see a log in screen; don't actually use this to actually log in locally. Visit `http://localhost:8000/admin/` to log in instead.
 
-Run `npm run watch`, which will automatically rebuild the JS bundle if any changes to the frontend JS are detected.
-Alternatively you can run `npm run dev` manually each time you make changes to the frontend.
+Any changes will automatically reload the server in the docker containers, but you will usually need to force refresh (`ctrl + shift + R` or `cmd + shift + R` on most browsers) for frontend changes to be reflected (this clears the browser cache for the page).
+
 
 ## Troubleshooting
 
