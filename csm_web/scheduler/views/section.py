@@ -809,15 +809,19 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 {}
                 With status code of 201 if successful, 400 if not.
         """
-        student_id = 1  # Change to request.data["student_id"] ? request.method != "POST" and pk is not None : -1
+        section = get_object_or_error(Section.objects, pk=pk)
+        is_mentor = section.mentor.user == request.user
+        student_id = request.data.get("student_id", -1)
         if student_id == -1:
             raise PermissionDenied("The `student_id` field in the request cannot be empty,"
                                    "please specify student.")
         if request.method == "GET":
+            if is_mentor:
+                raise PermissionDenied("Cannot `GET` swaps for a mentor.")
             student = get_object_or_error(Student.objects, id=student_id)
             try:
-                outgoing_swaps = get_object_or_error(Swap.objects, sender=student)
-                incoming_swaps = get_object_or_error(Swap.objects, receiver=student)
+                outgoing_swaps = Swap.objects.filter(sender=student)
+                incoming_swaps = Swap.objects.filter(receiver=student)
             except Exception as e:
                 raise NotFound("No swaps found for student with id: " + str(student_id))
 
@@ -825,16 +829,19 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 "sender": SwapSerializer(outgoing_swaps).data,
                 "receiver": SwapSerializer(incoming_swaps).data,
             }
-
             return Response(student_swaps, status=status.HTTP_200_OK)
-
         if request.method == "POST":
+            if is_mentor:
+                raise PermissionDenied("Cannot `POST` swaps for a mentor.")
             if (pk is None):
                 '''If pk is None, create a new Swap object between the the current student
                 and the student with the email specified in the request. This is essentially
                 creating a swap invite.'''
                 receiver_email = request.data["email"]
                 receiver = get_object_or_error(Student.objects, user__email=receiver_email)
+                receiver_is_sender = receiver == student
+                if receiver_is_sender:
+                    raise PermissionDenied("Cannot send a swap request to yourself.")
                 try:
                     # Create Swap request
                     swap = Swap.objects.create(sender=student, receiver=receiver)
@@ -847,7 +854,6 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     log_str(student.user),
                     log_str(receiver.user),
                 )
-
                 return Response({}, status=status.HTTP_201_CREATED)
             else:
                 '''If pk is not None, initiate the swap between the two students. This should 
@@ -859,7 +865,21 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 except Exception as e:
                     raise PermissionDenied("Swap with id: " + str(pk) + " does not exist.")
                 # Execute atomic transaction, and swap sections
-                sender = target_swap.sender
-                receiver = target_swap.receiver
+                try:
+                    sender = get_object_or_error(Student.objects, id=target_swap.sender.id)
+                    receiver = get_object_or_error(Student.objects, id=target_swap.receiver.id)
+                except Exception as e:
+                    raise NotFound("Could not find swaps for student.")
                 with transaction.atomic():
-                    pass
+                    sender.section = target_swap.receiver.section
+                    sender.save()
+                    receiver.section = target_swap.sender.section
+                    receiver.save()
+                # Delete all other swaps between the two students. Delete this swap object too.
+                target_swap.delete()
+                # Get outgoing and incoming swaps for sender and receiver
+                outgoing_swaps = Swap.objects.filter(sender=sender).values()
+                incoming_swaps = Swap.objects.filter(receiver=sender).values()
+                for expired_swap in outgoing_swaps + incoming_swaps:
+                    expired_swap.delete()
+                return Response({}, status=status.HTTP_200_OK)
