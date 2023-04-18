@@ -809,13 +809,12 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 {}
                 With status code of 201 if successful, 400 if not.
         """
-        student_id = 1  # Change to request.data["student_id"]
-        if student_id == "":
+        student_id = 1  # Change to request.data["student_id"] ? request.method != "POST" and pk is not None : -1
+        if student_id == -1:
             raise PermissionDenied("The `student_id` field in the request cannot be empty,"
                                    "please specify student.")
-        student = get_object_or_error(Student.objects, id=student_id)
-
         if request.method == "GET":
+            student = get_object_or_error(Student.objects, id=student_id)
             try:
                 outgoing_swaps = get_object_or_error(Swap.objects, sender=student)
                 incoming_swaps = get_object_or_error(Swap.objects, receiver=student)
@@ -846,12 +845,21 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 logger.info(
                     "<Swap> User %s requested a swap with %s",
                     log_str(student.user),
-                    log_str(receiver),
+                    log_str(receiver.user),
                 )
 
                 return Response({}, status=status.HTTP_201_CREATED)
             else:
                 '''If pk is not None, initiate the swap between the two students. This should 
-                be done in one atomic transaction. If either or both of the swaps are deleted, 
-                then return a 404 error.'''
-                pass
+                be done in one atomic transaction. If either or both of the swaps are already 
+                deleted, then return a 404 error.'''
+                # Check if swap object with given id exists
+                try:
+                    target_swap = get_object_or_error(Swap.objects, id=pk)
+                except Exception as e:
+                    raise PermissionDenied("Swap with id: " + str(pk) + " does not exist.")
+                # Execute atomic transaction, and swap sections
+                sender = target_swap.sender
+                receiver = target_swap.receiver
+                with transaction.atomic():
+                    pass
