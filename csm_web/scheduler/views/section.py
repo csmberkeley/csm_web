@@ -837,8 +837,14 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 '''If pk is None, create a new Swap object between the the current student
                 and the student with the email specified in the request. This is essentially
                 creating a swap invite.'''
-                receiver_email = request.data["email"]
-                receiver = get_object_or_error(Student.objects, user__email=receiver_email)
+                receiver_email = request.data("email", None)
+                if receiver_email is None:
+                    raise PermissionDenied("The `email` field in the request cannot be empty,"
+                                           "please specify a receiver.")
+                try:
+                    receiver = get_object_or_error(Student.objects, user__email=receiver_email)
+                except Exception as e:
+                    raise NotFound("Invalid email provided.")
                 receiver_is_sender = receiver == student
                 if receiver_is_sender:
                     raise PermissionDenied("Cannot send a swap request to yourself.")
@@ -859,27 +865,27 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 '''If pk is not None, initiate the swap between the two students. This should 
                 be done in one atomic transaction. If either or both of the swaps are already 
                 deleted, then return a 404 error.'''
-                # Check if swap object with given id exists
-                try:
-                    target_swap = get_object_or_error(Swap.objects, id=pk)
-                except Exception as e:
-                    raise PermissionDenied("Swap with id: " + str(pk) + " does not exist.")
-                # Execute atomic transaction, and swap sections
-                try:
-                    sender = get_object_or_error(Student.objects, id=target_swap.sender.id)
-                    receiver = get_object_or_error(Student.objects, id=target_swap.receiver.id)
-                except Exception as e:
-                    raise NotFound("Could not find swaps for student.")
                 with transaction.atomic():
+                    # Check if swap object with given id exists
+                    try:
+                        target_swap = get_object_or_error(Swap.objects, pk=pk).select_for_update()
+                    except Exception as e:
+                        raise PermissionDenied("Swap with id: " + str(pk) + " does not exist.")
+                    # Execute atomic transaction, and swap sections
+                    try:
+                        sender = get_object_or_error(Student.objects, id=target_swap.sender.id)
+                        receiver = get_object_or_error(Student.objects, id=target_swap.receiver.id)
+                    except Exception as e:
+                        raise NotFound("Could not find swaps for student.")
                     sender.section = target_swap.receiver.section
                     sender.save()
                     receiver.section = target_swap.sender.section
                     receiver.save()
-                # Delete all other swaps between the two students. Delete this swap object too.
-                target_swap.delete()
-                # Get outgoing and incoming swaps for sender and receiver
-                outgoing_swaps = Swap.objects.filter(sender=sender).values()
-                incoming_swaps = Swap.objects.filter(receiver=sender).values()
-                for expired_swap in outgoing_swaps + incoming_swaps:
-                    expired_swap.delete()
+                    # Delete all other swaps between the two students. Delete this swap object too.
+                    target_swap.delete()
+                    # Get outgoing and incoming swaps for sender and receiver
+                    outgoing_swaps = Swap.objects.filter(sender=sender).select_for_update().values()
+                    incoming_swaps = Swap.objects.filter(receiver=sender).select_for_update().values()
+                    for expired_swap in outgoing_swaps + incoming_swaps:
+                        expired_swap.delete()
                 return Response({}, status=status.HTTP_200_OK)
