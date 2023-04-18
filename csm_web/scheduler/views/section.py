@@ -782,7 +782,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
         raise PermissionDenied()
 
-    @action(detail=True, methods=["GET", "PUT", "DELETE"])
+    @action(detail=True, methods=["GET", "POST", "DELETE"])
     def swap(self, request, pk=None):
         """
         GET: Returns all relevant Swap objects for current user.
@@ -790,7 +790,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 { student_id: int }
             Response format:
                 {
-                    receiver: [`List of Swap objects`], 
+                    receiver: [`List of Swap objects`],
                     sender: [`List of Swap objects`]
                 }
                 Where each Swap object has the following format:
@@ -811,7 +811,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
         student_id = 1  # Change to request.data["student_id"]
         if student_id == "":
-            raise PermissionDenied("The `student_id` field in the request cannot be empty, please specify student.")
+            raise PermissionDenied("The `student_id` field in the request cannot be empty,"
+                                   "please specify student.")
         student = get_object_or_error(Student.objects, id=student_id)
 
         if request.method == "GET":
@@ -828,19 +829,29 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
             return Response(student_swaps, status=status.HTTP_200_OK)
 
-        if request.method == "PUT":
-            receiver_email = request.data["email"]
-            receiver = get_object_or_error(Student.objects, user__email=receiver_email)
-            try:
-                swap = Swap.objects.create(sender=student, receiver=receiver)
-            except Exception as e:
-                raise NotFound("Could not create swap for student with id: " + str(student_id))
+        if request.method == "POST":
+            if (pk is None):
+                '''If pk is None, create a new Swap object between the the current student
+                and the student with the email specified in the request. This is essentially
+                creating a swap invite.'''
+                receiver_email = request.data["email"]
+                receiver = get_object_or_error(Student.objects, user__email=receiver_email)
+                try:
+                    # Create Swap request
+                    swap = Swap.objects.create(sender=student, receiver=receiver)
+                except Exception as e:
+                    raise NotFound("Could not create swap for student with id: " + str(student_id))
 
-            # Successful Swap
-            logger.info(
-                "<Swap> User %s requested a swap with %s",
-                log_str(student.user),
-                log_str(receiver),
-            )
+                # Successfuly created swap
+                logger.info(
+                    "<Swap> User %s requested a swap with %s",
+                    log_str(student.user),
+                    log_str(receiver),
+                )
 
-            return Response({}, status=status.HTTP_201_CREATED)
+                return Response({}, status=status.HTTP_201_CREATED)
+            else:
+                '''If pk is not None, initiate the swap between the two students. This should 
+                be done in one atomic transaction. If either or both of the swaps are deleted, 
+                then return a 404 error.'''
+                pass
