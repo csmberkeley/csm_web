@@ -23,12 +23,38 @@ class UserViewSet(*viewset_with("list")):
         return Response(self.queryset.order_by("email").values_list("email", flat=True))
 
 
-@api_view(["GET"])
+@api_view(["GET", "PUT"])
 def userinfo(request):
     """
     Get user info for request user
-
-    TODO: perhaps replace this with a viewset when we establish profiles
+    Put user info for request user
     """
-    serializer = UserSerializer(request.user)
+    if request.method == "GET":
+        serializer = UserSerializer(request.user)
+        return Response(serializer.data, status=status.HTTP_200_OK)
+    elif request.method == "PUT":
+        user = request.user
+        bio = request.data.get("bio")
+        pronunciation = request.data.get("pronunciation")
+        pronouns = request.data.get("pronouns")
+        is_private = request.data.get("is_private")
+        if bio is not None:
+            user.bio = bio
+        if pronunciation is not None:
+            user.pronunciation = pronunciation
+        if pronouns is not None:
+            user.pronouns = pronouns
+        if is_private is not None:
+            user.is_private = is_private
+        user.save()
+        return Response(status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def userprofile(request, user_id):
+    """
+    Get the user information (for profiles) of other people (user_id)
+    """
+    user = User.objects.get(id=user_id)
+    serializer = UserSerializer(user)
     return Response(serializer.data, status=status.HTTP_200_OK)

@@ -37,6 +37,12 @@ def week_bounds(date):
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
+    # profile-relevant fields
+    bio = models.CharField(max_length=1000, blank=True)
+    pronouns = models.CharField(max_length=50, blank=True)
+    pronunciation = models.CharField(max_length=50, blank=True)
+    is_private = models.BooleanField()
+
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         # check restricted first
         if course.is_restricted and not self.is_whitelisted_for(course):
@@ -114,7 +120,7 @@ class Attendance(ValidatingModel):
     class Meta:
         unique_together = ("sectionOccurrence", "student")
         ordering = ("sectionOccurrence",)
-        #indexes = (models.Index(fields=("date",)),)
+        # indexes = (models.Index(fields=("date",)),)
 
 
 class SectionOccurrence(ValidatingModel):
