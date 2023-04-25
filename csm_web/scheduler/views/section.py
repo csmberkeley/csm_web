@@ -801,7 +801,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     time: DateTime,
                 }
 
-        POST: Handles creating a new Swap instance when a Swap a requested.
+        POST: Handles creating a new Swap instance when a Swap a requested or
+        processes an existing Swap request.
             Request format:
                 { email: string }
                 `email` is the email of the student who will be receiving the swap request.
@@ -888,4 +889,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     incoming_swaps = Swap.objects.filter(receiver=sender).select_for_update().values()
                     for expired_swap in outgoing_swaps + incoming_swaps:
                         expired_swap.delete()
+                logger.info(
+                    "<Swap> User %s swapped with %s",
+                    log_str(sender.user),
+                    log_str(receiver.user),
+                )
                 return Response({}, status=status.HTTP_200_OK)
