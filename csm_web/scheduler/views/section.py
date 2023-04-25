@@ -32,6 +32,8 @@ from .utils import get_object_or_error, log_str, logger, viewset_with
 
 class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
     serializer_class = SectionSerializer
+    lookup_field = 'pk'
+    lookup_url_kwarg = 'section_id'
 
     def get_object(self):
         """Retrieve section object"""
@@ -833,8 +835,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         if request.method == "POST":
             if is_mentor:
                 raise PermissionDenied("Cannot `POST` swaps for a mentor.")
-            if (pk is None):
-                '''If pk is None, create a new Swap object between the the current student
+            swap_id = self.kwargs.get('swap_id', None)
+            if (swap_id is None):
+                '''If swap_id is None, create a new Swap object between the the current student
                 and the student with the email specified in the request. This is essentially
                 creating a swap invite.'''
                 receiver_email = request.data("email", None)
@@ -862,15 +865,15 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
                 return Response({}, status=status.HTTP_201_CREATED)
             else:
-                '''If pk is not None, initiate the swap between the two students. This should 
+                '''If swap_id is not None, initiate the swap between the two students. This should 
                 be done in one atomic transaction. If either or both of the swaps are already 
                 deleted, then return a 404 error.'''
                 with transaction.atomic():
                     # Check if swap object with given id exists
                     try:
-                        target_swap = get_object_or_error(Swap.objects, pk=pk).select_for_update()
+                        target_swap = get_object_or_error(Swap.objects, pk=swap_id).select_for_update()
                     except Exception as e:
-                        raise PermissionDenied("Swap with id: " + str(pk) + " does not exist.")
+                        raise PermissionDenied("Swap with id: " + str(swap_id) + " does not exist.")
                     # Execute atomic transaction, and swap sections
                     try:
                         sender = get_object_or_error(Student.objects, id=target_swap.sender.id)
@@ -889,3 +892,20 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     for expired_swap in outgoing_swaps + incoming_swaps:
                         expired_swap.delete()
                 return Response({}, status=status.HTTP_200_OK)
+
+        if request.method == "DELETE":
+            swap_id = self.kwargs.get('swap_id', None)
+            swap = get_object_or_error(Swap, pk=swap_id)
+            if student_id != swap.reciever.id and student_id != swap.sender.id:
+                logger.error(
+                    f"<Swap Deletion:Failure> Could not delete swap, user {log_str(request.user)} does not have proper permissions"
+                )
+                raise PermissionDenied("You must be a student or a coordinator to delete this spacetime override!")
+
+            swap.delete()
+            swap.save()
+
+            logger.info(
+                f"<Swap Deletion:Success> Deleted swap {log_str(swap)}"
+            )
+            return Response(status=status.HTTP_200_OK)
