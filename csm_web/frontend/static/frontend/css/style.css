@@ -1932,5 +1932,10 @@ button.SearchButton {
 }
 
 .SearchRowElem {
+	width: 10vw;
 	padding: 10px;
+}
+
+.searchRowID {
+	width: 5vw;
 }

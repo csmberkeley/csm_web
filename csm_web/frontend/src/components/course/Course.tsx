@@ -1,13 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { fetchJSON } from "../../utils/api";
-import { Section } from "../../utils/types";
 import { SectionCard } from "./SectionCard";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
 import { SearchBar } from "../SearchBar";
 import { SearchRow } from "./SearchRow";
 import { SearchTable } from "./SearchTable";
-import { CordinatorSeach } from "./CoordinatorSearch";
+import { Section, Student } from "../../utils/types";
+import { CoordinatorSearch } from "./CoordinatorSearch";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",
@@ -79,6 +79,8 @@ const Course = ({
    */
   const [whichModal, setWhichModal] = useState<string>(COURSE_MODAL_TYPE.createSection);
 
+  const [students, setStudents] = useState<Student[]>();
+
   /**
    * Fetch all sections for the course and update state accordingly.
    */
@@ -87,7 +89,10 @@ const Course = ({
       sections: { [day: string]: Section[] };
       userIsCoordinator: boolean;
     }
-
+    fetchJSON(`/students/students`).then(data => {
+      const student: Student[] = data.map(({ name, email, id }: Student) => ({ name, email, id }));
+      setStudents(student);
+    });
     fetchJSON(`/courses/${id}/sections`).then(({ sections, userIsCoordinator }: JSONResponseType) => {
       setSections(sections);
       setUserIsCoordinator(userIsCoordinator);
@@ -195,7 +200,7 @@ const Course = ({
       <div>
         {userIsCoordinator && (
           <div>
-            <CordinatorSeach></CordinatorSeach>
+            <CoordinatorSearch allStudents={students} />
           </div>
         )}
       </div>

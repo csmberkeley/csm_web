@@ -11,7 +11,7 @@ export const SearchRow = ({ name, email, id }: SearchRowProps): React.ReactEleme
     <div className="SearchRowFormat">
       <div className="SearchRowElem">{name}</div>
       <div className="SearchRowElem">{email}</div>
-      <div className="SearchRowElem">{id}</div>
+      <div className="SearchRowID">{id}</div>
       <button className="SearchButton"> Additional Information</button>
     </div>
   );

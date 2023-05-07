@@ -7,25 +7,14 @@ import { DataExportModal } from "./DataExportModal";
 import { SearchBar } from "../SearchBar";
 import { SearchRow } from "./SearchRow";
 import { SearchTable } from "./SearchTable";
+import StudentSection from "../section/StudentSection";
 
-export const CordinatorSeach = (): React.ReactElement => {
-  const [allStudents, setStudents] = useState<Student[]>([]);
+interface CoordinatorSearchProps {
+  allStudents: Student[];
+}
+
+export const CoordinatorSearch = ({ allStudents }: CoordinatorSearchProps): React.ReactElement => {
   const [selectedStudents, setSelectedStudents] = useState<Student[]>();
-
-  const reloadSearch = (): void => {
-    interface JSONResponseType {
-      students: Student[];
-    }
-
-    fetchJSON(`/students/students`).then(({ students }: JSONResponseType) => {
-      setStudents(students);
-    });
-  };
-
-  // reload sections upon first mount
-  useEffect(() => {
-    reloadSearch();
-  }, []);
 
   const handleChange = ({ target: { value } }: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void => {
     const validStudents = [];
@@ -34,7 +23,7 @@ export const CordinatorSeach = (): React.ReactElement => {
         const student = allStudents[i];
         let str = student.name + student.email;
         str += student.id;
-        if (str.includes(value)) {
+        if (str.toLowerCase().includes(value.toLowerCase())) {
           validStudents.push(student);
         }
       }
@@ -46,7 +35,6 @@ export const CordinatorSeach = (): React.ReactElement => {
     <div>
       Search
       <SearchBar className="test" onChange={handleChange} />
-      <SearchRow name="test" email="test@berkeley.edu" id="1234" />
       {selectedStudents?.map(student => (
         <div key={student.id}>
           <SearchRow name={student.name} email={student.email} id={student.id.toString()} />
