@@ -72,3 +72,14 @@ Cypress.Commands.add("_exec", command => {
     }
   });
 });
+
+/**
+ * Chained click until a condition is satisfied;
+ * doesn't use the Cypress .click(), and instead uses the jQuery .trigger("click").
+ *
+ * Should guard this with a visibility check to ensure that the element is actually clickable.
+ */
+Cypress.Commands.add("clickUntil", { prevSubject: true }, (subject: JQuery<HTMLElement>, condition) => {
+  const click = ($el: JQuery<HTMLElement>) => $el.trigger("click");
+  return cy.wrap(subject).pipe(click).should(condition);
+});

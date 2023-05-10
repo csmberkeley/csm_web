@@ -14,5 +14,8 @@ declare namespace Cypress {
     setupDB(script_name: string, func_name: string, options?: SetupDBOptions): Chainable<void>;
     initDB(): Chainable<void>;
     _exec(command: string): Chainable<void>;
+    clickUntil(
+      condition: ($el: JQuery<HTMLElement>) => void | Chainable<JQuery<HTMLElement>>
+    ): Chainable<JQuery<HTMLElement>>;
   }
 }

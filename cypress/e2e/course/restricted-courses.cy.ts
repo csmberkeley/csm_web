@@ -93,13 +93,18 @@ describe("whitelisted courses", () => {
     cy.contains(".csm-btn", /cs61a/i).should("be.visible");
 
     // view unrestricted courses; should show nothing
-    cy.contains(".course-menu-sidebar-tab", /unrestricted/i).click();
+    cy.contains(".course-menu-sidebar-tab", /unrestricted/i).clickUntil($el => {
+      expect($el).to.have.class("active");
+    });
     cy.contains(".course-menu-sidebar-tab", /unrestricted/i).should("have.class", "active");
     cy.contains(".csm-btn", /cs61a/i).should("not.exist");
 
     // go to cs61a sections
-    cy.contains(".course-menu-sidebar-tab", /restricted/i).click();
+    cy.contains(".course-menu-sidebar-tab", /restricted/i).clickUntil($el => {
+      expect($el).to.have.class("active");
+    });
     cy.contains(".course-menu-sidebar-tab", /restricted/i).should("have.class", "active");
+
     cy.contains(".csm-btn", /cs61a/i).click();
     cy.get(".section-card").should("have.length", 1).should("be.visible");
 
@@ -143,13 +148,17 @@ describe("whitelisted courses", () => {
     cy.contains(".csm-btn", /cs70/i).should("not.exist");
 
     // view unrestricted courses; should show cs70, but not cs61a
-    cy.contains(".course-menu-sidebar-tab", /unrestricted/i).click();
+    cy.contains(".course-menu-sidebar-tab", /unrestricted/i).clickUntil($el => {
+      expect($el).to.have.class("active");
+    });
     cy.contains(".course-menu-sidebar-tab", /unrestricted/i).should("have.class", "active");
     cy.contains(".csm-btn", /cs61a/i).should("not.exist");
     cy.contains(".csm-btn", /cs70/i).should("be.visible");
 
     // go to cs61a sections
-    cy.contains(".course-menu-sidebar-tab", /restricted/i).click();
+    cy.contains(".course-menu-sidebar-tab", /restricted/i).clickUntil($el => {
+      expect($el).to.have.class("active");
+    });
     cy.contains(".course-menu-sidebar-tab", /restricted/i).should("have.class", "active");
     cy.contains(".csm-btn", /cs61a/i).click();
     cy.get(".section-card").should("have.length", 1).should("be.visible");
@@ -225,7 +234,9 @@ describe("whitelisted courses", () => {
     cy.contains(".enrollment-container .enrollment-course", /cs61a/i).should("be.visible");
 
     // view unrestricted courses; should show cs70, but not cs61a
-    cy.contains(".course-menu-sidebar-tab", /unrestricted/i).click();
+    cy.contains(".course-menu-sidebar-tab", /unrestricted/i).clickUntil($el => {
+      expect($el).to.have.class("active");
+    });
     cy.contains(".course-menu-sidebar-tab", /unrestricted/i).should("have.class", "active");
     cy.contains(".csm-btn", /cs61a/i).should("not.exist");
     cy.contains(".csm-btn", /cs70/i).should("be.visible");
@@ -233,7 +244,9 @@ describe("whitelisted courses", () => {
     cy.get(".enrollment-container").should("not.exist");
 
     // go to cs61a sections
-    cy.contains(".course-menu-sidebar-tab", /restricted/i).click();
+    cy.contains(".course-menu-sidebar-tab", /restricted/i).clickUntil($el => {
+      expect($el).to.have.class("active");
+    });
     cy.contains(".course-menu-sidebar-tab", /restricted/i).should("have.class", "active");
     cy.contains(".csm-btn", /cs61a/i).click();
     cy.get(".section-card").should("have.length", 1).should("be.visible");
