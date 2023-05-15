@@ -5,7 +5,8 @@ from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.utils import timezone
 from rest_framework import status
-from rest_framework.decorators import action
+from rest_framework import permissions
+from rest_framework.decorators import action, permission_classes
 from rest_framework.exceptions import PermissionDenied, NotFound
 from rest_framework.response import Response
 from scheduler.models import (
@@ -32,8 +33,8 @@ from .utils import get_object_or_error, log_str, logger, viewset_with
 
 class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
     serializer_class = SectionSerializer
-    lookup_field = 'pk'
-    lookup_url_kwarg = 'section_id'
+    # lookup_field = 'pk'
+    # lookup_url_kwarg = 'section_id'
 
     def get_object(self):
         """Retrieve section object"""
@@ -815,6 +816,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         section = get_object_or_error(Section.objects, pk=pk)
         is_mentor = section.mentor.user == request.user
         student_id = request.data.get("student_id", -1)
+        student = Student.objects.get(id=student_id)
         if student_id == -1:
             raise PermissionDenied("The `student_id` field in the request cannot be empty,"
                                    "please specify student.")
@@ -835,15 +837,16 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             return Response(student_swaps, status=status.HTTP_200_OK)
         if request.method == "POST":
             if is_mentor:
+                logger.error("Cannot `POST` swaps for a mentor.")
                 raise PermissionDenied("Cannot `POST` swaps for a mentor.")
             swap_id = self.kwargs.get('swap_id', None)
             if (swap_id is None):
                 '''If swap_id is None, create a new Swap object between the the current student
                 and the student with the email specified in the request. This is essentially
                 creating a swap invite.'''
-                receiver_email = request.data("email", None)
+                receiver_email = request.data.get("receiver_email", None)
                 if receiver_email is None:
-                    raise PermissionDenied("The `email` field in the request cannot be empty,"
+                    raise PermissionDenied("The `receiver_email` field in the request cannot be empty,"
                                            "please specify a receiver.")
                 try:
                     receiver = get_object_or_error(Student.objects, user__email=receiver_email)
@@ -860,7 +863,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
                 # Successfuly created swap
                 logger.info(
-                    "<Swap> User %s requested a swap with %s",
+                    "<Swap Created> User %s requested a swap with %s",
                     log_str(student.user),
                     log_str(receiver.user),
                 )
@@ -874,12 +877,22 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     try:
                         target_swap = get_object_or_error(Swap.objects, pk=swap_id).select_for_update()
                     except Exception as e:
+                        logger.error(
+                            "<Swap Processed:Failure> User %s could not swap with %s",
+                            log_str(student.user),
+                            log_str(receiver.user),
+                        )
                         raise PermissionDenied("Swap with id: " + str(swap_id) + " does not exist.")
                     # Execute atomic transaction, and swap sections
                     try:
                         sender = get_object_or_error(Student.objects, id=target_swap.sender.id)
                         receiver = get_object_or_error(Student.objects, id=target_swap.receiver.id)
                     except Exception as e:
+                        logger.error(
+                            "<Swap Processed:Failure> User %s could not swap with %s",
+                            log_str(student.user),
+                            log_str(receiver.user),
+                        )
                         raise NotFound("Could not find swaps for student.")
                     sender.section = target_swap.receiver.section
                     sender.save()
@@ -893,7 +906,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     for expired_swap in outgoing_swaps + incoming_swaps:
                         expired_swap.delete()
                 logger.info(
-                    "<Swap> User %s swapped with %s",
+                    "<Swap Processed:Success> User %s swapped with %s",
                     log_str(sender.user),
                     log_str(receiver.user),
                 )
