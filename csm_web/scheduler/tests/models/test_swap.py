@@ -1,9 +1,10 @@
 import pytest
+import json 
 
+from django.urls import reverse
 from django.core.exceptions import ValidationError
-from scheduler.models import Student, User
+from scheduler.models import Student, User, Swap
 from scheduler.factories import UserFactory, CourseFactory, SectionFactory, StudentFactory, MentorFactory
-
 
 @pytest.fixture
 def setup_section(db):
@@ -32,6 +33,14 @@ def test_basic_swap_request_success(client, setup_section):
     Tests that a student can successfully request a swap.
     """
     # TODO: Add test for when a student successfully requests a swap from another student in a different section
+    section_one, section_two, student_one, student_two = setup_section[1:]
+    client.force_login(student_one.user)
+    post_url = reverse("section-swap", args=[section_one.id]) 
+    data = json.dumps({"receiver_email": student_two.user.email, "student_id": student_one.id})
+    response = client.post(post_url, data=data, content_type="application/json")
+
+    # Check that the swap request was created
+    assert Swap.objects.filter(receiver=student_two).exists()
 
 
 @pytest.mark.django_db
@@ -58,6 +67,7 @@ def test_request_swap_invalid_email(client, setup_section, email, request):
     if (type(receiver_email) != str):
         receiver_email = request.getfixturevalue(email.__name__)[4].user.email
     # TODO Add test for when a student requests a swap with a invalid email
+    
 
 
 @pytest.mark.django_db
