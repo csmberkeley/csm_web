@@ -815,24 +815,27 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
         section = get_object_or_error(Section.objects, pk=pk)
         is_mentor = section.mentor.user == request.user
-        student_id = request.data.get("student_id", -1)
-        student = Student.objects.get(id=student_id)
+        student_id = request.data.get("student_id", -1) if request.method != "GET" \
+            else request.query_params.get("student_id", -1)
         if student_id == -1:
             raise PermissionDenied("The `student_id` field in the request cannot be empty,"
                                    "please specify student.")
+        try:
+            student = get_object_or_error(Student.objects, id=student_id)
+        except Exception:
+            raise NotFound("No student found with id: " + str(student_id))
         if request.method == "GET":
             if is_mentor:
                 raise PermissionDenied("Cannot `GET` swaps for a mentor.")
-            student = get_object_or_error(Student.objects, id=student_id)
             try:
                 outgoing_swaps = Swap.objects.filter(sender=student)
                 incoming_swaps = Swap.objects.filter(receiver=student)
             except Exception as e:
                 raise NotFound("No swaps found for student with id: " + str(student_id))
-
+            
             student_swaps = {
-                "sender": SwapSerializer(outgoing_swaps).data,
-                "receiver": SwapSerializer(incoming_swaps).data,
+                "sender": SwapSerializer(outgoing_swaps, many=True).data,
+                "receiver": SwapSerializer(incoming_swaps, many=True).data,
             }
             return Response(student_swaps, status=status.HTTP_200_OK)
         if request.method == "POST":
