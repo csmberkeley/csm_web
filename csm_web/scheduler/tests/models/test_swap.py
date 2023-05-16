@@ -103,15 +103,43 @@ def test_request_swap_invalid_email(client, setup_scheduler, email, request):
     receiver_email = email
     if (type(receiver_email) != str):
         receiver_email = request.getfixturevalue(email.__name__)[4][0].user.email
-    # TODO Add test for when a student requests a swap with a invalid email 
+    if type(email) == str:
+        with pytest.raises(Exception):
+            # Create a swap request
+            create_swap_request(client, section_one_students[0], email)
+            # Get the list of swaps for the reciever
+            swaps = get_swap_requests(client, section_one_students[0])
+    else:
+        # Create a swap request
+        create_swap_request(client, section_one_students[0], section_two_students[0])
+        # Check that the swap request was created
+        assert Swap.objects.filter(receiver=section_two_students[0]).exists()
 
 
 @pytest.mark.django_db
-def test_swap_with_stale_receiver(client, setup_scheduler):
+def test_accept_swap_request(client, setup_scheduler):
     """
-    Tests weather Swaps are being invalidated/deleted when receiver has swapped with another student. 
+    Tests that a student can accept a swap request.
     """
-    # TODO Add test for when a student requests a swap with a stale receiver
+    # TODO Add test for when a student accepts a swap request
+
+
+@pytest.mark.django_db
+def test_reject_swap_request(client, setup_scheduler):
+    """
+    Tests that a student can reject a swap request.
+    """
+    # TODO Add test for when a student rejects a swap request
+
+
+@pytest.mark.django_db
+def test_swap_conflict_clear(client, setup_scheduler):
+    """
+    Test for when a student has multiple swap requests pending and one of them
+    is accepted. In this case, all other swap requests from that user should be
+    invalidated and cleared.
+    """
+    # TODO Add test for when a student accepts a swap in a conflict setup 
 
 
 def create_students(course, section, quantity):
