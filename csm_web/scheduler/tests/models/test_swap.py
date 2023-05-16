@@ -3,6 +3,7 @@ import json
 
 from django.urls import reverse
 from django.core.exceptions import ValidationError
+from rest_framework.exceptions import NotFound
 from scheduler.models import (
     Student, 
     User, 
@@ -39,7 +40,7 @@ def test_basic_swap_request_success(client, setup_scheduler):
     """
     Tests that a student can successfully request a swap.
     """
-    section_one, section_two, section_one_students, section_two_students = setup_scheduler[1:]
+    section_one_students, section_two_students = setup_scheduler[3:]
     sender_student, reciever_student = section_one_students[0], section_two_students[0]
     # Create a swap request
     create_swap_request(client, sender_student, reciever_student)
@@ -62,7 +63,7 @@ def test_basic_swap_get(client, setup_scheduler, is_empty):
     """
     Tests getting a list of swaps for a student
     """
-    section_one, section_two, section_one_students, section_two_students = setup_scheduler[1:]
+    section_one_students, section_two_students = setup_scheduler[3:]
     sender_student, reciever_student = section_one_students[0], section_two_students[0]
     if not is_empty:
         # Create a swap request
@@ -99,21 +100,19 @@ def test_request_swap_invalid_email(client, setup_scheduler, email, request):
     """
     Tests that a student cannot request a swap with an invalid email.
     """
-    course, section_one, section_two, section_one_students, section_two_students = setup_scheduler 
+    section_one_students, section_two_students = setup_scheduler[3:] 
+    sender, receiver = section_one_students[0], section_two_students[0]
     receiver_email = email
     if (type(receiver_email) != str):
-        receiver_email = request.getfixturevalue(email.__name__)[4][0].user.email
+        receiver_email = receiver.user.email
+    receiver.user.email = receiver_email
+    response = create_swap_request(client, sender, receiver)
     if type(email) == str:
-        with pytest.raises(Exception):
-            # Create a swap request
-            create_swap_request(client, section_one_students[0], email)
-            # Get the list of swaps for the reciever
-            swaps = get_swap_requests(client, section_one_students[0])
+        assert response.status_code == 404
     else:
-        # Create a swap request
-        create_swap_request(client, section_one_students[0], section_two_students[0])
+        assert response.status_code == 201
         # Check that the swap request was created
-        assert Swap.objects.filter(receiver=section_two_students[0]).exists()
+        assert Swap.objects.filter(receiver=receiver).exists()
 
 
 @pytest.mark.django_db
@@ -121,7 +120,20 @@ def test_accept_swap_request(client, setup_scheduler):
     """
     Tests that a student can accept a swap request.
     """
-    # TODO Add test for when a student accepts a swap request
+    section_one_students, section_two_students = setup_scheduler[3:]
+    sender, receiver = section_one_students[0], section_two_students[0]
+    create_swap_request(client, sender, receiver)
+    # Get the swap_id
+    swap_id = json.loads(get_swap_requests(client, sender).content.decode("utf-8"))["sender"][0]["id"]
+    accept_swap_request(client, receiver, swap_id)
+    # Record old section ids
+    old_sender_section_id, old_receiver_section_id = sender.section.id, receiver.section.id
+    # Get the new section ids
+    sender.refresh_from_db()
+    receiver.refresh_from_db()
+    # Make sure that the swap was accepted
+    assert sender.section.id == old_receiver_section_id
+    assert receiver.section.id == old_sender_section_id
 
 
 @pytest.mark.django_db
@@ -169,7 +181,7 @@ def create_swap_request(client, sender, reciever):
     Creates a swap request between two students.
     """
     client.force_login(sender.user)
-    post_url = reverse("section-swap", args=[sender.section.id]) 
+    post_url = reverse("section-swap-no-id", args=[sender.section.id]) 
     data = json.dumps({"receiver_email": reciever.user.email, "student_id": sender.id})
     response = client.post(post_url, data=data, content_type="application/json")
     return response
@@ -180,7 +192,18 @@ def get_swap_requests(client, sender):
     Gets a list of swap requests for a given student.
     """
     client.force_login(sender.user)
-    get_url = reverse("section-swap", args=[sender.section.id])
+    get_url = reverse("section-swap-no-id", args=[sender.section.id])
     body = {"student_id": sender.id}
     response = client.get(get_url, body, content_type="application/json")
+    return response
+
+
+def accept_swap_request(client, receiver, swap_id):
+    """
+    Accepts a swap request between two students.
+    """
+    client.force_login(receiver.user)
+    post_url = reverse("section-swap-with-id", kwargs={"section_id": receiver.section.id, "swap_id": swap_id})
+    data = json.dumps({"student_id": receiver.id})
+    response = client.post(post_url, data, content_type="application/json")
     return response

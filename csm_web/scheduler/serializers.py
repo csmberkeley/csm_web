@@ -61,7 +61,7 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 class SwapSerializer(serializers.ModelSerializer):
     class Meta:
         model = Swap
-        fields = ("sender", "receiver")
+        fields = ("id", "sender", "receiver")
 
 class SpacetimeSerializer(serializers.ModelSerializer):
 

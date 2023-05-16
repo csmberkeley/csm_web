@@ -33,8 +33,8 @@ from .utils import get_object_or_error, log_str, logger, viewset_with
 
 class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
     serializer_class = SectionSerializer
-    # lookup_field = 'pk'
-    # lookup_url_kwarg = 'section_id'
+    lookup_field = 'pk'
+    lookup_url_kwarg = 'section_id'
 
     def get_object(self):
         """Retrieve section object"""
@@ -785,8 +785,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
         raise PermissionDenied()
 
-    @action(detail=True, methods=["GET", "POST", "DELETE"])
-    def swap(self, request, pk=None):
+
+    @action(detail=True, methods=["GET", "POST"], url_path='swap')
+    def swap_no_id(self, request, section_id=None, swap_id=None):
         """
         GET: Returns all relevant Swap objects for current user.
             Request format:
@@ -813,7 +814,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 {}
                 With status code of 201 if successful, 400 if not.
         """
-        section = get_object_or_error(Section.objects, pk=pk)
+        section = get_object_or_error(Section.objects, pk=section_id)
         is_mentor = section.mentor.user == request.user
         student_id = request.data.get("student_id", -1) if request.method != "GET" \
             else request.query_params.get("student_id", -1)
@@ -871,49 +872,64 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     log_str(receiver.user),
                 )
                 return Response({}, status=status.HTTP_201_CREATED)
-            else:
-                '''If swap_id is not None, initiate the swap between the two students. This should 
-                be done in one atomic transaction. If either or both of the swaps are already 
-                deleted, then return a 404 error.'''
-                with transaction.atomic():
-                    # Check if swap object with given id exists
-                    try:
-                        target_swap = get_object_or_error(Swap.objects, pk=swap_id).select_for_update()
-                    except Exception as e:
-                        logger.error(
-                            "<Swap Processed:Failure> User %s could not swap with %s",
-                            log_str(student.user),
-                            log_str(receiver.user),
-                        )
-                        raise PermissionDenied("Swap with id: " + str(swap_id) + " does not exist.")
-                    # Execute atomic transaction, and swap sections
-                    try:
-                        sender = get_object_or_error(Student.objects, id=target_swap.sender.id)
-                        receiver = get_object_or_error(Student.objects, id=target_swap.receiver.id)
-                    except Exception as e:
-                        logger.error(
-                            "<Swap Processed:Failure> User %s could not swap with %s",
-                            log_str(student.user),
-                            log_str(receiver.user),
-                        )
-                        raise NotFound("Could not find swaps for student.")
-                    sender.section = target_swap.receiver.section
-                    sender.save()
-                    receiver.section = target_swap.sender.section
-                    receiver.save()
-                    # Delete all other swaps between the two students. Delete this swap object too.
-                    target_swap.delete()
-                    # Get outgoing and incoming swaps for sender and receiver
-                    outgoing_swaps = Swap.objects.filter(sender=sender).select_for_update().values()
-                    incoming_swaps = Swap.objects.filter(receiver=sender).select_for_update().values()
-                    for expired_swap in outgoing_swaps + incoming_swaps:
-                        expired_swap.delete()
-                logger.info(
-                    "<Swap Processed:Success> User %s swapped with %s",
-                    log_str(sender.user),
-                    log_str(receiver.user),
-                )
-                return Response({}, status=status.HTTP_200_OK)
+
+    
+    @action(detail=True, methods=["POST", "DELETE"], url_path='swap/(?P<swap_id>[^/.]+)')
+    def swap_with_id(self, request, section_id=None, swap_id=None):
+        '''If swap_id is not None, initiate the swap between the two students. This should 
+        be done in one atomic transaction. If either or both of the swaps are already 
+        deleted, then return a 404 error.'''
+        student_id = request.data.get("student_id", -1) if request.method != "GET" \
+            else request.query_params.get("student_id", -1)
+        if student_id == -1:
+            raise PermissionDenied("The `student_id` field in the request cannot be empty,"
+                                   "please specify student.")
+        try:
+            student = get_object_or_error(Student.objects, id=student_id)
+        except Exception:
+            raise NotFound("No student found with id: " + str(student_id))
+        if request.method == "POST":
+            with transaction.atomic():
+                # Check if swap object with given id exists
+                try:
+                    target_swap = Swap.objects.select_for_update().get(id=swap_id) 
+                except Exception as e:
+                    logger.info(e)
+                    logger.error(
+                        "<Swap Processed:Failure> User %s could not complete swap. Swap does not exist.",
+                        log_str(student.user),
+                    )
+                    raise NotFound("Swap with id: " + str(swap_id) + " does not exist.")
+                # Execute atomic transaction, and swap sections
+                try:
+                    sender = get_object_or_error(Student.objects, id=target_swap.sender.id)
+                    receiver = get_object_or_error(Student.objects, id=target_swap.receiver.id)
+                except Exception as e:
+                    logger.error(
+                        "<Swap Processed:Failure> User %s could not swap with %s",
+                        log_str(student.user),
+                        log_str(receiver.user),
+                    )
+                    raise NotFound("Could not find swaps for student.")
+                sender.section = target_swap.receiver.section
+                sender.save()
+                receiver.section = target_swap.sender.section
+                receiver.save()
+                # Delete all other swaps between the two students. Delete this swap object too.
+                target_swap.delete()
+                # Get outgoing and incoming swaps for sender and receiver
+                outgoing_swaps = Swap.objects.filter(sender=sender).select_for_update().values()
+                incoming_swaps = Swap.objects.filter(receiver=sender).select_for_update().values()
+                for expired_swap in outgoing_swaps:
+                    expired_swap.delete()
+                for expired_swap in incoming_swaps:
+                    expired_swap.delete()
+            logger.info(
+                "<Swap Processed:Success> User %s swapped with %s",
+                log_str(sender.user),
+                log_str(receiver.user),
+            )
+            return Response({}, status=status.HTTP_200_OK)
 
         if request.method == "DELETE":
             swap_id = self.kwargs.get('swap_id', None)
