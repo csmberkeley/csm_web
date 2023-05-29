@@ -50,8 +50,9 @@ services:
       - 8000:8000
     volumes:
       - type: bind
-        source: ./csm_web
-        target: /opt/csm_web/csm_web
+        source: ./
+        target: /opt/csm_web
+        read_only: true
     depends_on:
       postgres:
         condition: service_healthy
