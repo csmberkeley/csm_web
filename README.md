@@ -11,18 +11,21 @@ If you're unfamiliar with CSM and/or its web applications, check out [this repos
 We don't know what specific minimum version you would need for any of the following software, but the most recent version of any of the below should work.
 
 - Python 3.9.13
-  - It is recommended that you use [`pyenv`](https://github.com/pyenv/pyenv) to manage python versions, so that you can use a consistent python version for `csm_web`, and another python version for your other projects.
+  - It is recommended that you use a python version manager like [`pyenv`](https://github.com/pyenv/pyenv) or [`asdf`](https://asdf-vm.com) (with [`asdf-python`](https://github.com/asdf-community/asdf-python)), so that you can use a consistent python version for `csm_web`, and another python version for your other projects.
 - [`poetry`](https://python-poetry.org/docs/#installation)
+  - We use poetry to manage python dependencies; this should be installed _outside_ of a virtual environment.
+  - Although everything will be run through Docker containers, you should use Poetry to get the dependencies locally for editing.
 - `npm`
-  - It is recommended that you use [`nvm`](https://github.com/nvm-sh/nvm) to manage node/npm versions, so that you can use a consistent node/npm version for `csm_web`, and another verison for your other projects.
-- [PostgreSQL](https://www.postgresql.org/download/)
-  - This should not be necessary now that we have migrated to Docker, but install it if any issues arise when editing.
+  - It is recommended that you use a node version manager like [`nvm`](https://github.com/nvm-sh/nvm), [`n`](https://github.com/tj/n), or [`asdf`](https://asdf-vm.com) (with [`asdf-nodejs`](https://github.com/asdf-vm/asdf-nodejs)), so that you can use a consistent node/npm version for `csm_web`, and another verison for your other projects.
+  - Although everything will be run through Docker containers, you should get the dependencies locally for editing.
 - [Docker](https://www.docker.com)
   - Your development environment will be hosted through docker containers, so that you do not need to do much local setup.
+- [PostgreSQL](https://www.postgresql.org/download/) (optional)
+  - This should not be necessary now that we have migrated to Docker, but install it if any issues arise when editing.
 - [Heroku CLI](https://devcenter.heroku.com/articles/heroku-cli#download-and-install) (optional)
   - Create an account on [Heroku](https://id.heroku.com/login) and [login](https://devcenter.heroku.com/articles/heroku-cli#getting-started)
   - This is not completely necessary for the application to work locally; it is only used for interactions with the production/staging environment.
-- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html)
+- [AWS CLI](https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html) (optional)
   - We use an S3 bucket to store course resources. See [here](https://aws.amazon.com/s3/) to get started.
   - Log in to AWS CLI (`aws configure`) This will prompt an interactive session to enter login credentials.
     - AWS Access Key ID: (ask tech chair)
@@ -39,22 +42,23 @@ To ensure package version consistency and avoid polluting your global package in
 
 Firstly, make sure you have the right python version (see `runtime.txt` for the expected python version to install). If you're using `pyenv` to manage python versions (this is recommended), you can install the specified python version with `pyenv install <version>`.
 
-From a terminal in the top level of the project directory, run `python3 -m venv venv`; if your system python version is different from the version required here, and you're using `pyenv`, run `PYENV_VERSION=<version> python3 -m venv venv` instead (for example, `PYENV_VERSION=3.9.13 python3 -m venv venv`). This will initialize a new virtual environment in the `venv/` folder, with the correct base python version.
+Next, make sure that your current python version is correct (i.e. as specified in the previous section); if it is different, then change to the correct python version. That is, with `pyenv`, run `pyenv local use <version>`; with `asdf`, run `asdf local python <version>`.
 
-To activate the environment, run `source venv/bin/activate`. You will need to run this command every time you open a new terminal.
+Finally, run `./setup.sh`. This will install additional requirements needed by the server, and set up some necessary environment variables. In particular, the setup script installs all dependencies locally and builds the Docker images.
 
-Finally, run `./setup.sh`. This will install additional requirements needed by the server, and set up some necessary environment variables. You should _not_ be running this script after it has succeeded and set up the environment for the first time.
+Note that generally, you should not need to run `setup.sh` after first setting up the repository.
 
 ## Running
 
 To start the Django server and other services, run `docker compose up -d`. This will start Django, automatically compile and watch frontend files, and start a development database. (The `-d` puts the process in the background.)
 
-To generate test data, run `docker compose exec django python3 csm_web/manage.py runserver`. In general, if you'd like to run any commands in the Django docker container, run `docker compose exec django <command>`.
+To generate test data, run `docker compose exec django python3 csm_web/manage.py runserver`. In general, if you'd like to run any commands in the Django docker container, run `docker compose exec django <command>`. (You can make an alias in your shell if you'd like to avoid typing all of this each time.)
 
-If all of the above has worked, visit `http://localhost:8000` in your browser and you should see a log in screen; don't actually use this to actually log in locally. Visit `http://localhost:8000/admin/` to log in instead.
+If all of the above has worked, visit [http://localhost:8000](http://localhost:8000) in your browser and you should see a log in screen; don't actually use this to actually log in locally. Visit [http://localhost:8000/admin/](http://localhost:8000/admin/) to log in instead.
 
 Any changes will automatically reload the server in the docker containers, but you will usually need to force refresh (`ctrl + shift + R` or `cmd + shift + R` on most browsers) for frontend changes to be reflected (this clears the browser cache for the page).
 
+During development, you should use the virtual environment as much as possible---while Docker makes this less necessary, your choice of editor may require the dependencies in the virtual environment. To activate the virtual environment, you can use `poetry shell` (this will start a new nested shell instance), or you can use `source .venv/bin/activate` (more generally, `source $(poetry env info --path)/bin/activate`).
 
 ## Troubleshooting
 
@@ -126,5 +130,4 @@ could not connect to server: Connection refused
         TCP/IP connections on port 5432?
 ```
 
-Your postgres server is likely not running. On a mac (which is the only platform we've done local
-testing on), run `brew services start postgres` before invoking `runserver` again.
+Your PostgreSQL server is likely not running. On MacOS, run `brew services start postgres` before invoking `runserver` again; on Unix, run `sudo service postgresql restart` before invoking `runserver` again.
