@@ -173,6 +173,15 @@ def test_swap_conflict_clear(client, setup_scheduler):
     # Make sure that the second swap request was cleared
     assert len(json.loads(get_swap_requests(client, receiver_two).content.decode("utf-8"))["receiver"]) == 0
 
+
+@pytest.mark.django_db
+def test_swap_conflict_concurrent_fail(client, setup_scheduler):
+    """
+    Test for when two receivers accept a swap request from the same sender concurrently.
+    """
+    # TODO implement this test
+
+
 def create_students(course, section, quantity):
     """
     Creates a given number of students for a given section.
