@@ -134,6 +134,9 @@ def test_accept_swap_request(client, setup_scheduler):
     # Make sure that the swap was accepted
     assert sender.section.id == old_receiver_section_id
     assert receiver.section.id == old_sender_section_id
+    # Make sure that all swaps for both students are cleared
+    assert len(json.loads(get_swap_requests(client, sender).content.decode("utf-8"))["sender"]) == 0
+    assert len(json.loads(get_swap_requests(client, receiver).content.decode("utf-8"))["sender"]) == 0
 
 
 @pytest.mark.django_db
@@ -141,7 +144,14 @@ def test_reject_swap_request(client, setup_scheduler):
     """
     Tests that a student can reject a swap request.
     """
-    # TODO Add test for when a student rejects a swap request
+    section_one_students, section_two_students = setup_scheduler[3:]
+    sender, receiver = section_one_students[0], section_two_students[0]
+    create_swap_request(client, sender, receiver)
+    # Get the swap_id
+    swap_id = json.loads(get_swap_requests(client, sender).content.decode("utf-8"))["sender"][0]["id"]
+    reject_swap_request(client, receiver, swap_id)
+    # Make sure that the swap was rejected
+    assert len(json.loads(get_swap_requests(client, receiver).content.decode("utf-8"))["sender"]) == 0
 
 
 @pytest.mark.django_db
@@ -151,8 +161,17 @@ def test_swap_conflict_clear(client, setup_scheduler):
     is accepted. In this case, all other swap requests from that user should be
     invalidated and cleared.
     """
-    # TODO Add test for when a student accepts a swap in a conflict setup 
-
+    section_one_students, section_two_students = setup_scheduler[3:]
+    sender = section_one_students[0]
+    receiver_one, receiver_two = section_two_students[0], section_two_students[1]
+    create_swap_request(client, sender, receiver_one)
+    create_swap_request(client, sender, receiver_two)
+    # Get first swap_id
+    swap_id_one = json.loads(get_swap_requests(client, sender).content.decode("utf-8"))["sender"][0]["id"]
+    # Accept first swap request
+    accept_swap_request(client, receiver_one, swap_id_one)
+    # Make sure that the second swap request was cleared
+    assert len(json.loads(get_swap_requests(client, receiver_two).content.decode("utf-8"))["receiver"]) == 0
 
 def create_students(course, section, quantity):
     """
@@ -206,4 +225,14 @@ def accept_swap_request(client, receiver, swap_id):
     post_url = reverse("section-swap-with-id", kwargs={"section_id": receiver.section.id, "swap_id": swap_id})
     data = json.dumps({"student_id": receiver.id})
     response = client.post(post_url, data, content_type="application/json")
+    return response
+
+
+def reject_swap_request(client, receiver, swap_id):
+    """
+    Receiver rejects a swap request from a sender.
+    """
+    client.force_login(receiver.user)
+    delete_url = reverse("section-swap-with-id", kwargs={"section_id": receiver.section.id, "swap_id": swap_id})
+    response = client.delete(delete_url)
     return response
