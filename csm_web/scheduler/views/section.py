@@ -933,18 +933,25 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     )
                     raise NotFound("Could not find swaps for student.")
                 sender.section = target_swap.receiver.section
-                sender.save()
-                receiver.section = target_swap.sender.section
-                receiver.save()
-                # Delete all other swaps between the two students. Delete this swap object too.
-                target_swap.delete()
-                # Get outgoing and incoming swaps for sender and receiver
+                # Get outgoing and incoming swaps for sender
                 outgoing_swaps = Swap.objects.filter(sender=sender).select_for_update()
                 incoming_swaps = Swap.objects.filter(receiver=sender).select_for_update()
                 for expired_swap in outgoing_swaps:
                     expired_swap.delete()
                 for expired_swap in incoming_swaps:
                     expired_swap.delete()
+                sender.save()
+                receiver.section = target_swap.sender.section
+                # Get outgoing and incoming swaps for receiver
+                outgoing_swaps = Swap.objects.filter(sender=receiver).select_for_update()
+                incoming_swaps = Swap.objects.filter(receiver=receiver).select_for_update()
+                for expired_swap in outgoing_swaps:
+                    expired_swap.delete()
+                for expired_swap in incoming_swaps:
+                    expired_swap.delete()
+                receiver.save()
+                # Finall, delete the swap object
+                target_swap.delete()
             logger.info(
                 "<Swap Processed:Success> User %s swapped with %s",
                 log_str(sender.user),
