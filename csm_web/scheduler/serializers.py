@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from enum import Enum
 from django.utils import timezone
-from .models import Attendance, Course, Link, SectionOccurrence, User, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet, Matcher, MatcherSlot, MatcherPreference
+from .models import Attendance, Swap, Course, Link, SectionOccurrence, User, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet, Matcher, MatcherSlot, MatcherPreference
 
 
 class Role(Enum):
@@ -58,6 +58,10 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
         fields = ("spacetime", "date")
         read_only_fields = ("spacetime", "date")
 
+class SwapSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Swap
+        fields = ("sender", "receiver")
 
 class SpacetimeSerializer(serializers.ModelSerializer):
 
