@@ -11,6 +11,13 @@ import datetime
 from .utils import log_str, logger, get_object_or_error
 from ..models import Student
 from ..serializers import AttendanceSerializer, StudentSerializer
+from ..email.email_utils import (email_coordinator_drop,
+                                 email_student_drop,
+                                 EmailFormattingError,
+                                 NoEmailError,
+                                 EmailAuthError,
+                                 HttpError
+                                 )
 
 
 class StudentViewSet(viewsets.GenericViewSet):
@@ -45,7 +52,8 @@ class StudentViewSet(viewsets.GenericViewSet):
         logger.info(
             f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)} for Student user {log_str(student.user)}"
         )
-        # filter attendances and delete future attendances
+
+        # Filter attendances and delete future attendances
         now = timezone.now().astimezone(timezone.get_default_timezone())
         num_deleted, _ = student.attendance_set.filter(
             Q(
@@ -56,6 +64,16 @@ class StudentViewSet(viewsets.GenericViewSet):
         logger.info(
             f"<Drop> Deleted {num_deleted} attendances for user {log_str(student.user)} in Section {log_str(student.section)} after {now.date()}"
         )
+        # Send drop email
+        if is_coordinator:
+            coordinator = student.course.coordinator_set.get(user=request.user)
+            mentor = student.section.mentor
+            email_coordinator_drop(student, logger)
+
+        else:
+            mentor = student.section.mentor
+            email_student_drop(student, logger)
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["get", "put"])
@@ -95,4 +113,3 @@ class StudentViewSet(viewsets.GenericViewSet):
             f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, errors: {serializer.errors}"
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-

@@ -1,6 +1,7 @@
 import pytest
 from freezegun import freeze_time
 from unittest import mock
+from unittest.mock import patch
 import factory
 import faker
 import datetime
@@ -113,8 +114,9 @@ def setup_section(db):
     ],
 )
 def test_attendance_add_student_on_day(
-    client, setup_section, day, num_attendances_added
+    client, setup_section, day, num_attendances_added, mocker
 ):
+    mocker.patch('scheduler.email.email_utils._email_send_message')
     mentor, student_user, course, section = setup_section
     with freeze_time(day):
         client.force_login(student_user)
@@ -179,8 +181,9 @@ def test_attendance_add_student_on_day(
     ],
 )
 def test_attendance_drop_student_on_day(
-    client, setup_section, day, num_attendances_left
+    client, setup_section, day, num_attendances_left, mocker
 ):
+    mocker.patch('scheduler.email.email_utils._email_send_message')
     mentor, student_user, course, section = setup_section
 
     # enroll student first

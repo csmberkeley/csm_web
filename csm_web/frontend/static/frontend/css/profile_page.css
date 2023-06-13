@@ -1,0 +1,13 @@
+.profile-page {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+}
+
+.subscription-btn {
+	font-size: 14px;
+	border: none;
+	border-radius: 6px;
+	padding: 10px 20px;
+	cursor: pointer;
+}

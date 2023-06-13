@@ -81,7 +81,7 @@ class CourseInline(admin.TabularInline):
 
 @admin.register(User)
 class UserAdmin(CoordAdmin):
-    fields = ("username", "email", "first_name", "last_name", "priority_enrollment")
+    fields = ("username", "email", "first_name", "last_name", "priority_enrollment", "subscribed")
     search_fields = ("email",)
     list_display = ("name", "email")
     list_filter = ("is_active",)
