@@ -12,6 +12,7 @@ from scheduler.models import (
     Course,
     Section,
     Mentor,
+    Coordinator,
     Student,
     Attendance,
     SectionOccurrence,
@@ -21,6 +22,7 @@ from scheduler.factories import (
     CourseFactory,
     SectionFactory,
     MentorFactory,
+    CoordinatorFactory,
     StudentFactory,
     AttendanceFactory,
     SpacetimeFactory,
@@ -33,6 +35,9 @@ DEFAULT_TZ = zoneinfo.ZoneInfo(timezone.get_default_timezone().zone)
 
 @pytest.fixture
 def setup_section(db):
+    coordinator_user = UserFactory(
+        username="coordinator_user", first_name="coordinator", last_name="user"
+    )
     mentor_user = UserFactory(
         username="mentor_user", first_name="mentor", last_name="user"
     )
@@ -56,6 +61,7 @@ def setup_section(db):
         ),
     )
     mentor = MentorFactory(user=mentor_user, course=course)
+    coord = CoordinatorFactory(user=coordinator_user, course=course)
     section = SectionFactory(
         mentor=mentor,
         capacity=6,
@@ -74,7 +80,7 @@ def setup_section(db):
             ),
         ],
     )
-    return mentor, student_user, course, section
+    return mentor, student_user, course, section, coord
 
 
 @pytest.mark.django_db
@@ -115,7 +121,7 @@ def setup_section(db):
 def test_attendance_add_student_on_day(
     client, setup_section, day, num_attendances_added
 ):
-    mentor, student_user, course, section = setup_section
+    mentor, student_user, course, section, coord = setup_section
     with freeze_time(day):
         client.force_login(student_user)
         enroll_url = reverse("section-students", kwargs={"pk": section.pk})
@@ -181,7 +187,7 @@ def test_attendance_add_student_on_day(
 def test_attendance_drop_student_on_day(
     client, setup_section, day, num_attendances_left
 ):
-    mentor, student_user, course, section = setup_section
+    mentor, student_user, course, section, coord = setup_section
 
     # enroll student first
     with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):
@@ -210,3 +216,38 @@ def test_attendance_drop_student_on_day(
 
         # make sure attendance objects have been deleted
         assert student.attendance_set.count() == num_attendances_left
+
+
+@pytest.mark.django_db
+def test_coord_add_attendance(client, setup_section):
+    mentor, student_user, course, section, coord = setup_section()
+    with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):
+        client.force_login(coord)
+        student = Student.objects.get(user=student_user)
+        attendance_url = reverse("student-attendances", kwargs={"pk": student.pk})
+
+        # Mark student as present
+        data = {'id': student.id, 'presence': 'PR'}
+        client.put(attendance_url, data)
+    student.refresh_from_db()
+
+
+@pytest.mark.django_db
+def test_coord_add_student_attendance(client, setup_section):
+    mentor, student_user, course, section, coord = setup_section()
+    with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):
+        client.force_login(coord)
+        data = {'emails': [{'email': "amogus@berkeley.edu"}], 'actions': {}}
+        add_student_url = reverse("section-students", kwargs={"pk": section.pk})
+        client.put(add_student_url, data)
+
+        # check of the student was added
+        assert section.students.count() == 1
+
+        student = Student.objects.filter(user__email="amogus@berkeley.edu")
+        attendance_url = reverse("student-attendances", kwargs={"pk": student.pk})
+
+        # Mark student as present
+        data = {'id': student.id, 'presence': 'PR'}
+        client.put(attendance_url, data)
+    student.refresh_from_db()
