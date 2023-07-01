@@ -114,7 +114,7 @@ class Attendance(ValidatingModel):
     class Meta:
         unique_together = ("sectionOccurrence", "student")
         ordering = ("sectionOccurrence",)
-        # indexes = (models.Index(fields=("date",)),)
+        #indexes = (models.Index(fields=("date",)),)
 
 
 class SectionOccurrence(ValidatingModel):
