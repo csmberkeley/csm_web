@@ -912,19 +912,22 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             with transaction.atomic():
                 # Check if swap object with given id exists
                 try:
-                    target_swap = Swap.objects.select_for_update().get(id=swap_id) 
+                    target_swap = get_object_or_error(Swap.objects.select_for_update(), id=swap_id)
                 except Exception as e:
                     logger.info(e)
                     logger.error(
-                        "<Swap Processed:Failure> User %s could not complete swap. Swap does not exist.",
+                        "<Swap Processed:Failure> User %s could not complete swap. "
+                        "Swap does not exist.",
                         log_str(student.user),
                     )
                     raise NotFound("Swap with id: " + str(swap_id) + " does not exist.")
 
                 # Execute atomic transaction, and swap sections
                 try:
-                    sender = get_object_or_error(Student.objects, id=target_swap.sender.id)
-                    receiver = get_object_or_error(Student.objects, id=target_swap.receiver.id)
+                    sender = get_object_or_error(Student.objects.select_for_update(), 
+                                                 id=target_swap.sender.id)
+                    receiver = get_object_or_error(Student.objects.select_for_update(), 
+                                                   id=target_swap.receiver.id)
                 except Exception as e:
                     logger.error(
                         "<Swap Processed:Failure> User %s could not swap with %s",
