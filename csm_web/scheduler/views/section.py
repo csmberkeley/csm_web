@@ -1,13 +1,14 @@
 import datetime
 import re
 
-from django.db import transaction
+from django.core.exceptions import ValidationError, ObjectDoesNotExist
+from django.db import transaction, IntegrityError, DatabaseError
 from django.db.models import Prefetch, Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework import permissions
-from rest_framework.decorators import action, permission_classes
-from rest_framework.exceptions import PermissionDenied, NotFound
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied, NotFound, ValidationError as BadRequestError
 from rest_framework.response import Response
 from scheduler.models import (
     Attendance,
@@ -33,8 +34,6 @@ from .utils import get_object_or_error, log_str, logger, viewset_with
 
 class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
     serializer_class = SectionSerializer
-    lookup_field = 'pk'
-    lookup_url_kwarg = 'section_id'
 
     def get_object(self):
         """Retrieve section object"""
@@ -787,7 +786,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
 
     @action(detail=True, methods=["GET", "POST"], url_path='swap')
-    def swap_no_id(self, request, section_id=None, swap_id=None):
+    def swap_no_id(self, request, pk=None, swap_id=None):
         """
         GET: Returns all relevant Swap objects for current user.
             Request format:
@@ -805,7 +804,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     time: DateTime,
                 }
 
-        POST: Handles creating a new Swap instance when a Swap a requested or
+        POST: Handles creating a new Swap instance when a Swap is requested or
         processes an existing Swap request.
             Request format:
                 { email: string }
@@ -814,27 +813,29 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 {}
                 With status code of 201 if successful, 400 if not.
         """
-        section = get_object_or_error(Section.objects, pk=section_id)
-        student_id = request.data.get("student_id", -1) if request.method != "GET" \
-            else request.query_params.get("student_id", -1)
+        section = get_object_or_error(Section.objects, pk=pk)
+        if request.method != "GET":
+            student_id = request.data.get("student_id", -1)
+        else:
+            student_id = request.query_params.get("student_id", -1)
 
         # check if student_id is specified in request
         if student_id == -1:
-            raise PermissionDenied("The `student_id` field in the request cannot be empty,"
+            raise BadRequestError("The `student_id` field in the request cannot be empty,"
                                    "please specify student.")
 
         # check if student exists
         try:
             student = get_object_or_error(Student.objects, id=student_id)
-        except Exception:
+        except ObjectDoesNotExist as e:
+            logger.info(e)
             raise NotFound("No student found with id: " + str(student_id))
         if request.method == "GET":
             if section.mentor.user == request.user:
-                raise PermissionDenied("Cannot `GET` swaps for a mentor.")
-            try:
-                outgoing_swaps = Swap.objects.filter(sender=student)
-                incoming_swaps = Swap.objects.filter(receiver=student)
-            except Exception as e:
+                raise BadRequestError("Cannot `GET` swaps for a mentor.")
+            outgoing_swaps = Swap.objects.filter(sender=student)
+            incoming_swaps = Swap.objects.filter(receiver=student)
+            if outgoing_swaps is None or incoming_swaps is None:
                 raise NotFound("No swaps found for student with id: " + str(student_id))
             
             student_swaps = {
@@ -846,7 +847,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         if request.method == "POST":
             if section.mentor.user == request.user:
                 logger.error("Cannot `POST` swaps for a mentor.")
-                raise PermissionDenied("Cannot `POST` swaps for a mentor.")
+                raise BadRequestError("Cannot `POST` swaps for a mentor.")
 
             '''Create a new Swap object between the the current student
             and the student with the email specified in the request. This is essentially
@@ -855,35 +856,40 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
             # Check if receiver_email is empty
             if receiver_email is None:
-                raise PermissionDenied("The `receiver_email` field in the request cannot be empty,"
+                raise BadRequestError("The `receiver_email` field in the request cannot be empty,"
                                         "please specify a receiver.")
 
             # Check if receiver_email is valid
             try:
                 receiver = get_object_or_error(Student.objects, user__email=receiver_email)
-            except Exception as e:
+            except ObjectDoesNotExist as e:
                 raise NotFound("Invalid email provided.")
 
             # Check if receiver is the sender
             receiver_is_sender = receiver == student
             if receiver_is_sender:
-                raise PermissionDenied("Cannot send a swap request to yourself.")
+                raise BadRequestError("Cannot send a swap request to yourself.")
 
             # Check if receiver has already sent a swap request to the sender
-            try:
-                incoming_swaps = Swap.objects.filter(receiver=student)
-            except Exception as e:
-                logger.error(e)
-                raise PermissionDenied("Could not fetch incoming swaps for student with id: " + 
+            incoming_swaps = Swap.objects.filter(receiver=student)
+            if incoming_swaps is None:
+                logger.error("Could not fetch incoming swaps for student with id: %s", student_id) 
+                raise NotFound("Could not fetch incoming swaps for student with id: " + 
                                        str(student_id))
             for swap in incoming_swaps:
                 if swap.sender == receiver:
-                    raise PermissionDenied("Cannot send a swap request to someone who has already"
+                    raise NotFound("Cannot send a swap request to someone who has already"
                                             "sent you a swap request.") 
             # Create Swap request
             try:
                 swap = Swap.objects.create(sender=student, receiver=receiver)
-            except Exception as e:
+            except (IntegrityError, ValidationError, DatabaseError) as e:
+                logger.info(e)
+                logger.error(
+                    "<Swap Creation Failed> User %s requested a swap with %s",
+                    log_str(student.user),
+                    log_str(receiver.user)
+                )
                 raise NotFound("Could not create swap for student with id: " + str(student_id))
             # Successfuly created swap
             logger.info(
@@ -895,25 +901,24 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
     
     @action(detail=True, methods=["POST", "DELETE"], url_path='swap/(?P<swap_id>[^/.]+)')
-    def swap_with_id(self, request, section_id=None, swap_id=None):
+    def swap_with_id(self, request, pk=None, swap_id=None):
         '''If swap_id is not None, initiate the swap between the two students. This should 
         be done in one atomic transaction. If either or both of the swaps are already 
         deleted, then return a 404 error.'''
-        student_id = request.data.get("student_id", -1) if request.method != "GET" \
-            else request.query_params.get("student_id", -1)
+        student_id = request.data.get("student_id", -1)
         if student_id == -1:
-            raise PermissionDenied("The `student_id` field in the request cannot be empty,"
+            raise BadRequestError("The `student_id` field in the request cannot be empty,"
                                    "please specify student.")
         try:
             student = get_object_or_error(Student.objects, id=student_id)
-        except Exception:
+        except ObjectDoesNotExist as e:
             raise NotFound("No student found with id: " + str(student_id))
         if request.method == "POST":
             with transaction.atomic():
                 # Check if swap object with given id exists
                 try:
                     target_swap = get_object_or_error(Swap.objects.select_for_update(), id=swap_id)
-                except Exception as e:
+                except ObjectDoesNotExist as e:
                     logger.info(e)
                     logger.error(
                         "<Swap Processed:Failure> User %s could not complete swap. "
@@ -928,7 +933,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                                                  id=target_swap.sender.id)
                     receiver = get_object_or_error(Student.objects.select_for_update(), 
                                                    id=target_swap.receiver.id)
-                except Exception as e:
+                except ObjectDoesNotExist as e:
                     logger.error(
                         "<Swap Processed:Failure> User %s could not swap with %s",
                         log_str(student.user),
@@ -938,22 +943,18 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 sender.section = target_swap.receiver.section
                 # Get outgoing and incoming swaps for sender
                 outgoing_swaps = Swap.objects.filter(sender=sender).select_for_update()
+                outgoing_swaps.delete()
                 incoming_swaps = Swap.objects.filter(receiver=sender).select_for_update()
-                for expired_swap in outgoing_swaps:
-                    expired_swap.delete()
-                for expired_swap in incoming_swaps:
-                    expired_swap.delete()
+                incoming_swaps.delete()
                 sender.save()
                 receiver.section = target_swap.sender.section
                 # Get outgoing and incoming swaps for receiver
                 outgoing_swaps = Swap.objects.filter(sender=receiver).select_for_update()
+                outgoing_swaps.delete()
                 incoming_swaps = Swap.objects.filter(receiver=receiver).select_for_update()
-                for expired_swap in outgoing_swaps:
-                    expired_swap.delete()
-                for expired_swap in incoming_swaps:
-                    expired_swap.delete()
+                incoming_swaps.delete()
                 receiver.save()
-                # Finall, delete the swap object
+                # Finally, delete the swap object
                 target_swap.delete()
             logger.info(
                 "<Swap Processed:Success> User %s swapped with %s",
@@ -971,9 +972,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
                 raise PermissionDenied("You must be a student or a coordinator"
                                        "to delete this spacetime override!")
-
             swap.delete()
-            swap.save()
 
             logger.info(
                 f"<Swap Deletion:Success> Deleted swap {log_str(swap)}"
