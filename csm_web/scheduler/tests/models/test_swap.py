@@ -40,39 +40,40 @@ def test_basic_swap_request_success(client, setup_scheduler):
     create_swap_request(client, sender_student, reciever_student)
     # Make sure that the swap request was created
     assert Swap.objects.filter(receiver=reciever_student).exists()
-    
+
 
 @pytest.mark.django_db
-@pytest.mark.parametrize(
-    ["is_empty"],
-    [
-        # expect empty swap list
-        (True,),
-        # expect non-empty swap list
-        (False,),
-    ],
-    ids=["empty swap list", "non-empty swap list"],
-)
-def test_basic_swap_get(client, setup_scheduler, is_empty):
+def test_empty_swap_list(client, setup_scheduler):
     """
-    Tests getting a list of swaps for a student
+    Test getting an empty list of swaps for a student.
     """
     section_one_students, section_two_students = setup_scheduler[3:]
-    sender_student, reciever_student = section_one_students[0], section_two_students[0]
-    if not is_empty:
-        # Create a swap request
-        create_swap_request(client, sender_student, reciever_student)
-    # Get the list of swaps for the reciever
+    sender_student = section_one_students[0]
+    # Get the list of swaps for the sender
     swaps = get_swap_requests(client, sender_student)
     # Decode get response to UTF-8
     swaps = json.loads(swaps.content.decode("utf-8"))
-    if not is_empty:
-        # Make sure that the swap request was created
-        assert Swap.objects.filter(receiver=reciever_student).exists()
-        # Make sure that the swap request is in the list of swaps
-        assert len(swaps["sender"]) != 0 and swaps["sender"][0]["receiver"] == reciever_student.id
-    else:
-        assert len(swaps["sender"]) == 0
+    # Make sure that the list of swaps is empty
+    assert len(swaps["sender"]) == 0
+
+
+@pytest.mark.django_db
+def test_non_empty_swap_list(client, setup_scheduler):
+    """
+    Test getting a non-empty list of swaps for a student.
+    """
+    section_one_students, section_two_students = setup_scheduler[3:]
+    sender_student, receiver_student = section_one_students[0], section_two_students[0]
+    # Create a swap request
+    create_swap_request(client, sender_student, receiver_student)
+    # Get the list of swaps for the sender
+    swaps = get_swap_requests(client, sender_student)
+    # Decode get response to UTF-8
+    swaps = json.loads(swaps.content.decode("utf-8"))
+    # Make sure that the swap request was created
+    assert Swap.objects.filter(receiver=receiver_student).exists()
+    # Make sure that the swap request is in the list of swaps
+    assert len(swaps["sender"]) != 0 and swaps["sender"][0]["receiver"] == receiver_student.id
 
 
 @pytest.mark.django_db
@@ -217,7 +218,7 @@ def accept_swap_request(client, receiver, swap_id):
     Accepts a swap request between two students.
     """
     client.force_login(receiver.user)
-    post_url = reverse("section-swap-with-id", kwargs={"section_id": receiver.section.id, "swap_id": swap_id})
+    post_url = reverse("section-swap-with-id", kwargs={"pk": receiver.section.id, "swap_id": swap_id})
     data = json.dumps({"student_id": receiver.id})
     response = client.post(post_url, data, content_type="application/json")
     return response
@@ -228,6 +229,6 @@ def reject_swap_request(client, receiver, swap_id):
     Receiver rejects a swap request from a sender.
     """
     client.force_login(receiver.user)
-    delete_url = reverse("section-swap-with-id", kwargs={"section_id": receiver.section.id, "swap_id": swap_id})
+    delete_url = reverse("section-swap-with-id", kwargs={"pk": receiver.section.id, "swap_id": swap_id})
     response = client.delete(delete_url)
     return response
