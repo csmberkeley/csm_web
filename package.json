@@ -60,6 +60,7 @@
     "jest": "^28.1.1",
     "jest-environment-jsdom": "^29.0.3",
     "lodash-webpack-plugin": "^0.11.6",
+    "playwright-webkit": "^1.29.2",
     "prettier": "^2.7.1",
     "random-words": "^1.1.2",
     "style-loader": "^3.2.1",
