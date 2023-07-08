@@ -31,6 +31,7 @@ interface StrTime {
   day: string;
   startTime: string;
   endTime: string;
+  location: string;
 }
 
 export function CoordinatorMatcherForm({
@@ -66,7 +67,8 @@ export function CoordinatorMatcherForm({
           startTime: parseTime(time.startTime),
           endTime: parseTime(time.endTime),
           day: time.day,
-          isLinked: slot.times.length > 0
+          isLinked: slot.times.length > 0,
+          location: time.location
         };
       });
       return {

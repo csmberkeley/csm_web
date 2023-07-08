@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { formatTime } from "../utils";
 import { CalendarDay, CalendarDayHeader } from "./CalendarDay";
 import { CalendarEvent, CalendarEventSingleTime, DAYS } from "./CalendarTypes";
@@ -11,11 +11,14 @@ const SCROLL_AMT = 30;
 
 const WIDTH_SCALE = 0.9;
 
+const DEFAULT_LOCATION = "TBD";
+
 interface Time {
   day: string;
   startTime: number;
   endTime: number;
   isLinked: boolean; // whether this time is linked to another within a section
+  location: string;
 }
 
 interface CalendarProps {
@@ -63,7 +66,8 @@ export function Calendar({
     day: "",
     startTime: -1,
     endTime: -1,
-    isLinked: false
+    isLinked: false,
+    location: DEFAULT_LOCATION
   });
 
   const [eventExtrema, setEventExtrema] = useState<{ min: number; max: number }>({
@@ -222,7 +226,7 @@ export function Calendar({
     if (!eventCreationEnabled) {
       return;
     }
-    setCurCreatedEvent({ day, startTime, endTime, isLinked: createdTimes.length > 0 });
+    setCurCreatedEvent({ day, startTime, endTime, isLinked: createdTimes.length > 0, location: DEFAULT_LOCATION });
     setCreatingEvent(true);
     setEventHoverIndex(-1);
     setSelectedEventIndices([]);
@@ -237,7 +241,8 @@ export function Calendar({
       day: curCreatedEvent.day,
       startTime: curCreatedEvent.startTime,
       endTime: end_time,
-      isLinked: curCreatedEvent.isLinked
+      isLinked: curCreatedEvent.isLinked,
+      location: curCreatedEvent.location
     });
   };
 
@@ -246,12 +251,12 @@ export function Calendar({
       return;
     }
     onEventCreated(normalizeCreatedEvent());
-    setCurCreatedEvent({ day: "", startTime: -1, endTime: -1, isLinked: false });
+    setCurCreatedEvent({ day: "", startTime: -1, endTime: -1, isLinked: false, location: DEFAULT_LOCATION });
     setCreatingEvent(false);
   };
 
   const onCreateDragEndCancel = (e: MouseEvent | FocusEvent) => {
-    setCurCreatedEvent({ day: "", startTime: -1, endTime: -1, isLinked: false });
+    setCurCreatedEvent({ day: "", startTime: -1, endTime: -1, isLinked: false, location: DEFAULT_LOCATION });
     setCreatingEvent(false);
   };
 
@@ -263,7 +268,8 @@ export function Calendar({
         day: curCreatedEvent.day,
         startTime: curCreatedEvent.endTime - INTERVAL_LENGTH,
         endTime: curCreatedEvent.startTime + INTERVAL_LENGTH,
-        isLinked: curCreatedEvent.isLinked
+        isLinked: curCreatedEvent.isLinked,
+        location: "TBD"
       };
     }
   };
@@ -296,8 +302,8 @@ export function Calendar({
               onEventHover={
                 disableHover
                   ? () => {
-                      /* do nothing */
-                    }
+                    /* do nothing */
+                  }
                   : setEventHoverIndex
               }
               onEventClick={eventClickWrapper}

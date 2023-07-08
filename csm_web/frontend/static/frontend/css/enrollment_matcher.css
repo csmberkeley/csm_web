@@ -358,7 +358,26 @@
 	left: -3px;
 }
 
+.matcher-selected-location {
+    font-size: 0.9rem;
+    color: #666;
+}
+
 .matcher-created-time {
+    display: flex;
+    flex-direction: column;
+    justify-content: stretch;
+}
+
+.matcher-created-time-location {
+    font-size: 0.9rem;
+}
+
+.matcher-created-time-location span {
+    margin-right: 3px;
+}
+
+.matcher-created-time-detail {
 	padding: 5px 0;
 }
 

@@ -58,7 +58,8 @@ export function MentorSectionPreferences({
           day: time.day,
           startTime: parseTime(time.startTime),
           endTime: parseTime(time.endTime),
-          isLinked: time.isLinked
+          isLinked: time.isLinked,
+          location: time.location
         });
       }
       const parsed_slot: Slot = {
@@ -177,6 +178,8 @@ export function MentorSectionPreferences({
                   <li key={time_idx} className="matcher-selected-time-container">
                     <span className="matcher-selected-time">
                       {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
+                      <br />
+                      <span className="matcher-selected-location">(location: {time.location})</span>
                     </span>
                   </li>
                 ))}

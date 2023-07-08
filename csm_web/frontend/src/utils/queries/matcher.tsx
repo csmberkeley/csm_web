@@ -52,6 +52,7 @@ interface MatcherSlotsResponseTime {
   day: string;
   startTime: string;
   endTime: string;
+  location: string;
   isLinked: boolean;
 }
 
