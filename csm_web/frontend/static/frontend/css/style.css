@@ -54,6 +54,8 @@ button {
 	--csm-neutral-darkened: #b6b6b6;
 	--csm-resources: #ededed;
 	--csm-link-blue: #039be5;
+	--csm-warning: #f8de7e;
+	--csm-warning-darkened: #ffd700;
 }
 
 /* Header */
@@ -270,6 +272,14 @@ header {
 
 .csm-btn:hover {
 	background-color: var(--csm-green-darkened);
+}
+
+.csm-btn-waitlist {
+	background-color: var(--csm-warning);
+}
+
+.csm-btn-waitlist:hover {
+	background-color: var(--csm-warning-darkened);
 }
 
 .csm-btn:focus {
@@ -1217,8 +1227,24 @@ main {
 	padding: 10px 27px;
 }
 
-.danger-btn:hover {
+.warning-btn:hover {
 	background-color: var(--csm-danger-darkened);
+}
+
+.warning-btn {
+	display: block;
+	border: none;
+	margin: auto;
+	cursor: pointer;
+	background-color: var(--csm-warning);
+	border-radius: 6px;
+	color: white;
+	font-size: 14px;
+	padding: 10px 27px;
+}
+
+.warning-btn:hover {
+	background-color: var(--csm-warning-darkened);
 }
 
 .override-label {
@@ -1974,4 +2000,14 @@ table tbody tr:last-child > td {
 
 .spacetimeDeleteDropper {
 	text-align: center;
+}
+
+.registration-container {
+	display: flex;
+	flex-wrap: wrap;
+}
+
+.registration-container > p {
+	flex: 50%; /* or - flex: 0 50% - or - flex-basis: 50% - */
+	margin-top: 0px;
 }

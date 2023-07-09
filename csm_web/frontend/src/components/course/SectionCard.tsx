@@ -1,16 +1,15 @@
 import React, { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
-
-import { EnrollUserMutationResponse, useEnrollUserMutation } from "../../utils/queries/sections";
-import { Mentor, Spacetime } from "../../utils/types";
-import Modal, { ModalCloser } from "../Modal";
-
-import CheckCircle from "../../../static/frontend/img/check_circle.svg";
-import ClockIcon from "../../../static/frontend/img/clock.svg";
-import GroupIcon from "../../../static/frontend/img/group.svg";
+import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+import { Link, Redirect } from "react-router-dom";
 import LocationIcon from "../../../static/frontend/img/location.svg";
 import UserIcon from "../../../static/frontend/img/user.svg";
+import GroupIcon from "../../../static/frontend/img/group.svg";
+import WaitListIcon from "../../../static/frontend/img/waitlist.svg";
+import ClockIcon from "../../../static/frontend/img/clock.svg";
+import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import XCircle from "../../../static/frontend/img/x_circle.svg";
+import Modal, { ModalCloser } from "../Modal";
+import { Mentor, Spacetime } from "../../utils/types";
 
 interface SectionCardProps {
   id: number;
@@ -21,6 +20,8 @@ interface SectionCardProps {
   description: string;
   userIsCoordinator: boolean;
   courseOpen: boolean;
+  numStudentsWaitlisted: number;
+  waitlistCapacity: number;
 }
 
 export const SectionCard = ({
@@ -31,13 +32,12 @@ export const SectionCard = ({
   capacity,
   description,
   userIsCoordinator,
-  courseOpen
+  courseOpen,
+  numStudentsWaitlisted,
+  waitlistCapacity
 }: SectionCardProps): React.ReactElement => {
-  /**
-   * Mutation to enroll a student in the section.
-   */
-  const enrollStudentMutation = useEnrollUserMutation(id);
-
+  numStudentsWaitlisted = 0;
+  waitlistCapacity = 5;
   /**
    * Whether to show the modal (after an attempt to enroll).
    */
@@ -55,6 +55,10 @@ export const SectionCard = ({
    * Handle enrollment in the section.
    */
   const enroll = () => {
+    interface FetchJSON {
+      detail: string;
+    }
+
     if (!courseOpen) {
       setShowModal(true);
       setEnrollmentSuccessful(false);
@@ -62,17 +66,24 @@ export const SectionCard = ({
       return;
     }
 
-    enrollStudentMutation.mutate(undefined, {
-      onSuccess: () => {
-        setEnrollmentSuccessful(true);
+    fetchWithMethod(`sections/${id}/students/`, HTTP_METHODS.PUT)
+      .then((response: { ok: boolean; json: () => Promise<FetchJSON> }) => {
+        if (response.ok) {
+          setShowModal(true);
+          setEnrollmentSuccessful(true);
+        } else {
+          response.json().then(({ detail }: FetchJSON) => {
+            setShowModal(true);
+            setEnrollmentSuccessful(false);
+            setErrorMessage(detail);
+          });
+        }
+      })
+      .catch((error: any) => {
         setShowModal(true);
-      },
-      onError: ({ detail }: EnrollUserMutationResponse) => {
         setEnrollmentSuccessful(false);
-        setErrorMessage(detail);
-        setShowModal(true);
-      }
-    });
+        setErrorMessage(String(error));
+      });
   };
 
   /**
@@ -113,24 +124,52 @@ export const SectionCard = ({
 
   const iconWidth = "1.3em";
   const iconHeight = "1.3em";
-  const isFull = numStudentsEnrolled >= capacity;
+  const isOpen = numStudentsEnrolled < capacity;
+  const isWaitlistOpen = numStudentsWaitlisted < waitlistCapacity;
   if (!showModal && enrollmentSuccessful) {
     // redirect to the section page if the user was successfully enrolled in the section
-    return <Navigate to="/" />;
+    return <Redirect to="/" />;
   }
 
   // set of all distinct locations
-  const spacetimeLocationSet = new Set<string | undefined>();
+  const spacetimeLocationSet = new Set();
   for (const spacetime of spacetimes) {
     spacetimeLocationSet.add(spacetime.location);
   }
   // remove the first location because it'll always be displayed
   spacetimeLocationSet.delete(spacetimes[0].location);
 
+  let footerButton = null;
+  if (userIsCoordinator) {
+    footerButton = (
+      <Link to={`/sections/${id}`} className="csm-btn section-card-footer">
+        MANAGE
+      </Link>
+    );
+  } else if (isWaitlistOpen && !isOpen) {
+    footerButton = (
+      <div
+        className={`csm-btn csm-btn-waitlist section-card-footer ${courseOpen ? "" : "disabled"}`}
+        onClick={isOpen ? enroll : undefined}
+      >
+        ENROLL WAITLIST
+      </div>
+    );
+  } else {
+    footerButton = (
+      <div
+        className={`csm-btn section-card-footer ${courseOpen ? "" : "disabled"}`}
+        onClick={isOpen ? enroll : undefined}
+      >
+        ENROLL
+      </div>
+    );
+  }
+
   return (
     <React.Fragment>
       {showModal && <Modal closeModal={closeModal}>{modalContents().props.children}</Modal>}
-      <section className={`section-card ${isFull ? "full" : ""}`}>
+      <section className={`section-card ${isOpen || isWaitlistOpen ? "" : "full"}`}>
         <div className="section-card-contents">
           {description && <span className="section-card-description">{description}</span>}
           <p title="Location">
@@ -169,22 +208,16 @@ export const SectionCard = ({
           <p title="Mentor">
             <UserIcon width={iconWidth} height={iconHeight} /> {mentor.name}
           </p>
-          <p title="Current enrollment">
-            <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}
-          </p>
-        </div>
-        {userIsCoordinator ? (
-          <Link to={`/sections/${id}`} className="csm-btn section-card-footer">
-            MANAGE
-          </Link>
-        ) : (
-          <div
-            className={`csm-btn section-card-footer ${courseOpen ? "" : "disabled"}`}
-            onClick={isFull ? undefined : enroll}
-          >
-            ENROLL
+          <div className="registration-container">
+            <p title="Current enrollment">
+              <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}
+            </p>
+            <p title="Current waitlist">
+              <WaitListIcon width={iconWidth} height={iconHeight} /> {`${numStudentsWaitlisted}/${waitlistCapacity}`}
+            </p>
           </div>
-        )}
+        </div>
+        {footerButton}
       </section>
     </React.Fragment>
   );

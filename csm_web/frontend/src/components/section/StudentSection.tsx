@@ -92,7 +92,14 @@ function StudentSectionInfo({ mentor, spacetimes, override, associatedProfileId 
             override={override}
           />
         ))}
-        <DropSection profileId={associatedProfileId} />
+      </div>
+      <div className="registration-container">
+        <p title="Waitlist Position">
+          <WaitlistPosition profileId={associatedProfileId} />
+        </p>
+        <p title="Drop Section">
+          <DropSection profileId={associatedProfileId} />
+        </p>
       </div>
     </React.Fragment>
   );
@@ -143,6 +150,55 @@ function DropSection({ profileId }: DropSectionProps) {
       );
     case DropSectionStage.DROPPED:
       return <Navigate to="/" />;
+  }
+}
+
+interface WaitlistPositionProps {
+  profileId: number;
+}
+interface WaitlistPositionState {
+  stage: string;
+}
+
+class WaitlistPosition extends React.Component<WaitlistPositionProps, WaitlistPositionState> {
+  static STAGES = Object.freeze({ INITIAL: "INITIAL", CONFIRM: "CONFIRM", DROPPED: "DROPPED" });
+
+  constructor(props: DropSectionProps) {
+    super(props);
+    this.state = { stage: WaitlistPosition.STAGES.INITIAL };
+    this.performDrop = this.performDrop.bind(this);
+  }
+
+  performDrop() {
+    //TODO: Handle API failure
+    fetchWithMethod(`students/${this.props.profileId}/drop`, HTTP_METHODS.PATCH).then(() =>
+      this.setState({ stage: WaitlistPosition.STAGES.DROPPED })
+    );
+  }
+
+  render() {
+    switch (this.state.stage) {
+      case WaitlistPosition.STAGES.INITIAL:
+        return (
+          <InfoCard title="Drop Section" showTitle={false}>
+            <h5>Waitlist Position</h5>
+            <button className="warning-btn" onClick={() => this.setState({ stage: DropSection.STAGES.CONFIRM })}>
+              <XIcon height="1.3em" width="1.3em" />
+              Drop
+            </button>
+          </InfoCard>
+        );
+      case WaitlistPosition.STAGES.CONFIRM:
+        return (
+          <Modal className="drop-confirmation" closeModal={() => this.setState({ stage: DropSection.STAGES.INITIAL })}>
+            <h5>Are you sure you want to drop your position in the waitlist?</h5>
+            <p>You are not guaranteed an available spot in another section!</p>
+            <button className="-btn" onClick={this.performDrop}>
+              Confirm
+            </button>
+          </Modal>
+        );
+    }
   }
 }
 

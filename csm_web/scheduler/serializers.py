@@ -395,4 +395,13 @@ class MatcherSlotSerializer(serializers.ModelSerializer):
 class MatcherPreferenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = MatcherPreference
+<<<<<<< HEAD
+        fields = ['slot', 'mentor', 'preference']
+
+class WaitlistPositionSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = WaitlistPosition
+        fields = ['section', 'student', 'join_time']
+=======
         fields = ["slot", "mentor", "preference"]
+>>>>>>> master

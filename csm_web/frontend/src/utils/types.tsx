@@ -23,21 +23,6 @@ export interface Profile {
   sectionSpacetimes: Array<Spacetime>;
 }
 
-export interface UserInfo {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  priorityEnrollment?: Date;
-}
-
-/**
- * Raw type from the query response.
- */
-export type RawUserInfo = Omit<UserInfo, "priorityEnrollment"> & {
-  priorityEnrollment?: string;
-};
-
 export interface Section {
   id: number;
   spacetimes: Spacetime[];
@@ -49,7 +34,8 @@ export interface Section {
   course: string;
   userRole: string;
   courseTitle: string;
-  courseRestricted: boolean;
+  numStudentsWaitlisted: number;
+  waitlistCapacity: number;
 }
 
 export interface Mentor {
@@ -65,8 +51,6 @@ export interface Course {
   enrollmentStart: string;
   enrollmentOpen: boolean;
   userCanEnroll: boolean;
-  isRestricted: boolean;
-  wordOfTheDayLimit: string;
 }
 
 export interface Student {
@@ -80,21 +64,4 @@ export interface Attendance {
   date: string;
   student: Student;
   presence: string;
-  occurrenceId: number;
-  wordOfTheDayDeadline: string;
-}
-
-export interface RawAttendance {
-  id: number;
-  date: string;
-  section: Section;
-  attendances: Array<{
-    id: number;
-    date: string;
-    presence: string;
-    studentName: string;
-    studentId: number;
-    studentEmail: string;
-    wordOfTheDayDeadline: string;
-  }>;
 }

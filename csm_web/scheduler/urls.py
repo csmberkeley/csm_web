@@ -23,4 +23,8 @@ urlpatterns += [
     path("matcher/<int:pk>/mentors/", views.matcher.mentors),
     path("matcher/<int:pk>/configure/", views.matcher.configure),
     path("matcher/<int:pk>/create/", views.matcher.create),
+    path("sections/<int:pk>/waitlist/get/", views.sectionapiveiew.get),
+    path("sections/<int:pk>/waitlist/drop/", views.sectionapiveiew.drop),
+    path("sections/<int:pk>/waitlist/add/", views.sectionapiveiew.add),
+    path("sections/<int:pk>/waitlist/edit/", views.sectionapiveiew.edit)
 ]

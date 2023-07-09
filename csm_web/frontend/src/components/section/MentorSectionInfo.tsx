@@ -1,15 +1,15 @@
-import React, { useState } from "react";
-import { useSectionStudents } from "../../utils/queries/sections";
+import React, { useEffect, useState } from "react";
+import { fetchJSON } from "../../utils/api";
 import { Mentor, Spacetime, Student } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
-import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
-import MetaEditModal from "./MetaEditModal";
 import { InfoCard, SectionSpacetime } from "./Section";
+import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
 
 import XIcon from "../../../static/frontend/img/x.svg";
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
+import MetaEditModal from "./MetaEditModal";
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 
 enum ModalStates {
@@ -20,37 +20,48 @@ enum ModalStates {
 }
 
 interface MentorSectionInfoProps {
+  students: Student[];
+  loaded: boolean;
   spacetimes: Spacetime[];
+  reloadSection: () => void;
   isCoordinator: boolean;
   mentor: Mentor;
   capacity: number;
   description: string;
   id: number;
-  courseRestricted: boolean;
+  waitlistedStudents: Student[];
 }
 
 export default function MentorSectionInfo({
+  students,
+  loaded,
   spacetimes,
+  reloadSection,
   isCoordinator,
   mentor,
   capacity,
-  id: sectionId,
+  id,
   description,
-  courseRestricted
+  waitlistedStudents
 }: MentorSectionInfoProps) {
-  const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(sectionId);
-
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
+  const [userEmails, setUserEmails] = useState<string[]>([]);
   const [isAddingStudent, setIsAddingStudent] = useState<boolean>(false);
   const [deleteType, setDeleteType] = useState<boolean>(false);
-
+  useEffect(() => {
+    if (!isCoordinator) {
+      return;
+    }
+    fetchJSON("/users/").then(userEmails => setUserEmails(userEmails));
+  }, [id, isCoordinator]);
   const closeModal = () => setShowModal(ModalStates.NONE);
-
-  const closeAddModal = () => {
+  const closeAddModal = (reload = false) => {
     setIsAddingStudent(false);
+    if (reload) {
+      reloadSection();
+    }
   };
-
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">{`${
@@ -58,8 +69,7 @@ export default function MentorSectionInfo({
       } Section`}</h3>
       <div className="section-info-cards-container">
         <InfoCard title="Students">
-          {studentsLoaded ? (
-            // done loading
+          {loaded && (
             <React.Fragment>
               <table id="students-table">
                 <thead>
@@ -69,16 +79,11 @@ export default function MentorSectionInfo({
                 </thead>
                 <tbody>
                   {(students.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students).map(
-                    ({ name, email, id: studentId }: Student) => (
-                      <tr key={studentId}>
+                    ({ name, email, id }: Student) => (
+                      <tr key={id}>
                         <td>
-                          {isCoordinator && studentId !== -1 && (
-                            <StudentDropper
-                              name={name ? name : email}
-                              id={studentId}
-                              sectionId={sectionId}
-                              courseRestricted={courseRestricted}
-                            />
+                          {isCoordinator && id !== -1 && (
+                            <StudentDropper name={name ? name : email} id={id} reloadSection={reloadSection} />
                           )}
                           <span className="student-info">{name || email}</span>
                         </td>
@@ -99,17 +104,55 @@ export default function MentorSectionInfo({
                 </tbody>
               </table>
               {isCoordinator && isAddingStudent && (
-                <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} />
+                <CoordinatorAddStudentModal closeModal={closeAddModal} userEmails={userEmails} sectionId={id} />
               )}
             </React.Fragment>
-          ) : studentsLoadError ? (
-            // error loading
-            <h3>Students could not be loaded</h3>
-          ) : (
-            // not done loading
-            <LoadingSpinner className="spinner-centered" />
           )}
+          {!loaded && <LoadingSpinner />}
         </InfoCard>
+        <InfoCard title="Waitlisted Students">
+          {loaded && (
+            <React.Fragment>
+              <table id="students-table">
+                <thead>
+                  <tr>
+                    <th>Name</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {(students.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students).map(
+                    ({ name, email, id }: Student) => (
+                      <tr key={id}>
+                        <td>
+                          {isCoordinator && id !== -1 && (
+                            <StudentDropper name={name ? name : email} id={id} reloadSection={reloadSection} />
+                          )}
+                          <span className="student-info">{name || email}</span>
+                        </td>
+                      </tr>
+                    )
+                  )}
+                  {isCoordinator && (
+                    <React.Fragment>
+                      <tr>
+                        <td>
+                          <button className="coordinator-email-modal-button" onClick={() => setIsAddingStudent(true)}>
+                            Add students
+                          </button>
+                        </td>
+                      </tr>
+                    </React.Fragment>
+                  )}
+                </tbody>
+              </table>
+              {isCoordinator && isAddingStudent && (
+                <CoordinatorAddStudentModal closeModal={closeAddModal} userEmails={userEmails} sectionId={id} />
+              )}
+            </React.Fragment>
+          )}
+          {!loaded && <LoadingSpinner />}
+        </InfoCard>
+        s
         <div className="section-info-cards-right">
           {spacetimes.map(({ override, ...spacetime }, index) => (
             <SectionSpacetime
@@ -122,7 +165,7 @@ export default function MentorSectionInfo({
               {showModal === ModalStates.SPACETIME_EDIT && focusedSpacetimeID === spacetime.id && (
                 <SpacetimeEditModal
                   key={spacetime.id}
-                  sectionId={sectionId}
+                  reloadSection={reloadSection}
                   defaultSpacetime={spacetime}
                   closeModal={closeModal}
                   editingOverride={deleteType}
@@ -130,9 +173,9 @@ export default function MentorSectionInfo({
               )}
               {showModal === ModalStates.SPACETIME_DELETE && focusedSpacetimeID === spacetime.id && (
                 <SpacetimeDeleteModal
-                  sectionId={sectionId}
                   spacetimeId={spacetime.id}
                   closeModal={closeModal}
+                  reloadSection={reloadSection}
                   overrideDelete={deleteType}
                 />
               )}
@@ -193,8 +236,9 @@ export default function MentorSectionInfo({
                 </button>
                 {showModal === ModalStates.META_EDIT && (
                   <MetaEditModal
-                    sectionId={sectionId}
+                    sectionId={id}
                     closeModal={closeModal}
+                    reloadSection={reloadSection}
                     capacity={capacity}
                     description={description}
                   />
