@@ -1,38 +1,27 @@
-import pytest
-from freezegun import freeze_time
-from unittest import mock
-import factory
-import faker
 import datetime
 
-from django.utils import timezone
+import pytest
 from django.urls import reverse
-from scheduler.models import (
-    User,
-    Course,
-    Section,
-    Mentor,
-    Student,
-    Attendance,
-    SectionOccurrence,
-)
+from django.utils import timezone
+from freezegun import freeze_time
 from scheduler.factories import (
-    UserFactory,
     CourseFactory,
-    SectionFactory,
     MentorFactory,
-    StudentFactory,
-    AttendanceFactory,
+    SectionFactory,
     SpacetimeFactory,
+    UserFactory,
 )
+from scheduler.models import Attendance, SectionOccurrence, Student
 
-import zoneinfo
-
-DEFAULT_TZ = zoneinfo.ZoneInfo(timezone.get_default_timezone().zone)
+DEFAULT_TZ = timezone.get_default_timezone()
 
 
-@pytest.fixture
-def setup_section(db):
+# avoid pylint warning redefining name in outer scope
+@pytest.fixture(name="setup_section")
+def fixture_setup_section(db):  # pylint: disable=unused-argument
+    """
+    Set up a mentor, student, and section for attendance testing
+    """
     mentor_user = UserFactory(
         username="mentor_user", first_name="mentor", last_name="user"
     )
@@ -115,7 +104,11 @@ def setup_section(db):
 def test_attendance_add_student_on_day(
     client, setup_section, day, num_attendances_added
 ):
-    mentor, student_user, course, section = setup_section
+    """
+    Check various section occurrence and attendance objects are created
+    when a student is added on a given day.
+    """
+    _, student_user, _, section = setup_section
     with freeze_time(day):
         client.force_login(student_user)
         enroll_url = reverse("section-students", kwargs={"pk": section.pk})
@@ -181,7 +174,11 @@ def test_attendance_add_student_on_day(
 def test_attendance_drop_student_on_day(
     client, setup_section, day, num_attendances_left
 ):
-    mentor, student_user, course, section = setup_section
+    """
+    Check that future attendances are deleted when a student is dropped,
+    and verify that past section occurrences and attendances are unchanged.
+    """
+    _, student_user, _, section = setup_section
 
     # enroll student first
     with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):

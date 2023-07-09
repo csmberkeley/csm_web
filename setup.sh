@@ -2,21 +2,57 @@
 # Sets up environment variables and such, assuming requirements already installed.
 # Kevin Svetlitski, rev. Jonathan Shi
 
+# check directory
 { [ ! -d 'csm_web' ] || [ ! -f 'package.json' ]; } && echo 'You are in the wrong directory!' 1>&2 && exit 1
-[ -z "$VIRTUAL_ENV" ] && echo 'You must activate your virtualenv first!' 1>&2 && exit 1
-if ! ( command -v npm && command -v pip3 && command -v psql ) >/dev/null
+# should not have virtual environment enabled
+[ -n "$VIRTUAL_ENV" ] && echo 'You must not be in a vritual environment!' 1>&2 && exit 1
+
+# check all required dependencies are installed
+if ! ( command -v npm ) > /dev/null
 then
-	echo 'You must install npm, python3, pip, and postgres before running this script!' 1>&2
-	exit 1
+    echo 'You must install npm before running this script! (It is recommended to use nvm to manage npm versions; see https://github.com/nvm-sh/nvm#installing-and-updating)' 1>&2
+    exit 1
+elif ! ( command -v python3 && command -v pip3 ) > /dev/null
+then
+    echo 'You must have python3 and pip3 installed before running this script! (It is recommended to use pyenv to manage python versions; see https://github.com/pyenv/pyenv#installation)' 1>&2
+    exit 1
+elif ! ( command -v poetry ) > /dev/null
+then
+    echo 'You must have poetry installed before running this script! (See https://python-poetry.org/docs/#installation)' 1>&2
+    exit 1
+elif ! ( command -v psql ) > /dev/null
+then
+    echo 'You must have postgres installed before running this script! (See https://www.postgresql.org/download)' 1>&2
+    exit 1
+elif ! (command -v docker) > /dev/null
+then
+    echo 'You must have docker installed before running this script! (See https://www.docker.com)' 1>&2
+    exit 1
+elif [[ "$(docker info 2>&1)" =~ "Cannot connect to the Docker daemon" ]]
+then
+    echo "The docker daemon must be running; make sure you've started Docker Desktop, or manually through the terminal." 1>&2
+    exit 1
 fi
 
-echo 'Beginning setup, this may take a minute or so...'
-sleep 1 # Give user time to read above message 
+# check python version
+EXPECTED_PYTHON_VERSION=$(sed 's/[^0-9.]//g' runtime.txt)
+ACTUAL_PYTHON_VERSION=$(python3 --version | sed 's/[^0-9.]//g')
+if [[ "$EXPECTED_PYTHON_VERSION" != "$ACTUAL_PYTHON_VERSION" ]]
+then
+    echo "Expected python version $EXPECTED_PYTHON_VERSION, got $ACTUAL_PYTHON_VERSION; make sure you have the right python version installed." 1>&2
+    echo "It is recommended to use pyenv to manage python versions; see https://github.com/pyenv/pyenv#installation. make sure you've created the virtual environment with the correct python version."
+    exit 1
+fi
+
+echo 'Beginning setup, this may take a while...'
+sleep 1 # Give user time to read above message
 
 # Node and Python requirements
-npm i
+npm ci
 # The LDFLAGS are specified so that heroku's implicit psycopg2 (*not* binary) dependency will build successfully on macOS
-LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib" pip3 install --no-cache-dir -r requirements.txt
+LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib" poetry install --no-root --with=dev
+# Activate virtual environment (only local to this script)
+source $(poetry env info --path)/bin/activate
 
 # Set up environment variables
 echo "Setting up environment variables..."
@@ -30,19 +66,6 @@ echo "Generating Django secret key..."
 export SECRET_KEY='temp'  # set temporary secret key
 export SECRET_KEY=$(python3 csm_web/manage.py shell -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
 echo "SECRET_KEY='$SECRET_KEY'" >> .env
-
-# Must be pulled from Heroku (but not critical to running tests etc.)
-if ! command -v heroku 1>/dev/null
-then
-	echo "Did not find Heroku CLI installation. OAUTH keys have not been set, so you will be unable to log in with your email."
-elif heroku whoami 1>/dev/null
-then
-	echo "Attempting to set OAUTH keys from Heroku config..."
-	heroku config:get SOCIAL_AUTH_GOOGLE_OAUTH2_KEY -s >> .env
-	heroku config:get SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET -s >> .env
-else
-	echo "You are not logged into the Heroku CLI. OAUTH keys have not been set, so you will be unable to log in with your email."
-fi
 
 # Pull AWS S3 credentials
 if ! command -v aws 1>/dev/null
@@ -67,38 +90,17 @@ pwd > "$VIRTUAL_ENV/.project_dir"
 # Add env variables to virutalenv activate script so that not everything needs to be run with 'heroku local'
 echo 'set -a; source $(cat $VIRTUAL_ENV/.project_dir)/.env; set +a' >> "$VIRTUAL_ENV/bin/activate"
 
-# Setup postgres DB if needed
-if ! psql -lt | grep -q '^ *csm_web_dev *'
-then
-	createdb csm_web_dev
-	psql csm_web_dev -c 'CREATE ROLE postgres LOGIN SUPERUSER;'
-fi
-
-# Utility function for running the dev server
-echo '
-function run() {
-	start_dir=$(pwd)
-	project_dir=$(cat "$VIRTUAL_ENV/.project_dir")
-	trap "pkill -P $$ heroku npm python; stty sane; cd $startdir; return" SIGINT
-	cd "$project_dir" && npm run dev && python csm_web/manage.py runserver
-	cd "$start_dir"
-}' >> "$VIRTUAL_ENV/bin/activate"
-
-# Initialize for local development
-npm run dev
-source .env # need the relevant env variables for django, but can't count on the Heroku CLI being installed
-python csm_web/manage.py migrate
-python csm_web/manage.py createtestdata --yes 
-
 echo "Installing pre-commit hook..."
-ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
+#ln -s -f ../../.pre-commit.sh .git/hooks/pre-commit
+pre-commit install
 
-target_version=$(sed 's/[^0-9.]//g' runtime.txt)
-installed_version=$(python3 --version | sed 's/[^0-9.]//g')
-if [ "$target_version" != "$installed_version" ]
-then
-   echo "You have python version $installed_version installed, but the expected version is $target_version.
-This may cause problems."
-fi
+# Setup environment variables
+set +a; source .env; set -a
 
-echo "Done installing. Please reactivate your virtualenv before running any more commands."
+# Build docker containers
+docker compose build
+docker compose up -d
+
+echo
+echo "Done installing."
+echo "Please activate the virtual environment before running other commands."

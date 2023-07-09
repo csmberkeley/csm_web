@@ -38,11 +38,14 @@ Cypress.Commands.add(
   "setupDB",
   (script_path: string, func_name: string, options: SetupDBOptions = { force: false, mutate: false }) => {
     // validate arguments
-    expect(script_path.match(/[a-zA-Z0-9_\/\.\-]/)).to.not.be.null;
+    expect(script_path.match(/[a-zA-Z0-9_/.-]/)).to.not.be.null;
     expect(func_name.match(/[a-zA-Z0-9_]/)).to.not.be.null;
 
+    // insert prefix in case of docker container; default to empty
+    const prefix = Cypress.env("DOCKER_PREFIX") ?? "";
+
     // run setup script
-    let command = `python3 cypress/db/_setup.py "${script_path}" "${func_name}"`;
+    let command = `${prefix} python3 cypress/db/_setup.py "${script_path}" "${func_name}"`;
     if (options.force) {
       command += " --force";
     }
@@ -57,7 +60,9 @@ Cypress.Commands.add(
  * Initialize the Django database and cache
  */
 Cypress.Commands.add("initDB", () => {
-  cy._exec("python3 cypress/db/_setup.py --init");
+  // insert prefix in case of docker container; default to empty
+  const prefix = Cypress.env("DOCKER_PREFIX") ?? "";
+  cy._exec(`${prefix} python3 cypress/db/_setup.py --init`);
 });
 
 /**
@@ -71,4 +76,15 @@ Cypress.Commands.add("_exec", command => {
       );
     }
   });
+});
+
+/**
+ * Chained click until a condition is satisfied;
+ * doesn't use the Cypress .click(), and instead uses the jQuery .trigger("click").
+ *
+ * Should guard this with a visibility check to ensure that the element is actually clickable.
+ */
+Cypress.Commands.add("clickUntil", { prevSubject: true }, (subject: JQuery<HTMLElement>, condition) => {
+  const click = ($el: JQuery<HTMLElement>) => $el.trigger("click");
+  return cy.wrap(subject).pipe(click).should(condition);
 });

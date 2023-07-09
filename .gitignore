@@ -83,6 +83,9 @@ ipython_config.py
 # pyenv
 .python-version
 
+# asdf
+.tool-versions
+
 # celery beat schedule file
 celerybeat-schedule
 

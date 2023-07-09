@@ -1,29 +1,27 @@
-import pytest
-from freezegun import freeze_time
 import datetime
 
-from django.db.models import Q
-from django.utils import timezone
+import pytest
 from django.urls import reverse
-from scheduler.models import (
-    Override,
-)
+from django.utils import timezone
+from freezegun import freeze_time
 from scheduler.factories import (
-    UserFactory,
-    CourseFactory,
-    SectionFactory,
-    MentorFactory,
     CoordinatorFactory,
+    CourseFactory,
+    MentorFactory,
+    SectionFactory,
     SpacetimeFactory,
+    UserFactory,
 )
 
-import zoneinfo
-
-DEFAULT_TZ = zoneinfo.ZoneInfo(timezone.get_default_timezone().zone)
+DEFAULT_TZ = timezone.get_default_timezone()
 
 
-@pytest.fixture
-def setup_section(db):
+# avoid pylint warning redefining name in outer scope
+@pytest.fixture(name="setup_section")
+def fixture_setup_section(db):  # pylint: disable=unused-argument
+    """
+    Set up a mentor, coordinator, and section for spacetime testing
+    """
     mentor_user = UserFactory(
         username="mentor_user", first_name="mentor", last_name="user"
     )
@@ -142,6 +140,9 @@ def setup_section(db):
     ],
 )
 def test_delete_spacetime(client, setup_section, day, spacetime_index):
+    """
+    On deletion of spacetimes, ensure that future section occurrences are deleted.
+    """
     section, _, coord, spacetimes = setup_section
 
     with freeze_time(day):
@@ -154,10 +155,14 @@ def test_delete_spacetime(client, setup_section, day, spacetime_index):
         assert section.spacetimes.filter(pk=spacetime.pk).count() == 0
 
         # make sure future section occurrences have been deleted
-        # FIX ME: Once issue #303 is resolved, this should search through the directly related section occurences
-        assert section.sectionoccurrence_set.filter(
-            date__gte=day, date__week_day=spacetime.day_number()
-        ).count() == 0
+        # FIX ME: Once issue #303 is resolved, this should search
+        #     through the directly related section occurences
+        assert (
+            section.sectionoccurrence_set.filter(
+                date__gte=day, date__week_day=spacetime.day_number()
+            ).count()
+            == 0
+        )
 
 
 @pytest.mark.django_db
@@ -165,34 +170,61 @@ def test_delete_spacetime(client, setup_section, day, spacetime_index):
     ["day", "override_date", "spacetime_index"],
     [
         # on prior thursday, move tuesday section to following wednesday
-        (timezone.datetime(2020, 5, 21, 0, 0, 0, tzinfo=DEFAULT_TZ),
-         timezone.datetime(2020, 5, 27, 9, 0, 0, tzinfo=DEFAULT_TZ), 0),
+        (
+            timezone.datetime(2020, 5, 21, 0, 0, 0, tzinfo=DEFAULT_TZ),
+            timezone.datetime(2020, 5, 27, 9, 0, 0, tzinfo=DEFAULT_TZ),
+            0,
+        ),
         # on prior monday, change tuesday section location
-        (timezone.datetime(2020, 5, 25, 9, 0, 0, tzinfo=DEFAULT_TZ),
-         timezone.datetime(2020, 5, 26, 10, 0, 0, tzinfo=DEFAULT_TZ), 0),
+        (
+            timezone.datetime(2020, 5, 25, 9, 0, 0, tzinfo=DEFAULT_TZ),
+            timezone.datetime(2020, 5, 26, 10, 0, 0, tzinfo=DEFAULT_TZ),
+            0,
+        ),
         # on tuesday an hour before scheduled section, push tuesday section an hour later
-        (timezone.datetime(2020, 5, 26, 9, 0, 0, tzinfo=DEFAULT_TZ),
-         timezone.datetime(2020, 5, 26, 11, 0, 0, tzinfo=DEFAULT_TZ), 0),
+        (
+            timezone.datetime(2020, 5, 26, 9, 0, 0, tzinfo=DEFAULT_TZ),
+            timezone.datetime(2020, 5, 26, 11, 0, 0, tzinfo=DEFAULT_TZ),
+            0,
+        ),
         # on tuesday an hour after scheduled section, correct tuesday section to prior monday
-        (timezone.datetime(2020, 5, 26, 11, 0, 0, tzinfo=DEFAULT_TZ),
-         timezone.datetime(2020, 5, 25, 10, 0, 0, tzinfo=DEFAULT_TZ), 0),
+        (
+            timezone.datetime(2020, 5, 26, 11, 0, 0, tzinfo=DEFAULT_TZ),
+            timezone.datetime(2020, 5, 25, 10, 0, 0, tzinfo=DEFAULT_TZ),
+            0,
+        ),
         # on prior monday, move thursday section to prior wednesday
-        (timezone.datetime(2020, 5, 25, 9, 0, 0, tzinfo=DEFAULT_TZ),
-         timezone.datetime(2020, 5, 27, 10, 0, 0, tzinfo=DEFAULT_TZ), 1),
+        (
+            timezone.datetime(2020, 5, 25, 9, 0, 0, tzinfo=DEFAULT_TZ),
+            timezone.datetime(2020, 5, 27, 10, 0, 0, tzinfo=DEFAULT_TZ),
+            1,
+        ),
         # on prior wednesday, move thursday section to current time
-        (timezone.datetime(2020, 5, 27, 9, 0, 0, tzinfo=DEFAULT_TZ),
-         timezone.datetime(2020, 5, 27, 9, 0, 0, tzinfo=DEFAULT_TZ), 1),
+        (
+            timezone.datetime(2020, 5, 27, 9, 0, 0, tzinfo=DEFAULT_TZ),
+            timezone.datetime(2020, 5, 27, 9, 0, 0, tzinfo=DEFAULT_TZ),
+            1,
+        ),
     ],
     ids=[
         "on prior thursday, move tuesday section to following wednesday",
         "on prior monday, change tuesday section location",
-        "on tuesday an hour before scheduled section, push tuesday section an hour later",
-        "on tuesday an hour after scheduled section, correct tuesday section to prior monday",
+        (
+            "on tuesday an hour before scheduled section, push tuesday section an hour"
+            " later"
+        ),
+        (
+            "on tuesday an hour after scheduled section, correct tuesday section to"
+            " prior monday"
+        ),
         "on prior monday, move thursday section to prior wednesday",
         "on prior wednesday, move thursday section to current time",
     ],
 )
 def test_delete_override(client, setup_section, day, override_date, spacetime_index):
+    """
+    Ensure that spacetime overrides can be deleted.
+    """
     _, mentor, coord, spacetimes = setup_section
 
     with freeze_time(day):
@@ -200,11 +232,15 @@ def test_delete_override(client, setup_section, day, override_date, spacetime_in
         spacetime = spacetimes[spacetime_index]
         override_url = reverse("spacetime-override", kwargs={"pk": spacetime.pk})
 
-        response = client.put(override_url, content_type="application/json", data={
-            "location": "location",
-            "start_time": override_date.timetz(),
-            "date": override_date.date(),
-        })
+        client.put(
+            override_url,
+            content_type="application/json",
+            data={
+                "location": "location",
+                "start_time": override_date.timetz(),
+                "date": override_date.date(),
+            },
+        )
 
         # refresh spacetime object
         spacetime.refresh_from_db()

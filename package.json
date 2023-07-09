@@ -10,8 +10,8 @@
     "build": "npm run build:js && npm run build:css",
     "watch": "webpack --mode development --watch",
     "test": "jest",
-    "cypress:open": "cypress open",
-    "cypress:run": "cypress run --e2e --record=false --config video=false,screenshotOnRunFailure=false"
+    "cypress:open": "cypress open --env DOCKER_PREFIX='docker compose exec django'",
+    "cypress:run": "cypress run --e2e --record=false --env DOCKER_PREFIX='docker compose exec django' --config video=false,screenshotOnRunFailure=false"
   },
   "heroku-run-build-script": true,
   "repository": {
@@ -38,11 +38,11 @@
     "@testing-library/react": "^13.4.0",
     "@types/js-cookie": "^3.0.2",
     "@types/lodash": "^4.14.175",
+    "@types/random-words": "^1.1.2",
     "@types/react-router-dom": "^5.3.3",
     "@typescript-eslint/eslint-plugin": "^5.43.0",
     "@typescript-eslint/parser": "^5.43.0",
     "babel-jest": "^28.1.1",
-    "@types/random-words": "^1.1.2",
     "babel-loader": "^8.2.2",
     "babel-plugin-dynamic-import-node": "^2.3.3",
     "babel-plugin-lodash": "^3.3.4",
@@ -51,6 +51,7 @@
     "css-loader": "^6.2.0",
     "csso-cli": "^3.0.0",
     "cypress": "^12.2.0",
+    "cypress-pipe": "^2.0.0",
     "eslint": "^8.27.0",
     "eslint-config-prettier": "^7.2.0",
     "eslint-plugin-cypress": "^2.12.1",
@@ -63,7 +64,7 @@
     "random-words": "^1.1.2",
     "style-loader": "^3.2.1",
     "typescript": "^4.8.4",
-    "webpack": "^5.73.0",
+    "webpack": "^5.76.0",
     "webpack-cli": "^4.10.0"
   },
   "dependencies": {

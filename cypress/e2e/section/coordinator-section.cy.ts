@@ -182,7 +182,9 @@ describe("modifying students", () => {
             cy.get("input[type='checkbox'][value='DROP']").should("have.length", 1).should("be.disabled");
 
             // remove email
-            cy.get("span.inline-plus-sign").click().should("not.exist");
+            cy.get("span.inline-plus-sign").clickUntil($el => {
+              expect($el).to.not.exist;
+            });
           });
           // should disappear after click
           cy.contains(".coordinator-email-response-item", USERNAME).should("not.exist");
@@ -211,36 +213,36 @@ describe("modifying students", () => {
       cy.wait("@section-students");
       cy.get(".coordinator-email-modal-button").click();
 
-      cy.get(".coordinator-add-student-modal")
-        .within(() => {
-          cy.get(".coordinator-email-input").type(USERNAME);
-          cy.get(".coordinator-email-input-submit").click();
+      cy.get(".coordinator-add-student-modal").within(() => {
+        cy.get(".coordinator-email-input").type(USERNAME);
+        cy.get(".coordinator-email-input-submit").click();
 
-          // wait for request; should fail
-          cy.wait("@add-student").its("response.statusCode").should("eq", 422);
+        // wait for request; should fail
+        cy.wait("@add-student").its("response.statusCode").should("eq", 422);
 
-          cy.contains(".coordinator-email-response-container", /section conflict/i).within(() => {
-            // should display section conflict
-            cy.contains(".coordinator-email-response-status-conflict", /section conflict/i).should("be.visible");
+        cy.contains(".coordinator-email-response-container", /section conflict/i).within(() => {
+          // should display section conflict
+          cy.contains(".coordinator-email-response-status-conflict", /section conflict/i).should("be.visible");
 
-            cy.contains(".coordinator-email-response-item", USERNAME).within(() => {
-              // check text objects
-              cy.contains("span", USERNAME).should("be.visible");
-              cy.contains("div", /conflict: user one/i)
-                .should("be.visible")
-                .find("a")
-                .invoke("attr", "href")
-                .should("eq", "/sections/2");
+          cy.contains(".coordinator-email-response-item", USERNAME).within(() => {
+            // check text objects
+            cy.contains("span", USERNAME).should("be.visible");
+            cy.contains("div", /conflict: user one/i)
+              .should("be.visible")
+              .find("a")
+              .invoke("attr", "href")
+              .should("eq", "/sections/2");
 
-              // drop student from other section
-              cy.get("input[type='checkbox'][value='DROP']").should("have.length", 1).should("not.be.disabled").click();
-            });
+            // drop student from other section
+            cy.get("input[type='checkbox'][value='DROP']").should("have.length", 1).should("not.be.disabled").click();
           });
+        });
 
-          cy.contains(".coordinator-email-input-submit", /retry/i).click();
-          cy.wait("@add-student").its("response.statusCode").should("eq", 200);
-        })
-        .should("not.exist"); // should disappear after click
+        cy.contains(".coordinator-email-input-submit", /retry/i).click();
+        cy.wait("@add-student").its("response.statusCode").should("eq", 200);
+      });
+      // should disappear after click
+      cy.get(".coordinator-add-student-modal").should("not.exist");
 
       cy.wait("@section-students");
 
@@ -386,7 +388,9 @@ describe("modifying students", () => {
             cy.get("input[type='checkbox'][value='DROP']").should("have.length", 1).should("be.disabled");
 
             // remove email
-            cy.get("span.inline-plus-sign").click().should("not.exist");
+            cy.get("span.inline-plus-sign").clickUntil($el => {
+              expect($el).to.not.exist;
+            });
           });
 
           // mentor for another section

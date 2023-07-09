@@ -1,7 +1,27 @@
-from rest_framework import serializers
 from enum import Enum
+
 from django.utils import timezone
-from .models import Attendance, Course, Link, SectionOccurrence, User, Student, Section, Mentor, Override, Spacetime, Coordinator, DayOfWeekField, Resource, Worksheet, Matcher, MatcherSlot, MatcherPreference, WaitlistPosition
+from rest_framework import serializers
+
+from .models import (
+    Attendance,
+    Coordinator,
+    Course,
+    DayOfWeekField,
+    Link,
+    Matcher,
+    MatcherPreference,
+    MatcherSlot,
+    Mentor,
+    Override,
+    Resource,
+    Section,
+    SectionOccurrence,
+    Spacetime,
+    Student,
+    User,
+    Worksheet,
+)
 
 
 class Role(Enum):
@@ -11,21 +31,24 @@ class Role(Enum):
 
 
 def get_profile_role(profile):
+    """Return role (enum) depending on the profile type"""
     for role, klass in zip(Role, (Coordinator, Student, Mentor)):
         if isinstance(profile, klass):
             return role.value
+    return None
 
 
 def make_omittable(field_class, omit_key, *args, predicate=None, **kwargs):
     """
     Behaves exactly as if the field were defined directly by calling `field_class(*args, **kwargs)`,
-    except that if `omit_key` is present in the context when the field is serialized and predicate returns True,
-    the value is omitted and `None` is returned instead.
+    except that if `omit_key` is present in the context when the field is serialized and predicate
+    returns True, the value is omitted and `None` is returned instead.
 
     Useful for when you want to leave out one or two fields in one view, while including them in
-    another view, without having to go through the trouble of writing two completely separate serializers.
-    This is a marked improvement over using a `SerializerMethodField` because this approach still allows
-    writing to the field to work without any additional machinery.
+    another view, without having to go through the trouble of writing two completely separate
+    serializers.
+    This is a marked improvement over using a `SerializerMethodField` because this approach
+    still allows writing to the field to work without any additional machinery.
     """
     predicate_provided = predicate is not None
     predicate = predicate or (lambda _: True)
@@ -33,14 +56,23 @@ def make_omittable(field_class, omit_key, *args, predicate=None, **kwargs):
     class OmittableField(field_class):
         def get_attribute(self, instance):
             """
-            This is an important performance optimization that prevents us from hitting the DB for an
-            unconditionally omitted field, as by the time to_representation is called, the DB has already been queried
-            (because `value` has to come from *somewhere*).
+            This is an important performance optimization that prevents us from hitting the DB
+            for an unconditionally omitted field, as by the time to_representation is called,
+            the DB has already been queried (because `value` has to come from *somewhere*).
             """
-            return None if self.context.get(omit_key) and not predicate_provided else super().get_attribute(instance)
+            return (
+                None
+                if self.context.get(omit_key) and not predicate_provided
+                else super().get_attribute(instance)
+            )
 
         def to_representation(self, value):
-            return None if self.context.get(omit_key) and predicate(value) else super().to_representation(value)
+            """Override to return None if key is omitted"""
+            return (
+                None
+                if self.context.get(omit_key) and predicate(value)
+                else super().to_representation(value)
+            )
 
     return OmittableField(*args, **kwargs)
 
@@ -50,8 +82,11 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
     date = serializers.DateField(format="%b. %-d")
 
     def get_spacetime(self, obj):
+        """Retrieve the serialized spacetime object associated with the override"""
         # Gets around cyclic dependency issue
-        return SpacetimeSerializer(obj.spacetime, context={**self.context, 'omit_overrides': True}).data
+        return SpacetimeSerializer(
+            obj.spacetime, context={**self.context, "omit_overrides": True}
+        ).data
 
     class Meta:
         model = Override
@@ -60,20 +95,38 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 
 class SpacetimeSerializer(serializers.ModelSerializer):
-
     time = serializers.SerializerMethodField()
-    location = make_omittable(serializers.CharField, 'omit_spacetime_links',
-                              predicate=lambda location: location.startswith('http'))
-    override = make_omittable(OverrideReadOnlySerializer, 'omit_overrides', read_only=True)
+    location = make_omittable(
+        serializers.CharField,
+        "omit_spacetime_links",
+        predicate=lambda location: location.startswith("http"),
+    )
+    override = make_omittable(
+        OverrideReadOnlySerializer, "omit_overrides", read_only=True
+    )
 
     def get_time(self, obj):
+        """Format the spacetime"""
+        formatted_end_time = obj.end_time.strftime("%-I:%M %p")
         if obj.start_time.strftime("%p") != obj.end_time.strftime("%p"):
-            return f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M %p')}-{obj.end_time.strftime('%-I:%M %p')}"
-        return f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M')}-{obj.end_time.strftime('%-I:%M %p')}"
+            return (
+                f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M %p')}-{formatted_end_time}"
+            )
+        return (
+            f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M')}-{formatted_end_time}"
+        )
 
     class Meta:
         model = Spacetime
-        fields = ("start_time", "day_of_week", "time", "location", "id", "duration", "override")
+        fields = (
+            "start_time",
+            "day_of_week",
+            "time",
+            "location",
+            "id",
+            "duration",
+            "override",
+        )
         read_only_fields = ("time", "id", "override")
 
 
@@ -82,20 +135,34 @@ class CourseSerializer(serializers.ModelSerializer):
     user_can_enroll = serializers.SerializerMethodField()
 
     def get_enrollment_open(self, obj):
-        user = self.context.get('request') and self.context.get('request').user
-        if user and user.priority_enrollment and user.priority_enrollment < obj.enrollment_start:
+        """Compute enrollment open time; takes priority enrollment into account"""
+        user = self.context.get("request") and self.context.get("request").user
+        if (
+            user
+            and user.priority_enrollment
+            and user.priority_enrollment < obj.enrollment_start
+        ):
             now = timezone.now().astimezone(timezone.get_default_timezone())
             return user.priority_enrollment < now < obj.enrollment_end
-        else:
-            return obj.is_open()
+
+        return obj.is_open()
 
     def get_user_can_enroll(self, obj):
-        user = self.context.get('request') and self.context.get('request').user
+        """Determine whether the user can currently enroll in the course"""
+        user = self.context.get("request") and self.context.get("request").user
         return user and user.can_enroll_in_course(obj)
 
     class Meta:
         model = Course
-        fields = ("id", "name", "enrollment_start", "enrollment_open", "user_can_enroll", "is_restricted", "word_of_the_day_limit")
+        fields = (
+            "id",
+            "name",
+            "enrollment_start",
+            "enrollment_open",
+            "user_can_enroll",
+            "is_restricted",
+            "word_of_the_day_limit",
+        )
 
 
 class UserSerializer(serializers.ModelSerializer):
@@ -104,29 +171,36 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ("id", "email", "first_name", "last_name", "priority_enrollment")
 
 
-class ProfileSerializer(serializers.Serializer):
-    class VariableSourceCourseField(serializers.Field):
-        def __init__(self, *args, **kwargs):
-            self.target = kwargs.pop('target')
-            super().__init__(self, *args, **kwargs)
+class ProfileSerializer(serializers.Serializer):  # pylint: disable=abstract-method
+    class VariableSourceCourseField(
+        serializers.Field
+    ):  # pylint: disable=abstract-method
+        def __init__(self, **kwargs):
+            self.target = kwargs.pop("target")
+            super().__init__(**kwargs)
 
         def to_representation(self, value):
             return getattr(value.course, self.target)
 
     id = serializers.IntegerField()
-    section_id = serializers.IntegerField(source='section.id', required=False)
-    section_spacetimes = SpacetimeSerializer(source='section.spacetimes', many=True, required=False)
-    course = VariableSourceCourseField(source='*', target='name', required=False)
-    course_title = VariableSourceCourseField(source='*', target='title', required=False)
-    course_id = VariableSourceCourseField(source='*', target='pk', required=False)
+    section_id = serializers.IntegerField(source="section.id", required=False)
+    section_spacetimes = SpacetimeSerializer(
+        source="section.spacetimes", many=True, required=False
+    )
+    course = VariableSourceCourseField(source="*", target="name", required=False)
+    course_title = VariableSourceCourseField(source="*", target="title", required=False)
+    course_id = VariableSourceCourseField(source="*", target="pk", required=False)
     role = serializers.SerializerMethodField()
 
     def get_role(self, obj):
+        """Retrieve the profile role"""
         return get_profile_role(obj)
 
 
 class MentorSerializer(serializers.ModelSerializer):
-    email = make_omittable(serializers.EmailField, 'omit_mentor_emails', source='user.email')
+    email = make_omittable(
+        serializers.EmailField, "omit_mentor_emails", source="user.email"
+    )
 
     class Meta:
         model = Mentor
@@ -170,8 +244,8 @@ class AttendanceSerializer(serializers.ModelSerializer):
 
 
 class StudentSerializer(serializers.ModelSerializer):
-    email = serializers.EmailField(source='user.email')
-    attendances = AttendanceSerializer(source='attendance_set', many=True)
+    email = serializers.EmailField(source="user.email")
+    attendances = AttendanceSerializer(source="attendance_set", many=True)
 
     class Meta:
         model = Student
@@ -182,19 +256,25 @@ class SectionSerializer(serializers.ModelSerializer):
     spacetimes = SpacetimeSerializer(many=True)
     num_students_enrolled = serializers.SerializerMethodField()
     mentor = MentorSerializer()
-    course = serializers.CharField(source='mentor.course.name')
-    course_title = serializers.CharField(source='mentor.course.title')
+    course = serializers.CharField(source="mentor.course.name")
+    course_title = serializers.CharField(source="mentor.course.title")
     user_role = serializers.SerializerMethodField()
     associated_profile_id = serializers.SerializerMethodField()
-    course_restricted = serializers.BooleanField(source='mentor.course.is_restricted')
+    course_restricted = serializers.BooleanField(source="mentor.course.is_restricted")
 
     def get_num_students_enrolled(self, obj):
-        return obj.num_students_annotation if hasattr(obj, 'num_students_annotation') else obj.current_student_count
+        """Retrieve the number of students enrolled in the section"""
+        return (
+            obj.num_students_annotation
+            if hasattr(obj, "num_students_annotation")
+            else obj.current_student_count
+        )
 
     def user_associated_profile(self, obj):
-        user = self.context.get('request') and self.context.get('request').user
+        """Retrieve the user profile associated with the section"""
+        user = self.context.get("request") and self.context.get("request").user
         if not user:
-            return
+            return None
         try:
             return obj.students.get(user=user)
         except Student.DoesNotExist:
@@ -206,68 +286,89 @@ class SectionSerializer(serializers.ModelSerializer):
         return None  # no profile
 
     def get_user_role(self, obj):
+        """Retrieve the role of the associated user profile"""
         profile = self.user_associated_profile(obj)
         if not profile:
-            return
+            return None
         return get_profile_role(profile)
 
     def get_associated_profile_id(self, obj):
+        """Retrieve the id of the associated user profile"""
         profile = self.user_associated_profile(obj)
         return profile and profile.pk
 
     class Meta:
         model = Section
-        fields = ("id", "spacetimes", "mentor", "capacity", "associated_profile_id",
-                  "num_students_enrolled", "description", "mentor", "course", "user_role",
-                  "course_title", "course_restricted")
+        fields = (
+            "id",
+            "spacetimes",
+            "mentor",
+            "capacity",
+            "associated_profile_id",
+            "num_students_enrolled",
+            "description",
+            "mentor",
+            "course",
+            "user_role",
+            "course_title",
+            "course_restricted",
+        )
 
 
 class WorksheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Worksheet
-        fields = ['id', 'name', 'resource', 'worksheet_file', 'solution_file']
+        fields = ["id", "name", "resource", "worksheet_file", "solution_file"]
 
 
 class LinkSerializer(serializers.ModelSerializer):
     class Meta:
         model = Link
-        fields = ['id', 'name', 'resource', 'url']
+        fields = ["id", "name", "resource", "url"]
 
 
 class ResourceSerializer(serializers.ModelSerializer):
-    worksheets = WorksheetSerializer(source='worksheet_set', many=True)
-    links = LinkSerializer(source='link_set', many=True)
+    worksheets = WorksheetSerializer(source="worksheet_set", many=True)
+    links = LinkSerializer(source="link_set", many=True)
 
     class Meta:
         model = Resource
-        fields = ['id', 'course', 'week_num', 'date', 'topics', 'worksheets', 'links']
+        fields = ["id", "course", "week_num", "date", "topics", "worksheets", "links"]
 
 
 class SectionOccurrenceSerializer(serializers.ModelSerializer):
-    attendances = AttendanceSerializer(source='attendance_set', many=True)
+    attendances = AttendanceSerializer(source="attendance_set", many=True)
 
     class Meta:
         model = SectionOccurrence
-        fields = ('id', 'date', 'section', 'attendances')
+        fields = ("id", "date", "section", "attendances")
 
 
 class OverrideSerializer(serializers.ModelSerializer):
-    location = serializers.CharField(source='spacetime.location')
-    start_time = serializers.TimeField(source='spacetime.start_time')
+    location = serializers.CharField(source="spacetime.location")
+    start_time = serializers.TimeField(source="spacetime.start_time")
     date = serializers.DateField()
 
     def create(self, validated_data):
         spacetime = Spacetime.objects.create(
-            **validated_data['spacetime'], day_of_week=DayOfWeekField.DAYS[validated_data['date'].weekday()], duration=validated_data['overriden_spacetime'].duration)
-        return Override.objects.create(date=validated_data['date'], overriden_spacetime=validated_data['overriden_spacetime'],
-                                       spacetime=spacetime)
+            **validated_data["spacetime"],
+            day_of_week=DayOfWeekField.DAYS[validated_data["date"].weekday()],
+            duration=validated_data["overriden_spacetime"].duration,
+        )
+        return Override.objects.create(
+            date=validated_data["date"],
+            overriden_spacetime=validated_data["overriden_spacetime"],
+            spacetime=spacetime,
+        )
 
     def update(self, instance, validated_data):
-        instance.date = validated_data['date']
-        spacetime_data = validated_data['spacetime']
-        instance.spacetime.day_of_week = DayOfWeekField.DAYS[validated_data['date'].weekday()]
-        instance.spacetime.location = spacetime_data['location']
-        instance.spacetime.start_time = spacetime_data['start_time']
+        instance.date = validated_data["date"]
+        spacetime_data = validated_data["spacetime"]
+        instance.spacetime.day_of_week = DayOfWeekField.DAYS[
+            validated_data["date"].weekday()
+        ]
+        instance.spacetime.location = spacetime_data["location"]
+        instance.spacetime.start_time = spacetime_data["start_time"]
         instance.spacetime.duration = instance.overriden_spacetime.duration
         instance.spacetime.save()
         instance.save()
@@ -276,28 +377,31 @@ class OverrideSerializer(serializers.ModelSerializer):
     class Meta:
         model = Override
         fields = ("location", "start_time", "date", "overriden_spacetime")
-        extra_kwargs = {"overriden_spacetime": {'required': False}}
+        extra_kwargs = {"overriden_spacetime": {"required": False}}
 
 
 class MatcherSerializer(serializers.ModelSerializer):
     class Meta:
         model = Matcher
-        fields = ('id', 'course', 'assignment', 'is_open')
+        fields = ("id", "course", "assignment", "is_open")
 
 
 class MatcherSlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = MatcherSlot
-        fields = ['id', 'matcher', 'times']
+        fields = ["id", "matcher", "times"]
 
 
 class MatcherPreferenceSerializer(serializers.ModelSerializer):
-
     class Meta:
         model = MatcherPreference
+<<<<<<< HEAD
         fields = ['slot', 'mentor', 'preference']
 
 class WaitlistPositionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = WaitlistPosition 
+        model = WaitlistPosition
         fields = ['section', 'student', 'join_time']
+=======
+        fields = ["slot", "mentor", "preference"]
+>>>>>>> master

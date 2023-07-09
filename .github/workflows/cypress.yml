@@ -1,15 +1,21 @@
 name: Cypress E2E
+
 on:
   push:
     branches: [master]
   pull_request:
     branches: [master]
+  workflow_dispatch:
+
+env:
+  PYTHON_VERSION: 3.9
+
 jobs:
   cypress-run-chrome:
+    name: Chrome tests (${{ matrix.containers }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9]
         containers: [1, 2, 3, 4]
     services:
       postgres:
@@ -23,10 +29,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
@@ -60,11 +66,12 @@ jobs:
           # better cypress run titles
           COMMIT_INFO_MESSAGE: ${{github.event.pull_request.title}}
           COMMIT_INFO_SHA: ${{github.event.pull_request.head.sha}}
+
   cypress-run-firefox:
+    name: Firefox tests (${{ matrix.containers }})
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: [3.9]
         containers: [1, 2, 3, 4]
     services:
       postgres:
@@ -78,10 +85,10 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }}
+      - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
-          python-version: ${{ matrix.python-version }}
+          python-version: ${{ env.PYTHON_VERSION }}
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip

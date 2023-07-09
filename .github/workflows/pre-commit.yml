@@ -1,0 +1,39 @@
+name: pre-commit
+
+on:
+  pull_request:
+    branches: [master]
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  pre-commit:
+    name: "pre-commit"
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Get changed files
+        id: changed-files
+        uses: tj-actions/changed-files@v36.0.9
+      - name: Parse Python version from runtime.txt
+        run: |
+          sed 's/[^0-9.]//g' runtime.txt | head > .python-version
+      - name: Set up Python
+        uses: actions/setup-python@v4
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+          installer-parallel: true
+      - name: Install dependencies with Poetry
+        run: |
+          poetry install --no-root --with=dev --no-interaction --no-ansi
+          # add virtual environment to path for future steps
+          echo $(poetry env info --path)/bin >> $GITHUB_PATH
+      - name: Run pre-commit hooks
+        uses: pre-commit/action@v3.0.0
+        with:
+          # only check changed files
+          extra_args: "--files ${{ steps.changed-files.outputs.all_changed_files }}"

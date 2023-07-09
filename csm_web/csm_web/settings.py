@@ -11,9 +11,10 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+
+import sentry_sdk
 from factory.django import DjangoModelFactory
 from rest_framework.serializers import ModelSerializer, Serializer
-import sentry_sdk
 from sentry_sdk.integrations.django import DjangoIntegration
 
 # Analogous to RAILS_ENV, is one of {prod, staging, dev}. Defaults to dev. This default can
@@ -33,8 +34,12 @@ SECRET_KEY = os.environ.get("SECRET_KEY")
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = DJANGO_ENV == DEVELOPMENT
 
-if DJANGO_ENV == PRODUCTION or DJANGO_ENV == STAGING:
-    sentry_sdk.init(dsn=os.environ.get('SENTRY_DSN'), integrations=[DjangoIntegration()], send_default_pii=True)
+if DJANGO_ENV in (PRODUCTION, STAGING):
+    sentry_sdk.init(
+        dsn=os.environ.get("SENTRY_DSN"),
+        integrations=[DjangoIntegration()],
+        send_default_pii=True,
+    )
 
 ALLOWED_HOSTS = []
 
@@ -44,7 +49,7 @@ ADMINS = [
     ("Alec Li", "alec.li@berkeley.edu"),
     ("Noor Mahini", "nmahini@berkeley.edu"),
     ("Rohan D'Souza", "rohan.ds1001@berkeley.edu"),
-    ("Naveen Gopalan", "ngopalan@berkeley.edu")
+    ("Naveen Gopalan", "ngopalan@berkeley.edu"),
 ]
 
 # Application definition
@@ -74,7 +79,7 @@ MIDDLEWARE = [
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "django.middleware.gzip.GZipMiddleware"
+    "django.middleware.gzip.GZipMiddleware",
 ]
 
 ROOT_URLCONF = "csm_web.urls"
@@ -82,7 +87,7 @@ ROOT_URLCONF = "csm_web.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, 'templates/')],
+        "DIRS": [os.path.join(BASE_DIR, "templates/")],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -99,22 +104,22 @@ TEMPLATES = [
 
 WSGI_APPLICATION = "csm_web.wsgi.application"
 
-DEFAULT_AUTO_FIELD = 'django.db.models.AutoField'
+DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 
 POSTGRES_EXTRA_AUTO_EXTENSION_SET_UP = False
-POSTGRES_EXTRA_DB_BACKEND_BASE = 'django.db.backends.postgresql'
+POSTGRES_EXTRA_DB_BACKEND_BASE = "django.db.backends.postgresql"
 # Database
 # https://docs.djangoproject.com/en/2.1/ref/settings/#databases
 
 if DEBUG:
     DATABASES = {
-        'default': {
-            'ENGINE': 'psqlextra.backend',
-            'NAME': 'csm_web_dev',
-            'USER': 'postgres',
-            'PASSWORD': os.environ.get('POSTGRES_PASSWORD', ''),
-            'HOST': 'localhost',
-            'PORT': '5432',
+        "default": {
+            "ENGINE": "psqlextra.backend",
+            "NAME": os.environ.get("POSTGRES_DB", "csm_web_dev"),
+            "USER": os.environ.get("POSTGRES_USER", "postgres"),
+            "PASSWORD": os.environ.get("POSTGRES_PASSWORD", ""),
+            "HOST": os.environ.get("POSTGRES_HOST", "localhost"),
+            "PORT": "5432",
         }
     }
 else:
@@ -135,7 +140,9 @@ else:
 
 AUTH_PASSWORD_VALIDATORS = [
     {
-        "NAME": "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+        "NAME": (
+            "django.contrib.auth.password_validation.UserAttributeSimilarityValidator"
+        )
     },
     {"NAME": "django.contrib.auth.password_validation.MinimumLengthValidator"},
     {"NAME": "django.contrib.auth.password_validation.CommonPasswordValidator"},
@@ -154,21 +161,19 @@ TIME_ZONE = "America/Los_Angeles"
 
 USE_I18N = True
 
-USE_L10N = True
-
 USE_TZ = True
 
 # AWS environment variables for S3 resource storage
 AWS_ACCESS_KEY_ID = os.environ.get("AWS_ACCESS_KEY_ID")
 AWS_SECRET_ACCESS_KEY = os.environ.get("AWS_SECRET_ACCESS_KEY")
 AWS_STORAGE_BUCKET_NAME = os.environ.get("AWS_STORAGE_BUCKET_NAME")
-AWS_S3_SIGNATURE_VERSION = 's3v4'
+AWS_S3_SIGNATURE_VERSION = "s3v4"
 AWS_S3_REGION_NAME = os.environ.get("AWS_S3_REGION_NAME")
 AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 AWS_S3_VERIFY = True
 AWS_QUERYSTRING_AUTH = False  # public bucket
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
+DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
@@ -223,12 +228,10 @@ REST_FRAMEWORK = {
     "DEFAULT_RENDERER_CLASSES": [
         "djangorestframework_camel_case.render.CamelCaseJSONRenderer"
     ],
-    "DEFAULT_PERMISSION_CLASSES": [
-        'rest_framework.permissions.IsAuthenticated'
-    ],
+    "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PARSER_CLASSES": [
-        'djangorestframework_camel_case.parser.CamelCaseJSONParser',
-    ]
+        "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+    ],
 }
 
 if DJANGO_ENV == DEVELOPMENT:
@@ -238,36 +241,36 @@ if DJANGO_ENV == DEVELOPMENT:
 
 # Cache
 CACHES = {
-    'default': {
-        'BACKEND': 'django.core.cache.backends.db.DatabaseCache',
-        'LOCATION': 'db_cache_table',
+    "default": {
+        "BACKEND": "django.core.cache.backends.db.DatabaseCache",
+        "LOCATION": "db_cache_table",
     }
 }
 
 # Logging
 LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
         },
     },
-    'loggers': {
-        'django': {
-            'handlers': ['console'],
-            'level': 'INFO',
+    "loggers": {
+        "django": {
+            "handlers": ["console"],
+            "level": "INFO",
         },
-        'scheduler.views': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propogate': True,
+        "scheduler.views": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propogate": True,
         },
-        'scheduler.models': {
-            'handlers': ['console'],
-            'level': 'INFO',
-            'propogate': True,
-        }
+        "scheduler.models": {
+            "handlers": ["console"],
+            "level": "INFO",
+            "propogate": True,
+        },
     },
 }
 
@@ -284,9 +287,12 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
 
     # Content Security Policy
     MIDDLEWARE.append("csp.middleware.CSPMiddleware")
-    CSP_DEFAULT_SRC = ("'none'", )
-    CSP_SCRIPT_SRC = ("'self'", "https://unpkg.com/react@18/umd/",
-                      "https://unpkg.com/react-dom@18/umd/")
+    CSP_DEFAULT_SRC = ("'none'",)
+    CSP_SCRIPT_SRC = (
+        "'self'",
+        "https://unpkg.com/react@18/umd/",
+        "https://unpkg.com/react-dom@18/umd/",
+    )
     CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")
     CSP_CONNECT_SRC = ("'self'",)
     CSP_IMG_SRC = ("'self'", "data:")
