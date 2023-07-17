@@ -7,6 +7,7 @@ import Modal from "../Modal";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import ErrorCircle from "../../../static/frontend/img/error_outline.svg";
 import { useEnrollStudentMutation } from "../../utils/queries/sections";
+import { DateTime } from "luxon";
 
 enum CoordModalStates {
   INITIAL = "INITIAL",
@@ -502,7 +503,7 @@ export function CoordinatorAddStudentModal({
     <React.Fragment>
       <h4 className="internal-error-title">Internal Error</h4>
       <div className="internal-error-body">{response && response.errors && response.errors.critical}</div>
-      <div>Timestamp: {`${new Date()}`}</div>
+      <div>Timestamp: {`${DateTime.now().toISO()}`}</div>
     </React.Fragment>
   );
 

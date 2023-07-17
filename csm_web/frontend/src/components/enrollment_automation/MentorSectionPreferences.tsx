@@ -1,14 +1,17 @@
+import { Interval } from "luxon";
 import React, { useEffect, useState } from "react";
+
 import { Profile } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { Calendar } from "./calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime } from "./calendar/CalendarTypes";
 import { Slot } from "./EnrollmentAutomationTypes";
-import { formatInterval, formatTime, MAX_PREFERENCE, parseTime } from "./utils";
+import { MAX_PREFERENCE, parseTime } from "./utils";
+import { useMatcherPreferenceMutation, useMatcherPreferences, useMatcherSlots } from "../../utils/queries/matcher";
+import { formatInterval } from "../../utils/datetime";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import ErrorCircle from "../../../static/frontend/img/x_circle.svg";
-import { useMatcherPreferenceMutation, useMatcherPreferences, useMatcherSlots } from "../../utils/queries/matcher";
 
 enum Status {
   NONE,
@@ -56,8 +59,7 @@ export function MentorSectionPreferences({
       for (const time of slot.times) {
         times.push({
           day: time.day,
-          startTime: parseTime(time.startTime),
-          endTime: parseTime(time.endTime),
+          interval: Interval.fromDateTimes(parseTime(time.startTime), parseTime(time.endTime)),
           isLinked: time.isLinked
         });
       }
@@ -153,7 +155,7 @@ export function MentorSectionPreferences({
 
     return (
       <React.Fragment>
-        <span className="calendar-event-detail-time">{formatInterval(event.time.startTime, event.time.endTime)}</span>
+        <span className="calendar-event-detail-time">{formatInterval(event.time.interval)}</span>
         {detail}
       </React.Fragment>
     );
@@ -176,7 +178,7 @@ export function MentorSectionPreferences({
                 {event.times.map((time, time_idx) => (
                   <li key={time_idx} className="matcher-selected-time-container">
                     <span className="matcher-selected-time">
-                      {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
+                      {time.day} {formatInterval(time.interval)}
                     </span>
                   </li>
                 ))}

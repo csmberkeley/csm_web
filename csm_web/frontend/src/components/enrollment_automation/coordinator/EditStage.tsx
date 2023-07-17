@@ -1,3 +1,4 @@
+import { Interval } from "luxon";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -13,7 +14,7 @@ import { Tooltip } from "../../Tooltip";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime, DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
 import { Assignment, Slot, SlotPreference, Time } from "../EnrollmentAutomationTypes";
-import { formatInterval, formatTime } from "../utils";
+import { formatInterval } from "../../../utils/datetime";
 
 import ErrorIcon from "../../../../static/frontend/img/error_outline.svg";
 import InfoIcon from "../../../../static/frontend/img/info.svg";
@@ -49,9 +50,17 @@ const SORT_FUNCTIONS: Record<string, (a: any, b: any) => number> = {
     if (Math.min(...aDays) != Math.min(...bDays)) {
       return Math.min(...aDays) - Math.min(...bDays);
     } else {
-      const aTimes = a.map(t => t.startTime);
-      const bTimes = b.map(t => t.startTime);
-      return Math.min(...aTimes) - Math.min(...bTimes);
+      const mergeIntervals = (merged: Interval | null, current: Time) => {
+        if (merged == null) {
+          return current.interval;
+        } else {
+          return merged.union(current.interval);
+        }
+      };
+
+      const mergedATimes = a.reduce(mergeIntervals, null);
+      const mergedBTimes = b.reduce(mergeIntervals, null);
+      return mergedATimes!.start!.toMillis() - mergedBTimes!.start!.toMillis();
     }
   }
 };
@@ -703,7 +712,7 @@ const EditTableRow = ({
    * Format a datetime as a string for display.
    */
   const displayTime = (time: Time) => {
-    return `${DAYS_ABBREV[time.day]} ${formatTime(time.startTime)}\u2013${formatTime(time.endTime)}`;
+    return `${DAYS_ABBREV[time.day]} ${formatInterval(time.interval)}`;
   };
 
   /**
@@ -871,9 +880,7 @@ const AssignmentDistributionModal = ({
         placement="bottom"
         source={
           <div className="matcher-assignment-distribution-div" style={{ backgroundColor: color }}>
-            <span className="calendar-event-detail-time">
-              {formatInterval(event.time.startTime, event.time.endTime)}
-            </span>
+            <span className="calendar-event-detail-time">{formatInterval(event.time.interval)}</span>
           </div>
         }
       >

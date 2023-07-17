@@ -1,7 +1,8 @@
+import { Interval } from "luxon";
+
 export interface Time {
   day: string;
-  startTime: number;
-  endTime: number;
+  interval: Interval;
   isLinked: boolean;
 }
 

@@ -5,6 +5,8 @@ import { useUserInfo } from "../utils/queries/base";
 import { Course as CourseType, UserInfo } from "../utils/types";
 import Course from "./course/Course";
 import LoadingSpinner from "./LoadingSpinner";
+import { DateTime } from "luxon";
+import { DEFAULT_LONG_LOCALE_OPTIONS, DEFAULT_TIMEZONE } from "../utils/datetime";
 
 const CourseMenu = () => {
   const { data: jsonCourses, isSuccess: coursesLoaded } = useCourses();
@@ -33,7 +35,7 @@ const CourseMenu = () => {
   if (userInfoLoaded) {
     let priorityEnrollment = undefined;
     if (jsonUserInfo.priorityEnrollment) {
-      priorityEnrollment = new Date(Date.parse(jsonUserInfo.priorityEnrollment));
+      priorityEnrollment = DateTime.fromISO(jsonUserInfo.priorityEnrollment);
     }
     const convertedUserInfo: UserInfo = {
       ...jsonUserInfo,
@@ -46,7 +48,7 @@ const CourseMenu = () => {
   }
 
   let show_enrollment_times = false;
-  const enrollment_times_by_course: Array<{ courseName: string; enrollmentDate: Date }> = [];
+  const enrollment_times_by_course: Array<{ courseName: string; enrollmentDate: DateTime }> = [];
 
   if (courses !== null) {
     for (const course of courses.values()) {
@@ -54,7 +56,7 @@ const CourseMenu = () => {
       if (!course.enrollmentOpen) {
         enrollment_times_by_course.push({
           courseName: course.name,
-          enrollmentDate: new Date(Date.parse(course.enrollmentStart))
+          enrollmentDate: DateTime.fromISO(course.enrollmentStart, { zone: DEFAULT_TIMEZONE })
         });
       }
     }
@@ -97,7 +99,7 @@ interface CourseMenuContentProps {
   courses: Map<number, CourseType> | null;
   coursesLoaded: boolean;
   userInfo: UserInfo | null;
-  enrollment_times_by_course: Array<{ courseName: string; enrollmentDate: Date }>;
+  enrollment_times_by_course: Array<{ courseName: string; enrollmentDate: DateTime }>;
 }
 
 enum CourseMenuSidebarTabs {
@@ -217,7 +219,7 @@ const EnrollmentMenu = ({ courses }: EnrollmentMenuProps) => {
 interface EnrollmentTimesProps {
   coursesLoaded: boolean;
   userInfo: UserInfo | null;
-  enrollmentTimes: Array<{ courseName: string; enrollmentDate: Date }>;
+  enrollmentTimes: Array<{ courseName: string; enrollmentDate: DateTime }>;
 }
 
 /**
@@ -237,19 +239,6 @@ const EnrollmentTimes = ({
     return null;
   }
 
-  /**
-   * Formatting for the enrollment times.
-   */
-  const date_locale_string_options: Intl.DateTimeFormatOptions = {
-    weekday: "long",
-    month: "numeric",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true,
-    timeZoneName: "short"
-  };
-
   if (enrollmentTimes.length === 0) {
     return null;
   }
@@ -266,16 +255,14 @@ const EnrollmentTimes = ({
                 <em>Priority</em>
               </div>
               <div className="enrollment-time">
-                <em>{`${userInfo.priorityEnrollment.toLocaleDateString("en-US", date_locale_string_options)}`}</em>
+                <em>{`${userInfo.priorityEnrollment.toLocaleString(DEFAULT_LONG_LOCALE_OPTIONS)}`}</em>
               </div>
             </div>
           )}
           {enrollmentTimes.map(({ courseName, enrollmentDate }) => (
             <div className="enrollment-row" key={courseName}>
               <div className="enrollment-course">{courseName}</div>
-              <div className="enrollment-time">
-                {`${enrollmentDate.toLocaleDateString("en-US", date_locale_string_options)}`}
-              </div>
+              <div className="enrollment-time">{`${enrollmentDate.toLocaleString(DEFAULT_LONG_LOCALE_OPTIONS)}`}</div>
             </div>
           ))}
         </div>

@@ -1,7 +1,8 @@
+import { Interval } from "luxon";
 import React, { useEffect, useState } from "react";
+
 import { Profile } from "../../../utils/types";
 import { parseTime } from "../utils";
-
 import {
   useMatcherAssignment,
   useMatcherConfig,
@@ -63,8 +64,7 @@ export function CoordinatorMatcherForm({
     const new_slots: Slot[] = jsonSlots.slots.map((slot: { id: number; times: StrTime[] }) => {
       const new_times: Time[] = slot.times.map((time: StrTime) => {
         return {
-          startTime: parseTime(time.startTime),
-          endTime: parseTime(time.endTime),
+          interval: Interval.fromDateTimes(parseTime(time.startTime), parseTime(time.endTime)),
           day: time.day,
           isLinked: slot.times.length > 0
         };

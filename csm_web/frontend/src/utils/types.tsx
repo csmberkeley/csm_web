@@ -1,3 +1,5 @@
+import { DateTime } from "luxon";
+
 export interface Override {
   date: string;
   spacetime: Spacetime;
@@ -28,7 +30,7 @@ export interface UserInfo {
   firstName: string;
   lastName: string;
   email: string;
-  priorityEnrollment?: Date;
+  priorityEnrollment?: DateTime;
 }
 
 /**

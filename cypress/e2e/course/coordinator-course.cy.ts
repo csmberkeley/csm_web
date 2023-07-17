@@ -1,3 +1,5 @@
+import { DateTime } from "luxon";
+
 before(() => {
   // initialize the database and cache
   cy.initDB();
@@ -6,19 +8,8 @@ before(() => {
 /**
  * Converts a time of the form hh:mm a/pm into a Date object
  */
-const timeStringToDate = (time: string): Date => {
-  // extract hours, minutes, am/pm
-  const [, hours_str, minutes, ampm] = time.match(/(\d\d?):(\d\d) (AM|PM)/);
-
-  let hours = parseInt(hours_str);
-  if (ampm === "PM" && hours !== 12) {
-    hours += 12;
-  } else if (ampm === "AM" && hours === 12) {
-    hours = 0;
-  }
-  const formatted_hours = hours.toString().padStart(2, "0");
-  // put in iso format to ensure parse succeeds
-  return new Date(Date.parse(`2020-01-01T${formatted_hours}:${minutes}:00.000`));
+const timeStringToDate = (time: string): DateTime => {
+  return DateTime.fromFormat(time, "h:mm a");
 };
 
 /**
@@ -37,13 +28,13 @@ const checkCapacity = (text: string, isFull = false) => {
  * Check that the cards are in chronological order
  */
 const checkCardOrder = () => {
-  let prevTime = null;
+  let prevTime: DateTime = null;
   cy.get('[title="Time"]').each($el => {
     const text = $el.text().trim();
     // time of form [day] [start]-[end] [AM/PM]
     //   or of form [day] [start] [AM/PM]-[end] [AM/PM]
     const matches = text.match(/\w+ (\d\d?:\d\d(?: AM| PM)?)-(\d\d?:\d\d (?:A|P)M)/g);
-    let sectionTime = null;
+    let sectionTime: DateTime = null;
     for (const substr of matches) {
       // get groups in this match
       const match = substr.match(/\w+ (\d\d?:\d\d(?: AM| PM)?)-(\d\d?:\d\d (?:A|P)M)/);
@@ -61,7 +52,7 @@ const checkCardOrder = () => {
 
     if (prevTime !== null) {
       // should be chronological
-      expect(prevTime).to.be.lte(sectionTime);
+      expect(prevTime.toMillis()).to.be.lte(sectionTime.toMillis());
     }
     prevTime = sectionTime;
   });

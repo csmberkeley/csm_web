@@ -1,15 +1,11 @@
+import { Duration, Interval } from "luxon";
 import React, { useEffect, useState } from "react";
-import { formatInterval } from "../utils";
+
+import { Time } from "../EnrollmentAutomationTypes";
 import { CalendarEventSingleTime } from "./CalendarTypes";
+import { formatInterval } from "../../../utils/datetime";
 
 const NO_CONTENT_WIDTH = 35;
-
-interface NumberTime {
-  day: string;
-  startTime: number;
-  endTime: number;
-  isLinked: boolean;
-}
 
 enum EventType {
   SAVED,
@@ -26,8 +22,7 @@ interface ComputedTime {
 
   // day/start/end attributes from the event
   day: string;
-  startTime: number;
-  endTime: number;
+  interval: Interval;
 
   // associated event index and event
   event_idx?: number;
@@ -41,9 +36,8 @@ interface ComputedTime {
 
 interface CalendarDayProps {
   day: string;
-  startTime: number;
-  endTime: number;
-  intervalLength: number;
+  interval: Interval;
+  intervalLength: Duration;
   eventHoverIndex: number;
   eventSelectIndices: number[];
   events: {
@@ -51,34 +45,23 @@ interface CalendarDayProps {
     event: CalendarEventSingleTime;
     isLinked: boolean;
   }[];
-  curCreatedTimes: NumberTime[];
-  curCreatedTime: NumberTime;
+  curCreatedTimes: Time[];
+  curCreatedTime: Time;
   intervalHeight: number;
   intervalWidth: number;
   onEventClick: (index: number, add: boolean) => void;
   onEventHover: (index: number) => void;
-  onCreateDragStart: (day: string, startTime: number, endTime: number) => void;
-  onCreateDragOver: (day: string, startTime: number, endTime: number) => void;
-  onCreateDragEnd: (day: string, startTime: number, endTime: number) => void;
+  onCreateDragStart: (day: string, interval: Interval) => void;
+  onCreateDragOver: (day: string, interval: Interval) => void;
+  onCreateDragEnd: (day: string, interval: Interval) => void;
   getEventDetails: (event: CalendarEventSingleTime) => React.ReactElement;
   brighterLinkedTimes: boolean;
   flushDetails: boolean;
 }
 
-/**
- * Parses a 24h time string and returns the number of minutes past midnight.
- * @param time 24h time string
- * @returns minutes past midnight
- */
-function parseTime(time: string): number {
-  const [hours, minutes] = time.split(":");
-  return parseInt(hours) * 60 + parseInt(minutes);
-}
-
 export function CalendarDay({
   day,
-  startTime,
-  endTime,
+  interval,
   intervalLength,
   eventHoverIndex,
   eventSelectIndices: eventSelectIndex,
@@ -108,8 +91,7 @@ export function CalendarDay({
           ({ event_idx, event, isLinked }): ComputedTime => ({
             eventType: EventType.SAVED,
             day: event.time.day,
-            startTime: event.time.startTime,
-            endTime: event.time.endTime,
+            interval: event.time.interval,
             event_idx,
             event,
             isLinked,
@@ -122,8 +104,7 @@ export function CalendarDay({
           filteredCurCreatedTimes.map((time, idx) => ({
             eventType: EventType.CREATED,
             day: time.day,
-            startTime: time.startTime,
-            endTime: time.endTime,
+            interval: time.interval,
             event_idx: idx,
             isLinked: time.isLinked,
             track: -1,
@@ -135,8 +116,7 @@ export function CalendarDay({
                 {
                   eventType: EventType.EDITING,
                   day: day,
-                  startTime: curCreatedTime.startTime,
-                  endTime: curCreatedTime.endTime,
+                  interval: curCreatedTime.interval,
                   isLinked: curCreatedTime.isLinked,
                   track: -1,
                   totalTracks: -1
@@ -155,8 +135,10 @@ export function CalendarDay({
   const eventElements = [];
 
   const getEventPosition = (computedTime: ComputedTime) => {
-    const eventYOffset = (intervalHeight * (computedTime.startTime - startTime)) / intervalLength;
-    const eventHeight = (intervalHeight * (computedTime.endTime - computedTime.startTime)) / intervalLength;
+    const durationToComputedStart = computedTime.interval.start!.diff(interval.start!);
+    const durationToComputedEnd = computedTime.interval.end!.diff(computedTime.interval.start!);
+    const eventYOffset = intervalHeight * (durationToComputedStart.as("seconds") / intervalLength.as("seconds"));
+    const eventHeight = intervalHeight * (durationToComputedEnd.as("seconds") / intervalLength.as("seconds"));
     const eventWidth = intervalWidth / computedTime.totalTracks;
     const eventXOffset = eventWidth * computedTime.track;
 
@@ -198,10 +180,7 @@ export function CalendarDay({
     }
 
     return (
-      <div
-        className="calendar-event-container"
-        key={`${event.time.startTime}-${event.time.endTime}-${computedTime.track}`}
-      >
+      <div className="calendar-event-container" key={`${event.time.interval.toISO()}-${computedTime.track}`}>
         <div className={classList.join(" ")} style={eventPosition.style}>
           <div
             className={`calendar-event-detail ${flushDetails ? "flush" : ""}`}
@@ -219,10 +198,7 @@ export function CalendarDay({
   const getCreatedEventHTML = (computedTime: ComputedTime) => {
     const eventPosition = getEventPosition(computedTime);
     return (
-      <div
-        className="calendar-event-container"
-        key={`${computedTime.startTime}-${computedTime.endTime}-${computedTime.track}`}
-      >
+      <div className="calendar-event-container" key={`${computedTime.interval.toISO()}-${computedTime.track}`}>
         <div
           className={`calendar-creating-event ${
             brighterLinkedTimes && computedTime.isLinked ? "calendar-event-linked" : ""
@@ -231,7 +207,7 @@ export function CalendarDay({
         >
           <div className={`calendar-event-detail ${flushDetails ? "flush" : ""}`}>
             <div className="calendar-event-detail-title">
-              {eventPosition.showContent ? formatInterval(computedTime.startTime, computedTime.endTime) : "..."}
+              {eventPosition.showContent ? formatInterval(computedTime.interval) : "..."}
             </div>
           </div>
         </div>
@@ -244,7 +220,7 @@ export function CalendarDay({
     return (
       <div
         className="calendar-transparent-event-container"
-        key={`${computedTime.startTime}-${computedTime.endTime}-${computedTime.track}`}
+        key={`${computedTime.interval.toISO()}-${computedTime.track}`}
       >
         <div
           className={`calendar-transparent-event ${
@@ -254,7 +230,7 @@ export function CalendarDay({
         >
           <div className={`calendar-event-detail ${flushDetails ? "flush" : ""}`}>
             <div className="calendar-event-detail-title">
-              {eventPosition.showContent ? formatInterval(computedTime.startTime, computedTime.endTime) : "..."}
+              {eventPosition.showContent ? formatInterval(computedTime.interval) : "..."}
             </div>
           </div>
         </div>
@@ -274,13 +250,12 @@ export function CalendarDay({
 
   // create array of intervals by intervalLength
   const intervals = [];
-  for (let i = startTime; i < endTime; i += intervalLength) {
+  for (let d = interval.start!; d < interval.end!; d = d.plus(intervalLength)) {
     intervals.push(
       <CalendarDayInterval
-        key={i}
+        key={d.toISO()}
         day={day}
-        startTime={i}
-        endTime={i + intervalLength}
+        interval={Interval.fromDateTimes(d, d.plus(intervalLength))}
         onCreateDragStart={onCreateDragStart}
         onCreateDragOver={onCreateDragOver}
         onCreateDragEnd={onCreateDragEnd}
@@ -308,17 +283,15 @@ export function CalendarDayHeader({ day }: CalendarDayHeaderProps): React.ReactE
 
 interface CalendarDayIntervalProps {
   day: string;
-  startTime: number;
-  endTime: number;
-  onCreateDragStart: (day: string, startTime: number, endTime: number) => void;
-  onCreateDragOver: (day: string, startTime: number, endTime: number) => void;
-  onCreateDragEnd: (day: string, startTime: number, endTime: number) => void;
+  interval: Interval;
+  onCreateDragStart: (day: string, interval: Interval) => void;
+  onCreateDragOver: (day: string, interval: Interval) => void;
+  onCreateDragEnd: (day: string, interval: Interval) => void;
 }
 
 function CalendarDayInterval({
   day,
-  startTime,
-  endTime,
+  interval,
   onCreateDragStart,
   onCreateDragOver,
   onCreateDragEnd
@@ -326,14 +299,14 @@ function CalendarDayInterval({
   const dragStartWrapper = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.buttons === 1) {
       e.preventDefault();
-      onCreateDragStart(day, startTime, endTime);
+      onCreateDragStart(day, interval);
     }
   };
 
   const dragOverWrapper = (e: React.MouseEvent<HTMLDivElement>) => {
     if (e.buttons === 1) {
       e.preventDefault();
-      onCreateDragOver(day, startTime, endTime);
+      onCreateDragOver(day, interval);
     }
   };
 
@@ -341,7 +314,7 @@ function CalendarDayInterval({
     // stop event propagation to capture this as a true drag end
     e.preventDefault();
     e.stopPropagation();
-    onCreateDragEnd(day, startTime, endTime);
+    onCreateDragEnd(day, interval);
   };
 
   return (
@@ -375,13 +348,13 @@ const computeLocations = (computedTimes: ComputedTime[]): ComputedTime[] => {
     const sharedState = {};
     markers.push({
       markerType: MarkerType.START,
-      time: computedTime.startTime,
+      time: computedTime.interval.start!.toMillis(),
       computedTime,
       state: sharedState
     });
     markers.push({
       markerType: MarkerType.END,
-      time: computedTime.endTime,
+      time: computedTime.interval.end!.toMillis(),
       computedTime,
       state: sharedState
     });
