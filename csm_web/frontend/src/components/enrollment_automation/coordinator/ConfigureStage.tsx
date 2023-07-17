@@ -6,7 +6,7 @@ import LoadingSpinner from "../../LoadingSpinner";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
 import { Slot } from "../EnrollmentAutomationTypes";
-import { formatInterval } from "../utils";
+import { formatInterval } from "../../../utils/datetime";
 
 import CheckCircle from "../../../../static/frontend/img/check_circle.svg";
 import ErrorCircle from "../../../../static/frontend/img/error_outline.svg";
@@ -82,7 +82,7 @@ export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStag
   const getEventDetails = (event: CalendarEventSingleTime) => {
     return (
       <React.Fragment>
-        <span className="calendar-event-detail-time">{formatInterval(event.time.startTime, event.time.endTime)}</span>
+        <span className="calendar-event-detail-time">{formatInterval(event.time.interval)}</span>
         <br />
         <span className="matcher-mentor-min-max">
           ({minMentorMap.get(event.id)}&#8211;{maxMentorMap.get(event.id)})

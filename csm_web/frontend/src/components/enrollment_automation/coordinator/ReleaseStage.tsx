@@ -14,7 +14,7 @@ import { Tooltip } from "../../Tooltip";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
 import { Slot, SlotPreference } from "../EnrollmentAutomationTypes";
-import { formatInterval } from "../utils";
+import { formatInterval } from "../../../utils/datetime";
 
 import CheckIcon from "../../../../static/frontend/img/check.svg";
 import CheckCircleIcon from "../../../../static/frontend/img/check_circle.svg";
@@ -604,9 +604,7 @@ function PreferenceStatusModal({
           placement="top"
           source={
             <div className="matcher-pref-distribution-div" style={{ backgroundColor: prefColor }}>
-              <span className="calendar-event-detail-time">
-                {formatInterval(event.time.startTime, event.time.endTime)}
-              </span>
+              <span className="calendar-event-detail-time">{formatInterval(event.time.interval)}</span>
             </div>
           }
         >

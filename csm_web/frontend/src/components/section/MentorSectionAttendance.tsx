@@ -7,7 +7,7 @@ import {
 } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import { ATTENDANCE_LABELS } from "./Section";
-import { dateSortISO, formatDateISO } from "./utils";
+import { dateSortISO, formatDateLocaleShort } from "./utils";
 import { Attendance } from "../../utils/types";
 import randomWords from "random-words";
 
@@ -256,7 +256,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                     className={id === selectedOccurrence!.id ? "active" : ""}
                     onClick={() => handleSelectOccurrence({ id, date })}
                   >
-                    {formatDateISO(date)}
+                    {formatDateLocaleShort(date)}
                   </div>
                 ))}
               </div>
@@ -299,7 +299,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
               </div>
               <div id="word-of-the-day-container">
                 <h4 className="word-of-the-day-title">
-                  Word of the Day ({selectedOccurrence ? formatDateISO(selectedOccurrence.date) : "unselected"})
+                  Word of the Day ({selectedOccurrence ? formatDateLocaleShort(selectedOccurrence.date) : "unselected"})
                 </h4>
                 {wotdLoaded ? (
                   <React.Fragment>

@@ -1,3 +1,5 @@
+import { DateTime } from "luxon";
+
 export const MONTH_NUMBERS: Readonly<{ [month: string]: number }> = Object.freeze({
   Jan: 1,
   Feb: 2,
@@ -24,81 +26,34 @@ export const DAYS_OF_WEEK: Readonly<string[]> = Object.freeze([
 ]);
 
 /**
- * Convert date of form yyyy-mm-dd to mm/dd.
+ * Convert date from ISO to mm/dd/yy.
  *
  * Example:
- * formatDate("2022-01-06") --> "1/6"
+ * formatDate("2022-01-06") --> "1/6/22"
  */
-export function formatDateISO(dateString: string): string {
-  const [, /* ignore year */ month, day] = dateString.split("-").map(part => parseInt(part));
-  return `${month}/${day}`;
+export function formatDateLocaleShort(dateString: string): string {
+  return DateTime.fromISO(dateString).toLocaleString({
+    ...DateTime.DATE_SHORT,
+    // use 2-digit year
+    year: "2-digit"
+  });
 }
 
 /**
- * Convert date of form Month. day, year to mm/dd.
+ * Convert date from ISO to "Month day, year"
  *
  * Example:
- * formatDate("Jan. 6, 2022") --> "1/6"
+ * formatDate("2022-01-06") --> "Jan 6, 2022"
  */
-export function formatDateWord(dateString: string): string {
-  const [month, dayAndYear] = dateString.split(".");
-  const day = dayAndYear.split(",")[0].trim();
-  return `${MONTH_NUMBERS[month]}/${day}`;
+export function formatDateAbbrevWord(dateString: string): string {
+  return DateTime.fromISO(dateString).toLocaleString(DateTime.DATE_MED);
 }
 
 /**
- * Convert date of form yyyy-mm-dd to MOnth. day, year
- *
- * Example:
- * formatDate("2022-01-06") --> "Jan. 6, 2022"
- */
-export function formatDateISOToWord(dateString: string): string {
-  const [year, month, day] = dateString.split("-").map(part => parseInt(part));
-
-  // get word version of month
-  for (const [monthWord, monthNumber] of Object.entries(MONTH_NUMBERS)) {
-    if (monthNumber === month) {
-      // format with word
-      return `${monthWord}. ${day}, ${year}`;
-    }
-  }
-  return "";
-}
-
-/**
- * Conert date of form Month. day, year into mm/dd/yyyy.
- *
- * Example:
- * formatDateYear("Jan. 6, 2022") --> 1/6/2022
- */
-function formatDateYear(dateString: string): string {
-  const year = dateString.split(",")[1];
-  const formattedDate = formatDateWord(dateString);
-  return `${formattedDate}/${year.trim()}`;
-}
-
-/**
- * Sort two dates of the form yyyy-mm-dd.
+ * Sort two dates in ISO.
  */
 export function dateSortISO(date1: string, date2: string) {
-  const [year1, month1, day1] = date1.split("-").map(part => parseInt(part));
-  const [year2, month2, day2] = date2.split("-").map(part => parseInt(part));
-  return year2 - year1 || month2 - month1 || day2 - day1;
-}
-
-/**
- * Sort two dates of the form Month. day, year.
- *
- * Example: sorting dates like Jan. 6, 2022
- */
-export function dateSortWord(date1: string, date2: string) {
-  const [month1, day1, year1] = formatDateYear(date1)
-    .split("/")
-    .map(part => Number(part));
-  const [month2, day2, year2] = formatDateYear(date2)
-    .split("/")
-    .map(part => Number(part));
-  return year2 - year1 || month2 - month1 || day2 - day1;
+  return DateTime.fromISO(date2).diff(DateTime.fromISO(date1)).as("milliseconds");
 }
 
 export function zeroPadTwoDigit(num: number) {

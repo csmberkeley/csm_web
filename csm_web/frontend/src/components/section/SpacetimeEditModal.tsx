@@ -1,10 +1,11 @@
+import { DateTime } from "luxon";
 import React, { useState } from "react";
 import { useSpacetimeModifyMutation, useSpacetimeOverrideMutation } from "../../utils/queries/spacetime";
 import { Spacetime } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 import TimeInput from "../TimeInput";
-import { DAYS_OF_WEEK, zeroPadTwoDigit } from "./utils";
+import { DAYS_OF_WEEK } from "./utils";
 
 interface SpacetimeEditModalProps {
   sectionId: number;
@@ -49,8 +50,7 @@ const SpaceTimeEditModal = ({
     closeModal();
   };
 
-  const now = new Date();
-  const today = `${now.getFullYear()}-${zeroPadTwoDigit(now.getMonth() + 1)}-${zeroPadTwoDigit(now.getDate())}`;
+  const today = DateTime.now().toISODate()!;
 
   return (
     <Modal className="spacetime-edit-modal" closeModal={closeModal}>

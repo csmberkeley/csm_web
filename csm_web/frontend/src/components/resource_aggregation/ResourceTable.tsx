@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import { DateTime, Duration } from "luxon";
 
 import {
   useCreateResourceMutation,
@@ -12,6 +13,7 @@ import ResourceRow from "./ResourceRow";
 import { emptyResource, Link, Resource, Worksheet } from "./ResourceTypes";
 
 import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
+import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 
 interface ResourceTableProps {
   courseID: number;
@@ -226,14 +228,11 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
     const lastResource = resources[resources.length - 1]; // get last resource
     newResource.weekNum = lastResource.weekNum + 1;
 
-    // add a week
-    const date = new Date(Date.parse(lastResource.date));
-    date.setUTCDate(date.getUTCDate() + 7);
+    // parse date from the resource, and add a week
+    const date = DateTime.fromISO(lastResource.date, { zone: DEFAULT_TIMEZONE }).plus(Duration.fromObject({ week: 1 }));
 
-    // pad month and day
-    const newMonth = `${date.getUTCMonth() + 1}`.padStart(2, "0");
-    const newDay = `${date.getUTCDate()}`.padStart(2, "0");
-    newResource.date = `${date.getUTCFullYear()}-${newMonth}-${newDay}`;
+    // format the new date
+    newResource.date = date.toISODate()!;
     return newResource;
   }
 

@@ -8,11 +8,13 @@ import {
 import { Mentor, Override, Spacetime } from "../../utils/types";
 import Modal from "../Modal";
 import { ATTENDANCE_LABELS, InfoCard, ROLES, SectionDetail, SectionSpacetime } from "./Section";
-import { dateSortWord, formatDateISOToWord } from "./utils";
+import { dateSortISO, formatDateLocaleShort, formatDateAbbrevWord } from "./utils";
 
 import XIcon from "../../../static/frontend/img/x.svg";
 import LoadingSpinner from "../LoadingSpinner";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
+import { DateTime } from "luxon";
+import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 
 interface StudentSectionType {
   id: number;
@@ -180,7 +182,7 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
         // only allow choosing from dates with blank attendances
         .filter(attendance => attendance.presence === "")
         // sort and get the first attendance
-        .sort((a, b) => dateSortWord(a.date, b.date))[0];
+        .sort((a, b) => dateSortISO(a.date, b.date))[0];
       setSelectedAttendanceId(firstAttendance?.id ?? -1);
     }
   }, [attendancesLoaded]);
@@ -234,49 +236,12 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
 
     // only compare current date if deadline exists
     if (wordOfTheDayDeadline !== null) {
-      /*
-       * TODO: replace all of this with a datetime library with better timezone support.
-       *
-       * There's a few things to consider here when comparing these dates.
-       * Firstly, the date stored in the database and all comparisons done in Django
-       * are in the `America/Los_Angeles` timezone, whereas JS Date objects internally use UTC,
-       * and without a timezone specification, it uses the local timezone of the host.
-       * This inconsistency means that it's hard to make the frontend exactly match
-       * the actual comparison done by Django in the backend.
-       * A compromise is to make the frontend a little bit less strict,
-       * allowing for submissions that match the *local* date, which would then possibly
-       * get rejected by the backend when it parses the request.
-       * The only times where the frontend would incorrectly reject inputs would be
-       * if anybody was west of the `America/Los_Angeles` timezone, which should be quite rare.
-       *
-       * In implementation, we first convert the deadline from the database as if it was in UTC,
-       * and fetch the current time via native JS Date objects.
-       * We then format this date in the local timezone, and trick JS into thinking
-       * that the displayed date is actually in UTC, and parse it again.
-       * Now that the date objects are stored in the same relative offset
-       * (both in UTC, even though they originated from different timezones),
-       * we can do a simple comparison without worrying about what the values actually are
-       * (the stored values would not actually be correct in any way,
-       * but would match relative to each other).
-       */
-
-      // convert from ISO yyyy-mm-dd using UTC (stored in the database as `America/Los_Angeles`)
-      const parsedDeadline = new Date(wordOfTheDayDeadline + "T00:00:00.000Z");
-      // get the current time (stored internally as UTC)
-      const now = new Date();
-      // convert to mm/dd/yyyy form, in the local timezone
-      const nowString = now.toLocaleDateString("en-US", {
-        year: "numeric",
-        month: "2-digit",
-        day: "2-digit"
-      });
-      // extract each part as string
-      const [month, day, year] = nowString.split("/");
-      // put them back in ISO format as if it was UTC
-      const parsedNowString = new Date(`${year}-${month}-${day}T00:00:00.000Z`);
-      // both are stored in UTC, even though they originated from different timezones,
-      // so we can now compare the two
-      wordOfTheDayDeadlinePassed = parsedNowString > parsedDeadline;
+      // convert from ISO yyyy-mm-dd (stored in the database as `America/Los_Angeles`)
+      const parsedDeadline = DateTime.fromISO(wordOfTheDayDeadline, { zone: DEFAULT_TIMEZONE });
+      // get the current local time
+      const now = DateTime.now();
+      // compare the two dates
+      wordOfTheDayDeadlinePassed = now > parsedDeadline;
     }
   }
 
@@ -295,11 +260,11 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
                 // only allow choosing from dates with blank attendances
                 .filter(attendance => attendance.presence === "")
                 // sort by date (most recent first)
-                .sort((a, b) => dateSortWord(a.date, b.date))
+                .sort((a, b) => dateSortISO(a.date, b.date))
                 // convert to option elements
                 .map((occurrence, idx) => (
                   <option key={idx} value={occurrence.id}>
-                    {occurrence.date}
+                    {formatDateLocaleShort(occurrence.date)}
                   </option>
                 ))}
             </select>
@@ -337,7 +302,7 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
               <React.Fragment>
                 Deadline:{" "}
                 <span className={`word-of-the-day-deadline ${wordOfTheDayDeadlinePassed ? "passed" : ""}`}>
-                  {formatDateISOToWord(wordOfTheDayDeadline)}
+                  {formatDateAbbrevWord(wordOfTheDayDeadline)}
                 </span>
               </React.Fragment>
             )}
@@ -355,13 +320,13 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
         <tbody>
           {attendances
             // sort by date (most recent first)
-            .sort((a, b) => dateSortWord(a.date, b.date))
+            .sort((a, b) => dateSortISO(a.date, b.date))
             // convert to a table row
             .map(({ presence, date }) => {
               const [label, cssSuffix] = ATTENDANCE_LABELS[presence];
               return (
                 <tr key={date}>
-                  <td>{date}</td>
+                  <td>{formatDateLocaleShort(date)}</td>
                   <td className="status">
                     <div style={{ backgroundColor: `var(--csm-attendance-${cssSuffix})` }}>{label}</div>
                   </td>

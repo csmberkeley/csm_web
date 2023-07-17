@@ -208,9 +208,7 @@ class MentorSerializer(serializers.ModelSerializer):
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
-    date = serializers.DateField(
-        source="sectionOccurrence.date", format="%b. %-d, %Y", read_only=True
-    )
+    date = serializers.DateField(source="sectionOccurrence.date", read_only=True)
     student_name = serializers.CharField(source="student.name")
     student_id = serializers.IntegerField(source="student.id")
     student_email = serializers.CharField(source="student.user.email")

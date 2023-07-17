@@ -1,4 +1,5 @@
 import _ from "lodash";
+import { DateTime, Duration, Interval } from "luxon";
 import React, { useEffect, useState } from "react";
 
 import { Profile } from "../../../utils/types";
@@ -6,18 +7,19 @@ import { Tooltip } from "../../Tooltip";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime, DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
 import { Slot, Time } from "../EnrollmentAutomationTypes";
-import { formatInterval, formatTime, parseTime, serializeTime } from "../utils";
+import { parseTime, serializeTime } from "../utils";
+import { useMatcherConfigMutation, useMatcherSlotsMutation } from "../../../utils/queries/matcher";
+import { formatInterval } from "../../../utils/datetime";
 
 import InfoIcon from "../../../../static/frontend/img/info.svg";
 import XIcon from "../../../../static/frontend/img/x.svg";
-import { useMatcherConfigMutation, useMatcherSlotsMutation } from "../../../utils/queries/matcher";
 
 interface TileDetails {
   days: string[];
   daysLinked: boolean;
-  startTime: number;
-  endTime: number;
-  length: number;
+  start: DateTime;
+  end: DateTime;
+  length: Duration;
 }
 
 interface CreateStageProps {
@@ -59,9 +61,9 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
   const [tileDetails, setTileDetails] = useState<TileDetails>({
     days: [],
     daysLinked: true,
-    startTime: -1,
-    endTime: -1,
-    length: 60
+    start: DateTime.invalid("initial value"),
+    end: DateTime.invalid("initial value"),
+    length: Duration.fromObject({ hours: 1 })
   });
 
   /**
@@ -100,19 +102,14 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
 
   useEffect(() => {
     // update calendar with tiled events
-    if (
-      tileDetails.startTime !== -1 &&
-      tileDetails.endTime !== -1 &&
-      tileDetails.length !== -1 &&
-      tileDetails.startTime < tileDetails.endTime
-    ) {
+    const interval = Interval.fromDateTimes(tileDetails.start, tileDetails.end);
+    if (interval.isValid && tileDetails.length.isValid) {
       const newTimes: Time[] = [];
-      for (let t = tileDetails.startTime; t <= tileDetails.endTime - tileDetails.length; t += tileDetails.length) {
+      for (let t = interval.start!; t <= interval.end!.minus(tileDetails.length); t = t.plus(tileDetails.length)) {
         for (const day of tileDetails.days) {
           newTimes.push({
             day: day,
-            startTime: t,
-            endTime: t + tileDetails.length,
+            interval: Interval.fromDateTimes(t, t.plus(tileDetails.length)),
             // linked only if there are multiple days and user wants to link them
             isLinked: tileDetails.daysLinked && tileDetails.days.length > 1
           });
@@ -129,8 +126,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     const converted_slots = slots.map(slot => {
       const times = slot.times.map(time => ({
         day: time.day,
-        startTime: serializeTime(time.startTime),
-        endTime: serializeTime(time.endTime)
+        startTime: serializeTime(time.interval.start!),
+        endTime: serializeTime(time.interval.end!)
       }));
       return {
         ...slot,
@@ -163,7 +160,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
   /**
    * Update current event with a new related time
    *
-   * @param time new time to add
+   * @param time - new time to add
    */
   const updateTimes = (time: Time): void => {
     if (creatingTiledEvents) {
@@ -179,15 +176,20 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
         }
       }
       if (tileRefs.startTime.current) {
-        tileRefs.startTime.current.value = serializeTime(time.startTime);
+        tileRefs.startTime.current.value = serializeTime(time.interval.start!);
       }
       if (tileRefs.endTime.current) {
-        tileRefs.endTime.current.value = serializeTime(time.endTime);
+        tileRefs.endTime.current.value = serializeTime(time.interval.end!);
       }
       if (tileRefs.length.current) {
-        tileRefs.length.current.value = tileDetails.length.toString();
+        tileRefs.length.current.value = tileDetails.length.as("minutes").toString();
       }
-      setTileDetails({ ...tileDetails, days: [time.day], startTime: time.startTime, endTime: time.endTime });
+      setTileDetails({
+        ...tileDetails,
+        days: [time.day],
+        start: time.interval.start ?? DateTime.invalid("initial value"),
+        end: time.interval.end ?? DateTime.invalid("initial value")
+      });
     } else {
       const newTimes = [...curCreatedTimes, time];
       setCurCreatedTimes(newTimes);
@@ -197,8 +199,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
   /**
    * Delete a time from current event
    *
-   * @param index       index of time to remove
-   * @param useSelected whether to use selected event or the event currently being created
+   * @param index - index of time to remove
+   * @param useSelected - whether to use selected event or the event currently being created
    */
   const deleteTime = (index: number) => {
     const newTimes = [...curCreatedTimes];
@@ -215,9 +217,9 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
   /**
    * Edit the day field of an event
    *
-   * @param index       index of time to edit
-   * @param newDay      new day value for time
-   * @param useSelected whether to use selected event or the event currently being created
+   * @param index - index of time to edit
+   * @param newDay - new day value for time
+   * @param useSelected - whether to use selected event or the event currently being created
    */
   const editTime_day = (index: number, newDay: string): void => {
     if (!DAYS.includes(newDay)) {
@@ -231,26 +233,26 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
   /**
    * Edit the start time field of an event
    *
-   * @param index         index of time to edit
-   * @param newStartTime  new start time value
-   * @param useSelected   whether to use selected event or the event currently being created
+   * @param index - index of time to edit
+   * @param newStartTime - new start time value
+   * @param useSelected - whether to use selected event or the event currently being created
    */
   const editTime_startTime = (index: number, newStartTime: string) => {
     const newTimes = [...curCreatedTimes];
-    newTimes[index]["startTime"] = parseTime(newStartTime);
+    newTimes[index].interval = Interval.fromDateTimes(parseTime(newStartTime), newTimes[index].interval.end!);
     setCurCreatedTimes(newTimes);
   };
 
   /**
    * Edit the end time field of an event
    *
-   * @param index       index of time to edit
-   * @param newEndTime  new end time value
-   * @param useSelected whether to use selected event or the event currently being created
+   * @param index - index of time to edit
+   * @param newEndTime - new end time value
+   * @param useSelected - whether to use selected event or the event currently being created
    */
   const editTime_endTime = (index: number, newEndTime: string) => {
     const newTimes = [...curCreatedTimes];
-    newTimes[index]["endTime"] = parseTime(newEndTime);
+    newTimes[index].interval = Interval.fromDateTimes(newTimes[index].interval.start!, parseTime(newEndTime));
     setCurCreatedTimes(newTimes);
   };
 
@@ -265,8 +267,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
         ...tileDetails,
         days: [],
         daysLinked: true,
-        startTime: -1,
-        endTime: -1
+        start: DateTime.invalid("initial value"),
+        end: DateTime.invalid("initial value")
       });
     } else {
       setCurCreatedTimes([]);
@@ -274,11 +276,31 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     setCreatingTiledEvents(checked);
   };
 
-  const editTiled_number = (field: string, value: number): void => {
-    if (isNaN(value)) {
+  const editTiled_interval = (endpoint: "start" | "end", datetime: DateTime): void => {
+    let newDetails = null;
+    if (endpoint === "start") {
+      newDetails = {
+        ...tileDetails,
+        start: datetime
+      };
+    } else if (endpoint === "end") {
+      newDetails = {
+        ...tileDetails,
+        end: datetime
+      };
+    }
+
+    if (newDetails != null) {
+      setTileDetails(newDetails);
+    }
+  };
+
+  const editTiled_length = (duration: number): void => {
+    if (isNaN(duration)) {
       return;
     }
-    const newDetails = { ...tileDetails, [field]: value };
+
+    const newDetails = { ...tileDetails, length: Duration.fromObject({ minutes: duration }) };
     setTileDetails(newDetails);
   };
 
@@ -299,21 +321,22 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
 
   const saveTiledEvents = () => {
     const newSlots = [];
-    for (let t = tileDetails.startTime; t <= tileDetails.endTime - tileDetails.length; t += tileDetails.length) {
+    for (let t = tileDetails.start; t <= tileDetails.end.minus(tileDetails.length); t = t.plus(tileDetails.length)) {
       if (tileDetails.daysLinked) {
         const newEvent: CalendarEvent = { times: [] };
         for (const day of tileDetails.days) {
           newEvent.times.push({
             day: day,
-            startTime: t,
-            endTime: t + tileDetails.length,
+            interval: Interval.fromDateTimes(t, t.plus(tileDetails.length)),
             isLinked: tileDetails.days.length > 1
           });
         }
         newSlots.push(newEvent);
       } else {
         for (const day of tileDetails.days) {
-          newSlots.push({ times: [{ day: day, startTime: t, endTime: t + tileDetails.length, isLinked: false }] });
+          newSlots.push({
+            times: [{ day: day, interval: Interval.fromDateTimes(t, t.plus(tileDetails.length)), isLinked: false }]
+          });
         }
       }
     }
@@ -402,7 +425,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
   const getEventDetails = (event: CalendarEventSingleTime) => {
     return (
       <React.Fragment>
-        <span className="calendar-event-detail-time">{formatInterval(event.time.startTime, event.time.endTime)}</span>
+        <span className="calendar-event-detail-time">{formatInterval(event.time.interval)}</span>
         {/* <br />
         <span className="matcher-detail">Num. Mentors: {event.num_mentors}</span> */}
       </React.Fragment>
@@ -446,17 +469,17 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
               <input
                 type="time"
                 ref={tileRefs.startTime}
-                defaultValue={serializeTime(tileDetails.startTime)}
+                defaultValue={tileDetails.start.isValid ? serializeTime(tileDetails.start) : ""}
                 step="900"
-                onChange={e => editTiled_number("startTime", parseTime(e.target.value))}
+                onChange={e => editTiled_interval("start", parseTime(e.target.value))}
               />
               &#8211;
               <input
                 type="time"
                 ref={tileRefs.endTime}
-                defaultValue={serializeTime(tileDetails.endTime)}
+                defaultValue={tileDetails.end.isValid ? serializeTime(tileDetails.end) : ""}
                 step="900"
-                onChange={e => editTiled_number("endTime", parseTime(e.target.value))}
+                onChange={e => editTiled_interval("end", parseTime(e.target.value))}
               />
             </div>
             <div className="matcher-tiling-length-container">
@@ -467,8 +490,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                 ref={tileRefs.length}
                 min={15}
                 step={5}
-                defaultValue={tileDetails.length}
-                onChange={e => e.target.validity.valid && editTiled_number("length", parseInt(e.target.value))}
+                defaultValue={tileDetails.length.as("minutes")}
+                onChange={e => e.target.validity.valid && editTiled_length(parseInt(e.target.value))}
               />
               mins
             </div>
@@ -508,7 +531,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                   <input
                     type="time"
                     key={`start_${time_idx}/${selectedEventIndices}`}
-                    defaultValue={serializeTime(time.startTime)}
+                    defaultValue={serializeTime(time.interval.start!)}
                     step="900"
                     onChange={e => editTime_startTime(time_idx, e.target.value)}
                   />
@@ -516,7 +539,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                   <input
                     type="time"
                     key={`end_${time_idx}/${selectedEventIndices}`}
-                    defaultValue={serializeTime(time.endTime)}
+                    defaultValue={serializeTime(time.interval.end!)}
                     step="900"
                     onChange={e => editTime_endTime(time_idx, e.target.value)}
                   />
@@ -556,7 +579,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                 {selectedEvents[0].times.map((time, time_idx) => (
                   <li key={time_idx} className="matcher-selected-time-container">
                     <span className="matcher-selected-time">
-                      {time.day} {formatTime(time.startTime)}&#8211;{formatTime(time.endTime)}
+                      {time.day} {formatInterval(time.interval)}
                     </span>
                   </li>
                 ))}

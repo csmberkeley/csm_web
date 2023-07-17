@@ -10,6 +10,8 @@ import { WhitelistModal } from "./WhitelistModal";
 import { SettingsModal } from "./SettingsModal";
 
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
+import { DateTime } from "luxon";
+import { DEFAULT_LONG_LOCALE_OPTIONS } from "../../utils/datetime";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",
@@ -35,8 +37,8 @@ interface CourseProps {
    * CourseMenu is done with its API requests, making the user suffer twice the latency for no reason.
    */
   courses: Map<number, CourseType> | null;
-  enrollmentTimes: Array<{ courseName: string; enrollmentDate: Date }>;
-  priorityEnrollment: Date | undefined;
+  enrollmentTimes: Array<{ courseName: string; enrollmentDate: DateTime }>;
+  priorityEnrollment: DateTime | undefined;
 }
 
 const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): React.ReactElement | null => {
@@ -118,20 +120,9 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
     currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
   }
 
-  // copied from CourseMenu.tsx
-  const date_locale_string_options: Intl.DateTimeFormatOptions = {
-    weekday: "long",
-    month: "numeric",
-    day: "numeric",
-    hour: "numeric",
-    minute: "numeric",
-    hour12: true,
-    timeZoneName: "short"
-  };
-
   const enrollmentDate =
     priorityEnrollment ?? enrollmentTimes.find(({ courseName }) => courseName == course.name)?.enrollmentDate;
-  const enrollmentTimeString = enrollmentDate?.toLocaleDateString("en-US", date_locale_string_options) ?? "";
+  const enrollmentTimeString = enrollmentDate?.toLocaleString(DEFAULT_LONG_LOCALE_OPTIONS) ?? "";
 
   return (
     <div id="course-section-selector">
