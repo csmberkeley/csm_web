@@ -50,6 +50,8 @@ export interface Section {
   userRole: string;
   courseTitle: string;
   courseRestricted: boolean;
+  numStudentsWaitlisted: number;
+  waitlistCapacity: number;
 }
 
 export interface Mentor {

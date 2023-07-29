@@ -21,6 +21,8 @@ interface SectionCardProps {
   description: string;
   userIsCoordinator: boolean;
   courseOpen: boolean;
+  numStudentsWaitlisted: number;
+  waitlistCapacity: number;
 }
 
 export const SectionCard = ({
@@ -31,8 +33,12 @@ export const SectionCard = ({
   capacity,
   description,
   userIsCoordinator,
-  courseOpen
+  courseOpen,
+  numStudentsWaitlisted,
+  waitlistCapacity
 }: SectionCardProps): React.ReactElement => {
+  numStudentsWaitlisted = 0;
+  waitlistCapacity = 3; // TODO: Change this to values from the backend
   /**
    * Mutation to enroll a student in the section.
    */
