@@ -1,10 +1,8 @@
 import logging
 from operator import attrgetter
-from typing import Any, Generic, Iterator, TypeVar
+from typing import Any
 
 from django.core.exceptions import ObjectDoesNotExist, PermissionDenied
-from django.db import models
-from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, viewsets
 from scheduler.models import (
@@ -21,6 +19,8 @@ logger.info = logger.warning
 
 
 def log_str(obj) -> str:
+    """Convert a Django model into a string for logging."""
+
     def log_format(*args) -> str:
         return (
             "<"
@@ -44,7 +44,9 @@ def log_str(obj) -> str:
             return log_format("pk", "date", "spacetime.pk")
         if isinstance(obj, Attendance):
             return log_format("pk", "sectionOccurrence.date", "presence")
-    except Exception as error:
+    except Exception as error:  # pylint: disable=broad-exception-caught
+        # we want to catch all exceptions here, since logging shouldn't break the application;
+        # any exceptions raised during logging should just be logged and ignored
         logger.error("<Logging> Exception while logging: %s", error)
     return ""
 
@@ -57,10 +59,10 @@ def get_object_or_error(specific_queryset, **kwargs):
     """
     try:
         return specific_queryset.get(**kwargs)
-    except ObjectDoesNotExist:
+    except ObjectDoesNotExist as error:
         if get_object_or_404(specific_queryset.model.objects, **kwargs):
-            raise PermissionDenied()
-        raise ObjectDoesNotExist()
+            raise PermissionDenied() from error
+        raise ObjectDoesNotExist() from error
 
 
 METHOD_MIXINS = {
@@ -74,6 +76,7 @@ METHOD_MIXINS = {
 
 
 def viewset_with(*permitted_methods: str) -> Any:
+    """Helper method to create a list of permitted methods for a viewset."""
     assert all(
         method in METHOD_MIXINS for method in permitted_methods
     ), "Unrecognized method for ViewSet"

@@ -42,6 +42,7 @@ def day_to_number(day_of_week):
 
 
 def week_bounds(date):
+    """Compute the bounds of the week containing the date."""
     week_start = date - datetime.timedelta(days=date.weekday())
     week_end = week_start + datetime.timedelta(weeks=1)
     return week_start, week_end
@@ -51,6 +52,7 @@ class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
+        """Determine whether this user is allowed to enroll in the given course."""
         # check restricted first
         if course.is_restricted and not self.is_whitelisted_for(course):
             return False
@@ -61,17 +63,18 @@ class User(AbstractUser):
         )
         if bypass_enrollment_time:
             return not is_associated
+
+        if self.priority_enrollment:
+            now = timezone.now().astimezone(timezone.get_default_timezone())
+            is_valid_enrollment_time = (
+                self.priority_enrollment < now < course.enrollment_end
+            )
         else:
-            if self.priority_enrollment:
-                now = timezone.now().astimezone(timezone.get_default_timezone())
-                is_valid_enrollment_time = (
-                    self.priority_enrollment < now < course.enrollment_end
-                )
-            else:
-                is_valid_enrollment_time = course.is_open()
-            return is_valid_enrollment_time and not is_associated
+            is_valid_enrollment_time = course.is_open()
+        return is_valid_enrollment_time and not is_associated
 
     def is_whitelisted_for(self, course: "Course"):
+        """Determine whether this user is whitelisted for the given course."""
         return not course.is_restricted or self.whitelist.filter(pk=course.pk).exists()
 
     class Meta:
@@ -123,10 +126,12 @@ class Attendance(ValidatingModel):
 
     @property
     def section(self):
+        """Retrieve the section associated with this attendance."""
         return self.student.section
 
     @property
     def week_start(self):
+        """Retrieve the date corresonding to the beginning of the week for this attendance."""
         return week_bounds(self.sectionOccurrence.date)[0]
 
     class Meta:
@@ -189,6 +194,7 @@ class Course(ValidatingModel):
             raise ValidationError("word of the day limit must be in days")
 
     def is_open(self):
+        """Determine whether the course is open for enrollment."""
         now = timezone.now().astimezone(timezone.get_default_timezone())
         return self.enrollment_start < now < self.enrollment_end
 
@@ -201,6 +207,7 @@ class Profile(ValidatingModel):
 
     @property
     def name(self):
+        """Retrieve the user's full name."""
         return self.user.get_full_name()
 
     def __str__(self):
@@ -232,10 +239,8 @@ class Student(Profile):
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
-        """
-        Create an attendance for this week for the student if their section hasn't already been held this week
-        and no attendance for this week already exists.
-        """
+        # Create an attendance for this week for the student if their section
+        # hasn't already been held this week and no attendance for this week already exists.
         now = timezone.now().astimezone(timezone.get_default_timezone())
         week_start = week_bounds(now.date())[0]
         for spacetime in self.section.spacetimes.all():
@@ -255,14 +260,22 @@ class Student(Profile):
             ):
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
                     logger.info(
-                        "<SectionOccurrence> SO automatically created for student"
-                        f" {self.user.email} in course {course.name} for date"
-                        f" {now.date()}"
+                        (
+                            "<SectionOccurrence> SO automatically created for student"
+                            " %s in course %s for date %s"
+                        ),
+                        self.user.email,
+                        course.name,
+                        now.date(),
                     )
                     logger.info(
-                        "<Attendance> Attendance automatically created for student"
-                        f" {self.user.email} in course {course.name} for date"
-                        f" {now.date()}"
+                        (
+                            "<Attendance> Attendance automatically created for student"
+                            " %s in course %s for date %s"
+                        ),
+                        self.user.email,
+                        course.name,
+                        now.date(),
                     )
                 so_qs = SectionOccurrence.objects.filter(
                     section=self.section,
@@ -336,6 +349,7 @@ class Section(ValidatingModel):
 
     @functional.cached_property
     def current_student_count(self):
+        """Query the number of students currently enrolled in this section."""
         return self.students.filter(active=True).count()
 
     def delete(self, *args, **kwargs):
@@ -348,26 +362,28 @@ class Section(ValidatingModel):
 
     def clean(self):
         super().clean()
-        """
-        Checking self.pk is checking if this is a creation (as opposed to an update)
-        We can't possibly have spacetimes at creation time (because it's a foreign-key field),
-        so we only validate this on updates
-        """
+        # Checking self.pk is checking if this is a creation (as opposed to an update)
+        # We can't possibly have spacetimes at creation time (because it's a foreign-key field),
+        # so we only validate this on updates
         if self.pk and not self.spacetimes.exists():
             raise ValidationError("Section must have at least one Spacetime")
 
     def __str__(self):
-        return "{course} section ({enrolled}/{cap}, {mentor}, {spacetimes})".format(
-            # pylint is unable to recognize the reverse accessor in the OneToOneOrNoneField
-            course=self.mentor.course.name,  # pylint: disable=no-member
-            mentor="(no mentor)" if not self.mentor else self.mentor.name,
-            enrolled=self.current_student_count,
-            cap=self.capacity,
-            spacetimes="|".join(map(str, self.spacetimes.all())),
+        # pylint is unable to recognize the reverse accessor in the OneToOneOrNoneField
+        course_name = self.mentor.course.name  # pylint: disable=no-member
+        enrolled_count = self.current_student_count
+        capacity = self.capacity
+        mentor_name = "(no mentor)" if not self.mentor else self.mentor.name
+        spacetimes = "|".join(map(str, self.spacetimes.all()))
+
+        return (
+            f"{course_name} section ({enrolled_count}/{capacity}, {mentor_name},"
+            f" {spacetimes})"
         )
 
 
 def worksheet_path(instance, filename):
+    """Compute the full worksheet path for a worksheet file."""
     # file will be uploaded to MEDIA_ROOT/<course_name>/<filename>
     course_name = str(instance.resource.course.name).replace(" ", "")
     return f"resources/{course_name}/{filename}"
@@ -404,7 +420,7 @@ class Worksheet(ValidatingModel):
 
 
 @receiver(models.signals.post_delete, sender=Worksheet)
-def auto_delete_file_on_delete(sender, instance, **kwargs):
+def auto_delete_file_on_delete(instance, **kwargs):
     """
     Deletes file from filesystem when corresponding
     `Worksheet` object is deleted.
@@ -416,13 +432,13 @@ def auto_delete_file_on_delete(sender, instance, **kwargs):
 
 
 @receiver(models.signals.pre_save, sender=Worksheet)
-def auto_delete_file_on_change(sender, instance, **kwargs):
+def auto_delete_file_on_change(instance, **kwargs):
     """
     Deletes old file from filesystem when corresponding
     `Worksheet` object is updated with a new file.
     """
     if not instance.pk:
-        return False
+        return
 
     db_obj = Worksheet.objects.get(pk=instance.pk)
     exists = True
@@ -465,6 +481,7 @@ class Spacetime(ValidatingModel):
 
     @property
     def override(self):
+        """Retrieve the override for this spacetime if it exists."""
         # pylint is unable to recognize the reverse accessor
         # pylint: disable=no-member
         return (
@@ -475,6 +492,7 @@ class Spacetime(ValidatingModel):
 
     @property
     def end_time(self):
+        """Retrieve the end time for this spacetime."""
         # Time does not support addition/subtraction,
         # so we have to create a datetime wrapper over start_time to add it to duration
         return (
@@ -490,6 +508,7 @@ class Spacetime(ValidatingModel):
         ).time()
 
     def day_number(self):
+        """Retrieve the day number corresponding to the day of week for this spacetime."""
         return day_to_number(self.day_of_week)
 
     def __str__(self):
@@ -524,6 +543,7 @@ class Override(ValidatingModel):
             )
 
     def is_expired(self):
+        """Determine whether this override for the spacetime is expired."""
         now = timezone.now().astimezone(timezone.get_default_timezone())
         return self.date < now.date()
 

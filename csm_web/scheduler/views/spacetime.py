@@ -23,6 +23,11 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         ).distinct()
 
     def destroy(self, request, pk=None):
+        """
+        Deletes a spacetime, if possible.
+
+        Will not delete the spacetime if it will leave no spacetimes associated with a section.
+        """
         spacetime = get_object_or_error(self.get_queryset(), pk=pk)
         section = spacetime.section
         course = section.mentor.course
@@ -30,8 +35,11 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         is_coordinator = course.coordinator_set.filter(user=request.user).exists()
         if not is_coordinator:
             logger.error(
-                "<Spacetime Deletion:Failure> Could not delete spacetime, user"
-                f" {log_str(request.user)} does not have proper permissions"
+                (
+                    "<Spacetime Deletion:Failure> Could not delete spacetime, user %s"
+                    " does not have proper permissions"
+                ),
+                log_str(request.user),
             )
             raise PermissionDenied(
                 "You must be a coordinator to delete this spacetime!"
@@ -40,8 +48,8 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         has_multiple_spacetimes = section.spacetimes.count() > 1
         if not has_multiple_spacetimes:
             logger.error(
-                f"<Spacetime Deletion:Failure> Could not delete spacetime, only one"
-                f" spacetime exists"
+                "<Spacetime Deletion:Failure> Could not delete spacetime, only one"
+                " spacetime exists"
             )
             return Response(
                 status=status.HTTP_400_BAD_REQUEST,
@@ -50,17 +58,19 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
 
         now = timezone.now().astimezone(timezone.get_default_timezone())
 
-        # FIX ME: Once issue #303 is resolved, this should delete the directly related section occurences
-        future_sectionOccurrences = section.sectionoccurrence_set.filter(
+        # FIX ME: Once issue #303 is resolved, this should delete
+        # the directly related section occurences
+        future_section_occurrences = section.sectionoccurrence_set.filter(
             date__gte=now.date(), date__week_day=spacetime.day_number()
         )
 
         with transaction.atomic():
             spacetime.delete()
-            future_sectionOccurrences.delete()
+            future_section_occurrences.delete()
 
         logger.info(
-            f"<Spacetime Deletion:Success> Deleted Spacetime {log_str(spacetime)}"
+            "<Spacetime Deletion:Success> Deleted Spacetime %s",
+            log_str(spacetime),
         )
 
         return Response(status=status.HTTP_200_OK)
@@ -86,17 +96,20 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         # validate and save
         spacetime.save()
         logger.info(
-            f"<Spacetime:Success> Modified Spacetime {log_str(spacetime)} (previously"
-            f" {old_spacetime_str})"
+            "<Spacetime:Success> Modified Spacetime %s (previously %s)",
+            log_str(spacetime),
+            old_spacetime_str,
         )
         return Response(status=status.HTTP_202_ACCEPTED)
 
     @action(detail=True, methods=["put", "delete"])
     def override(self, request, pk=None):
+        """Either update or delete a spacetime override."""
         spacetime = get_object_or_error(self.get_queryset(), pk=pk)
 
         if request.method == "PUT":
             if hasattr(spacetime, "_override"):  # update
+                # pylint: disable-next=protected-access
                 serializer = OverrideSerializer(spacetime._override, data=request.data)
                 status_code = status.HTTP_202_ACCEPTED
             else:  # create
@@ -107,19 +120,21 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
             if serializer.is_valid():
                 override = serializer.save()
                 logger.info(
-                    f"<Override:Success> Overrode Spacetime {log_str(spacetime)} with"
-                    f" Override {log_str(override)}"
+                    "<Override:Success> Overrode Spacetime %s with Override %s",
+                    log_str(spacetime),
+                    log_str(override),
                 )
                 return Response(status=status_code)
             logger.error(
-                f"<Override:Failure> Could not override Spacetime {log_str(spacetime)},"
-                f" errors: {serializer.errors}"
+                "<Override:Failure> Could not override Spacetime %s, errors: %s",
+                log_str(spacetime),
+                serializer.errors,
             )
             return Response(
                 serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY
             )
 
-        elif request.method == "DELETE":
+        if request.method == "DELETE":
             mentor = spacetime.section.mentor
             course = mentor.course
 
@@ -127,8 +142,11 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
             is_coordinator = course.coordinator_set.filter(user=request.user).exists()
             if not (is_mentor or is_coordinator):
                 logger.error(
-                    "<Override Deletion:Failure> Could not delete override, user"
-                    f" {log_str(request.user)} does not have proper permissions"
+                    (
+                        "<Override Deletion:Failure> Could not delete override, user %s"
+                        " does not have proper permissions"
+                    ),
+                    log_str(request.user),
                 )
                 raise PermissionDenied(
                     "You must be a mentor or a coordinator to delete this spacetime"
@@ -136,10 +154,13 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
                 )
 
             if hasattr(spacetime, "_override"):
-                override = spacetime._override
+                override = spacetime._override  # pylint: disable=protected-access
                 override.delete()
 
             logger.info(
-                f"<Override Deletion:Success> Deleted override for {log_str(spacetime)}"
+                "<Override Deletion:Success> Deleted override for %s",
+                log_str(spacetime),
             )
             return Response(status=status.HTTP_200_OK)
+
+        return Response(status=status.HTTP_404_NOT_FOUND)
