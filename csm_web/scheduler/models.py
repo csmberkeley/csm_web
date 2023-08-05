@@ -1,14 +1,15 @@
 import datetime
+import logging
 import re
-from django.db import models
-from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
-from django.core.exceptions import ObjectDoesNotExist
+
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ObjectDoesNotExist
+from django.db import models
+from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 from django.dispatch import receiver
-from django.utils import timezone, functional
+from django.utils import functional, timezone
 from rest_framework.serializers import ValidationError
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -16,15 +17,27 @@ logger.info = logger.warning
 
 
 class DayOfWeekField(models.Field):
-    DAYS = ('Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday')
+    DAYS = (
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+    )
 
-    description = "Represents a single day of the week, ordered Monday - Sunday, backed by a Postgres enum"
+    description = (
+        "Represents a single day of the week, ordered Monday - Sunday, backed by a"
+        " Postgres enum"
+    )
 
     def db_type(self, connection):
-        return 'day_of_week'
+        return "day_of_week"
 
 
 def day_to_number(day_of_week):
+    """Day of week as a number; Monday = 0, Tuesday = 1, etc."""
     return DayOfWeekField.DAYS.index(day_of_week)
 
 
@@ -42,14 +55,18 @@ class User(AbstractUser):
         if course.is_restricted and not self.is_whitelisted_for(course):
             return False
 
-        is_associated = (self.student_set.filter(active=True, section__mentor__course=course).count() or
-                         self.mentor_set.filter(section__mentor__course=course).count())
+        is_associated = (
+            self.student_set.filter(active=True, section__mentor__course=course).count()
+            or self.mentor_set.filter(section__mentor__course=course).count()
+        )
         if bypass_enrollment_time:
             return not is_associated
         else:
             if self.priority_enrollment:
                 now = timezone.now().astimezone(timezone.get_default_timezone())
-                is_valid_enrollment_time = self.priority_enrollment < now < course.enrollment_end
+                is_valid_enrollment_time = (
+                    self.priority_enrollment < now < course.enrollment_end
+                )
             else:
                 is_valid_enrollment_time = course.is_open()
             return is_valid_enrollment_time and not is_associated
@@ -87,6 +104,7 @@ class OneToOneOrNoneField(models.OneToOneField):
     """
     A OneToOneField that returns None if the related object does not exist
     """
+
     related_accessor_class = ReverseOneToOneOrNoneDescriptor
 
 
@@ -114,7 +132,7 @@ class Attendance(ValidatingModel):
     class Meta:
         unique_together = ("sectionOccurrence", "student")
         ordering = ("sectionOccurrence",)
-        #indexes = (models.Index(fields=("date",)),)
+        # indexes = (models.Index(fields=("date",)),)
 
 
 class SectionOccurrence(ValidatingModel):
@@ -123,6 +141,7 @@ class SectionOccurrence(ValidatingModel):
     intermediate step between Section and Attendance. Now attendances dont
     have dates but rather are associated with Section Occurrence.
     """
+
     section = models.ForeignKey("Section", on_delete=models.CASCADE)
     date = models.DateField()
     word_of_the_day = models.CharField(max_length=50, blank=True)
@@ -196,10 +215,20 @@ class Student(Profile):
     Represents a given "instance" of a student. Every section in which a student enrolls should
     have a new Student profile.
     """
-    section = models.ForeignKey("Section", on_delete=models.CASCADE, related_name="students")
-    active = models.BooleanField(default=True, help_text="An inactive student is a dropped student.")
+
+    section = models.ForeignKey(
+        "Section", on_delete=models.CASCADE, related_name="students"
+    )
+    active = models.BooleanField(
+        default=True, help_text="An inactive student is a dropped student."
+    )
     banned = models.BooleanField(
-        default=False, help_text="A banned student cannot enroll in another section for the course they are banned from")
+        default=False,
+        help_text=(
+            "A banned student cannot enroll in another section for the course they are"
+            " banned from"
+        ),
+    )
 
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
@@ -212,29 +241,51 @@ class Student(Profile):
         for spacetime in self.section.spacetimes.all():
             section_day_num = day_to_number(spacetime.day_of_week)
             section_already_held = section_day_num < now.weekday() or (
-                section_day_num == now.weekday() and spacetime.start_time < now.time())
+                section_day_num == now.weekday() and spacetime.start_time < now.time()
+            )
             course = self.course
-            if self.active and course.section_start <= now.date() < course.valid_until\
-                    and not section_already_held and not self.attendance_set.filter(sectionOccurrence__date=week_start+datetime.timedelta(days=section_day_num)).exists():
+            if (
+                self.active
+                and course.section_start <= now.date() < course.valid_until
+                and not section_already_held
+                and not self.attendance_set.filter(
+                    sectionOccurrence__date=week_start
+                    + datetime.timedelta(days=section_day_num)
+                ).exists()
+            ):
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
                     logger.info(
-                        f"<SectionOccurrence> SO automatically created for student {self.user.email} in course {course.name} for date {now.date()}")
+                        "<SectionOccurrence> SO automatically created for student"
+                        f" {self.user.email} in course {course.name} for date"
+                        f" {now.date()}"
+                    )
                     logger.info(
-                        f"<Attendance> Attendance automatically created for student {self.user.email} in course {course.name} for date {now.date()}")
+                        "<Attendance> Attendance automatically created for student"
+                        f" {self.user.email} in course {course.name} for date"
+                        f" {now.date()}"
+                    )
                 so_qs = SectionOccurrence.objects.filter(
-                    section=self.section, date=week_start + datetime.timedelta(days=section_day_num))
+                    section=self.section,
+                    date=week_start + datetime.timedelta(days=section_day_num),
+                )
                 if not so_qs.exists():
                     so = SectionOccurrence.objects.create(
-                        section=self.section, date=week_start + datetime.timedelta(days=section_day_num))
+                        section=self.section,
+                        date=week_start + datetime.timedelta(days=section_day_num),
+                    )
                 else:
                     so = so_qs.get()
                 Attendance.objects.create(student=self, sectionOccurrence=so)
 
     def clean(self):
         super().clean()
-        # ensure consistency with two course fields
-        if self.section.mentor.course != self.course:
-            raise ValidationError("Student must be associated with the same course as the section they are in.")
+        # pylint is unable to recognize the reverse accessor in the OneToOneOrNoneField
+        if self.section.mentor.course != self.course:  # pylint: disable=no-member
+            # ensure consistency with two course fields
+            raise ValidationError(
+                "Student must be associated with the same course as the section they"
+                " are in."
+            )
 
     class Meta:
         unique_together = ("user", "section")
@@ -267,12 +318,16 @@ class Coordinator(Profile):
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
-    mentor = OneToOneOrNoneField(Mentor, on_delete=models.CASCADE, blank=True, null=True)
+    mentor = OneToOneOrNoneField(
+        Mentor, on_delete=models.CASCADE, blank=True, null=True
+    )
     description = models.CharField(
         max_length=100,
         blank=True,
-        help_text='A brief note to add some extra information about the section, e.g. "EOP" or '
-        '"early start".'
+        help_text=(
+            'A brief note to add some extra information about the section, e.g. "EOP"'
+            ' or "early start".'
+        ),
     )
 
     # @functional.cached_property
@@ -284,9 +339,11 @@ class Section(ValidatingModel):
         return self.students.filter(active=True).count()
 
     def delete(self, *args, **kwargs):
-        if self.current_student_count and not kwargs.get('force'):
-            raise models.ProtectedError("Cannot delete section with enrolled students", self)
-        kwargs.pop('force', None)
+        if self.current_student_count and not kwargs.get("force"):
+            raise models.ProtectedError(
+                "Cannot delete section with enrolled students", self
+            )
+        kwargs.pop("force", None)
         super().delete(*args, **kwargs)
 
     def clean(self):
@@ -301,18 +358,19 @@ class Section(ValidatingModel):
 
     def __str__(self):
         return "{course} section ({enrolled}/{cap}, {mentor}, {spacetimes})".format(
-            course=self.mentor.course.name,
+            # pylint is unable to recognize the reverse accessor in the OneToOneOrNoneField
+            course=self.mentor.course.name,  # pylint: disable=no-member
             mentor="(no mentor)" if not self.mentor else self.mentor.name,
             enrolled=self.current_student_count,
             cap=self.capacity,
-            spacetimes="|".join(map(str, self.spacetimes.all()))
+            spacetimes="|".join(map(str, self.spacetimes.all())),
         )
 
 
 def worksheet_path(instance, filename):
     # file will be uploaded to MEDIA_ROOT/<course_name>/<filename>
     course_name = str(instance.resource.course.name).replace(" ", "")
-    return f'resources/{course_name}/{filename}'
+    return f"resources/{course_name}/{filename}"
 
 
 class Resource(ValidatingModel):
@@ -322,12 +380,14 @@ class Resource(ValidatingModel):
     topics = models.CharField(blank=True, max_length=100)
 
     class Meta:
-        ordering = ['week_num']
+        ordering = ["week_num"]
 
     def clean(self):
         super().clean()
         if self.course.is_restricted:
-            raise NotImplementedError("Resources currently cannot be associated with a restricted course.")
+            raise NotImplementedError(
+                "Resources currently cannot be associated with a restricted course."
+            )
 
 
 class Link(ValidatingModel):
@@ -389,27 +449,45 @@ def auto_delete_file_on_change(sender, instance, **kwargs):
 
 
 class Spacetime(ValidatingModel):
-    SPACE_REDUCE_REGEX = re.compile(r'\s+')
+    SPACE_REDUCE_REGEX = re.compile(r"\s+")
 
     location = models.CharField(max_length=200)
     start_time = models.TimeField()
     duration = models.DurationField()
     day_of_week = DayOfWeekField()
-    section = models.ForeignKey(Section, on_delete=models.CASCADE, related_name="spacetimes", null=True, blank=True)
+    section = models.ForeignKey(
+        Section,
+        on_delete=models.CASCADE,
+        related_name="spacetimes",
+        null=True,
+        blank=True,
+    )
 
     @property
     def override(self):
-        return self._override if (hasattr(self, "_override") and not self._override.is_expired()) else None
+        # pylint is unable to recognize the reverse accessor
+        # pylint: disable=no-member
+        return (
+            self._override
+            if (hasattr(self, "_override") and not self._override.is_expired())
+            else None
+        )
 
     @property
     def end_time(self):
         # Time does not support addition/subtraction,
         # so we have to create a datetime wrapper over start_time to add it to duration
-        return (datetime.datetime(year=1, day=1, month=1,
-                                  hour=self.start_time.hour,
-                                  minute=self.start_time.minute,
-                                  second=self.start_time.second)
-                + self.duration).time()
+        return (
+            datetime.datetime(
+                year=1,
+                day=1,
+                month=1,
+                hour=self.start_time.hour,
+                minute=self.start_time.minute,
+                second=self.start_time.second,
+            )
+            + self.duration
+        ).time()
 
     def day_number(self):
         return day_to_number(self.day_of_week)
@@ -417,17 +495,23 @@ class Spacetime(ValidatingModel):
     def __str__(self):
         formatted_time = self.start_time.strftime("%I:%M %p")
         num_minutes = int(self.duration.total_seconds() // 60)
-        return f"{self.location} {self.day_of_week} {formatted_time} for {num_minutes} min"
+        return (
+            f"{self.location} {self.day_of_week} {formatted_time} for {num_minutes} min"
+        )
 
     def save(self, *args, **kwargs):
-        self.location = re.sub(self.SPACE_REDUCE_REGEX, ' ', self.location).strip()
+        self.location = re.sub(self.SPACE_REDUCE_REGEX, " ", self.location).strip()
         super().save(*args, **kwargs)
 
 
 class Override(ValidatingModel):
     # related_name='+' means Django does not create the reverse relation
-    spacetime = models.OneToOneField(Spacetime, on_delete=models.CASCADE, related_name="+")
-    overriden_spacetime = models.OneToOneField(Spacetime, related_name="_override", on_delete=models.CASCADE)
+    spacetime = models.OneToOneField(
+        Spacetime, on_delete=models.CASCADE, related_name="+"
+    )
+    overriden_spacetime = models.OneToOneField(
+        Spacetime, related_name="_override", on_delete=models.CASCADE
+    )
     date = models.DateField()
 
     def clean(self):
@@ -435,7 +519,9 @@ class Override(ValidatingModel):
         if self.spacetime == self.overriden_spacetime:
             raise ValidationError("A spacetime cannot override itself")
         if self.spacetime.day_of_week != self.date.strftime("%A"):
-            raise ValidationError("Day of week of spacetime and day of week of date do not match")
+            raise ValidationError(
+                "Day of week of spacetime and day of week of date do not match"
+            )
 
     def is_expired(self):
         now = timezone.now().astimezone(timezone.get_default_timezone())
@@ -446,7 +532,9 @@ class Override(ValidatingModel):
 
 
 class Matcher(ValidatingModel):
-    course = OneToOneOrNoneField(Course, on_delete=models.CASCADE, blank=True, null=True)
+    course = OneToOneOrNoneField(
+        Course, on_delete=models.CASCADE, blank=True, null=True
+    )
     """
     Serialized assignment of mentors to times.
     [{mentor: int, slot: int, section: {capacity: int, description: str}}, ...]

@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { useCourseSections } from "../../utils/queries/courses";
@@ -8,10 +9,9 @@ import { DataExportModal } from "./DataExportModal";
 import { SectionCard } from "./SectionCard";
 import { WhitelistModal } from "./WhitelistModal";
 import { SettingsModal } from "./SettingsModal";
+import { DEFAULT_LONG_LOCALE_OPTIONS } from "../../utils/datetime";
 
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
-import { DateTime } from "luxon";
-import { DEFAULT_LONG_LOCALE_OPTIONS } from "../../utils/datetime";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",

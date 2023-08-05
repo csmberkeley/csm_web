@@ -35,7 +35,7 @@ const CourseMenu = () => {
   if (userInfoLoaded) {
     let priorityEnrollment = undefined;
     if (jsonUserInfo.priorityEnrollment) {
-      priorityEnrollment = DateTime.fromISO(jsonUserInfo.priorityEnrollment);
+      priorityEnrollment = DateTime.fromISO(jsonUserInfo.priorityEnrollment, { zone: DEFAULT_TIMEZONE });
     }
     const convertedUserInfo: UserInfo = {
       ...jsonUserInfo,

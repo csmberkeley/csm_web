@@ -4,15 +4,10 @@
 
 import { useMutation, UseMutationResult, useQueryClient } from "@tanstack/react-query";
 import { fetchWithMethod, HTTP_METHODS } from "../api";
+import { Spacetime } from "../types";
 import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
 
 /* ===== Mutations ===== */
-
-export interface SpacetimeModifyMutationBody {
-  day_of_week: string;
-  location: string | undefined;
-  start_time: string;
-}
 
 /**
  * Hook to modify a section's spacetime.
@@ -20,10 +15,10 @@ export interface SpacetimeModifyMutationBody {
 export const useSpacetimeModifyMutation = (
   sectionId: number,
   spacetimeId: number
-): UseMutationResult<void, ServerError, SpacetimeModifyMutationBody> => {
+): UseMutationResult<void, ServerError, Partial<Spacetime>> => {
   const queryClient = useQueryClient();
-  const mutationResult = useMutation<void, Error, SpacetimeModifyMutationBody>(
-    async (body: SpacetimeModifyMutationBody) => {
+  const mutationResult = useMutation<void, Error, Partial<Spacetime>>(
+    async (body: Partial<Spacetime>) => {
       const response = await fetchWithMethod(`/spacetimes/${spacetimeId}/modify`, HTTP_METHODS.PUT, body);
       if (response.ok) {
         return;
@@ -78,7 +73,7 @@ export const useSpacetimeDeleteMutation = (
 
 export interface SpacetimeOverrideMutationBody {
   location: string | undefined;
-  start_time: string;
+  startTime: string;
   date: string;
 }
 

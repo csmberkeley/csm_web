@@ -30,14 +30,18 @@ const checkCapacity = (text: string, isFull = false) => {
 const checkCardOrder = () => {
   let prevTime: DateTime = null;
   cy.get('[title="Time"]').each($el => {
-    const text = $el.text().trim();
+    const text = $el
+      .text()
+      .trim()
+      // replace all weird spaces; see https://jkorpela.fi/chars/spaces.html
+      .replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/, " ");
     // time of form [day] [start]-[end] [AM/PM]
     //   or of form [day] [start] [AM/PM]-[end] [AM/PM]
-    const matches = text.match(/\w+ (\d\d?:\d\d(?: AM| PM)?)-(\d\d?:\d\d (?:A|P)M)/g);
+    const matches = text.match(/\w+, (\d\d?:\d\d(?: AM| PM)?)\s*–\s*(\d\d?:\d\d (?:A|P)M)/g);
     let sectionTime: DateTime = null;
     for (const substr of matches) {
       // get groups in this match
-      const match = substr.match(/\w+ (\d\d?:\d\d(?: AM| PM)?)-(\d\d?:\d\d (?:A|P)M)/);
+      const match = substr.match(/\w+, (\d\d?:\d\d(?: AM| PM)?)\s*–\s*(\d\d?:\d\d (?:A|P)M)/);
       let start = match[1];
       const end_ampm = match[2].match(/AM|PM/i)[0];
       if (start.match(/am|pm/i) === null) {

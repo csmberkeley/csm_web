@@ -11,6 +11,7 @@ import GroupIcon from "../../../static/frontend/img/group.svg";
 import LocationIcon from "../../../static/frontend/img/location.svg";
 import UserIcon from "../../../static/frontend/img/user.svg";
 import XCircle from "../../../static/frontend/img/x_circle.svg";
+import { formatSpacetimeInterval } from "../../utils/datetime";
 
 interface SectionCardProps {
   id: number;
@@ -151,16 +152,16 @@ export const SectionCard = ({
             )}
           </p>
           <p title="Time">
-            <ClockIcon width={iconWidth} height={iconHeight} /> {spacetimes[0].time}
+            <ClockIcon width={iconWidth} height={iconHeight} /> {formatSpacetimeInterval(spacetimes[0])}
             {spacetimes.length > 1 && (
               <span className="section-card-additional-times">
-                {spacetimes.slice(1).map(({ time, id }) => (
-                  <React.Fragment key={id}>
+                {spacetimes.slice(1).map(spacetime => (
+                  <React.Fragment key={spacetime.id}>
                     <span
                       className="section-card-icon-placeholder"
                       style={{ minWidth: iconWidth, minHeight: iconHeight }}
                     />{" "}
-                    {time}
+                    {formatSpacetimeInterval(spacetime)}
                   </React.Fragment>
                 ))}
               </span>

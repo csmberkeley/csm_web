@@ -1,4 +1,5 @@
 import { DateTime } from "luxon";
+import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 
 export const MONTH_NUMBERS: Readonly<{ [month: string]: number }> = Object.freeze({
   Jan: 1,
@@ -15,16 +16,6 @@ export const MONTH_NUMBERS: Readonly<{ [month: string]: number }> = Object.freez
   Dec: 12
 });
 
-export const DAYS_OF_WEEK: Readonly<string[]> = Object.freeze([
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday"
-]);
-
 /**
  * Convert date from ISO to mm/dd/yy.
  *
@@ -32,7 +23,7 @@ export const DAYS_OF_WEEK: Readonly<string[]> = Object.freeze([
  * formatDate("2022-01-06") --> "1/6/22"
  */
 export function formatDateLocaleShort(dateString: string): string {
-  return DateTime.fromISO(dateString).toLocaleString({
+  return DateTime.fromISO(dateString, { zone: DEFAULT_TIMEZONE }).toLocaleString({
     ...DateTime.DATE_SHORT,
     // use 2-digit year
     year: "2-digit"
@@ -46,14 +37,16 @@ export function formatDateLocaleShort(dateString: string): string {
  * formatDate("2022-01-06") --> "Jan 6, 2022"
  */
 export function formatDateAbbrevWord(dateString: string): string {
-  return DateTime.fromISO(dateString).toLocaleString(DateTime.DATE_MED);
+  return DateTime.fromISO(dateString, { zone: DEFAULT_TIMEZONE }).toLocaleString(DateTime.DATE_MED);
 }
 
 /**
  * Sort two dates in ISO.
  */
 export function dateSortISO(date1: string, date2: string) {
-  return DateTime.fromISO(date2).diff(DateTime.fromISO(date1)).as("milliseconds");
+  const datetime1 = DateTime.fromISO(date1, { zone: DEFAULT_TIMEZONE });
+  const datetime2 = DateTime.fromISO(date2, { zone: DEFAULT_TIMEZONE });
+  return datetime2.diff(datetime1).as("milliseconds");
 }
 
 export function zeroPadTwoDigit(num: number) {
