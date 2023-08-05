@@ -4,7 +4,7 @@ import { Resource } from "./ResourceTypes";
 
 import Pencil from "../../../static/frontend/img/pencil.svg";
 import Trash from "../../../static/frontend/img/trash-alt.svg";
-import { formatDate } from "../../utils/datetime";
+import { DEFAULT_TIMEZONE, formatDate } from "../../utils/datetime";
 import { DateTime } from "luxon";
 
 interface ResourceRowRenderProps {
@@ -60,7 +60,7 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
           <div>Week {resource.weekNum}</div>
         </div>
         <div className="resourceInfo dateCell">
-          <div>{formatDate(DateTime.fromISO(resource.date))}</div>
+          <div>{formatDate(DateTime.fromISO(resource.date, { zone: DEFAULT_TIMEZONE }))}</div>
         </div>
         <div className="resourceInfo resourceTopics">
           <ResourceTopics topics={resource.topics} />

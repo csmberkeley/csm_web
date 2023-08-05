@@ -1,13 +1,13 @@
 import React, { useState } from "react";
+import { dayOfWeekToEnglishString, DAYS_OF_WEEK } from "../../utils/datetime";
 import { useUserEmails } from "../../utils/queries/base";
 import { useSectionCreateMutation } from "../../utils/queries/sections";
 import { Spacetime } from "../../utils/types";
 import Modal from "../Modal";
-import { DAYS_OF_WEEK } from "../section/utils";
 import TimeInput from "../TimeInput";
 
 const makeSpacetime = (): Spacetime => {
-  return { dayOfWeek: "", startTime: "", location: "" } as Spacetime;
+  return { id: -1, duration: 0, dayOfWeek: 1, startTime: "", location: "" };
 };
 
 interface CreateSectionModalProps {
@@ -57,17 +57,18 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
   /**
    * Handle the change of a form field.
    */
-  const handleChange = ({ target: { name, value } }: React.ChangeEvent<HTMLSelectElement | HTMLInputElement>): void => {
-    if (name.startsWith("location") || name.startsWith("startTime") || name.startsWith("dayOfWeek")) {
-      // Funny JavaScript scoping workaround (let [name, index] = name.split("|") doesn't work)
-      let index;
-      [name, index] = name.split("|");
-      index = Number(index);
-      setSpacetimes([
-        ...spacetimes.slice(0, index),
-        { ...spacetimes[index], [name]: value },
-        ...spacetimes.slice(index + 1)
-      ]);
+  const handleChange = (index: number, name: string, value: string): void => {
+    if (name === "location" || name === "startTime" || name === "dayOfWeek" || name === "duration") {
+      setSpacetimes(oldSpacetimes => {
+        const newSpacetimes = [...oldSpacetimes];
+        if (name === "dayOfWeek" || name === "duration") {
+          // day of week is int
+          newSpacetimes[index][name] = parseInt(value);
+        } else {
+          newSpacetimes[index][name] = value;
+        }
+        return newSpacetimes;
+      });
     } else {
       switch (name) {
         case "mentorEmail":
@@ -115,7 +116,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
             <label>
               Mentor Email
               <input
-                onChange={handleChange}
+                onChange={e => handleChange(-1, "mentorEmail", e.target.value)}
                 type="email"
                 list="user-email-list"
                 required
@@ -139,22 +140,27 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                 inputMode="numeric"
                 pattern="[0-9]*"
                 value={capacity}
-                onChange={handleChange}
+                onChange={e => handleChange(-1, "capacity", e.target.value)}
               />
             </label>
             <label>
               Description
-              <input name="description" type="text" value={description} onChange={handleChange} />
+              <input
+                name="description"
+                type="text"
+                value={description}
+                onChange={e => handleChange(-1, "description", e.target.value)}
+              />
             </label>
           </div>
-          {spacetimes.map(({ dayOfWeek, startTime, location }, index) => (
+          {spacetimes.map(({ dayOfWeek, startTime, location, duration }, index) => (
             <React.Fragment key={index}>
               <h4 className="spacetime-fields-header">Weekly occurence {index + 1}</h4>
               <div className="spacetime-fields">
                 <label>
                   Location
                   <input
-                    onChange={handleChange}
+                    onChange={e => handleChange(index, "location", e.target.value)}
                     required
                     title="You cannot leave this field blank"
                     pattern=".*[^\s]+.*"
@@ -165,10 +171,15 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                 </label>
                 <label>
                   Day
-                  <select onChange={handleChange} name={`dayOfWeek|${index}`} value={dayOfWeek} required>
-                    {["---"].concat(DAYS_OF_WEEK).map(day => (
-                      <option key={day} value={day === "---" ? "" : day} disabled={day === "---"}>
-                        {day}
+                  <select
+                    onChange={e => handleChange(index, "dayOfWeek", e.target.value)}
+                    name={`dayOfWeek|${index}`}
+                    value={dayOfWeek}
+                    required
+                  >
+                    {[["---", ""], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
+                      <option key={value} value={value} disabled={value === "---"}>
+                        {label}
                       </option>
                     ))}
                   </select>
@@ -176,10 +187,19 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                 <label>
                   Time
                   <TimeInput
-                    onChange={handleChange as React.FormEventHandler<HTMLInputElement>}
+                    onChange={e => handleChange(index, "startTime", e.target.value)}
                     required
                     name={`startTime|${index}`}
                     value={startTime}
+                  />
+                </label>
+                <label>
+                  Duration (min)
+                  <input
+                    type="number"
+                    name={`duration|${index}`}
+                    value={duration}
+                    onChange={e => handleChange(index, "duration", e.target.value)}
                   />
                 </label>
                 {index === spacetimes.length - 1 && (

@@ -1,11 +1,11 @@
 import { DateTime } from "luxon";
 import React, { useState } from "react";
+import { DAYS_OF_WEEK } from "../../utils/datetime";
 import { useSpacetimeModifyMutation, useSpacetimeOverrideMutation } from "../../utils/queries/spacetime";
 import { Spacetime } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 import TimeInput from "../TimeInput";
-import { DAYS_OF_WEEK } from "./utils";
 
 interface SpacetimeEditModalProps {
   sectionId: number;
@@ -20,10 +20,9 @@ const SpaceTimeEditModal = ({
   defaultSpacetime: { id: spacetimeId, startTime: timeString, location: prevLocation, dayOfWeek },
   editingOverride
 }: SpacetimeEditModalProps): React.ReactElement => {
-  const sliceIndex = timeString.split(":").length < 3 ? timeString.indexOf(":") : timeString.lastIndexOf(":");
   const [location, setLocation] = useState<Spacetime["location"]>(prevLocation);
   const [day, setDay] = useState<Spacetime["dayOfWeek"]>(dayOfWeek);
-  const [time, setTime] = useState<Spacetime["time"]>(timeString.slice(0, sliceIndex));
+  const [time, setTime] = useState<Spacetime["startTime"]>(timeString);
   const [isPermanent, setIsPermanent] = useState<boolean>(false);
   const [date, setDate] = useState<string>("");
   const [mode, setMode] = useState<string>(prevLocation && prevLocation.startsWith("http") ? "virtual" : "inperson");
@@ -38,13 +37,13 @@ const SpaceTimeEditModal = ({
     setShowSaveSpinner(true);
     isPermanent
       ? spacetimeModifyMutation.mutate({
-          day_of_week: day,
+          dayOfWeek,
           location: location,
-          start_time: `${time}:00`
+          startTime: time
         })
       : spacetimeOverrideMutation.mutate({
           location: location,
-          start_time: `${time}:00`,
+          startTime: time,
           date: date
         });
     closeModal();
@@ -100,15 +99,15 @@ const SpaceTimeEditModal = ({
           <label>
             Day
             <select
-              onChange={e => setDay(e.target.value)}
+              onChange={e => setDay(parseInt(e.target.value))}
               required={!!isPermanent}
               name="day"
               disabled={!isPermanent}
               value={isPermanent ? day : "---"}
             >
-              {["---"].concat(Array.from(DAYS_OF_WEEK)).map(value => (
+              {[["---", ""], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
                 <option key={value} value={value} disabled={value === "---"}>
-                  {value}
+                  {label}
                 </option>
               ))}
             </select>

@@ -21,6 +21,7 @@ from .models import (
     Student,
     User,
     Worksheet,
+    day_to_number,
 )
 
 
@@ -95,7 +96,8 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 
 class SpacetimeSerializer(serializers.ModelSerializer):
-    time = serializers.SerializerMethodField()
+    duration = serializers.SerializerMethodField()
+    day_of_week = serializers.SerializerMethodField()
     location = make_omittable(
         serializers.CharField,
         "omit_spacetime_links",
@@ -105,23 +107,20 @@ class SpacetimeSerializer(serializers.ModelSerializer):
         OverrideReadOnlySerializer, "omit_overrides", read_only=True
     )
 
-    def get_time(self, obj):
-        """Format the spacetime"""
-        formatted_end_time = obj.end_time.strftime("%-I:%M %p")
-        if obj.start_time.strftime("%p") != obj.end_time.strftime("%p"):
-            return (
-                f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M %p')}-{formatted_end_time}"
-            )
-        return (
-            f"{obj.day_of_week} {obj.start_time.strftime('%-I:%M')}-{formatted_end_time}"
-        )
+    def get_duration(self, obj):
+        """Serialize the duration field (timedelta) as a number in seconds"""
+        return obj.duration.total_seconds()
+
+    def get_day_of_week(self, obj):
+        """Serialize the weekday field (string) as an ISO weekday"""
+        # day_to_number converts with Monday = 0, whereas ISO uses Monday = 1
+        return day_to_number(obj.day_of_week) + 1
 
     class Meta:
         model = Spacetime
         fields = (
             "start_time",
             "day_of_week",
-            "time",
             "location",
             "id",
             "duration",

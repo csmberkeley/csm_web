@@ -5,6 +5,7 @@ import MentorSection from "./MentorSection";
 import { Override, Spacetime } from "../../utils/types";
 import { useSection } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
+import { formatSpacetimeInterval } from "../../utils/datetime";
 
 export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
@@ -89,24 +90,19 @@ interface SectionSpacetimeProps {
   override?: Override;
 }
 
-export function SectionSpacetime({
-  manySpacetimes,
-  index,
-  spacetime: { location, time },
-  override,
-  children
-}: SectionSpacetimeProps) {
+export function SectionSpacetime({ manySpacetimes, index, spacetime, override, children }: SectionSpacetimeProps) {
+  const location = spacetime.location;
   return (
     <InfoCard title={`Time and Location${manySpacetimes ? ` ${index + 1}` : ""}`}>
       {children}
       <Location location={location} />
-      <h5>{time}</h5>
+      <h5>{formatSpacetimeInterval(spacetime)}</h5>
       {override && (
         <React.Fragment>
           <div className="divider" />
           <div className="override-label">Adjusted for {override.date}</div>
           <Location location={override.spacetime.location} />
-          <h5>{override.spacetime.time}</h5>
+          <h5>{formatSpacetimeInterval(override.spacetime)}</h5>
         </React.Fragment>
       )}
     </InfoCard>

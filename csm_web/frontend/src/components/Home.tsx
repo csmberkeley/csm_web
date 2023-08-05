@@ -6,6 +6,7 @@ import { useCourses } from "../utils/queries/courses";
 import { ROLES } from "./section/Section";
 import { Profile, Course } from "../utils/types";
 import LoadingSpinner from "./LoadingSpinner";
+import { formatSpacetimeInterval } from "../utils/datetime";
 
 const Home = () => {
   const { data: profiles, isSuccess: profilesLoaded, isError: profilesLoadError } = useProfiles();
@@ -91,7 +92,7 @@ const CourseCard = ({ profiles }: CourseCardProps): React.ReactElement => {
               <Link key={profile.id} to={`/sections/${profile.sectionId}`} className="section-link">
                 {profile.sectionSpacetimes.map(spacetime => (
                   <div key={spacetime.id} className="course-card-section-time">
-                    {spacetime.time}
+                    {formatSpacetimeInterval(spacetime)}
                   </div>
                 ))}
               </Link>

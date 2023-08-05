@@ -7,8 +7,14 @@ from django.db import models
 from django.db.models.query import QuerySet
 from django.shortcuts import get_object_or_404
 from rest_framework import mixins, viewsets
-
-from ..models import User, Section, Spacetime, Override, Attendance
+from scheduler.models import (
+    Attendance,
+    DayOfWeekField,
+    Override,
+    Section,
+    Spacetime,
+    User,
+)
 
 logger = logging.getLogger(__name__)
 logger.info = logger.warning
@@ -31,7 +37,9 @@ def log_str(obj) -> str:
         if isinstance(obj, Section):
             return log_format("pk", "mentor.course.name", "spacetimes.all")
         if isinstance(obj, Spacetime):
-            return log_format("pk", "section.mentor.course.name", "location", "start_time")
+            return log_format(
+                "pk", "section.mentor.course.name", "location", "start_time"
+            )
         if isinstance(obj, Override):
             return log_format("pk", "date", "spacetime.pk")
         if isinstance(obj, Attendance):
@@ -76,3 +84,10 @@ def viewset_with(*permitted_methods: str) -> Any:
             if method in permitted_methods
         }
     ) + [viewsets.GenericViewSet]
+
+
+def weekday_iso_to_string(day_of_week: int) -> str:
+    """
+    Convert a weekday int (in ISO format, where Monday = 1) into a string
+    """
+    return DayOfWeekField.DAYS[day_of_week - 1]

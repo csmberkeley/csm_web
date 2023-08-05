@@ -6,7 +6,7 @@ from django.db.models import Prefetch, Q
 from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import action
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import PermissionDenied, ValidationError
 from rest_framework.response import Response
 from scheduler.models import (
     Attendance,
@@ -21,11 +21,16 @@ from scheduler.models import (
 from scheduler.serializers import (
     SectionOccurrenceSerializer,
     SectionSerializer,
-    SpacetimeSerializer,
     StudentSerializer,
 )
 
-from .utils import get_object_or_error, log_str, logger, viewset_with
+from .utils import (
+    get_object_or_error,
+    log_str,
+    logger,
+    viewset_with,
+    weekday_iso_to_string,
+)
 
 
 class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
@@ -52,6 +57,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
             )
             .filter(
+                # pylint: disable-next=unsupported-binary-operation
                 Q(mentor__user=self.request.user)
                 | Q(students__user=self.request.user)
                 | Q(mentor__course__coordinator__user=self.request.user)
@@ -80,40 +86,34 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 email=self.request.data["mentor_email"],
                 username=self.request.data["mentor_email"].split("@")[0],
             )
-            mentors_with_sections = course.mentor_set.filter(section__isnull=False)
-            if mentors_with_sections.count() > 0:
-                duration = (
-                    mentors_with_sections.first().section.spacetimes.first().duration
+
+            if "spacetimes" not in self.request.data:
+                return ValidationError("Spacetimes must be provided")
+
+            spacetime_objects = []
+            for spacetime in self.request.data["spacetimes"]:
+                # create and validate all spacetimes prior to saving them
+                converted_duration = datetime.timedelta(minutes=spacetime["duration"])
+                converted_day_of_week = weekday_iso_to_string(spacetime["day_of_week"])
+                new_spacetime = Spacetime(
+                    location=spacetime.get("location"),
+                    start_time=spacetime.get("start_time"),
+                    duration=converted_duration,
+                    day_of_week=converted_day_of_week,
                 )
-            else:
-                # default duration is 1 hour
-                duration = datetime.timedelta(hours=1)
-            spacetime_serializers = [
-                SpacetimeSerializer(data={**spacetime, "duration": str(duration)})
-                for spacetime in self.request.data["spacetimes"]
-            ]
-            for spacetime_serializer in spacetime_serializers:
-                # Be extra defensive and validate them all first before saving any
-                if not spacetime_serializer.is_valid():
-                    return Response(
-                        {
-                            "error": (
-                                f"Spacetime was invalid {spacetime_serializer.errors}"
-                            )
-                        },
-                        status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    )
-            spacetimes = [
-                spacetime_serializer.save()
-                for spacetime_serializer in spacetime_serializers
-            ]
+                new_spacetime.full_clean()
+                spacetime_objects.append(new_spacetime)
+
+            for spacetime in spacetime_objects:
+                spacetime.save()
+
             mentor = Mentor.objects.create(user=mentor_user, course=course)
             section = Section.objects.create(
                 mentor=mentor,
                 description=self.request.data["description"],
                 capacity=self.request.data["capacity"],
             )
-            section.spacetimes.set(spacetimes)
+            section.spacetimes.set(spacetime_objects)
             section.save()
 
         serializer = self.serializer_class(section)

@@ -1,15 +1,16 @@
-from django.db.models import Q
-from django.db import transaction
-from django.utils import timezone
-from rest_framework import status
-from rest_framework.decorators import action
-from rest_framework.response import Response
-from rest_framework.exceptions import PermissionDenied
-from rest_framework import viewsets
+import datetime
 
-from .utils import log_str, logger, get_object_or_error
+from django.db import transaction
+from django.db.models import Q
+from django.utils import timezone
+from rest_framework import status, viewsets
+from rest_framework.decorators import action
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
+
 from ..models import Spacetime
-from ..serializers import SpacetimeSerializer, OverrideSerializer
+from ..serializers import OverrideSerializer
+from .utils import get_object_or_error, log_str, logger, weekday_iso_to_string
 
 
 class SpacetimeViewSet(viewsets.GenericViewSet):
@@ -29,16 +30,23 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
         is_coordinator = course.coordinator_set.filter(user=request.user).exists()
         if not is_coordinator:
             logger.error(
-                f"<Spacetime Deletion:Failure> Could not delete spacetime, user {log_str(request.user)} does not have proper permissions"
+                "<Spacetime Deletion:Failure> Could not delete spacetime, user"
+                f" {log_str(request.user)} does not have proper permissions"
             )
-            raise PermissionDenied("You must be a coordinator to delete this spacetime!")
+            raise PermissionDenied(
+                "You must be a coordinator to delete this spacetime!"
+            )
 
         has_multiple_spacetimes = section.spacetimes.count() > 1
         if not has_multiple_spacetimes:
             logger.error(
-                f"<Spacetime Deletion:Failure> Could not delete spacetime, only one spacetime exists"
+                f"<Spacetime Deletion:Failure> Could not delete spacetime, only one"
+                f" spacetime exists"
             )
-            return Response(status=status.HTTP_400_BAD_REQUEST, data={"error": "Only one spacetime left!"})
+            return Response(
+                status=status.HTTP_400_BAD_REQUEST,
+                data={"error": "Only one spacetime left!"},
+            )
 
         now = timezone.now().astimezone(timezone.get_default_timezone())
 
@@ -61,17 +69,27 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
     def modify(self, request, pk=None):
         """Permanently modifies a spacetime, ignoring the override field."""
         spacetime = get_object_or_error(self.get_queryset(), pk=pk)
-        serializer = SpacetimeSerializer(spacetime, data=request.data, partial=True)
-        if serializer.is_valid():
-            new_spacetime = serializer.save()
-            logger.info(
-                f"<Spacetime:Success> Modified Spacetime {log_str(new_spacetime)} (previously {log_str(spacetime)})"
+        old_spacetime_str = log_str(spacetime)
+
+        # replace values if specified
+        spacetime.location = request.data.get("location", spacetime.location)
+        spacetime.start_time = request.data.get("start_time", spacetime.start_time)
+        if "duration" in request.data:
+            spacetime.duration = datetime.timedelta(
+                minutes=request.data.get("duration")
             )
-            return Response(status=status.HTTP_202_ACCEPTED)
-        logger.error(
-            f"<Spacetime:Failure> Could not modify Spacetime {log_str(spacetime)}, errors: {serializer.errors}"
+        if "day_of_week" in request.data:
+            spacetime.day_of_week = weekday_iso_to_string(
+                request.data.get("day_of_week")
+            )
+
+        # validate and save
+        spacetime.save()
+        logger.info(
+            f"<Spacetime:Success> Modified Spacetime {log_str(spacetime)} (previously"
+            f" {old_spacetime_str})"
         )
-        return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+        return Response(status=status.HTTP_202_ACCEPTED)
 
     @action(detail=True, methods=["put", "delete"])
     def override(self, request, pk=None):
@@ -89,13 +107,17 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
             if serializer.is_valid():
                 override = serializer.save()
                 logger.info(
-                    f"<Override:Success> Overrode Spacetime {log_str(spacetime)} with Override {log_str(override)}"
+                    f"<Override:Success> Overrode Spacetime {log_str(spacetime)} with"
+                    f" Override {log_str(override)}"
                 )
                 return Response(status=status_code)
             logger.error(
-                f"<Override:Failure> Could not override Spacetime {log_str(spacetime)}, errors: {serializer.errors}"
+                f"<Override:Failure> Could not override Spacetime {log_str(spacetime)},"
+                f" errors: {serializer.errors}"
             )
-            return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+            return Response(
+                serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY
+            )
 
         elif request.method == "DELETE":
             mentor = spacetime.section.mentor
@@ -105,9 +127,13 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
             is_coordinator = course.coordinator_set.filter(user=request.user).exists()
             if not (is_mentor or is_coordinator):
                 logger.error(
-                    f"<Override Deletion:Failure> Could not delete override, user {log_str(request.user)} does not have proper permissions"
+                    "<Override Deletion:Failure> Could not delete override, user"
+                    f" {log_str(request.user)} does not have proper permissions"
                 )
-                raise PermissionDenied("You must be a mentor or a coordinator to delete this spacetime override!")
+                raise PermissionDenied(
+                    "You must be a mentor or a coordinator to delete this spacetime"
+                    " override!"
+                )
 
             if hasattr(spacetime, "_override"):
                 override = spacetime._override

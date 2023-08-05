@@ -6,12 +6,11 @@ export interface Override {
 }
 
 export interface Spacetime {
-  dayOfWeek: string;
-  duration: string;
+  dayOfWeek: number;
+  duration: number;
   id: number;
   location?: string;
   startTime: string;
-  time: string;
   override?: Override;
 }
 
