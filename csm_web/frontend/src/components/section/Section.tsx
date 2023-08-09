@@ -7,6 +7,10 @@ import { useSection } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import { formatSpacetimeInterval } from "../../utils/datetime";
 
+// Styles
+import scssColors from "../../css/base/colors-export.module.scss";
+import "../../css/section.scss";
+
 export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
 export default function Section(): React.ReactElement | null {
@@ -39,13 +43,14 @@ interface SectionHeaderProps {
 
 export function SectionHeader({ course, courseTitle, userRole }: SectionHeaderProps) {
   const relation = userRole.toLowerCase();
+  const relationColor = scssColors[relation];
   return (
     <div className="section-detail-header">
       <div className="section-detail-header-title">
         <h3>{course}</h3>
         <h4>{courseTitle}</h4>
       </div>
-      <div className="relation-label" style={{ backgroundColor: `var(--csm-${relation})` }}>
+      <div className="relation-label" style={{ backgroundColor: relationColor }}>
         {relation}
       </div>
     </div>
@@ -88,18 +93,30 @@ interface SectionSpacetimeProps {
   children?: React.ReactNode;
   spacetime: Spacetime;
   override?: Override;
+  spacetimeActions?: React.ReactNode;
+  overrideActions?: React.ReactNode;
 }
 
-export function SectionSpacetime({ manySpacetimes, index, spacetime, override, children }: SectionSpacetimeProps) {
+export function SectionSpacetime({
+  manySpacetimes,
+  index,
+  spacetime,
+  override,
+  spacetimeActions,
+  overrideActions,
+  children
+}: SectionSpacetimeProps) {
   const location = spacetime.location;
   return (
     <InfoCard title={`Time and Location${manySpacetimes ? ` ${index + 1}` : ""}`}>
+      {spacetimeActions}
       {children}
       <Location location={location} />
       <h5>{formatSpacetimeInterval(spacetime)}</h5>
       {override && (
         <React.Fragment>
           <div className="divider" />
+          {overrideActions}
           <div className="override-label">Adjusted for {override.date}</div>
           <Location location={override.spacetime.location} />
           <h5>{formatSpacetimeInterval(override.spacetime)}</h5>
@@ -113,14 +130,17 @@ interface InfoCardProps {
   title: string;
   children?: React.ReactNode;
   showTitle?: boolean;
+  extraPadding?: boolean;
 }
 
-export function InfoCard({ title, children, showTitle = true }: InfoCardProps) {
+export function InfoCard({ title, children, showTitle = true, extraPadding = true }: InfoCardProps) {
   const cssClass = title.toLowerCase().replace(/ /g, "-");
   return (
     <div className={`section-detail-info-card ${cssClass}`}>
-      {showTitle && <h4>{title}</h4>}
-      <div className={`section-detail-info-card-contents ${cssClass}`}>{children}</div>
+      {showTitle && <h2>{title}</h2>}
+      <div className={`section-detail-info-card-contents ${extraPadding ? "padded-card" : ""} ${cssClass}`}>
+        {children}
+      </div>
     </div>
   );
 }
@@ -132,7 +152,6 @@ interface SectionDetailProps {
   links: string[][];
   children?: React.ReactNode;
 }
-
 export function SectionDetail({ course, courseTitle, userRole, links, children }: SectionDetailProps) {
   return (
     <section>
@@ -147,8 +166,8 @@ export function SectionDetail({ course, courseTitle, userRole, links, children }
 
 // Values are [label, css class suffix]
 export const ATTENDANCE_LABELS: Readonly<{ [label: string]: string[] }> = Object.freeze({
-  UN: ["Unexcused Absence", "unexcused"],
   EX: ["Excused Absence", "excused"],
   PR: ["Present", "present"],
+  UN: ["Unexcused Absence", "unexcused"],
   "": ["", ""]
 });

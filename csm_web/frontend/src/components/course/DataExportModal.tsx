@@ -101,7 +101,7 @@ export const DataExportModal = ({ closeModal }: DataExportModalProps): React.Rea
           {coursesLoaded ? renderCheckGrid() : <LoadingSpinner id="course-menu-loading-spinner" />}
         </div>
         <div className="data-export-modal-download">
-          <button className="csm-btn export-data-btn" onClick={getStudentEmails}>
+          <button className="primary-btn" onClick={getStudentEmails}>
             Download
           </button>
         </div>

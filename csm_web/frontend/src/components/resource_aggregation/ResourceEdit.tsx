@@ -16,12 +16,13 @@ import {
   Resource
 } from "./ResourceTypes";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
-
-import CheckCircle from "../../../static/frontend/img/check-circle-solid.svg";
-import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
-import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
 import ResourceLinkEdit from "./ResourceLinkEdit";
 import { Tooltip } from "../Tooltip";
+
+// Images
+import CheckCircle from "../../../static/frontend/img/check-circle-solid.svg";
+import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
+import PlusIcon from "../../../static/frontend/img/plus.svg";
 
 interface ResourceEditProps {
   resource: Resource;
@@ -662,80 +663,87 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   return (
     <Modal closeModal={onCancel} className="resourceEditModal">
       <div className="resourceEditContainer">
+        <div id="resourceEditInner">
+          <div className="resourceInfoEdit">
+            <label className="form-label resourceEditHeadItem">
+              Week Number
+              <input
+                className="form-input"
+                type="text"
+                defaultValue={resource.weekNum}
+                placeholder="Week Number"
+                onChange={e => onChange(e, "weekNum")}
+                onBlur={() => handleBlur("weekNum")}
+              />
+            </label>
+            <div className="resourceValidationError">
+              {formErrors.weekNum && <ExclamationCircle className="icon exclamationIcon" />}
+              {formErrors.weekNum}
+            </div>
+          </div>
+          <div className="resourceInfoEdit">
+            <label className="form-label resourceEditHeadItem">
+              Date
+              <input
+                className="form-date"
+                type="date"
+                defaultValue={resource.date}
+                onChange={e => onChange(e, "date")}
+                onBlur={() => handleBlur("date")}
+              />
+            </label>
+            <div className="resourceValidationError">
+              {formErrors.date && <ExclamationCircle className="icon exclamationIcon" />}
+              {formErrors.date}
+            </div>
+          </div>
+          <div className="resourceInfoEdit">
+            <label className="form-label resourceEditHeadItem">
+              Topics
+              <div className="topicsTooltipWrapper">
+                <Tooltip
+                  placement="bottom"
+                  source={
+                    <input
+                      className="form-input"
+                      type="text"
+                      defaultValue={resource.topics}
+                      placeholder="Topics"
+                      onChange={e => onChange(e, "topics")}
+                      onBlur={() => handleBlur("topics")}
+                    />
+                  }
+                >
+                  Topics should be delimited by semicolons
+                </Tooltip>
+              </div>
+            </label>
+            <div className="resourceValidationError">
+              {formErrors.topics && <ExclamationCircle className="icon exclamationIcon" />}
+              {formErrors.topics}
+            </div>
+          </div>
+        </div>
+        <div className="tab-list">
+          <button
+            onClick={() => {
+              setIsEditingLinks(false);
+            }}
+            className={`tab ${!isEditingLinks ? "active" : ""}`}
+          >
+            Edit Worksheets
+          </button>
+          <button
+            onClick={() => {
+              setIsEditingLinks(true);
+            }}
+            className={`tab ${isEditingLinks ? "active" : ""}`}
+          >
+            Edit Links
+          </button>
+        </div>
         <div className="resourceEditContentWrapper">
           <div className="resourceEditContent">
-            <div id="resourceEditInner">
-              <div className="resourceInfoEdit">
-                <div className="resourceEditHeadItem">Week Number</div>
-                <input
-                  type="text"
-                  defaultValue={resource.weekNum}
-                  placeholder="Week Number"
-                  onChange={e => onChange(e, "weekNum")}
-                  onBlur={() => handleBlur("weekNum")}
-                />
-                <div className="resourceValidationError">
-                  {formErrors.weekNum && <ExclamationCircle className="icon exclamationIcon" />}
-                  {formErrors.weekNum}
-                </div>
-              </div>
-              <div className="resourceInfoEdit">
-                <div className="resourceEditHeadItem">Date</div>
-                <input
-                  type="date"
-                  defaultValue={resource.date}
-                  onChange={e => onChange(e, "date")}
-                  onBlur={() => handleBlur("date")}
-                />
-                <div className="resourceValidationError">
-                  {formErrors.date && <ExclamationCircle className="icon exclamationIcon" />}
-                  {formErrors.date}
-                </div>
-              </div>
-              <div className="resourceInfoEdit">
-                <div className="resourceEditHeadItem">Topics</div>
-                <div className="topicsTooltipWrapper">
-                  <Tooltip
-                    placement="bottom"
-                    source={
-                      <input
-                        type="text"
-                        defaultValue={resource.topics}
-                        placeholder="Topics"
-                        onChange={e => onChange(e, "topics")}
-                        onBlur={() => handleBlur("topics")}
-                      />
-                    }
-                  >
-                    Topics should be delimited by semicolons
-                  </Tooltip>
-                </div>
-                <div className="resourceValidationError">
-                  {formErrors.topics && <ExclamationCircle className="icon exclamationIcon" />}
-                  {formErrors.topics}
-                </div>
-              </div>
-            </div>
-            <div className="resourceEditTabContainer">
-              <button
-                onClick={() => {
-                  setIsEditingLinks(false);
-                }}
-                className="resourceEditTab"
-                disabled={!isEditingLinks}
-              >
-                Edit Worksheets
-              </button>
-              <button
-                onClick={() => {
-                  setIsEditingLinks(true);
-                }}
-                className="resourceEditTab"
-                disabled={isEditingLinks}
-              >
-                Edit Links
-              </button>
-            </div>
             {!isEditingLinks && (
               <div className="resourceWorksheetContainer">
                 {hasWorksheets && (
@@ -747,10 +755,12 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                 )}
                 {existingWorksheetDisplay}
                 {newWorksheetDisplay}
-                <button onClick={handleAddWorksheet} className="addResourceButton" id="addWorksheetButton">
-                  <PlusCircle className="icon" id="plusIcon" />
-                  Add Worksheet
-                </button>
+                <div className="resourceWorksheetActionsContainer">
+                  <button onClick={handleAddWorksheet} className="secondary-btn">
+                    <PlusIcon className="icon" />
+                    Add Worksheet
+                  </button>
+                </div>
               </div>
             )}
             {isEditingLinks && (
@@ -763,20 +773,24 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                 )}
                 {existingLinkDisplay}
                 {newLinkDisplay}
-                <button onClick={handleAddLink} id="addLinkButton" className="addResourceButton">
-                  <PlusCircle className="icon" id="plusIcon" />
-                  Add Link
-                </button>
+                <div className="resourceWorksheetActionsContainer">
+                  <button onClick={handleAddLink} className="secondary-btn">
+                    <PlusIcon className="icon" />
+                    Add Link
+                  </button>
+                </div>
               </div>
             )}
           </div>
         </div>
-        <button onClick={handleSubmit} id="resourceButtonSubmit" disabled={!checkValid()}>
-          <CheckCircle className="icon" id="saveIcon" /> SAVE
-        </button>
-        {!(!isEditingLinks && formErrors["existingLinks"].size == 0 && formErrors["newLinks"].size == 0) &&
-          !(isEditingLinks && formErrors["existingWorksheets"].size == 0 && formErrors["newWorksheets"].size == 0) &&
-          tabErrorDisplay}
+        <div className="resourceEditFooter">
+          <button onClick={handleSubmit} className="primary-btn" disabled={!checkValid()}>
+            <CheckCircle className="icon" id="saveIcon" /> Save
+          </button>
+          {!(!isEditingLinks && formErrors["existingLinks"].size == 0 && formErrors["newLinks"].size == 0) &&
+            !(isEditingLinks && formErrors["existingWorksheets"].size == 0 && formErrors["newWorksheets"].size == 0) &&
+            tabErrorDisplay}
+        </div>
       </div>
     </Modal>
   );

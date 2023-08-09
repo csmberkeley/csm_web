@@ -8,12 +8,16 @@ import {
   useUpdateResourceMutation
 } from "../../utils/queries/resources";
 import { Roles } from "../../utils/user";
+import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 import LoadingSpinner from "../LoadingSpinner";
 import ResourceRow from "./ResourceRow";
 import { emptyResource, Link, Resource, Worksheet } from "./ResourceTypes";
 
-import PlusCircle from "../../../static/frontend/img/plus-circle.svg";
-import { DEFAULT_TIMEZONE } from "../../utils/datetime";
+// Images
+import PlusIcon from "../../../static/frontend/img/plus.svg";
+
+// Styles
+import "../../css/resource_aggregation.scss";
 
 interface ResourceTableProps {
   courseID: number;
@@ -249,12 +253,12 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
     <div className="resourceWrapperContainer">
       {canEdit && (
         <div className="resourceTableOptions">
-          <button onClick={handleSetAddingResource} className="addResourceButton" id="addResourceButton">
-            <PlusCircle className="icon" id="plusIcon" />
+          <button onClick={handleSetAddingResource} className="primary-outline-btn" id="addResourceButton">
+            <PlusIcon className="icon" />
             <div>Add Resource</div>
           </button>
           <div className="toggleViewEditContainer">
-            <label htmlFor="toggleViewEditInput" id="toggleViewEditLabel">
+            <label htmlFor="toggleViewEditInput" className="primary-outline-btn">
               <input type="checkbox" checked={viewEdit} id="toggleViewEditInput" onChange={handleToggleViewEdit} />
               Toggle Edit
             </label>

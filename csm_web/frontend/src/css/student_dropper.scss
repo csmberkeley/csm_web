@@ -1,0 +1,48 @@
+@use "base/variables" as *;
+
+.student-dropper {
+  /// center x icon
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /// strikethrough name if the modal is visible
+  &.ban-prompt-visible + .student-info {
+    color: #cecece;
+    text-decoration: line-through;
+  }
+}
+
+.student-dropper-modal {
+  margin: auto 0;
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-evenly;
+  align-items: center;
+  gap: 40px;
+}
+
+.student-dropper-head-item {
+  text-align: center;
+}
+
+.student-dropper-checkbox-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.student-dropper-checkbox-label {
+  // color: #646464;
+  font-size: 16px;
+  // padding-top: 20px;
+  margin-left: 8px;
+}
+
+.student-dropper-submit-wrapper {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+}

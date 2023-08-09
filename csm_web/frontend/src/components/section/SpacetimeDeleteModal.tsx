@@ -2,6 +2,9 @@ import React, { useState } from "react";
 import { useSpacetimeDeleteMutation, useSpacetimeOverrideDeleteMutation } from "../../utils/queries/spacetime";
 import Modal from "../Modal";
 
+// Styles
+import "../../css/spacetime_delete.scss";
+
 interface SpacetimeDeleteProps {
   spacetimeId: number;
   sectionId: number;
@@ -32,17 +35,15 @@ export default function SpacetimeDeleteModal({
   return (
     <Modal closeModal={closeModal}>
       <div className="deleteSpacetime">
+        <h2>Delete {overrideDelete ? "Override" : "Spacetime"}</h2>
         <div>
-          <h4>Delete {overrideDelete ? "Override" : "Spacetime"}</h4>
-          <div>
-            <input type="checkbox" id="drop" name="drop" onChange={e => setDrop(e.target.checked)} />
-            <label className="spacetimeCheckboxLabel" htmlFor="drop">
-              I understand this {overrideDelete ? "override" : "spacetime"} will be permenantly deleted.
-            </label>
-          </div>
+          <input type="checkbox" id="drop" name="drop" onChange={e => setDrop(e.target.checked)} />
+          <label className="spacetimeCheckboxLabel" htmlFor="drop">
+            I understand this {overrideDelete ? "override" : "spacetime"} will be permenantly deleted.
+          </label>
         </div>
         <div className="spacetimeDeleteDropper">
-          <button className="spacetimeDeleteSubmit" disabled={!drop} onClick={handleClickDrop}>
+          <button className="danger-btn" disabled={!drop} onClick={handleClickDrop}>
             Submit
           </button>
         </div>

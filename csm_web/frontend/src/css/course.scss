@@ -1,0 +1,284 @@
+/* Section enrollment */
+
+@use "base/variables" as *;
+@use "base/button";
+
+.section-card {
+  width: 320px;
+  overflow-x: hidden;
+  box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.15);
+  border-radius: 20px;
+  margin: 0 auto 50px;
+  display: flex;
+  flex-direction: column;
+}
+
+.section-card.full {
+  background-color: #eaeaea;
+}
+
+.section-card-contents {
+  position: relative;
+  padding: 10px 20px 0;
+  flex: 1;
+}
+
+.section-card-contents p {
+  color: #727272;
+}
+
+.section-card-contents svg,
+.section-card-icon-placeholder {
+  vertical-align: bottom;
+  margin-right: 5px;
+}
+
+.section-card-additional-times {
+  display: block;
+}
+
+.section-card-icon-placeholder {
+  display: inline-block;
+}
+
+.section-card-footer {
+  @extend %button;
+
+  border-radius: 0px !important;
+
+  padding: 5px !important;
+
+  font-size: 1.3em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+/* Specify div because it's an <a> element for coordinators which links to section management page */
+.section-card.full div.section-card-footer {
+  background-color: inherit;
+  color: transparent;
+  user-select: none;
+  cursor: inherit;
+}
+
+.section-card-description {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: $csm-student;
+  color: white;
+  border-radius: 8px;
+  min-width: 50px;
+  text-align: center;
+  font-size: 12px;
+  padding: 2px 5px;
+}
+
+.enroll-confirm-modal-contents {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+#day-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, $day-btn-size);
+  grid-auto-rows: max-content;
+  grid-gap: 10px;
+  justify-content: center;
+}
+
+.data-export-modal {
+  height: 90%;
+  display: flex;
+  flex-direction: column;
+}
+
+.data-export-modal-header {
+  display: flex;
+  flex: 0.2 0.2 0;
+  justify-content: center;
+  align-items: center;
+}
+
+.data-export-modal-selection {
+  flex: 1 1 55%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.data-export-modal-download {
+  flex: 1 1 30%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.data-export-checkbox-grid {
+  display: grid;
+  width: 100%;
+  height: 50%;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(auto-fit, 30px);
+  gap: 1%;
+  align-items: center;
+  justify-items: center;
+}
+
+.data-export-checkbox {
+  justify-content: center;
+  width: 40%;
+  align-items: center;
+}
+
+#course-section-controls {
+  flex-grow: 0.5;
+  min-width: 50%;
+  top: 0;
+  align-self: flex-start;
+  margin-top: 40px;
+}
+
+#course-section-controls > * {
+  margin: 0 0 10px;
+}
+
+#course-coord-buttons {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  width: max-content;
+  margin: 0 auto;
+}
+
+#course-enrollment-open-status {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: center;
+
+  margin: 20px 0;
+  color: #6d6d6d;
+}
+
+.course-title {
+  color: #6d6d6d;
+  font-size: 2.5em;
+  font-weight: 400;
+  text-align: center;
+}
+
+#show-unavailable-toggle {
+  display: block;
+  text-align: center;
+  color: #727272;
+}
+
+#show-unavailable-toggle > input {
+  margin-right: 5px;
+  vertical-align: top;
+}
+
+.day-btn {
+  height: $day-btn-size;
+  width: $day-btn-size;
+  border-radius: calc($day-btn-size / 2);
+  border: 2px solid $csm-green;
+  background-color: white;
+  color: #717171;
+  font-size: 1.3em;
+  cursor: pointer;
+  text-align: center;
+  outline: none;
+}
+
+.day-btn:hover {
+  background-color: #fafafa;
+}
+
+.day-btn.active {
+  background-color: $csm-green;
+  color: white;
+}
+
+#course-section-list {
+  width: 75vw;
+  margin: 40px auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  grid-gap: 10px;
+}
+
+#course-section-list-empty {
+  color: #646464;
+  text-align: center;
+}
+
+$create-section-modal-height: 65vh;
+
+.create-section-modal {
+  height: $create-section-modal-height;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#create-section-form {
+  // form should take up all of the space
+  flex: 1;
+  overflow: auto;
+}
+
+#create-section-form #non-spacetime-fields,
+#create-section-form .spacetime-fields {
+  display: grid;
+  padding-left: 0;
+  grid-template-columns: max-content max-content;
+  grid-template-areas:
+    ". ."
+    "last last";
+  grid-gap: 20px;
+  align-items: center;
+}
+
+#create-section-form-contents > .spacetime-fields-header {
+  margin: 0 0 10px 0;
+  color: #646464;
+  min-width: 100%;
+  border-bottom: 2px solid #646464;
+}
+
+#create-section-form-contents {
+  margin: auto;
+  max-width: max-content;
+}
+
+#create-section-form-contents > * {
+  margin-bottom: 20px;
+}
+
+#create-section-form label[name="description"],
+#create-section-form label[name="time"] {
+  grid-area: last;
+}
+
+#create-section-form .create-section-submit-container {
+  grid-area: submit;
+}
+
+.create-section-submit-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+
+  margin-top: 20px;
+}

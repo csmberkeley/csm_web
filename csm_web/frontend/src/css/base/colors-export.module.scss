@@ -1,0 +1,24 @@
+/// Variables to be exported for use in React components
+@use "variables" as *;
+
+:export {
+  csm61a: $csm-theme-csm61a;
+  csm61b: $csm-theme-csm61b;
+  csm61c: $csm-theme-csm61c;
+  csm70: $csm-theme-csm70;
+  csm88: $csm-theme-csm88;
+  csm16a: $csm-theme-csm16a;
+  csm16b: $csm-theme-csm16b;
+
+  student: $csm-student;
+  mentor: $csm-mentor;
+  coordinator: $csm-coordinator;
+
+  attendance-present: $csm-attendance-present;
+  attendance-excused: $csm-attendance-excused;
+  attendance-unexcused: $csm-attendance-unexcused;
+
+  attendance-present-fg: $csm-attendance-present-fg;
+  attendance-excused-fg: $csm-attendance-excused-fg;
+  attendance-unexcused-fg: $csm-attendance-unexcused-fg;
+}

@@ -8,6 +8,9 @@ import { emptyRoles, Roles } from "../../utils/user";
 import { CoordinatorMatcherForm } from "./coordinator/CoordinatorMatcherForm";
 import { MentorSectionPreferences } from "./MentorSectionPreferences";
 
+// Styles
+import "../../css/enrollment_matcher.scss";
+
 export interface MatcherProfile {
   courseId: number;
   courseName: string;

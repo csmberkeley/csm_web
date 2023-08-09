@@ -1,13 +1,17 @@
+import { DateTime } from "luxon";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { useUserEmails } from "../../utils/queries/base";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
+import { useEnrollStudentMutation } from "../../utils/queries/sections";
 
+// Images
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import ErrorCircle from "../../../static/frontend/img/error_outline.svg";
-import { useEnrollStudentMutation } from "../../utils/queries/sections";
-import { DateTime } from "luxon";
+
+// Styles
+import "../../css/coordinator-add-student.scss";
 
 enum CoordModalStates {
   INITIAL = "INITIAL",
@@ -179,7 +183,7 @@ export function CoordinatorAddStudentModal({
 
   const initial_component = (
     <React.Fragment>
-      <h4>Add new students</h4>
+      <h2>Add new students</h2>
       <div className="coordinator-email-content">
         <div className="coordinator-email-input-list">
           {emailsToAdd.map((email, index) => (
@@ -206,18 +210,20 @@ export function CoordinatorAddStudentModal({
         </div>
       </div>
       <div className="coordinator-email-input-buttons">
-        <button className="coordinator-email-input-add" type="button" onClick={() => addNewEmail()}>
-          Add email
-        </button>
-        {
-          /* Firefox doesn't support clipboard reads from sites; readText would be undefined */
-          navigator?.clipboard?.readText !== undefined && (
-            <button className="coordinator-email-input-add" type="button" onClick={() => addEmailsFromClipboard()}>
-              Add from clipboard
-            </button>
-          )
-        }
-        <button className="coordinator-email-input-submit" type="submit" onClick={() => setValidationEnabled(true)}>
+        <div className="coordinator-email-secondary-input-buttons">
+          <button className="secondary-btn" type="button" onClick={() => addNewEmail()}>
+            Add email
+          </button>
+          {
+            /* Firefox doesn't support clipboard reads from sites; readText would be undefined */
+            navigator?.clipboard?.readText !== undefined && (
+              <button className="secondary-btn" type="button" onClick={() => addEmailsFromClipboard()}>
+                Add from clipboard
+              </button>
+            )
+          }
+        </div>
+        <button className="primary-btn" type="submit" onClick={() => setValidationEnabled(true)}>
           Submit
         </button>
       </div>
@@ -226,7 +232,7 @@ export function CoordinatorAddStudentModal({
 
   const loading_component = (
     <React.Fragment>
-      <h4>Add new students</h4>
+      <h2>Add new students</h2>
       <LoadingSpinner />
       <div></div> {/* empty element to align the content */}
     </React.Fragment>
@@ -265,7 +271,7 @@ export function CoordinatorAddStudentModal({
 
   const warning_component = (
     <React.Fragment>
-      <h4>Add new students</h4>
+      <h2>Add new students</h2>
       <div className="coordinator-email-content">
         <div className="coordinator-email-response-list">
           {conflict_arr.length > 0 && (
@@ -492,7 +498,7 @@ export function CoordinatorAddStudentModal({
         </div>
       </div>
       <div className="coordinator-email-input-buttons">
-        <button className="coordinator-email-input-submit" type="submit" onClick={() => setValidationEnabled(true)}>
+        <button className="primary-btn" type="submit" onClick={() => setValidationEnabled(true)}>
           Retry
         </button>
       </div>

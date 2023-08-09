@@ -1,5 +1,8 @@
 import React, { useContext } from "react";
 
+// Images
+import XIcon from "../../static/frontend/img/x.svg";
+
 const ModalContext = React.createContext(Function.prototype);
 
 interface ModalProps {
@@ -16,15 +19,13 @@ export default function Modal({ children, closeModal, className = "" }: ModalPro
   return (
     <ModalContext.Provider value={closeModal}>
       <div className="modal-overlay" onClick={closeModal} />
-      <div className={`modal ${className}`}>
-        <div className="modal-contents">
-          <div className="modal-close-x">
-            <button className="inline-plus-sign" aria-label="close" onClick={closeModal}>
-              <span>&times;</span>
-            </button>
-          </div>
-          {children}
+      <div className={`modal `}>
+        <div className="modal-close-container">
+          <button className="modal-close-x" aria-label="close" onClick={closeModal}>
+            <XIcon className="icon" />
+          </button>
         </div>
+        <div className={`modal-contents ${className}`}>{children}</div>
       </div>
     </ModalContext.Provider>
   );

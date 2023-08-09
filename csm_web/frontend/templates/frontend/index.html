@@ -8,6 +8,9 @@
 	<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
 	<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
 	{% endif %}
+
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'frontend/main.css' %}" />
 {% endblock %}
 
 {% block body %}
@@ -16,5 +19,5 @@
 
 {% block after_body %}
 	{% load static %}
-  <script src="{% static 'frontend/main.js' %}"></script>
+    <script src="{% static 'frontend/main.js' %}"></script>
 {% endblock %}

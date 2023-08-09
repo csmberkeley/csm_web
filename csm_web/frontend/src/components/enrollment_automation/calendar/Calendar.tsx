@@ -6,6 +6,9 @@ import { Time } from "../EnrollmentAutomationTypes";
 import { CalendarDay, CalendarDayHeader } from "./CalendarDay";
 import { CalendarEvent, CalendarEventSingleTime, DAYS } from "./CalendarTypes";
 
+// Styles
+import "../../../css/calendar.scss";
+
 // default start and end times for calendar
 const START = DateTime.fromObject({ hour: 8, minute: 0 }); // 8:00 AM
 const END = DateTime.fromObject({ hour: 18, minute: 0 }); // 6:00 PM

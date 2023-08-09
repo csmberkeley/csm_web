@@ -1,0 +1,53 @@
+/* Course menu styles */
+@use "base/variables" as *;
+@use "base/button";
+
+#course-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, 10em);
+  max-width: calc((2 * 10em) + 10px);
+  grid-gap: 10px;
+  margin: 20px auto;
+  text-align: center;
+  justify-content: center;
+  font-size: 2em;
+}
+
+#course-menu-loading-spinner {
+  margin: auto;
+  height: 50px;
+  width: 50px;
+}
+
+.course-menu-content {
+  display: flex;
+  flex-direction: column;
+}
+
+.course-menu-sidebar {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+}
+
+.enrollment-container {
+  display: grid;
+  justify-content: center;
+}
+
+.enrollment-row {
+  display: contents;
+  font-size: 1.1em;
+}
+
+.enrollment-course {
+  grid-column: 1;
+  padding: 8px;
+  border-right: 2px solid $csm-neutral;
+}
+
+.enrollment-time {
+  grid-column: 2;
+  padding: 8px;
+}

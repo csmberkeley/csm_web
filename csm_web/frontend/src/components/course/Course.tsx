@@ -11,7 +11,12 @@ import { WhitelistModal } from "./WhitelistModal";
 import { SettingsModal } from "./SettingsModal";
 import { DEFAULT_LONG_LOCALE_OPTIONS } from "../../utils/datetime";
 
+// Images
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
+import PlusIcon from "../../../static/frontend/img/plus.svg";
+
+// Styles
+import "../../css/course.scss";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
   Monday: "M",
@@ -156,16 +161,17 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
         {userIsCoordinator && (
           <div id="course-coord-buttons">
             <button
-              className="csm-btn create-section-btn"
+              className="primary-btn"
               onClick={() => {
                 setShowModal(true);
                 setWhichModal(COURSE_MODAL_TYPE.createSection);
               }}
             >
-              <span className="inline-plus-sign">+ </span>Create Section
+              <PlusIcon className="icon" />
+              Create Section
             </button>
             <button
-              className="csm-btn export-data-btn"
+              className="primary-btn"
               onClick={() => {
                 setShowModal(true);
                 setWhichModal(COURSE_MODAL_TYPE.exportData);
@@ -174,7 +180,7 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
               Export Data
             </button>
             <button
-              className="csm-btn course-settings-btn"
+              className="primary-btn"
               onClick={() => {
                 setShowModal(true);
                 setWhichModal(COURSE_MODAL_TYPE.settings);
@@ -184,7 +190,7 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
             </button>
             {course.isRestricted && (
               <button
-                className="csm-btn edit-whitelist-btn"
+                className="primary-btn"
                 onClick={() => {
                   setShowModal(true);
                   setWhichModal(COURSE_MODAL_TYPE.whitelist);

@@ -26,6 +26,7 @@ const ResourceLinkEdit = ({
     <React.Fragment>
       <div className="resourceLinkEdit">
         <input
+          className="form-input"
           type="text"
           defaultValue={link.name}
           placeholder="Link Name"
@@ -33,6 +34,7 @@ const ResourceLinkEdit = ({
           onBlur={() => onBlur()}
         />
         <input
+          className="form-input"
           type="text"
           defaultValue={link.url}
           placeholder="Link URL"

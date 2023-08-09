@@ -1,0 +1,67 @@
+/// Colors
+
+// --csm-green: rgb(124, 233, 162);
+$csm-green: #9ae0b3;
+$csm-green-darkened: #75b38a;
+$csm-green-lightened: #d7ffe5;
+$csm-theme-csm61a: $csm-green;
+$csm-theme-csm61b: #63c5ff;
+$csm-theme-csm61c: #797c99;
+$csm-theme-csm70: #ff7070;
+$csm-theme-csm88: #e46495;
+$csm-theme-csm16a: #707eff;
+$csm-theme-csm16b: #ffe070;
+$csm-theme-default: black;
+
+$csm-mentor: $csm-green;
+$csm-coordinator: #6517b3;
+$csm-student: #ffab2e;
+
+$csm-danger: #ff7272;
+$csm-danger-darkened: #eb6060;
+$csm-neutral: #c0c0c0;
+$csm-neutral-darkened: #b6b6b6;
+$csm-resources: #ededed;
+$csm-link-blue: #039be5;
+$csm-link-hover: rgba(196, 196, 196, 0.28);
+
+$csm-attendance-present: $csm-green;
+$csm-attendance-excused: #797979;
+$csm-attendance-unexcused: $csm-danger;
+$csm-attendance-present-fg: black;
+$csm-attendance-excused-fg: white;
+$csm-attendance-unexcused-fg: black;
+
+$csm-content-title-color: #646464;
+
+/// calendar colors
+$calendar-header-bg: #f5f5f5;
+$calendar-header-border: #e5e5e5;
+$calendar-border: #ddd;
+$calendar-fg: #333;
+
+$calendar-label-fg: #666;
+$calendar-day-bg: white;
+
+$calendar-dragging-event: #ffd6dd;
+$calendar-creating-event: lightpink;
+$calendar-hover-event: #d2ffd2;
+$calendar-hover-shadow: #ccc;
+$calendar-select-event: #90ee90;
+
+/// Fonts
+$default-font: "Montserrat", sans-serif;
+
+// Lengths
+
+$day-btn-size: 70px;
+$arrow-size: 8px;
+$button-icon-gap: 4px;
+
+/// Height of the top close bar.
+$modal-close-height: 2em;
+/// Total padding in the modal contents.
+$modal-padding-y: 40px;
+
+/// Table padding amount
+$table-padding: 15px;

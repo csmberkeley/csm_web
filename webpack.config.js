@@ -1,6 +1,7 @@
 const LodashModuleReplacementPlugin = require("lodash-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
+const CssMinimizerPlugin = require("css-minimizer-webpack-plugin");
 const path = require("path");
-const plugins = [new LodashModuleReplacementPlugin()];
 
 module.exports = (env, argv) => {
   const config = {
@@ -9,7 +10,7 @@ module.exports = (env, argv) => {
       path: path.resolve(__dirname, "./csm_web/frontend/static/frontend/")
     },
     resolve: {
-      extensions: [".tsx", ".ts", ".js", ".json"]
+      extensions: [".tsx", ".ts", ".js", ".json", ".css", ".scss", ".sass"]
     },
     module: {
       rules: [
@@ -55,14 +56,36 @@ module.exports = (env, argv) => {
               }
             }
           ]
+        },
+        {
+          // scss, sass, css
+          test: /\.s[ac]ss$|\.css$/i,
+          include: [
+            path.resolve(__dirname, "./csm_web/frontend/src/css/"),
+            path.resolve(__dirname, "./csm_web/frontend/templates/frontend/")
+          ],
+          sideEffects: true,
+          use: [
+            {
+              loader: MiniCssExtractPlugin.loader,
+              options: {
+                publicPath: "./csm_web/frontend/static/frontend/css/"
+              }
+            },
+            "css-loader",
+            "sass-loader"
+          ]
         }
       ]
+    },
+    optimization: {
+      minimizer: ["...", new CssMinimizerPlugin()]
     },
     watchOptions: {
       poll: 1000,
       ignored: /node_modules/
     },
-    plugins: plugins,
+    plugins: [new LodashModuleReplacementPlugin(), new MiniCssExtractPlugin()],
     externals: { react: "React", "react-dom": "ReactDOM" }
   };
   if (argv.mode === "development") {

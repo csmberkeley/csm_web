@@ -24,12 +24,12 @@ export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
     <React.Fragment>
       <h3 className="section-detail-page-title">Roster</h3>
       {studentsLoaded ? (
-        <table className="standalone-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Email</th>
-              <th>
+        <table className="csm-table standalone">
+          <thead className="csm-table-head">
+            <tr className="csm-table-head-row">
+              <th className="csm-table-item">Name</th>
+              <th className="csm-table-item">Email</th>
+              <th className="csm-table-item">
                 <CopyIcon id="copy-student-emails" height="1em" width="1em" onClick={handleCopyEmails} />
                 {emailsCopied && <CheckCircle id="copy-student-emails-success" height="1em" width="1em" />}
               </th>
@@ -37,9 +37,9 @@ export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
           </thead>
           <tbody>
             {students.map(({ name, email, id }) => (
-              <tr key={id}>
-                <td>{name}</td>
-                <td>{email}</td>
+              <tr key={id} className="csm-table-row">
+                <td className="csm-table-item">{name}</td>
+                <td className="csm-table-item">{email}</td>
               </tr>
             ))}
           </tbody>

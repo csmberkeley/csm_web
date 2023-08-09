@@ -7,10 +7,14 @@ import MetaEditModal from "./MetaEditModal";
 import { InfoCard, SectionSpacetime } from "./Section";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
+import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 
+// Images
 import XIcon from "../../../static/frontend/img/x.svg";
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
-import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
+
+// Styles
+import "../../css/coordinator-add-student.scss";
 
 enum ModalStates {
   NONE = "NONE",
@@ -57,21 +61,27 @@ export default function MentorSectionInfo({
         isCoordinator ? `${mentor.name || mentor.email}'s` : "My"
       } Section`}</h3>
       <div className="section-info-cards-container">
-        <InfoCard title="Students">
+        <InfoCard
+          title="Students"
+          extraPadding={
+            // add extra padding if loading, otherwise remove padding
+            !studentsLoaded
+          }
+        >
           {studentsLoaded ? (
             // done loading
             <React.Fragment>
-              <table id="students-table">
-                <thead>
-                  <tr>
-                    <th>Name</th>
+              <table id="students-table" className="csm-table">
+                <thead className="csm-table-head">
+                  <tr className="csm-table-head-row">
+                    <th className="csm-table-item">Name</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(students.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students).map(
                     ({ name, email, id: studentId }: Student) => (
-                      <tr key={studentId}>
-                        <td>
+                      <tr key={studentId} className="csm-table-row">
+                        <td className="csm-table-item">
                           {isCoordinator && studentId !== -1 && (
                             <StudentDropper
                               name={name ? name : email}
@@ -87,9 +97,9 @@ export default function MentorSectionInfo({
                   )}
                   {isCoordinator && (
                     <React.Fragment>
-                      <tr>
-                        <td>
-                          <button className="coordinator-email-modal-button" onClick={() => setIsAddingStudent(true)}>
+                      <tr className="csm-table-row">
+                        <td className="csm-table-item">
+                          <button className="secondary-btn" onClick={() => setIsAddingStudent(true)}>
                             Add students
                           </button>
                         </td>
@@ -118,6 +128,58 @@ export default function MentorSectionInfo({
               key={spacetime.id}
               spacetime={spacetime}
               override={override}
+              spacetimeActions={
+                <div className="info-card-actions">
+                  {spacetimes.length > 1 && isCoordinator ? (
+                    <button
+                      className="secondary-link-btn delete-spacetime-btn"
+                      onClick={() => {
+                        setShowModal(ModalStates.SPACETIME_DELETE);
+                        setFocusedSpacetimeID(spacetime.id);
+                        setDeleteType(false);
+                      }}
+                    >
+                      <XIcon className="icon" /> Delete
+                    </button>
+                  ) : (
+                    <div>{/* empty div for positioning */}</div>
+                  )}
+                  <button
+                    className="secondary-link-btn info-card-edit-btn"
+                    onClick={() => {
+                      setShowModal(ModalStates.SPACETIME_EDIT);
+                      setFocusedSpacetimeID(spacetime.id);
+                      setDeleteType(false);
+                    }}
+                  >
+                    <PencilIcon className="icon" /> Edit
+                  </button>
+                </div>
+              }
+              overrideActions={
+                <div className="info-card-actions">
+                  <button
+                    className="secondary-link-btn delete-spacetime-btn"
+                    onClick={() => {
+                      setShowModal(ModalStates.SPACETIME_DELETE);
+                      setFocusedSpacetimeID(spacetime.id);
+                      setDeleteType(true);
+                    }}
+                  >
+                    <XIcon className="icon" /> Delete
+                  </button>
+                  <button
+                    className="secondary-link-btn info-card-edit-btn"
+                    onClick={() => {
+                      setShowModal(ModalStates.SPACETIME_EDIT);
+                      setFocusedSpacetimeID(spacetime.id);
+                      setDeleteType(true);
+                    }}
+                  >
+                    <PencilIcon className="icon" /> Edit
+                  </button>
+                </div>
+              }
             >
               {showModal === ModalStates.SPACETIME_EDIT && focusedSpacetimeID === spacetime.id && (
                 <SpacetimeEditModal
@@ -136,61 +198,21 @@ export default function MentorSectionInfo({
                   overrideDelete={deleteType}
                 />
               )}
-              {spacetimes.length > 1 && isCoordinator && (
-                <button
-                  className="delete-spacetime-btn"
-                  onClick={() => {
-                    setShowModal(ModalStates.SPACETIME_DELETE);
-                    setFocusedSpacetimeID(spacetime.id);
-                    setDeleteType(false);
-                  }}
-                >
-                  <XIcon width="1em" height="1em" /> Delete
-                </button>
-              )}
-              {override && (
-                <button
-                  className="delete-override-btn"
-                  onClick={() => {
-                    setShowModal(ModalStates.SPACETIME_DELETE);
-                    setFocusedSpacetimeID(spacetime.id);
-                    setDeleteType(true);
-                  }}
-                >
-                  <XIcon width="1em" height="1em" /> Delete
-                </button>
-              )}
-              <button
-                className="info-card-edit-btn"
-                onClick={() => {
-                  setShowModal(ModalStates.SPACETIME_EDIT);
-                  setFocusedSpacetimeID(spacetime.id);
-                  setDeleteType(false);
-                }}
-              >
-                <PencilIcon width="1em" height="1em" /> Edit
-              </button>
-              {override && (
-                <button
-                  className="override-info-card-edit-btn"
-                  onClick={() => {
-                    setShowModal(ModalStates.SPACETIME_EDIT);
-                    setFocusedSpacetimeID(spacetime.id);
-                    setDeleteType(true);
-                  }}
-                >
-                  <PencilIcon width="1em" height="1em" /> Edit
-                </button>
-              )}
             </SectionSpacetime>
           ))}
 
           <InfoCard title="Meta">
             {isCoordinator && (
               <React.Fragment>
-                <button className="info-card-edit-btn" onClick={() => setShowModal(ModalStates.META_EDIT)}>
-                  <PencilIcon width="1em" height="1em" /> Edit
-                </button>
+                <div className="info-card-actions">
+                  <div>{/* empty div for positioning */}</div>
+                  <button
+                    className="secondary-link-btn info-card-edit-btn"
+                    onClick={() => setShowModal(ModalStates.META_EDIT)}
+                  >
+                    <PencilIcon className="icon" /> Edit
+                  </button>
+                </div>
                 {showModal === ModalStates.META_EDIT && (
                   <MetaEditModal
                     sectionId={sectionId}

@@ -11,7 +11,12 @@ import { dateSortISO, formatDateLocaleShort } from "./utils";
 import { Attendance } from "../../utils/types";
 import randomWords from "random-words";
 
+// Image
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
+
+// Styles
+import scssColors from "../../css/base/colors-export.module.scss";
+import "../../css/word-of-the-day.scss";
 
 interface MentorSectionAttendanceProps {
   sectionId: number;
@@ -260,42 +265,45 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                   </div>
                 ))}
               </div>
-              <table id="mentor-attendance-table">
+              <table id="csm-table mentor-attendance-table">
                 <tbody>
                   {selectedOccurrence &&
-                    stagedAttendances.map(({ id, student, presence }) => (
-                      <tr key={id}>
-                        <td>{student.name}</td>
-                        <td>
-                          <select
-                            value={presence}
-                            name={String(id)}
-                            className="select-css"
-                            style={{
-                              backgroundColor: `var(--csm-attendance-${ATTENDANCE_LABELS[presence][1]})`
-                            }}
-                            onChange={handleAttendanceChange}
-                          >
-                            {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
-                              <option key={value} value={value} disabled={!value}>
-                                {label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
+                    stagedAttendances.map(({ id, student, presence }) => {
+                      const cssSuffix = ATTENDANCE_LABELS[presence][1].toLowerCase();
+                      const attendanceColor = scssColors[`attendance-${cssSuffix}`];
+                      const attendanceFgColor = scssColors[`attendance-${cssSuffix}-fg`];
+                      return (
+                        <tr key={id} className="csm-table-row">
+                          <td className="csm-table-item">{student.name}</td>
+                          <td className="csm-table-item">
+                            <select
+                              value={presence}
+                              name={String(id)}
+                              className="form-select mentor-attendance-input"
+                              style={{ backgroundColor: attendanceColor, color: attendanceFgColor }}
+                              onChange={handleAttendanceChange}
+                            >
+                              {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
+                                <option key={value} value={value} disabled={!value}>
+                                  {label}
+                                </option>
+                              ))}
+                            </select>
+                          </td>
+                        </tr>
+                      );
+                    })}
                 </tbody>
               </table>
               <div id="mentor-attendance-controls">
-                <button className="csm-btn save-attendance-btn" onClick={handleSaveAttendance}>
-                  Save
-                </button>
-                <button className="mark-all-present-btn" onClick={handleMarkAllPresent}>
-                  Mark All As Present
-                </button>
                 {showSaveSpinner && <LoadingSpinner />}
                 {showAttendanceSaveSuccess && <CheckCircle height="2em" width="2em" />}
+                <button className="primary-link-btn" onClick={handleMarkAllPresent}>
+                  Mark All As Present
+                </button>
+                <button className="primary-btn" onClick={handleSaveAttendance}>
+                  Save
+                </button>
               </div>
               <div id="word-of-the-day-container">
                 <h4 className="word-of-the-day-title">
@@ -311,8 +319,8 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                         <span className="word-of-the-day-status unselected">Unselected</span>
                       )}
                     </p>
-                    <div className="word-of-the-day-input-container">
-                      <div>
+                    <div className="word-of-the-day-action-container">
+                      <div className="word-of-the-day-input-container">
                         <input
                           className="word-of-the-day-input"
                           type="text"
@@ -322,7 +330,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                             setWordOfTheDay(e.target.value);
                           }}
                         />
-                        <button className="word-of-the-day-random" onClick={handlePickRandomWord}>
+                        <button className="primary-link-btn" onClick={handlePickRandomWord}>
                           Random
                         </button>
                       </div>
@@ -333,7 +341,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                           <CheckCircle className="word-of-the-day-icon" />
                         ) : null}
                         <button
-                          className="csm-btn word-of-the-day-submit"
+                          className="primary-btn"
                           onClick={handleSubmitWord}
                           disabled={!wordOfTheDay || initialWordOfTheDay == wordOfTheDay}
                         >

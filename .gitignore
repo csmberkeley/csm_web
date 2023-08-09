@@ -224,7 +224,7 @@ typings/
 # NPM Built
 main.js
 main.js.LICENSE.txt
-style.min.css
+main.css
 
 # Mac OS X dir files
 .DS_Store

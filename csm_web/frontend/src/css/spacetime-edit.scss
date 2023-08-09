@@ -1,0 +1,11 @@
+.spacetime-edit-form-title {
+  text-align: center;
+}
+
+#day-time-fields {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
