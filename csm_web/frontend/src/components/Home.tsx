@@ -8,6 +8,12 @@ import { Profile, Course } from "../utils/types";
 import LoadingSpinner from "./LoadingSpinner";
 import { formatSpacetimeInterval } from "../utils/datetime";
 
+// Images
+import PlusIcon from "../../static/frontend/img/plus.svg";
+
+// Styles
+import scssColors from "../css/base/colors-export.module.scss";
+
 const Home = () => {
   const { data: profiles, isSuccess: profilesLoaded, isError: profilesLoadError } = useProfiles();
   const { data: courses, isSuccess: coursesLoaded, isError: coursesLoadError } = useCourses();
@@ -63,8 +69,9 @@ const Home = () => {
     <div id="home-courses">
       <div id="home-courses-heading">
         <h3 className="page-title">My courses</h3>
-        <Link className="csm-btn" to="/courses">
-          <span className="inline-plus-sign">+ </span>Add Course
+        <Link className="primary-btn" to="/courses">
+          <PlusIcon className="icon inline-plus-icon" />
+          Add Course
         </Link>
       </div>
       {content}
@@ -82,8 +89,11 @@ const CourseCard = ({ profiles }: CourseCardProps): React.ReactElement => {
   const relation = role.toLowerCase();
 
   const Card = (): React.ReactElement => {
+    // default to black if not found
+    const courseColor = scssColors[course.toLowerCase()] ?? "black";
+    const relationColor = scssColors[relation.toLowerCase()] ?? "white";
     return (
-      <div className="course-card" style={{ borderTopColor: `var(--csm-theme-${course.toLowerCase()})` }}>
+      <div className="course-card" style={{ borderTopColor: courseColor }}>
         <div className="course-card-contents">
           <h3 className="course-card-name">{course}</h3>
           <p className="course-card-title">{courseTitle}</p>
@@ -97,7 +107,7 @@ const CourseCard = ({ profiles }: CourseCardProps): React.ReactElement => {
                 ))}
               </Link>
             ))}
-          <div className="relation-label" style={{ backgroundColor: `var(--csm-${relation})` }}>
+          <div className="relation-label" style={{ backgroundColor: relationColor }}>
             {relation}
           </div>
         </div>

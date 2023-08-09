@@ -91,24 +91,24 @@ export const SectionCard = ({
     const iconHeight = "8em";
     if (enrollmentSuccessful) {
       return (
-        <React.Fragment>
+        <div className="enroll-confirm-modal-contents">
           <CheckCircle height={iconHeight} width={iconWidth} />
           <h3>Successfully enrolled</h3>
           <ModalCloser>
-            <button className="modal-btn">OK</button>
+            <button className="primary-btn">OK</button>
           </ModalCloser>
-        </React.Fragment>
+        </div>
       );
     }
     return (
-      <React.Fragment>
+      <div className="enroll-confirm-modal-contents">
         <XCircle color="#eb6060" height={iconHeight} width={iconWidth} />
         <h3>Enrollment failed</h3>
         <h4>{errorMessage}</h4>
         <ModalCloser>
-          <button className="modal-btn">OK</button>
+          <button className="primary-btn">OK</button>
         </ModalCloser>
-      </React.Fragment>
+      </div>
     );
   };
 
@@ -130,7 +130,7 @@ export const SectionCard = ({
 
   return (
     <React.Fragment>
-      {showModal && <Modal closeModal={closeModal}>{modalContents().props.children}</Modal>}
+      {showModal && <Modal closeModal={closeModal}>{modalContents()}</Modal>}
       <section className={`section-card ${isFull ? "full" : ""}`}>
         <div className="section-card-contents">
           {description && <span className="section-card-description">{description}</span>}
@@ -175,12 +175,12 @@ export const SectionCard = ({
           </p>
         </div>
         {userIsCoordinator ? (
-          <Link to={`/sections/${id}`} className="csm-btn section-card-footer">
+          <Link to={`/sections/${id}`} className="primary-btn section-card-footer">
             MANAGE
           </Link>
         ) : (
           <div
-            className={`csm-btn section-card-footer ${courseOpen ? "" : "disabled"}`}
+            className={`primary-btn section-card-footer ${courseOpen ? "" : "disabled"}`}
             onClick={isFull ? undefined : enroll}
           >
             ENROLL

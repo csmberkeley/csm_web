@@ -73,6 +73,7 @@ const ResourceWorksheetEdit = ({
     <div className="resourceWorksheet">
       <div className="resourceWorksheetEditItem">
         <input
+          className="form-input"
           type="text"
           defaultValue={worksheet.name}
           placeholder="Worksheet Name"

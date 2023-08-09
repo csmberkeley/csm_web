@@ -8,6 +8,9 @@ import LoadingSpinner from "./LoadingSpinner";
 import { DateTime } from "luxon";
 import { DEFAULT_LONG_LOCALE_OPTIONS, DEFAULT_TIMEZONE } from "../utils/datetime";
 
+// Styles
+import "../css/course-menu.scss";
+
 const CourseMenu = () => {
   const { data: jsonCourses, isSuccess: coursesLoaded } = useCourses();
   const { data: jsonUserInfo, isSuccess: userInfoLoaded } = useUserInfo();
@@ -147,16 +150,27 @@ const CourseMenuContent = ({
 
   let sidebar = null;
   if (hasRestrictedCourses) {
+    /**
+     * Helper to get the current tab class
+     */
+    const getTabClass = (expected: CourseMenuSidebarTabs) => {
+      if (selectedTab === expected) {
+        return "tab active";
+      } else {
+        return "tab";
+      }
+    };
+
     sidebar = (
-      <div className="course-menu-sidebar">
+      <div className="tab-list">
         <button
-          className={"course-menu-sidebar-tab" + (selectedTab === CourseMenuSidebarTabs.RESTRICTED ? " active" : "")}
+          className={getTabClass(CourseMenuSidebarTabs.RESTRICTED)}
           onClick={() => setSelectedTab(CourseMenuSidebarTabs.RESTRICTED)}
         >
           Restricted
         </button>
         <button
-          className={"course-menu-sidebar-tab" + (selectedTab === CourseMenuSidebarTabs.UNRESTRICTED ? " active" : "")}
+          className={getTabClass(CourseMenuSidebarTabs.UNRESTRICTED)}
           onClick={() => setSelectedTab(CourseMenuSidebarTabs.UNRESTRICTED)}
         >
           Unrestricted
@@ -204,7 +218,7 @@ const EnrollmentMenu = ({ courses }: EnrollmentMenuProps) => {
       {courses !== null ? (
         <div id="course-menu">
           {Array.from(courses.entries()).map(([id, course]) => (
-            <Link className="csm-btn" to={`${id}`} key={id}>
+            <Link className="primary-btn" to={`${id}`} key={id}>
               {course.name}
             </Link>
           ))}

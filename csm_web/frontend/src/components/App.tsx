@@ -10,8 +10,13 @@ import Policies from "./Policies";
 import { Resources } from "./resource_aggregation/Resources";
 import Section from "./section/Section";
 
+// Images
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
+
+// Styles
+import "../css/header.scss";
+import "../css/home.scss";
 
 interface ErrorType {
   message: string;
@@ -113,26 +118,30 @@ function Header(): React.ReactElement {
 
   return (
     <header>
-      <Link to="/">
-        <LogoNoText id="logo" />
-      </Link>
-      <NavLink className={homeNavlinkClass} to="/">
-        <h3 className="site-title">Scheduler</h3>
-      </NavLink>
-      <NavLink to="/resources" className={navlinkClass}>
-        <h3 className="site-title">Resources</h3>
-      </NavLink>
-      {activeMatcherRoles["COORDINATOR"].size > 0 || activeMatcherRoles["MENTOR"].size > 0 ? (
-        <NavLink to="/matcher" className={navlinkClass}>
-          <h3 className="site-title">Matcher</h3>
+      <div className="site-title-group">
+        <Link to="/">
+          <LogoNoText id="logo" />
+        </Link>
+        <NavLink className={homeNavlinkClass} to="/">
+          <h3 className="site-title">Scheduler</h3>
         </NavLink>
-      ) : null}
-      <NavLink to="/policies" className={navlinkClassSubtitle}>
-        <h3 className="site-subtitle">Policies</h3>
-      </NavLink>
-      <a id="logout-btn" href="/logout" title="Log out">
-        <LogOutIcon width="1.25em" height="1.25em" />
-      </a>
+        <NavLink to="/resources" className={navlinkClass}>
+          <h3 className="site-title">Resources</h3>
+        </NavLink>
+        {activeMatcherRoles["COORDINATOR"].size > 0 || activeMatcherRoles["MENTOR"].size > 0 ? (
+          <NavLink to="/matcher" className={navlinkClass}>
+            <h3 className="site-title">Matcher</h3>
+          </NavLink>
+        ) : null}
+      </div>
+      <div className="site-title-group">
+        <NavLink to="/policies" className={navlinkClassSubtitle}>
+          <h3 className="site-subtitle">Policies</h3>
+        </NavLink>
+        <a id="logout-btn" href="/logout" title="Log out">
+          <LogOutIcon width="1.25em" height="1.25em" />
+        </a>
+      </div>
     </header>
   );
 }

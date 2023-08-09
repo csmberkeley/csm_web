@@ -24,7 +24,7 @@ export default function MetaEditModal({
     setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
   }
 
-  function handleSubmit(event: React.ChangeEvent<HTMLFormElement>) {
+  function handleSubmit(event: React.MouseEvent<HTMLButtonElement>) {
     event.preventDefault();
     //TODO: Handle API Failure
     sectionUpdateMutation.mutate(formState);
@@ -33,11 +33,12 @@ export default function MetaEditModal({
 
   return (
     <Modal closeModal={closeModal}>
-      <form className="csm-form" onSubmit={handleSubmit}>
-        <h4>Change Section Metadata</h4>
-        <label>
+      <div className="csm-form">
+        <h2>Change Section Metadata</h2>
+        <label className="form-label">
           Capacity
           <input
+            className="form-input"
             required
             name="capacity"
             type="number"
@@ -49,12 +50,22 @@ export default function MetaEditModal({
             autoFocus
           />
         </label>
-        <label>
+        <label className="form-label">
           Description
-          <input name="description" type="text" value={formState.description} onChange={handleChange} />
+          <input
+            className="form-input"
+            name="description"
+            type="text"
+            value={formState.description}
+            onChange={handleChange}
+          />
         </label>
-        <input type="submit" value="Save" />
-      </form>
+        <div className="form-actions">
+          <button className="primary-btn" onClick={handleSubmit}>
+            Save
+          </button>
+        </div>
+      </div>
     </Modal>
   );
 }

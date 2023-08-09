@@ -90,7 +90,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
   /**
    * Handle form submission.
    */
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+  const handleSubmit = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
     const data = {
       mentorEmail,
@@ -109,14 +109,15 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
   };
 
   return (
-    <Modal closeModal={closeModal}>
-      <form id="create-section-form" className="csm-form" onSubmit={handleSubmit}>
+    <Modal className="create-section-modal" closeModal={closeModal}>
+      <form id="create-section-form" className="csm-form">
         <div id="create-section-form-contents">
           <div id="non-spacetime-fields">
-            <label>
+            <label className="form-label">
               Mentor Email
               <input
                 onChange={e => handleChange(-1, "mentorEmail", e.target.value)}
+                className="form-input"
                 type="email"
                 list="user-email-list"
                 required
@@ -130,9 +131,10 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                 {userEmailsLoaded ? userEmails.map(email => <option key={email} value={email} />) : null}
               </datalist>
             </label>
-            <label>
+            <label className="form-label">
               Capacity
               <input
+                className="form-input"
                 required
                 name="capacity"
                 type="number"
@@ -143,9 +145,10 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                 onChange={e => handleChange(-1, "capacity", e.target.value)}
               />
             </label>
-            <label>
+            <label className="form-label">
               Description
               <input
+                className="form-input"
                 name="description"
                 type="text"
                 value={description}
@@ -157,9 +160,10 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
             <React.Fragment key={index}>
               <h4 className="spacetime-fields-header">Weekly occurence {index + 1}</h4>
               <div className="spacetime-fields">
-                <label>
+                <label className="form-label">
                   Location
                   <input
+                    className="form-input"
                     onChange={e => handleChange(index, "location", e.target.value)}
                     required
                     title="You cannot leave this field blank"
@@ -169,9 +173,10 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                     value={location}
                   />
                 </label>
-                <label>
+                <label className="form-label">
                   Day
                   <select
+                    className="form-select"
                     onChange={e => handleChange(index, "dayOfWeek", e.target.value)}
                     name={`dayOfWeek|${index}`}
                     value={dayOfWeek}
@@ -184,35 +189,40 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                     ))}
                   </select>
                 </label>
-                <label>
+                <label className="form-label">
                   Time
                   <TimeInput
+                    className="form-date"
                     onChange={e => handleChange(index, "startTime", e.target.value)}
                     required
                     name={`startTime|${index}`}
                     value={startTime}
                   />
                 </label>
-                <label>
+                <label className="form-label">
                   Duration (min)
                   <input
+                    className="form-input"
                     type="number"
                     name={`duration|${index}`}
                     value={duration}
+                    min={0}
                     onChange={e => handleChange(index, "duration", e.target.value)}
                   />
                 </label>
-                {index === spacetimes.length - 1 && (
-                  <button className="csm-btn" id="add-occurence-btn" onClick={appendSpacetime}>
-                    Add another occurence
-                  </button>
-                )}
               </div>
             </React.Fragment>
           ))}
-          <input type="submit" value="Create Section" />
         </div>
       </form>
+      <div className="create-section-submit-container">
+        <button className="secondary-btn" id="add-occurence-btn" onClick={appendSpacetime}>
+          Add another occurence
+        </button>
+        <button className="primary-btn" onClick={handleSubmit}>
+          Submit
+        </button>
+      </div>
     </Modal>
   );
 };

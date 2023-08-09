@@ -9,10 +9,14 @@ import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 import { SearchBar } from "../SearchBar";
 
+// Images
 import CheckCircleIcon from "../../../static/frontend/img/check_circle.svg";
 import ExclamationCircleIcon from "../../../static/frontend/img/exclamation-circle.svg";
 import UndoIcon from "../../../static/frontend/img/undo.svg";
 import XIcon from "../../../static/frontend/img/x.svg";
+
+// Styles
+import "../../css/whitelist_modal.scss";
 
 interface WhitelistModalProps {
   course: Course;
@@ -165,7 +169,7 @@ export const WhitelistModal = ({ course, closeModal }: WhitelistModalProps) => {
         <span className="whitelist-modal-description">List of emails, one per line or separated by commas</span>
         <textarea className="whitelist-modal-add-textarea" ref={whitelistAddTextArea}></textarea>
         <div className="whitelist-modal-footer">
-          <button className="csm-btn whitelist-modal-submit" onClick={submitWhitelistAdd}>
+          <button className="primary-btn whitelist-modal-submit" onClick={submitWhitelistAdd}>
             Submit
           </button>
           <div className="whitelist-modal-submit-status">{whitelistAddStatusIcon}</div>
@@ -229,7 +233,7 @@ export const WhitelistModal = ({ course, closeModal }: WhitelistModalProps) => {
         </div>
         <div className="whitelist-modal-footer">
           <button
-            className="csm-btn whitelist-modal-submit"
+            className="primary-btn whitelist-modal-submit"
             onClick={submitWhitelistDelete}
             disabled={stagedBlacklistEmails.length === 0}
           >
@@ -244,15 +248,15 @@ export const WhitelistModal = ({ course, closeModal }: WhitelistModalProps) => {
   return (
     <Modal className="whitelist-modal-container" closeModal={closeModal}>
       <div className="whitelist-modal">
-        <div className="whitelist-modal-header">
+        <div className="tab-list">
           <button
-            className={`csm-btn whitelist-modal-tab ${modalTab === ModalTab.ADD ? "active" : ""}`}
+            className={`tab ${modalTab === ModalTab.ADD ? "active" : ""}`}
             onClick={() => setModalTab(ModalTab.ADD)}
           >
             Add
           </button>
           <button
-            className={`csm-btn whitelist-modal-tab ${modalTab === ModalTab.DELETE ? "active" : ""}`}
+            className={`tab ${modalTab === ModalTab.DELETE ? "active" : ""}`}
             onClick={() => setModalTab(ModalTab.DELETE)}
           >
             Delete

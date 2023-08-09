@@ -1,3 +1,7 @@
+// Global styles (imported before any components to allow for overrides)
+import "./css/base/styles.scss";
+import "./css/fontawesome-styles.scss";
+
 import App from "./components/App";
 import React from "react";
 import { BrowserRouter as Router } from "react-router-dom";

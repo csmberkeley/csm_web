@@ -1,0 +1,113 @@
+/* Header styling */
+
+@use "base/variables" as *;
+
+/// container separating left and right groups of header items
+header {
+  box-shadow: 0px 4px 4px rgba(188, 188, 188, 0.25);
+  padding: 30px 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 8px -8px 0 -8px;
+}
+
+/// individual groups of site title items
+.site-title-group {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+}
+
+#logo {
+  height: 3em;
+  margin-top: -14px;
+}
+
+.site-title {
+  font-weight: 600;
+  font-size: 23px;
+  line-height: 18px;
+  margin-bottom: 0;
+  user-select: none;
+}
+
+.site-subtitle {
+  font-weight: 600;
+  font-size: 18px;
+  margin-bottom: 0;
+  user-select: none;
+}
+
+.site-title-link,
+.site-subtitle-link {
+  text-decoration: none;
+  color: #bbbbbb;
+
+  &.is-active {
+    color: #808080;
+  }
+}
+
+#user-profile-pic {
+  border: 2px solid #ffffff;
+  border-radius: 26px;
+  box-sizing: border-box;
+  box-shadow: 0px 4px 4px rgba(136, 136, 136, 0.25);
+}
+
+#logout-btn {
+  margin: auto 5px auto 30px;
+}
+
+#logout-btn * {
+  fill: #808080;
+  vertical-align: middle;
+}
+
+#logout-btn:hover * {
+  fill: #5e5e5e;
+}
+
+/* smaller screens */
+@media screen and (max-width: 500px) {
+  header {
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #logo {
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .site-title {
+    margin: 10px 0;
+  }
+
+  .site-title-link {
+    margin-right: 0;
+  }
+
+  .site-subtitle-link {
+    margin: 0px auto 0px auto;
+  }
+
+  #logout-btn {
+    margin: 0px auto auto auto;
+  }
+}
+
+.page-title {
+  font-style: normal;
+  font-weight: bold;
+  font-size: 24px;
+  color: #646464;
+
+  // remove bottom margin; top margin removed by base style
+  margin-bottom: 0;
+}
+
+.center-title {
+  text-align: center;
+}

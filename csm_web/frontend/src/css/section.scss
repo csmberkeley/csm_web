@@ -1,0 +1,439 @@
+/// Styles for the section view.
+/// These styles are for both coordinators and students.
+
+@use "base/variables" as *;
+
+.override-label {
+  background-color: #ffd874;
+  color: white;
+  font-size: 15px;
+  width: fit-content;
+  width: -moz-fit-content;
+  padding: 3px 5px;
+  border-radius: 4px;
+  margin: 10px 0;
+}
+
+.section-detail-info-card-contents {
+  position: relative;
+  min-width: 12em;
+}
+
+.section-detail-info-card-contents,
+#mentor-attendance {
+  border: 2px solid #e7e7e7;
+  box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
+  border-radius: 20px;
+}
+
+/// only add padding if specified,
+/// or if it's the mentor attendance table
+.section-detail-info-card-contents.padded-card,
+#mentor-attendance {
+  padding: 40px;
+}
+
+.section-detail-info-card-contents h5 {
+  font-size: 25px;
+  color: #727070;
+  margin: 0 auto 0.5em auto;
+}
+
+.section-detail-info-card-contents .location-link {
+  font-size: 25px;
+  margin: 0 auto 0.5em auto;
+}
+
+.section-detail-info-card-contents.mentor {
+  text-align: center;
+}
+
+.section-detail-info-card-contents a {
+  word-wrap: break-word;
+}
+
+#section-detail-sidebar {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+  width: fit-content;
+  width: -moz-fit-content;
+}
+
+#section-detail-sidebar a {
+  font-size: 18px;
+  color: #4b4b4b;
+  margin: 0 100px 20px 0;
+  text-decoration: none;
+}
+
+#section-detail-sidebar a.active {
+  color: $csm-green;
+}
+
+#section-detail-body * {
+  max-width: 90vw;
+}
+
+.drop-confirmation {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  text-align: center;
+}
+
+.drop-confirmation h5 {
+  font-size: 25px;
+  color: #727070;
+  margin: 0 auto 0.5rem;
+}
+
+.drop-confirmation p {
+  font-size: 14px;
+  color: #bfbfbf;
+  margin-top: 0;
+}
+
+#section-detail-body {
+  display: flex;
+}
+
+@media screen and (max-width: 1100px) {
+  /* only wrap for medium/small screens */
+  #section-detail-body {
+    flex-wrap: wrap;
+  }
+}
+
+#students-table .inline-plus-sign {
+  display: inline-block;
+  color: $csm-danger;
+  cursor: pointer;
+  position: relative;
+}
+
+#students-table .csm-table-item {
+  padding: 20px 30px;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+  gap: $button-icon-gap;
+}
+
+.should-ban-prompt {
+  font-size: 0.8em;
+  width: 10em;
+  text-align: center;
+  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.15);
+  background-color: white;
+  padding: 10px;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  bottom: 2rem;
+  border-radius: 8px;
+}
+
+.should-ban-prompt::before {
+  content: "";
+  display: block;
+  width: 0;
+  height: 0;
+  position: absolute;
+  border-left: $arrow-size solid transparent;
+  border-right: $arrow-size solid transparent;
+  border-top: $arrow-size solid white;
+  left: 0;
+  right: 0;
+  margin: 0 auto;
+  bottom: calc(-1 * $arrow-size);
+}
+
+.should-ban-prompt .ban-cancel {
+  position: absolute !important;
+  top: -5px;
+  right: 3px;
+  color: #dedede !important;
+  font-size: 1.5rem;
+}
+
+.should-ban-prompt .btn-group {
+  display: flex;
+  justify-content: space-evenly;
+  margin-top: 0.3em;
+}
+
+.should-ban-prompt .btn-group button {
+  border: unset;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.should-ban-prompt .btn-group button.yes {
+  background-color: $csm-danger;
+}
+
+.should-ban-prompt .btn-group button.yes:hover {
+  background-color: $csm-danger-darkened;
+}
+
+.should-ban-prompt .btn-group button.no {
+  background-color: $csm-neutral;
+}
+
+.should-ban-prompt .btn-group button.no:hover {
+  background-color: #aeaeae;
+}
+
+.newStudentErrorContainer {
+  display: flex;
+  flex-direction: column;
+  color: red;
+  font-size: 0.8rem;
+}
+
+#students-table .csm-form {
+  display: flex;
+  padding-left: 0;
+}
+
+#students-table .csm-form input[type="submit"] {
+  color: $csm-green;
+  transform: none;
+  margin: auto;
+  background-color: inherit;
+  padding: 0;
+  position: relative;
+  bottom: 3px;
+  top: unset;
+  display: inline-block;
+}
+#students-table .csm-form input[type="submit"]:hover {
+  color: $csm-green-darkened;
+}
+
+#students-table .csm-form input {
+  margin: auto;
+}
+
+#students-table .inline-plus-sign:hover {
+  color: $csm-danger-darkened;
+}
+
+#copy-student-emails {
+  cursor: pointer;
+}
+
+#copy-student-emails:hover {
+  color: #9c9c9c;
+}
+
+#copy-student-emails-success {
+  position: absolute;
+}
+
+/* Section details */
+
+.section-detail-header .relation-label {
+  border-radius: 4px;
+  padding: 5px 14px;
+  font-size: 14px;
+  margin-bottom: 40px;
+}
+
+.section-detail-header-title {
+  display: flex;
+  flex-wrap: wrap;
+  margin-bottom: 20px;
+}
+
+.section-detail-header-title > h3 {
+  font-size: 30px;
+  margin: 0 20px 0 0;
+  line-height: 30px;
+}
+
+.section-detail-header-title > h4 {
+  color: #bfbfbf;
+  font-size: 25px;
+  font-weight: normal;
+  margin: 0;
+}
+
+.section-detail-page-title {
+  // color: #646464;
+  font-size: 30px;
+  font-weight: bold;
+  margin: 0 0 45px;
+}
+
+.section-info-cards-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.section-info-cards-right {
+  flex: 1;
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.section-detail-info-card {
+  margin: 0 50px 50px 0;
+
+  /// only direct children
+  > {
+    h1,
+    h2,
+    h3,
+    h4,
+    h5,
+    h6 {
+      color: $csm-content-title-color;
+    }
+  }
+}
+
+// .section-detail-info-card h4 {
+//   color: #646464;
+//   font-size: 25px;
+//   font-weight: bold;
+//   margin: 0 0 20px;
+// }
+
+.section-detail-info-card.drop-section {
+  flex-basis: 100%;
+  display: flex;
+  text-align: center;
+}
+
+.section-detail-info-card-contents .divider {
+  margin: 40px -40px;
+  border-top: inherit;
+}
+
+.section-detail-info-card-contents.drop-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  border-color: #ffadad;
+}
+
+%info-card-action {
+  font-size: 14px;
+  // position: absolute;
+}
+
+.info-card-actions {
+  margin: -30px -30px 10px -30px;
+
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.info-card-edit-btn {
+  @extend %info-card-action;
+  top: 10px;
+  right: 10px;
+}
+
+.override-info-card-edit-btn {
+  @extend %info-card-action;
+  top: 170px;
+  right: 10px;
+}
+
+.delete-spacetime-btn {
+  @extend %info-card-action;
+  top: 10px;
+  left: 10px;
+}
+
+.delete-override-btn {
+  position: absolute;
+  top: 170px;
+  left: 10px;
+}
+
+.meta-field {
+  font-weight: 600;
+  color: #727070;
+}
+
+.spacetime-edit-modal {
+  height: 60vh;
+  padding: 0 20px;
+}
+
+/// Attendance table
+
+.mentor-attendance-page {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+#mentor-attendance {
+  max-width: 500px;
+  padding-top: 0;
+  padding-bottom: 30px;
+  overflow: hidden;
+  border-top: none;
+}
+
+#attendance-date-tabs-container {
+  display: flex;
+  margin: 0 -40px;
+  overflow-x: scroll;
+  overflow-y: hidden;
+}
+
+#attendance-date-tabs-container > div {
+  background-color: #f0f0f0;
+  border: 1px solid #e9e9e9;
+  border-radius: 10px 10px 0px 0px;
+  padding: 15px 30px;
+  color: #5e5e5e;
+  font-size: 15px;
+  cursor: pointer;
+}
+#attendance-date-tabs-container > div:hover {
+  background-color: #dedede;
+}
+
+#attendance-date-tabs-container > div.active {
+  background-color: white;
+  border-bottom-color: white;
+}
+
+#mentor-attendance-table {
+  width: 100%;
+}
+
+#mentor-attendance-controls {
+  margin-top: 25px;
+  max-width: 780px;
+  display: flex;
+  flex-direction: row;
+  justify-content: flex-end;
+  gap: 15px;
+}
+
+.mentor-attendance-input {
+  text-align-last: center;
+}
+
+/// student attendance table status
+.attendance-status {
+  text-align: center;
+  color: white;
+  padding: 5px 10px;
+  max-width: 200px;
+  border-radius: 6px;
+}

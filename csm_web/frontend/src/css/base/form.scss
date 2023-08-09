@@ -1,0 +1,144 @@
+/// Form styles
+
+@use "variables" as *;
+
+.csm-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+
+  padding: 0 40px;
+}
+
+// .csm-form > * {
+//   margin-bottom: 20px;
+// }
+//
+// .csm-form label {
+//   display: block;
+//   color: #646464;
+//   font-weight: 600;
+// }
+
+.form-select,
+.form-input,
+.form-date {
+  display: block;
+
+  background-color: #f5f5f5;
+  border: none;
+  border-radius: 6px;
+
+  box-sizing: content-box;
+}
+
+.form-select:disabled,
+.form-input:disabled {
+  cursor: not-allowed;
+  background-color: #fafafa;
+}
+
+.form-label {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 5px;
+
+  font-weight: bold;
+}
+
+// height/padding differences
+.form-input,
+.form-select {
+  height: 16px;
+  padding: 8px;
+}
+.form-date {
+  height: 20px;
+  padding: 6px 8px;
+}
+
+/// Select element
+
+.form-select {
+  max-width: 200px;
+  width: 200px;
+  border: none;
+  background-image: url('data:image/svg+xml;utf8,<svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><path fill="currentColor" d="M207.029 381.476L12.686 187.132c-9.373-9.373-9.373-24.569 0-33.941l22.667-22.667c9.357-9.357 24.522-9.375 33.901-.04L224 284.505l154.745-154.021c9.379-9.335 24.544-9.317 33.901.04l22.667 22.667c9.373 9.373 9.373 24.569 0 33.941L240.971 381.476c-9.373 9.372-24.569 9.372-33.942 0z"/></svg>');
+  background-repeat: no-repeat, repeat;
+  background-position: right 0.7em top 50%, 0 0;
+  background-size: 1em auto, 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+}
+
+/* Neccessary for options to be legible on Windows */
+.form-select > option {
+  background-color: white;
+  color: black;
+}
+
+/// Radio element
+
+.form-radio {
+  margin: 0 10px 0 0;
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  padding: 0;
+  width: 16px;
+  height: 16px;
+  display: inline-block;
+  border: 2px solid $csm-green;
+  border-radius: 8px;
+  vertical-align: middle;
+
+  &[value="true"] {
+    position: relative;
+    bottom: 1px;
+  }
+
+  &:checked {
+    background-color: $csm-green;
+  }
+}
+
+/// Radio input item (box and label)
+.form-radio-item {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.form-radio-group {
+  /// default should be column
+  &,
+  &-col {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+
+    margin: 5px;
+  }
+
+  &-row {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 40px;
+
+    margin: 5px;
+  }
+}
+
+/// Action buttons at bottom of form
+.form-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}

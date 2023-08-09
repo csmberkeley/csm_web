@@ -2,6 +2,12 @@ import React, { useState } from "react";
 import { useDropStudentMutation } from "../../utils/queries/sections";
 import Modal from "../Modal";
 
+// Images
+import XIcon from "../../../static/frontend/img/x.svg";
+
+// Styles
+import "../../css/student_dropper.scss";
+
 interface StudentDropperProps {
   id: number;
   sectionId: number;
@@ -25,23 +31,36 @@ export default function StudentDropper({ id, sectionId, name, courseRestricted }
     setShowDropPrompt(false);
   }
 
+  const dropDiv = (
+    <div>
+      <h2 className="student-dropper-head-item">DROP Student</h2>
+      <div className="student-dropper-checkbox-container">
+        <input type="checkbox" id="drop" name="drop" onChange={e => setDrop(e.target.checked)} />
+        <label className="student-dropper-checkbox-label" htmlFor="drop">
+          I would like to DROP {name} from this section.
+        </label>
+        <br></br>
+      </div>
+    </div>
+  );
+
   const banDiv = (
-    <React.Fragment>
-      <div className="studentDropperHeadItem">BAN Student</div>
-      <div>
+    <div>
+      <h2 className="student-dropper-head-item">BAN Student</h2>
+      <div className="student-dropper-checkbox-container">
         <input type="checkbox" id="ban" name="ban" onChange={e => setBan(e.target.checked)} disabled={!drop} />
-        <label className="studentDropperCheckboxLabel" htmlFor="ban">
+        <label className="student-dropper-checkbox-label" htmlFor="ban">
           I would like to BAN {name} from this course.
         </label>
         <br></br>
       </div>
-    </React.Fragment>
+    </div>
   );
 
   const blacklistDiv = (
-    <React.Fragment>
-      <div className="studentDropperHeadItem">BLACKLIST Student</div>
-      <div>
+    <div>
+      <h2 className="student-dropper-head-item">BLACKLIST Student</h2>
+      <div className="student-dropper-checkbox-container">
         <input
           type="checkbox"
           id="blacklist"
@@ -49,41 +68,29 @@ export default function StudentDropper({ id, sectionId, name, courseRestricted }
           onChange={e => setBlacklist(e.target.checked)}
           disabled={!drop}
         />
-        <label className="studentDropperCheckboxLabel" htmlFor="blacklist">
+        <label className="student-dropper-checkbox-label" htmlFor="blacklist">
           I would like to BLACKLIST {name} from this course.
         </label>
         <br></br>
       </div>
-    </React.Fragment>
+    </div>
   );
 
   return (
     <span className={`student-dropper ${showDropPrompt ? "ban-prompt-visible" : ""}`}>
-      <span title="Drop student from section" className="inline-plus-sign" onClick={() => setShowDropPrompt(true)}>
-        &times;
-      </span>
+      <XIcon
+        className="icon inline-plus-sign"
+        title="Drop student from section"
+        onClick={() => setShowDropPrompt(true)}
+      />
       {showDropPrompt && (
-        <Modal closeModal={() => setShowDropPrompt(false)}>
-          <div className="studentDropper">
-            <div className="studentDropperHeadItem">DROP Student</div>
-            <div>
-              <input type="checkbox" id="drop" name="drop" onChange={e => setDrop(e.target.checked)} />
-              <label className="studentDropperCheckboxLabel" htmlFor="drop">
-                I would like to DROP {name} from this section.
-              </label>
-              <br></br>
-            </div>
-            {courseRestricted ? blacklistDiv : banDiv}
-            <div className="studentDropperSubmitWrapper">
-              <button
-                className="studentDropperSubmit"
-                id="dropper submit button"
-                onClick={handleClickDrop}
-                disabled={!drop}
-              >
-                Submit
-              </button>
-            </div>
+        <Modal className="student-dropper-modal" closeModal={() => setShowDropPrompt(false)}>
+          {dropDiv}
+          {courseRestricted ? blacklistDiv : banDiv}
+          <div className="student-dropper-submit-wrapper">
+            <button className="danger-btn" onClick={handleClickDrop} disabled={!drop}>
+              Submit
+            </button>
           </div>
         </Modal>
       )}

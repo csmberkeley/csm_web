@@ -10,11 +10,16 @@ import Modal from "../Modal";
 import { ATTENDANCE_LABELS, InfoCard, ROLES, SectionDetail, SectionSpacetime } from "./Section";
 import { dateSortISO, formatDateLocaleShort, formatDateAbbrevWord } from "./utils";
 
+// Images
 import XIcon from "../../../static/frontend/img/x.svg";
 import LoadingSpinner from "../LoadingSpinner";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import { DateTime } from "luxon";
 import { DEFAULT_TIMEZONE } from "../../utils/datetime";
+
+// Styles
+import scssColors from "../../css/base/colors-export.module.scss";
+import "../../css/word-of-the-day.scss";
 
 interface StudentSectionType {
   id: number;
@@ -128,19 +133,21 @@ function DropSection({ profileId }: DropSectionProps) {
         <InfoCard title="Drop Section" showTitle={false}>
           <h5>Drop Section</h5>
           <button className="danger-btn" onClick={() => setStage(DropSectionStage.CONFIRM)}>
-            <XIcon height="1.3em" width="1.3em" />
+            <XIcon className="icon" />
             Drop
           </button>
         </InfoCard>
       );
     case DropSectionStage.CONFIRM:
       return (
-        <Modal className="drop-confirmation" closeModal={() => setStage(DropSectionStage.INITIAL)}>
-          <h5>Are you sure you want to drop?</h5>
-          <p>You are not guaranteed an available spot in another section!</p>
-          <button className="danger-btn" onClick={performDrop}>
-            Confirm
-          </button>
+        <Modal closeModal={() => setStage(DropSectionStage.INITIAL)}>
+          <div className="drop-confirmation">
+            <h5>Are you sure you want to drop?</h5>
+            <p>You are not guaranteed an available spot in another section!</p>
+            <button className="danger-btn" onClick={performDrop}>
+              Confirm
+            </button>
+          </div>
         </Modal>
       );
     case DropSectionStage.DROPPED:
@@ -249,13 +256,9 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
     <React.Fragment>
       <div id="word-of-the-day-card">
         <h3 className="word-of-the-day-title">Submit Word of the Day</h3>
-        <div className="word-of-the-day-input-container">
-          <div className="word-of-the-day-select-container">
-            <select
-              value={selectedAttendanceId}
-              className="word-of-the-day-select"
-              onChange={handleSelectedAttendanceIdChange}
-            >
+        <div className="word-of-the-day-action-container">
+          <div className="word-of-the-day-input-container">
+            <select value={selectedAttendanceId} className="form-select" onChange={handleSelectedAttendanceIdChange}>
               {attendances
                 // only allow choosing from dates with blank attendances
                 .filter(attendance => attendance.presence === "")
@@ -269,7 +272,7 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
                 ))}
             </select>
             <input
-              className="word-of-the-day-input"
+              className="form-input"
               type="text"
               placeholder="Word of the Day"
               value={currentWord}
@@ -283,7 +286,7 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
               <CheckCircle className="word-of-the-day-icon" />
             ) : null}
             <button
-              className="csm-btn word-of-the-day-submit"
+              className="primary-btn"
               onClick={handleSubmitWord}
               disabled={
                 !currentWord ||
@@ -310,11 +313,11 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
           <div className="word-of-the-day-status-text">{responseText}</div>
         </div>
       </div>
-      <table id="attendance-table" className="standalone-table">
-        <thead>
-          <tr>
-            <th>Date</th>
-            <th>Status</th>
+      <table id="attendance-table" className="csm-table standalone">
+        <thead className="csm-table-head">
+          <tr className="csm-table-head-row">
+            <th className="csm-table-item">Date</th>
+            <th className="csm-table-item">Status</th>
           </tr>
         </thead>
         <tbody>
@@ -324,11 +327,18 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
             // convert to a table row
             .map(({ presence, date }) => {
               const [label, cssSuffix] = ATTENDANCE_LABELS[presence];
+              const attendanceColor = scssColors[`attendance-${cssSuffix}`];
+              const attendanceFgColor = scssColors[`attendance-${cssSuffix}-fg`];
               return (
-                <tr key={date}>
-                  <td>{formatDateLocaleShort(date)}</td>
-                  <td className="status">
-                    <div style={{ backgroundColor: `var(--csm-attendance-${cssSuffix})` }}>{label}</div>
+                <tr key={date} className="csm-table-row">
+                  <td className="csm-table-item">{formatDateLocaleShort(date)}</td>
+                  <td className="csm-table-item">
+                    <div
+                      className="attendance-status"
+                      style={{ backgroundColor: attendanceColor, color: attendanceFgColor }}
+                    >
+                      {label}
+                    </div>
                   </td>
                 </tr>
               );

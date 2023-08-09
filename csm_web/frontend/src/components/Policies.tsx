@@ -1,4 +1,9 @@
 import React from "react";
+
+// Styles
+import "../css/policies.scss";
+
+// Data
 import SECTIONS from "../../static/frontend/data/enrollment_policies";
 
 export default class Policies extends React.Component {

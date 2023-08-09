@@ -1,0 +1,73 @@
+/* Modal styling */
+@use "sass:math" as math;
+
+@use "variables" as *;
+@use "button";
+
+/// Overlay for the modal window; grays out the screen behind the modal.
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  max-width: unset !important;
+  z-index: 999;
+  background: rgba(0, 0, 0, 0.6);
+}
+
+/// Modal container; controls the positioning within the screen.
+.modal {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  max-width: 90vw;
+  max-height: 90vh;
+  width: max-content;
+  height: max-content;
+  z-index: 1000;
+  background-color: white;
+  border-radius: 20px;
+}
+
+/// Contents of the modal; all children are put into this container.
+.modal-contents {
+  padding: math.div($modal-padding-y, 2);
+  overflow: auto;
+}
+
+/// Top bar in the modal that contains the close button.
+.modal-close-container {
+  position: sticky;
+  display: flex;
+  align-items: flex-end;
+  justify-content: flex-end;
+  margin-right: 1em;
+
+  height: $modal-close-height;
+}
+
+.modal-close-x {
+  border: none;
+  outline: none;
+  cursor: pointer;
+  user-select: none;
+  background-color: inherit;
+  color: black;
+  padding: 0;
+
+  // center the x icon vertically and horizontally
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  &:hover {
+    color: gray;
+  }
+
+  .icon {
+    width: 1.1rem;
+    height: 1.1rem;
+  }
+}

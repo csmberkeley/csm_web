@@ -1,12 +1,15 @@
 import React, { useEffect, useState } from "react";
 
 import LoadingSpinner from "../LoadingSpinner";
-
 import { useCourses, useCourseSettingsMutation } from "../../utils/queries/courses";
-
-import InfoIcon from "../../../static/frontend/img/info.svg";
 import { Tooltip } from "../Tooltip";
 import Modal from "../Modal";
+
+// Images
+import InfoIcon from "../../../static/frontend/img/info.svg";
+
+// Styles
+import "../../css/course-settings.scss";
 
 interface SettingsModalProps {
   courseId: number;
@@ -75,7 +78,7 @@ export const SettingsModal = ({ courseId, closeModal }: SettingsModalProps) => {
   if (coursesLoaded) {
     modalContent = (
       <div className="course-settings-content">
-        <h4 className="course-settings-title">Settings</h4>
+        <h2 className="course-settings-title">Settings</h2>
         <div className="course-settings-container">
           <div className="course-settings-row">
             <div className="course-settings-label-container">
@@ -92,7 +95,7 @@ export const SettingsModal = ({ courseId, closeModal }: SettingsModalProps) => {
             <div className="course-settings-input-container">
               <input
                 id="wordOfTheDayLimit"
-                className="course-settings-input"
+                className="form-input course-settings-input"
                 type="number"
                 min="0"
                 value={wordOfTheDayLimit}
@@ -103,7 +106,7 @@ export const SettingsModal = ({ courseId, closeModal }: SettingsModalProps) => {
           </div>
         </div>
         <div className="course-settings-footer">
-          <button className="csm-btn course-settings-submit" type="button" onClick={submitSettings}>
+          <button className="primary-btn course-settings-submit" type="button" onClick={submitSettings}>
             Submit
           </button>
         </div>
