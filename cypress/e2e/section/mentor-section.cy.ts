@@ -65,11 +65,11 @@ describe("section details accessibility", () => {
       [/C Student/i, /C_student@berkeley.edu/i],
       [/D Student/i, /D_student@berkeley.edu/i]
     ];
-    cy.get("table.standalone-table tbody tr")
+    cy.get(".csm-table tbody .csm-table-row")
       .should("have.length", 4)
       .each(($row, rowIdx) => {
         cy.wrap($row)
-          .find("td")
+          .find(".csm-table-item")
           .should("have.length", 2)
           .each(($cell, cellIdx) => {
             expect($cell.text()).to.match(expectedTable[rowIdx][cellIdx]);
@@ -131,7 +131,7 @@ describe("attendances", () => {
           expect($select.val()).to.be.null;
         });
 
-      cy.get(".mark-all-present-btn").click();
+      cy.contains(".primary-link-btn", /mark all as present/i).click();
 
       // all attendances should be marked as present
       cy.get("#mentor-attendance-table select")
@@ -141,7 +141,7 @@ describe("attendances", () => {
         });
 
       // save attendance
-      cy.get(".save-attendance-btn").click();
+      cy.contains(".primary-btn", /save/i).click();
       cy.wait(["@student-attendance", "@student-attendance", "@student-attendance", "@student-attendance"]);
 
       // reload
@@ -180,7 +180,7 @@ describe("attendances", () => {
       });
 
       // save and wait for at least one request
-      cy.get(".save-attendance-btn").click();
+      cy.contains(".primary-btn", /save/i).click();
       cy.wait("@student-attendance");
 
       // reload
@@ -220,20 +220,20 @@ describe("word of the day", () => {
       cy.contains(".word-of-the-day-status", /unselected/i).should("be.visible");
 
       // ensure no word is selected currently
-      cy.get(".word-of-the-day-input").invoke("val").should("be.empty");
-      cy.get(".word-of-the-day-submit").should("be.disabled");
+      cy.get(".form-input[name='word-of-the-day']").invoke("val").should("be.empty");
+      cy.contains(".primary-btn", /submit/i).should("be.disabled");
 
       // input a custom word of the day
-      cy.get(".word-of-the-day-input").type(WORD_OF_THE_DAY);
-      cy.get(".word-of-the-day-submit").click();
+      cy.get(".form-input[name='word-of-the-day']").type(WORD_OF_THE_DAY);
+      cy.contains(".primary-btn", /submit/i).click();
 
       // wait for submission to process
       cy.wait("@put-wotd");
 
       // input should update
       cy.wait("@get-wotd");
-      cy.get(".word-of-the-day-input").invoke("val").should("eq", WORD_OF_THE_DAY);
-      cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
+      cy.get(".form-input[name='word-of-the-day']").invoke("val").should("eq", WORD_OF_THE_DAY);
+      cy.contains(".primary-btn", /update/i).should("be.disabled"); // disabled because unchanged
     });
 
     // reload the page and ensure the submission is still there
@@ -245,18 +245,18 @@ describe("word of the day", () => {
       cy.contains(".word-of-the-day-status", /selected/i).should("be.visible");
 
       // ensure word is retrieved correctly
-      cy.get(".word-of-the-day-input").invoke("val").should("eq", WORD_OF_THE_DAY);
-      cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
+      cy.get(".form-input[name='word-of-the-day']").invoke("val").should("eq", WORD_OF_THE_DAY);
+      cy.contains(".primary-btn", /update/i).should("be.disabled"); // disabled because unchanged
 
       // change to a random word of the day
-      cy.get(".word-of-the-day-random").click();
-      cy.get(".word-of-the-day-input")
+      cy.contains(".primary-link-btn", /random/i).click();
+      cy.get(".form-input[name='word-of-the-day']")
         .invoke("val")
         .then((value: string) => {
           expect(value).to.not.be.eq(WORD_OF_THE_DAY);
           cy.wrap(value).as("newWord");
         });
-      cy.get(".word-of-the-day-submit").click();
+      cy.contains(".primary-btn", /update/i).click();
 
       // wait for submission to process
       cy.wait("@put-wotd");
@@ -264,9 +264,9 @@ describe("word of the day", () => {
       // input should update
       cy.wait("@get-wotd");
       cy.get("@newWord").then(newWord => {
-        cy.get(".word-of-the-day-input").invoke("val").should("eq", newWord);
+        cy.get(".form-input[name='word-of-the-day']").invoke("val").should("eq", newWord);
       });
-      cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
+      cy.contains(".primary-btn", /update/i).should("be.disabled"); // disabled because unchanged
     });
 
     // reload the page and ensure the submission is still there
@@ -279,9 +279,9 @@ describe("word of the day", () => {
 
       // ensure word is retrieved correctly
       cy.get("@newWord").then(newWord => {
-        cy.get(".word-of-the-day-input").invoke("val").should("eq", newWord);
+        cy.get(".form-input[name='word-of-the-day']").invoke("val").should("eq", newWord);
       });
-      cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
+      cy.contains(".primary-btn", /update/i).should("be.disabled"); // disabled because unchanged
     });
 
     // go to next day and should be unselected
@@ -295,8 +295,8 @@ describe("word of the day", () => {
       cy.contains(".word-of-the-day-status", /unselected/i).should("be.visible");
 
       // ensure no word is selected currently
-      cy.get(".word-of-the-day-input").invoke("val").should("be.empty");
-      cy.get(".word-of-the-day-submit").should("be.disabled");
+      cy.get(".form-input[name='word-of-the-day']").invoke("val").should("be.empty");
+      cy.contains(".primary-btn", /submit/i).should("be.disabled");
     });
 
     // switch back and it should be selected again
@@ -311,9 +311,9 @@ describe("word of the day", () => {
 
       // ensure word is retrieved correctly
       cy.get("@newWord").then(newWord => {
-        cy.get(".word-of-the-day-input").invoke("val").should("eq", newWord);
+        cy.get(".form-input[name='word-of-the-day']").invoke("val").should("eq", newWord);
       });
-      cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
+      cy.contains(".primary-btn", /update/i).should("be.disabled"); // disabled because unchanged
     });
   });
 });

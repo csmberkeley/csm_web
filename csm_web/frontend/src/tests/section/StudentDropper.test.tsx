@@ -22,14 +22,14 @@ jest.mock("../../components/Modal", () => {
 
 describe("StudentDropper", () => {
   it("should render correctly without interaction", () => {
-    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" />, {
+    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" courseRestricted={false} />, {
       wrapper: testQueryClientWrapper
     });
     expect(component.asFragment()).toMatchSnapshot();
   });
 
   it("should render modal correctly after clicking x", () => {
-    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" />, {
+    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" courseRestricted={false} />, {
       wrapper: testQueryClientWrapper
     });
 
@@ -42,7 +42,7 @@ describe("StudentDropper", () => {
   });
 
   it("should close modal correctly", () => {
-    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" />, {
+    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" courseRestricted={false} />, {
       wrapper: testQueryClientWrapper
     });
 
@@ -72,7 +72,7 @@ describe("StudentDropper", () => {
       return null as any;
     });
 
-    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" />, {
+    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" courseRestricted={false} />, {
       wrapper: testQueryClientWrapper
     });
 
@@ -129,7 +129,7 @@ describe("StudentDropper", () => {
       return null as any;
     });
 
-    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" />, {
+    const component = render(<StudentDropper id={1} sectionId={2} name="Test Student" courseRestricted={false} />, {
       wrapper: testQueryClientWrapper
     });
 

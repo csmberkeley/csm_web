@@ -34,13 +34,15 @@ describe("word of the day", () => {
       cy.contains(".word-of-the-day-title", /submit word of the day/i).should("be.visible");
 
       // first date (default) should not have word of the day, second date should
-      cy.get(".word-of-the-day-select").find(":selected").invoke("text").should("eq", dates[0]);
-      cy.get(".word-of-the-day-submit").should("be.disabled");
+      cy.get(".form-select[name='word-of-the-day-date']").find(":selected").invoke("text").should("eq", dates[0]);
+      cy.contains(".primary-btn", /submit/i).should("be.disabled");
       cy.get(".word-of-the-day-deadline").should("not.exist"); // no deadline set
 
       // word of the day for second date; should fail
-      cy.get(".word-of-the-day-input").type("wordoftheday");
-      cy.get(".word-of-the-day-submit").should("not.be.disabled").click();
+      cy.get(".form-input[name='word-of-the-day']").type("wordoftheday");
+      cy.contains(".primary-btn", /submit/i)
+        .should("not.be.disabled")
+        .click();
 
       cy.wait("@put-wotd").its("response.statusCode").should("eq", 403);
 
@@ -50,10 +52,10 @@ describe("word of the day", () => {
         .should("match", /incorrect word of the day/i);
 
       // swap to second date
-      cy.get(".word-of-the-day-select").select(dates[1]);
+      cy.get(".form-select[name='word-of-the-day-date']").select(dates[1]);
 
       cy.get(".word-of-the-day-deadline").should("not.exist"); // no deadline set
-      cy.get(".word-of-the-day-submit").click();
+      cy.contains(".primary-btn", /submit/i).click();
 
       cy.wait("@put-wotd").its("response.statusCode").should("eq", 200);
     });
@@ -65,11 +67,11 @@ describe("word of the day", () => {
       cy.wrap($row).find("td").first().invoke("text").should("eq", dates[idx]);
       if (idx === 0) {
         // future
-        cy.wrap($row).find("td.status").invoke("text").should("be.empty");
+        cy.wrap($row).find(".attendance-status").invoke("text").should("be.empty");
       } else if (idx === 1) {
         // past
         cy.wrap($row)
-          .find("td.status")
+          .find(".attendance-status")
           .invoke("text")
           .should("match", /present/i);
       }
@@ -79,7 +81,11 @@ describe("word of the day", () => {
     cy.get("#word-of-the-day-card").within(() => {
       cy.contains(".word-of-the-day-title", /submit word of the day/i).should("be.visible");
 
-      cy.get(".word-of-the-day-select").find("option").should("have.length", 1).invoke("text").should("eq", dates[0]);
+      cy.get(".form-select[name='word-of-the-day-date']")
+        .find("option")
+        .should("have.length", 1)
+        .invoke("text")
+        .should("eq", dates[0]);
     });
   });
 
@@ -101,17 +107,17 @@ describe("word of the day", () => {
         cy.wrap($row)
           .find("td")
           .first()
-          .should("not.have.class", "status")
+          .should("not.have.class", "attendance-status")
           .invoke("text")
           // save in array
           .then(text => dates.push(text));
 
         if (idx === 0) {
           // first row is future occurrence; no attendance taken
-          cy.wrap($row).find("td.status").should("have.length", 1).invoke("text").should("be.empty");
+          cy.wrap($row).find(".attendance-status").should("have.length", 1).invoke("text").should("be.empty");
         } else if (idx === 1) {
           cy.wrap($row)
-            .find("td.status")
+            .find(".attendance-status")
             .should("have.length", 1)
             .invoke("text")
             .should("match", /unexcused absence/i);
@@ -123,7 +129,11 @@ describe("word of the day", () => {
       cy.contains(".word-of-the-day-title", /submit word of the day/i).should("be.visible");
 
       // select input should only have one choice for future date
-      cy.get(".word-of-the-day-select").find("option").should("have.length", 1).invoke("text").should("eq", dates[0]);
+      cy.get(".form-select[name='word-of-the-day-date']")
+        .find("option")
+        .should("have.length", 1)
+        .invoke("text")
+        .should("eq", dates[0]);
     });
   });
 
@@ -156,21 +166,23 @@ describe("word of the day", () => {
       cy.contains(".word-of-the-day-title", /submit word of the day/i).should("be.visible");
 
       // currently should be on future date; deadline not passed yet
-      cy.get(".word-of-the-day-select").find(":selected").invoke("text").should("eq", dates[0]);
+      cy.get(".form-select[name='word-of-the-day-date']").find(":selected").invoke("text").should("eq", dates[0]);
       cy.get(".word-of-the-day-deadline").should("be.visible").should("not.have.class", "passed");
 
       // switch to past date; deadline should have passed
-      cy.get(".word-of-the-day-select").select(dates[1]);
+      cy.get(".form-select[name='word-of-the-day-date']").select(dates[1]);
       cy.get(".word-of-the-day-deadline").should("be.visible").should("have.class", "passed");
 
       // try typing something now; should not allow submitting
-      cy.get(".word-of-the-day-input").type("wordoftheday");
-      cy.get(".word-of-the-day-submit").should("be.disabled");
+      cy.get(".form-input[name='word-of-the-day']").type("wordoftheday");
+      cy.contains(".primary-btn", /submit/i).should("be.disabled");
 
       // switch to future date; should be able to submit normally
-      cy.get(".word-of-the-day-select").select(dates[0]);
-      cy.get(".word-of-the-day-input").clear().type("password");
-      cy.get(".word-of-the-day-submit").should("not.be.disabled").click();
+      cy.get(".form-select[name='word-of-the-day-date']").select(dates[0]);
+      cy.get(".form-input[name='word-of-the-day']").clear().type("password");
+      cy.contains(".primary-btn", /submit/i)
+        .should("not.be.disabled")
+        .click();
     });
 
     cy.wait("@put-wotd");
@@ -182,12 +194,12 @@ describe("word of the day", () => {
       if (idx === 0) {
         // future
         cy.wrap($row)
-          .find("td.status")
+          .find(".attendance-status")
           .invoke("text")
           .should("match", /present/i);
       } else if (idx === 1) {
         // past
-        cy.wrap($row).find("td.status").invoke("text").should("be.empty");
+        cy.wrap($row).find(".attendance-status").invoke("text").should("be.empty");
       }
     });
 
@@ -195,7 +207,11 @@ describe("word of the day", () => {
     cy.get("#word-of-the-day-card").within(() => {
       cy.contains(".word-of-the-day-title", /submit word of the day/i).should("be.visible");
 
-      cy.get(".word-of-the-day-select").find("option").should("have.length", 1).invoke("text").should("eq", dates[1]);
+      cy.get(".form-select[name='word-of-the-day-date']")
+        .find("option")
+        .should("have.length", 1)
+        .invoke("text")
+        .should("eq", dates[1]);
     });
   });
 });

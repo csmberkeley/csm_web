@@ -265,7 +265,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                   </div>
                 ))}
               </div>
-              <table id="csm-table mentor-attendance-table">
+              <table className="csm-table" id="mentor-attendance-table">
                 <tbody>
                   {selectedOccurrence &&
                     stagedAttendances.map(({ id, student, presence }) => {
@@ -322,7 +322,8 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                     <div className="word-of-the-day-action-container">
                       <div className="word-of-the-day-input-container">
                         <input
-                          className="word-of-the-day-input"
+                          className="form-input"
+                          name="word-of-the-day"
                           type="text"
                           placeholder="Word of the Day"
                           value={wordOfTheDay}
