@@ -31,17 +31,17 @@ describe("word of the day", () => {
       cy.contains(".word-of-the-day-status", /unselected/i).should("be.visible");
 
       // input a custom word of the day (future occurrence)
-      cy.get(".word-of-the-day-input").type(WORD_OF_THE_DAY);
-      cy.get(".word-of-the-day-submit").click();
+      cy.get(".form-input[name='word-of-the-day']").type(WORD_OF_THE_DAY);
+      cy.contains(".primary-btn", /submit/i).click();
     });
 
     cy.wait("@put-wotd");
     cy.wait("@get-wotd");
 
     // check client-side that it has updated
-    cy.get(".word-of-the-day-input").invoke("val").should("eq", WORD_OF_THE_DAY);
+    cy.get(".form-input[name='word-of-the-day']").invoke("val").should("eq", WORD_OF_THE_DAY);
     cy.contains(".word-of-the-day-status", /selected/i).should("be.visible");
-    cy.get(".word-of-the-day-submit").should("be.disabled"); // disabled because unchanged
+    cy.contains(".primary-btn", /update/i).should("be.disabled"); // disabled because unchanged
 
     // logout
     cy.visit("/logout/");
@@ -54,9 +54,9 @@ describe("word of the day", () => {
     cy.get("#word-of-the-day-card").within(() => {
       cy.contains(".word-of-the-day-title", /submit word of the day/i).should("be.visible");
 
-      cy.get(".word-of-the-day-input").type(WRONG_WORD_OF_THE_DAY);
+      cy.get(".form-input[name='word-of-the-day']").type(WRONG_WORD_OF_THE_DAY);
       cy.get(".word-of-the-day-deadline").should("not.exist"); // no deadline set
-      cy.get(".word-of-the-day-submit").click();
+      cy.contains(".primary-btn", /submit/i).click();
 
       // wrong word, should fail
       cy.wait("@put-wotd").its("response.statusCode").should("eq", 403);
@@ -66,9 +66,9 @@ describe("word of the day", () => {
         .should("match", /incorrect word of the day/i);
 
       // try correct word
-      cy.get(".word-of-the-day-input").clear().type(WORD_OF_THE_DAY);
+      cy.get(".form-input[name='word-of-the-day']").clear().type(WORD_OF_THE_DAY);
       cy.get(".word-of-the-day-deadline").should("not.exist"); // no deadline set
-      cy.get(".word-of-the-day-submit").click();
+      cy.contains(".primary-btn", /submit/i).click();
       cy.wait("@put-wotd").its("response.statusCode").should("eq", 200);
     });
 
@@ -79,12 +79,12 @@ describe("word of the day", () => {
       if (idx === 0) {
         // future
         cy.wrap($row)
-          .find("td.status")
+          .find(".attendance-status")
           .invoke("text")
           .should("match", /present/i);
       } else if (idx === 1) {
         // past
-        cy.wrap($row).find("td.status").invoke("text").should("be.empty");
+        cy.wrap($row).find(".attendance-status").invoke("text").should("be.empty");
       }
     });
 

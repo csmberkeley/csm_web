@@ -5,12 +5,10 @@ exports[`StudentDropper should close modal correctly 1`] = `
   <span
     class="student-dropper "
   >
-    <span
-      class="inline-plus-sign"
+    <x-svg
+      classname="icon inline-plus-sign"
       title="Drop student from section"
-    >
-      ×
-    </span>
+    />
   </span>
 </DocumentFragment>
 `;
@@ -20,12 +18,10 @@ exports[`StudentDropper should render correctly without interaction 1`] = `
   <span
     class="student-dropper "
   >
-    <span
-      class="inline-plus-sign"
+    <x-svg
+      classname="icon inline-plus-sign"
       title="Drop student from section"
-    >
-      ×
-    </span>
+    />
   </span>
 </DocumentFragment>
 `;
@@ -35,46 +31,48 @@ exports[`StudentDropper should render modal correctly after clicking x 1`] = `
   <span
     class="student-dropper ban-prompt-visible"
   >
-    <span
-      class="inline-plus-sign"
+    <x-svg
+      classname="icon inline-plus-sign"
       title="Drop student from section"
-    >
-      ×
-    </span>
+    />
     <div
       class="_mock-modal"
     >
       <button>
         Close
       </button>
-      <div
-        class="studentDropper"
-      >
-        <div
-          class="studentDropperHeadItem"
+      <div>
+        <h2
+          class="student-dropper-head-item"
         >
           DROP Student
-        </div>
-        <div>
+        </h2>
+        <div
+          class="student-dropper-checkbox-container"
+        >
           <input
             id="drop"
             name="drop"
             type="checkbox"
           />
           <label
-            class="studentDropperCheckboxLabel"
+            class="student-dropper-checkbox-label"
             for="drop"
           >
             I would like to DROP Test Student from this section.
           </label>
           <br />
         </div>
-        <div
-          class="studentDropperHeadItem"
+      </div>
+      <div>
+        <h2
+          class="student-dropper-head-item"
         >
           BAN Student
-        </div>
-        <div>
+        </h2>
+        <div
+          class="student-dropper-checkbox-container"
+        >
           <input
             disabled=""
             id="ban"
@@ -82,24 +80,23 @@ exports[`StudentDropper should render modal correctly after clicking x 1`] = `
             type="checkbox"
           />
           <label
-            class="studentDropperCheckboxLabel"
+            class="student-dropper-checkbox-label"
             for="ban"
           >
             I would like to BAN Test Student from this course.
           </label>
           <br />
         </div>
-        <div
-          class="studentDropperSubmitWrapper"
+      </div>
+      <div
+        class="student-dropper-submit-wrapper"
+      >
+        <button
+          class="danger-btn"
+          disabled=""
         >
-          <button
-            class="studentDropperSubmit"
-            disabled=""
-            id="dropper submit button"
-          >
-            Submit
-          </button>
-        </div>
+          Submit
+        </button>
       </div>
     </div>
   </span>

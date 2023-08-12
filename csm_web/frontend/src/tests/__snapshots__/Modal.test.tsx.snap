@@ -6,23 +6,23 @@ exports[`Modal should close correctly when an external modal closer is clicked 1
     class="modal-overlay"
   />
   <div
-    class="modal test-modal"
+    class="modal "
   >
     <div
-      class="modal-contents"
+      class="modal-close-container"
     >
-      <div
+      <button
+        aria-label="close"
         class="modal-close-x"
       >
-        <button
-          aria-label="close"
-          class="inline-plus-sign"
-        >
-          <span>
-            ×
-          </span>
-        </button>
-      </div>
+        <x-svg
+          classname="icon"
+        />
+      </button>
+    </div>
+    <div
+      class="modal-contents test-modal"
+    >
       <div>
         Hello World
       </div>
@@ -45,20 +45,20 @@ exports[`Modal should render correctly 1`] = `
     class="modal "
   >
     <div
-      class="modal-contents"
+      class="modal-close-container"
     >
-      <div
+      <button
+        aria-label="close"
         class="modal-close-x"
       >
-        <button
-          aria-label="close"
-          class="inline-plus-sign"
-        >
-          <span>
-            ×
-          </span>
-        </button>
-      </div>
+        <x-svg
+          classname="icon"
+        />
+      </button>
+    </div>
+    <div
+      class="modal-contents "
+    >
       <div>
         Hello World
       </div>
@@ -73,23 +73,23 @@ exports[`Modal should render correctly with className 1`] = `
     class="modal-overlay"
   />
   <div
-    class="modal test-modal"
+    class="modal "
   >
     <div
-      class="modal-contents"
+      class="modal-close-container"
     >
-      <div
+      <button
+        aria-label="close"
         class="modal-close-x"
       >
-        <button
-          aria-label="close"
-          class="inline-plus-sign"
-        >
-          <span>
-            ×
-          </span>
-        </button>
-      </div>
+        <x-svg
+          classname="icon"
+        />
+      </button>
+    </div>
+    <div
+      class="modal-contents test-modal"
+    >
       <div>
         Hello World
       </div>

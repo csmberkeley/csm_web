@@ -20,18 +20,14 @@ const checkEnrollButtons = (expectDisabled = false) => {
           if (expectDisabled) {
             cy.get(".section-card-footer")
               .should("have.length", 1)
-              // this may change if the implementation changes
-              .should("not.have.css", "color", "rgba(0, 0, 0, 0)")
-              .should("have.class", "disabled")
+              .should("be.disabled")
               // has the correct text
               .invoke("text")
               .should("match", /enroll/i);
           } else {
             cy.get(".section-card-footer")
               .should("have.length", 1)
-              // this may change if the implementation changes
-              .should("not.have.css", "color", "rgba(0, 0, 0, 0)")
-              .should("not.have.class", "disabled")
+              .should("not.be.disabled")
               // has the correct text
               .invoke("text")
               .should("match", /enroll/i);
@@ -45,12 +41,9 @@ const checkEnrollButtons = (expectDisabled = false) => {
 
     cy.get("#show-unavailable-toggle").click();
 
-    // verify all full sections have no enroll button
+    // verify all full sections have disabled enroll button
     cy.get(".section-card.full").each($card => {
-      cy.wrap($card)
-        // this may change if the implementation changes
-        .find(".section-card-footer")
-        .should("have.css", "color", "rgba(0, 0, 0, 0)");
+      cy.wrap($card).find(".section-card-footer").should("be.disabled");
     });
 
     // reset for next check
@@ -68,7 +61,7 @@ const checkEnrollAction = () => {
     .should("match", /successfully enrolled/i);
 
   // click on the ok button
-  cy.contains(".modal-contents .modal-btn", /ok/i)
+  cy.contains(".modal-contents .primary-btn", /ok/i)
     .click()
     // modal should disappear
     .should("not.exist");
@@ -101,22 +94,9 @@ const checkFailedEnrollAction = () => {
       cy.wrap($card)
         .contains(/enroll/i)
         .within($enroll => {
-          // pointer events should be disabled
-          cy.wrap($enroll).should("have.css", "pointer-events", "none");
-
-          // force a click on enroll button anyways
-          // ignore waiting to be actionable
-          cy.wrap($enroll).click({ force: true });
+          // button should be disabled
+          cy.wrap($enroll).should("be.disabled");
         });
-
-      // should open modal saying enrollment failed
-      cy.get(".modal-contents")
-        .should("be.visible")
-        .invoke("text")
-        .should("match", /enrollment failed/i);
-
-      // dismiss modal
-      cy.contains(".modal-contents .modal-btn", /ok/i).click().should("not.exist");
     });
   });
 

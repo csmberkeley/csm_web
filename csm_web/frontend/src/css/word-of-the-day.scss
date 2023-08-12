@@ -30,21 +30,6 @@
   gap: 8px;
 }
 
-.word-of-the-day-input {
-  border-radius: 6px;
-  font-size: 14px;
-  font-weight: 600;
-  font-family: "Montserrat";
-  border: none;
-  background-color: #ededed;
-  padding: 10px 20px;
-  margin-right: 5px;
-}
-
-.word-of-the-day-input::placeholder {
-  opacity: 0.65;
-}
-
 .word-of-the-day-status.unselected {
   color: $csm-danger;
 }

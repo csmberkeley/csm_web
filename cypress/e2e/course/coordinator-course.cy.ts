@@ -172,7 +172,7 @@ describe("coordinator course view", () => {
           .invoke("text")
           .should("match", /online/i);
         // should show "manage" button
-        cy.contains(".csm-btn", /manage/i).should("be.visible");
+        cy.contains(".primary-btn", /manage/i).should("be.visible");
 
         // should not be full
         cy.get('[title="Current enrollment"]')

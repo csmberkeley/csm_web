@@ -179,12 +179,13 @@ export const SectionCard = ({
             MANAGE
           </Link>
         ) : (
-          <div
-            className={`primary-btn section-card-footer ${courseOpen ? "" : "disabled"}`}
+          <button
+            className={`primary-btn section-card-footer`}
+            disabled={!courseOpen || isFull}
             onClick={isFull ? undefined : enroll}
           >
             ENROLL
-          </div>
+          </button>
         )}
       </section>
     </React.Fragment>

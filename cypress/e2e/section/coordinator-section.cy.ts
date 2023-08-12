@@ -33,14 +33,14 @@ describe("modifying students", () => {
       setupWithMutate();
 
       cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+      cy.contains(".secondary-btn", /add students/i).click();
 
       cy.get(".coordinator-add-student-modal").within(() => {
         // input new student email
         cy.get(".coordinator-email-input").type("testuser1@berkeley.edu");
 
         // submit
-        cy.get(".coordinator-email-input-submit").click();
+        cy.contains(".primary-btn", /submit/i).click();
       });
 
       // wait for request to finish
@@ -65,14 +65,14 @@ describe("modifying students", () => {
       setupWithMutate();
 
       cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+      cy.contains(".secondary-btn", /add students/i).click();
 
       cy.get(".coordinator-add-student-modal").within(() => {
         // input new student email
         cy.get(".coordinator-email-input").type("newuser@berkeley.edu");
 
         // submit
-        cy.get(".coordinator-email-input-submit").click();
+        cy.contains(".primary-btn", /submit/i).click();
       });
 
       // wait for request to finish
@@ -111,16 +111,16 @@ describe("modifying students", () => {
         });
 
       // perform the drop
-      cy.get(".studentDropper").within(() => {
+      cy.get(".student-dropper-modal").within(() => {
         cy.get("input#drop").click();
-        cy.get(".studentDropperSubmit").click();
+        cy.contains(".danger-btn", /submit/i).click();
       });
 
       cy.wait("@drop-student").its("response.statusCode").should("eq", 204);
       cy.wait("@section-students");
 
       // modal should disappear
-      cy.get(".studentDropper").should("not.exist");
+      cy.get(".student-dropper-modal").should("not.exist");
       // student should not appear in the list
       cy.contains("#students-table .student-info", /A Student/i).should("not.exist");
     });
@@ -138,11 +138,11 @@ describe("modifying students", () => {
           expect($text.text()).to.match(STUDENT_LIST[idx]);
         });
 
-      cy.get(".coordinator-email-modal-button").click();
+      cy.contains(".secondary-btn", /add students/i).click();
 
       cy.get(".coordinator-add-student-modal").within(() => {
         cy.get(".coordinator-email-input-item").should("have.length", 1).get("[title='Remove']").click();
-        cy.get(".coordinator-email-input-submit").click();
+        cy.contains(".primary-btn", /submit/i).click();
       });
 
       cy.get(".coordinator-add-student-modal").should("not.exist");
@@ -162,11 +162,11 @@ describe("modifying students", () => {
       const USERNAME = "user1@berkeley.edu";
 
       cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+      cy.contains(".secondary-btn", /add students/i).click();
 
       cy.get(".coordinator-add-student-modal").within(() => {
         cy.get(".coordinator-email-input").type(USERNAME);
-        cy.get(".coordinator-email-input-submit").click();
+        cy.contains(".primary-btn", /submit/i).click();
 
         // wait for request; should fail
         cy.wait("@add-student").its("response.statusCode").should("eq", 422);
@@ -192,7 +192,7 @@ describe("modifying students", () => {
         // should disappear after click
         cy.contains(".coordinator-email-response-container", /section conflict/i).should("not.exist");
 
-        cy.contains(".coordinator-email-input-submit", /retry/i).click();
+        cy.contains(".primary-btn", /retry/i).click();
         // no request, so no wait
       });
       // should disappear after click
@@ -211,11 +211,11 @@ describe("modifying students", () => {
       const USERNAME = "user2@berkeley.edu";
 
       cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+      cy.contains(".secondary-btn", /add students/i).click();
 
       cy.get(".coordinator-add-student-modal").within(() => {
         cy.get(".coordinator-email-input").type(USERNAME);
-        cy.get(".coordinator-email-input-submit").click();
+        cy.contains(".primary-btn", /submit/i).click();
 
         // wait for request; should fail
         cy.wait("@add-student").its("response.statusCode").should("eq", 422);
@@ -238,7 +238,7 @@ describe("modifying students", () => {
           });
         });
 
-        cy.contains(".coordinator-email-input-submit", /retry/i).click();
+        cy.contains(".primary-btn", /retry/i).click();
         cy.wait("@add-student").its("response.statusCode").should("eq", 200);
       });
       // should disappear after click
@@ -264,11 +264,11 @@ describe("modifying students", () => {
       const USERNAME = "banned_student@berkeley.edu";
 
       cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+      cy.contains(".secondary-btn", /add students/i).click();
 
       cy.get(".coordinator-add-student-modal").within(() => {
         cy.get(".coordinator-email-input").type(USERNAME);
-        cy.get(".coordinator-email-input-submit").click();
+        cy.contains(".primary-btn", /submit/i).click();
 
         // wait for request; should fail
         cy.wait("@add-student").its("response.statusCode").should("eq", 422);
@@ -287,7 +287,7 @@ describe("modifying students", () => {
           });
         });
 
-        cy.contains(".coordinator-email-input-submit", /retry/i).click();
+        cy.contains(".primary-btn", /retry/i).click();
         cy.wait("@add-student").its("response.statusCode").should("eq", 200);
       });
 
@@ -308,11 +308,11 @@ describe("modifying students", () => {
       setupFullSection();
 
       cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+      cy.contains(".secondary-btn", /add students/i).click();
 
       cy.get(".coordinator-add-student-modal").within(() => {
         cy.get(".coordinator-email-input").type("testuser1@berkeley.edu");
-        cy.get(".coordinator-email-input-submit").click();
+        cy.contains(".primary-btn", /submit/i).click();
 
         // wait for request; should fail
         cy.wait("@add-student").its("response.statusCode").should("eq", 422);
@@ -324,7 +324,7 @@ describe("modifying students", () => {
           cy.get("input[type='radio'][value='EXPAND']").click();
         });
 
-        cy.contains(".coordinator-email-input-submit", /retry/i).click();
+        cy.contains(".primary-btn", /retry/i).click();
         cy.wait("@add-student").its("response.statusCode").should("eq", 200);
       });
 
@@ -355,25 +355,25 @@ describe("modifying students", () => {
       setupWithMutate();
 
       cy.wait("@section-students");
-      cy.get(".coordinator-email-modal-button").click();
+      cy.contains(".secondary-btn", /add students/i).click();
 
       cy.get(".coordinator-add-student-modal").within(() => {
         // valid user
         cy.get(".coordinator-email-input").last().type("testuser1@berkeley.edu");
-        cy.contains(".coordinator-email-input-add", /add email/i)
+        cy.contains(".secondary-btn", /add email/i)
           .focus()
           .click();
         // mentor for another section
         cy.get(".coordinator-email-input").last().type("user1@berkeley.edu");
-        cy.contains(".coordinator-email-input-add", /add email/i).click();
+        cy.contains(".secondary-btn", /add email/i).click();
         // conflicting section
         cy.get(".coordinator-email-input").last().type("user2@berkeley.edu");
-        cy.contains(".coordinator-email-input-add", /add email/i).click();
+        cy.contains(".secondary-btn", /add email/i).click();
         // banned user
         cy.get(".coordinator-email-input").last().type("banned_student@berkeley.edu");
 
         // submit and wait for request; should fail
-        cy.get(".coordinator-email-input-submit").click();
+        cy.contains(".primary-btn", /submit/i).click();
         cy.wait("@add-student").its("response.statusCode").should("eq", 422);
 
         cy.contains(".coordinator-email-response-container", /section conflict/i).within(() => {
@@ -439,7 +439,7 @@ describe("modifying students", () => {
         });
 
         // submit form
-        cy.get(".coordinator-email-input-submit").click();
+        cy.contains(".primary-btn", /retry/i).click();
         cy.wait("@add-student");
       });
 

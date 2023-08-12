@@ -258,7 +258,12 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
         <h3 className="word-of-the-day-title">Submit Word of the Day</h3>
         <div className="word-of-the-day-action-container">
           <div className="word-of-the-day-input-container">
-            <select value={selectedAttendanceId} className="form-select" onChange={handleSelectedAttendanceIdChange}>
+            <select
+              value={selectedAttendanceId}
+              className="form-select"
+              name="word-of-the-day-date"
+              onChange={handleSelectedAttendanceIdChange}
+            >
               {attendances
                 // only allow choosing from dates with blank attendances
                 .filter(attendance => attendance.presence === "")
@@ -273,6 +278,7 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
             </select>
             <input
               className="form-input"
+              name="word-of-the-day"
               type="text"
               placeholder="Word of the Day"
               value={currentWord}
