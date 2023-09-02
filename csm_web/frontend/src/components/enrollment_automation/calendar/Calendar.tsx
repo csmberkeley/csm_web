@@ -204,7 +204,7 @@ export function Calendar({
       // don't update past midnight
       setViewBounds(prevBounds => {
         if (prevBounds.end! <= MAX.minus(SCROLL_AMT)) {
-          return prevBounds.mapEndpoints(datetime => datetime.plus(SCROLL_AMT));
+          return prevBounds.mapEndpoints(datetime => datetime.minus(SCROLL_AMT));
         } else {
           return prevBounds;
         }
