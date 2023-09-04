@@ -291,7 +291,7 @@ def mentors(request, pk=None):
         skipped = []
         # users already associated with the course as a mentor
         users_with_course = User.objects.filter(mentor__course=course)
-        for email in request.data["mentors"]:
+        for email in set(request.data["mentors"]):
             if not email or "@" not in email:
                 # invalid or blank email
                 skipped.append(email)
