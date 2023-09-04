@@ -1,37 +1,34 @@
 import datetime
 
+from django.db import transaction
+from django.db.models import Q
+from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from rest_framework import status
-
-from django.db.models import Q
-from django.db import transaction
-
 from scheduler.models import (
-    User,
     Course,
-    Section,
-    Mentor,
     Matcher,
     MatcherPreference,
     MatcherSlot,
+    Mentor,
+    Section,
     Spacetime,
+    User,
 )
 from scheduler.serializers import (
     MatcherPreferenceSerializer,
     MatcherSlotSerializer,
     MentorSerializer,
 )
-from .utils import get_object_or_error, logger
-
 from scheduler.utils.match_solver import (
-    get_matches,
     MentorTuple,
-    SlotTuple,
     PreferenceTuple,
+    SlotTuple,
+    get_matches,
 )
 
+from .utils import get_object_or_error, logger
 
 DEFAULT_CAPACITY = 5
 TIME_FORMAT = "%H:%M"  # Assuming 24-hour format in hh:mm
@@ -61,7 +58,7 @@ def active(request):
         & (Q(matcher__active=True) | Q(matcher__isnull=True))
     ).distinct()
 
-    activeCourses = []
+    active_courses = []
     for course in courses:
         add_course = True
         is_coord = course.coordinator_set.filter(user=user).exists()
@@ -70,9 +67,9 @@ def active(request):
             add_course = course.matcher.is_open if course.matcher else False
 
         if add_course:
-            activeCourses.append(course.id)
+            active_courses.append(course.id)
 
-    return Response(activeCourses)
+    return Response(active_courses)
 
 
 @api_view(["GET", "POST"])
@@ -106,10 +103,10 @@ def slots(request, pk=None):
             # haven't set up the matcher yet
             return Response({"slots": []}, status=status.HTTP_200_OK)
 
-        slots = MatcherSlot.objects.filter(matcher=matcher)
-        serializer = MatcherSlotSerializer(slots, many=True)
+        matcher_slots = MatcherSlot.objects.filter(matcher=matcher)
+        serializer = MatcherSlotSerializer(matcher_slots, many=True)
         return Response({"slots": serializer.data}, status=status.HTTP_200_OK)
-    elif request.method == "POST":
+    if request.method == "POST":
         # update possible slots
         if not is_coordinator:
             raise PermissionDenied(
@@ -120,20 +117,18 @@ def slots(request, pk=None):
             # create matcher
             matcher = Matcher.objects.create(course=course)
 
-        """
-        Request data:
-        [{"times": [{"day": str, "startTime": str, "endTime": str}], "numMentors": int}]
-        """
+        # Request data:
+        # [{"times": [{"day": str, "startTime": str, "endTime": str}], "numMentors": int}]
 
         if "slots" in request.data:
             request_slots = request.data["slots"]
             request_times = [slot["times"] for slot in request_slots]
             # delete slots that are not in the request
-            slots = MatcherSlot.objects.filter(matcher=matcher).exclude(
+            matcher_slots = MatcherSlot.objects.filter(matcher=matcher).exclude(
                 times__in=request_times
             )
 
-            num_deleted, _ = slots.delete()
+            num_deleted, _ = matcher_slots.delete()
             logger.info("<Matcher> Deleted %s slots.", num_deleted)
 
             for slot_json in request.data["slots"]:
@@ -147,7 +142,9 @@ def slots(request, pk=None):
                 if min_mentors > max_mentors:
                     return Response(
                         {
-                            "error": "min mentors is greater than max mentors for some slot"
+                            "error": (
+                                "min mentors is greater than max mentors for some slot"
+                            )
                         },
                         status=status.HTTP_400_BAD_REQUEST,
                     )
@@ -200,23 +197,24 @@ def preferences(request, pk=None):
         # get all mentor preferences
         if not (is_coordinator or is_mentor):
             raise PermissionDenied(
-                "You must be a coordinator or mentor for the course to submit this form."
+                "You must be a coordinator or mentor for the course to submit this"
+                " form."
             )
 
         if matcher is None:
             # haven't set up the matcher yet
             return Response({"responses": []}, status=status.HTTP_200_OK)
 
-        preferences = MatcherPreference.objects.filter(slot__matcher=matcher)
+        matcher_preferences = MatcherPreference.objects.filter(slot__matcher=matcher)
         if not is_coordinator and is_mentor:
             # filter only this mentor's preferences
-            preferences = preferences.filter(mentor__user=request.user)
-        serializer = MatcherPreferenceSerializer(preferences, many=True)
+            matcher_preferences = matcher_preferences.filter(mentor__user=request.user)
+        serializer = MatcherPreferenceSerializer(matcher_preferences, many=True)
         return Response(
             {"responses": serializer.data, "open": matcher.is_open},
             status=status.HTTP_200_OK,
         )
-    elif request.method == "POST":
+    if request.method == "POST":
         # update mentor preferences
         if not is_mentor:
             raise PermissionDenied(
@@ -251,11 +249,10 @@ def preferences(request, pk=None):
                 )
                 new_pref.save()
         logger.info(
-            f"<Matcher:Success> Updated mentor {mentor} preferences for {course}"
+            "<Matcher:Success> Updated mentor %s preferences for %s", mentor, course
         )
         return Response(status=status.HTTP_200_OK)
-    else:
-        raise PermissionDenied()
+    raise PermissionDenied()
 
 
 @api_view(["GET", "POST", "DELETE"])
@@ -286,7 +283,7 @@ def mentors(request, pk=None):
         queryset = Mentor.objects.filter(course=course, section=None)
         serializer = MentorSerializer(queryset, many=True)
         return Response({"mentors": serializer.data}, status=status.HTTP_200_OK)
-    elif request.method == "POST":
+    if request.method == "POST":
         # add new mentors to course
         skipped = []
         # users already associated with the course as a mentor
@@ -304,9 +301,9 @@ def mentors(request, pk=None):
                     skipped.append(email)
                     continue
                 # create new mentor
-                created = Mentor.objects.create(user=user, course=course)
+                Mentor.objects.create(user=user, course=course)
         return Response({"skipped": skipped}, status=status.HTTP_200_OK)
-    elif request.method == "DELETE":
+    if request.method == "DELETE":
         # delete mentors from course
         skipped = []
         for email in request.data["mentors"]:
@@ -361,20 +358,18 @@ def configure(request, pk=None):
                 # haven't set up the matcher yet
                 return Response({"open": False, "slots": []}, status=status.HTTP_200_OK)
 
-            slots = MatcherSlot.objects.filter(matcher=matcher)
+            matcher_slots = MatcherSlot.objects.filter(matcher=matcher)
             return Response(
                 {
                     "open": matcher.is_open,
-                    "slots": slots.values("id", "min_mentors", "max_mentors"),
+                    "slots": matcher_slots.values("id", "min_mentors", "max_mentors"),
                 },
                 status=status.HTTP_200_OK,
             )
-        else:
-            if matcher is None or matcher.is_open is False:
-                return Response({"open": False}, status=status.HTTP_200_OK)
-            else:
-                return Response({"open": True}, status=status.HTTP_200_OK)
-    elif request.method == "POST":
+        if matcher is None or matcher.is_open is False:
+            return Response({"open": False}, status=status.HTTP_200_OK)
+        return Response({"open": True}, status=status.HTTP_200_OK)
+    if request.method == "POST":
         if not is_coordinator:
             raise PermissionDenied(
                 "You must be a coordinator to modify the matcher configuration."
@@ -396,7 +391,10 @@ def configure(request, pk=None):
                     if curslot.min_mentors > curslot.max_mentors:
                         return Response(
                             {
-                                "error": "min mentors is greater than max mentors for some slot"
+                                "error": (
+                                    "min mentors is greater than max mentors for some"
+                                    " slot"
+                                )
                             },
                             status=status.HTTP_400_BAD_REQUEST,
                         )
@@ -406,11 +404,11 @@ def configure(request, pk=None):
             matcher.is_open = request.data["open"]
             matcher.save()
 
+        # run the matcher
         if "run" in request.data:
-            # run the matcher
             try:
-                assignment, unmatched = run_matcher(course)
-            except Exception as e:
+                matcher_assignment, unmatched = run_matcher(course)
+            except Exception as e:  # pylint: disable=broad-except
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
             # assignment is of the form {"mentor", "capacity"};
             # add a "section" key with default values of capacity and description
@@ -420,14 +418,14 @@ def configure(request, pk=None):
                     "mentor": int(mentor),
                     "section": {"capacity": DEFAULT_CAPACITY, "description": ""},
                 }
-                for (mentor, slot) in assignment.items()
+                for (mentor, slot) in matcher_assignment.items()
             ]
             # update the assignment
             matcher.assignment = updated_assignment
             matcher.save()
 
             return Response(
-                {"assignment": assignment, "unmatched": unmatched},
+                {"assignment": matcher_assignment, "unmatched": unmatched},
                 status=status.HTTP_200_OK,
             )
 
@@ -490,7 +488,7 @@ def assignment(request, pk=None):
             {"assignment": assignments},
             status=status.HTTP_200_OK,
         )
-    elif request.method == "PUT":
+    if request.method == "PUT":
         assignments = []
         for cur in request.data["assignment"]:
             if "slot" not in cur or "mentor" not in cur or "section" not in cur:
@@ -520,21 +518,24 @@ def run_matcher(course: Course):
         - unmatched: [int, int, ...] of mentor ids
     """
     # get slot information
-    slots = MatcherSlot.objects.filter(matcher=course.matcher)
+    matcher_slots = MatcherSlot.objects.filter(matcher=course.matcher)
     # get preference information
-    preferences = MatcherPreference.objects.filter(slot__matcher=course.matcher)
+    matcher_preferences = MatcherPreference.objects.filter(slot__matcher=course.matcher)
 
     # list of all mentor ids
     mentor_list = list(
         map(
-            lambda id: MentorTuple(id),
-            list(set(preferences.values_list("mentor", flat=True))),
+            MentorTuple,
+            list(set(matcher_preferences.values_list("mentor", flat=True))),
         )
     )
 
     # list of all slot ids
     slot_list = list(
-        map(lambda slot: SlotTuple(slot.id, slot.min_mentors, slot.max_mentors), slots)
+        map(
+            lambda slot: SlotTuple(slot.id, slot.min_mentors, slot.max_mentors),
+            matcher_slots,
+        )
     )
 
     # list of preferences (mentor_id, slot_id, preference)
@@ -543,7 +544,7 @@ def run_matcher(course: Course):
             lambda preference: PreferenceTuple(
                 preference.mentor.id, preference.slot.id, preference.preference
             ),
-            preferences,
+            matcher_preferences,
         )
     )
 
@@ -595,7 +596,7 @@ def create(request, pk=None):
     local_data = sorted(local_data, key=lambda x: x["mentor"])
     server_data = sorted(server_data, key=lambda x: x["mentor"])
 
-    for (local, server) in zip(local_data, server_data):
+    for local, server in zip(local_data, server_data):
         for key in local:
             if local[key] != server[key]:
                 data_matches = False
