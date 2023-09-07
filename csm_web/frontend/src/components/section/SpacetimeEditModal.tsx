@@ -37,7 +37,7 @@ const SpaceTimeEditModal = ({
     setShowSaveSpinner(true);
     isPermanent
       ? spacetimeModifyMutation.mutate({
-          dayOfWeek,
+          dayOfWeek: day,
           location: location,
           startTime: time
         })
