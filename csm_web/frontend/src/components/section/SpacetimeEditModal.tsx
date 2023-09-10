@@ -107,7 +107,7 @@ const SpaceTimeEditModal = ({
               Day
               <select
                 className="form-select"
-                onChange={e => setDay(e.target.value)}
+                onChange={e => setDay(parseInt(e.target.value))}
                 required={!!isPermanent}
                 name="day"
                 disabled={!isPermanent}
