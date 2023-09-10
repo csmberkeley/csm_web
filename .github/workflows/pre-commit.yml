@@ -32,6 +32,9 @@ jobs:
           poetry install --no-root --with=dev --no-interaction --no-ansi
           # add virtual environment to path for future steps
           echo $(poetry env info --path)/bin >> $GITHUB_PATH
+      - name: Install npm dependencies
+        run: |
+          npm ci
       - name: Run pre-commit hooks
         uses: pre-commit/action@v3.0.0
         with:
