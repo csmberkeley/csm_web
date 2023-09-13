@@ -1,6 +1,7 @@
 import pytest
 from django.urls import reverse
 from scheduler.factories import (
+    CoordinatorFactory,
     CourseFactory,
     MentorFactory,
     SectionFactory,
@@ -10,15 +11,23 @@ from scheduler.factories import (
 from scheduler.models import Section
 
 
-@pytest.fixture
-def setup_test_scheduler():
+@pytest.fixture(name="setup")
+def setup_test():
     """
     Create a course, coordinator, mentor, and a student for testing.
     """
     # Setup course
     course = CourseFactory.create()
+    # Setup sections
+    section_one = create_section(course)
+    section_two = create_section(course)
+    # Setup students
+    create_students(course, section_one, 3)
+    create_students(course, section_two, 3)
     # Setup coordinator for course
     coordinator_user = UserFactory.create()
+    # Create coordinator for course
+    CoordinatorFactory.create(user=coordinator_user, course=course)
 
     return (
         course,
@@ -27,14 +36,14 @@ def setup_test_scheduler():
 
 
 @pytest.mark.django_db
-def test_section_delete(client, setup_scheduler):
+def test_section_delete(client, setup):
     """
     Test that a section can be deleted.
     """
     (
         section_one,
         coordinator_user,
-    ) = setup_scheduler
+    ) = setup
     # Login as coordinator
     client.force_login(coordinator_user)
     # Delete section
