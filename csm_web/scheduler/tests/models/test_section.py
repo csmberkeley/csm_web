@@ -30,7 +30,7 @@ def setup_test():
     CoordinatorFactory.create(user=coordinator_user, course=course)
 
     return (
-        course,
+        section_one,
         coordinator_user,
     )
 
