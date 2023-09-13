@@ -119,6 +119,28 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         serializer = self.serializer_class(section)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def destroy(self, request, pk=None):
+        """
+        Handle request to delete section through the UI;
+        deletes mentor and spacetimes along with it
+        """
+        section = get_object_or_error(self.get_queryset(), pk=pk)
+        if not section.mentor.course.coordinator_set.filter(
+            user=self.request.user
+        ).count():
+            raise PermissionDenied("Only coordinators can delete section")
+        # Delete all students in the section
+        for student in section.students.all():
+            student.delete()
+        # Delete all spacetimes in the section
+        for spacetime in section.spacetimes.all():
+            spacetime.delete()
+        # Delete the mentor
+        section.mentor.delete()
+
+        section.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     def partial_update(self, request, pk=None):
         """Update section metadata (capacity and description)"""
         section = get_object_or_error(self.get_queryset(), pk=pk)
