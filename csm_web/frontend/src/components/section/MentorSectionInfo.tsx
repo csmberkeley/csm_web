@@ -8,6 +8,8 @@ import { InfoCard, SectionSpacetime } from "./Section";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
+import { fetchWithMethod } from "../../utils/api";
+import Modal from "../Modal";
 
 // Images
 import XIcon from "../../../static/frontend/img/x.svg";
@@ -15,6 +17,7 @@ import PencilIcon from "../../../static/frontend/img/pencil.svg";
 
 // Styles
 import "../../css/coordinator-add-student.scss";
+import { NavLink } from "react-router-dom";
 
 enum ModalStates {
   NONE = "NONE",
@@ -50,6 +53,13 @@ export default function MentorSectionInfo({
   const [deleteType, setDeleteType] = useState<boolean>(false);
 
   const closeModal = () => setShowModal(ModalStates.NONE);
+
+  // const [deletionStage, setDeletionStage] = useState<number>(0);
+
+  // function handleDelete() {
+  //   fetchWithMethod(`/sections/${sectionId}`, "DELETE")
+  //   setDeletionStage(0);
+  // }
 
   const closeAddModal = () => {
     setIsAddingStudent(false);
@@ -230,6 +240,29 @@ export default function MentorSectionInfo({
               <span className="meta-field">Description:</span> {description}
             </p>
           </InfoCard>
+        </div>
+      </div>
+      {/* {deletionStage === 1 && (
+        <Modal className="resourceDeleteConfirmation" closeModal={() => setDeletionStage(0)}>
+          <div className="resourceDeleteText">
+            <h2>Are you sure you want to delete this resource?</h2>
+            <p>This action is irreversible!</p>
+            <button className="danger-btn" onClick={() => handleDelete()}>
+              Confirm
+            </button>
+          </div>
+        </Modal>
+      )} */}
+      <div className="coordinator-delete-position">
+        <div className="coordinator-delete-button">
+          <NavLink
+            to="/courses"
+            onClick={() => fetchWithMethod(`/sections/${sectionId}`, "DELETE")}
+            className="coordinator-delete-link"
+          >
+            Remove This Section
+            <XIcon className="icon" />
+          </NavLink>
         </div>
       </div>
     </React.Fragment>
