@@ -6,6 +6,7 @@ import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResul
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
 import { Attendance, RawAttendance, Section, Spacetime, Student } from "../types";
 import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
+import { useProfiles } from "./base";
 
 /* ===== Queries ===== */
 
@@ -493,6 +494,45 @@ export const useSectionUpdateMutation = (
       onSuccess: () => {
         // invalidate all queries for the section
         queryClient.invalidateQueries(["sections", sectionId]);
+      },
+      retry: handleRetry
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
+
+/**
+ * Hook to drop the current section
+ *
+ * Invalidates the current user profile query.
+ */
+export const useDropSectionMutation = (
+  sectionId: number,
+  courseIds: Array<number>
+): UseMutationResult<void, ServerError, void> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, Error, void>(
+    async () => {
+      if (isNaN(sectionId) || isNaN(sectionId)) {
+        throw new PermissionError("Invalid section id");
+      }
+      const response = await fetchWithMethod(`sections/${sectionId}`, HTTP_METHODS.DELETE);
+      if (response.ok) {
+        return;
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to drop section ${sectionId}`);
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["sections", sectionId]);
+        for (const courseId of courseIds) {
+          // console.log(courseId)
+          queryClient.invalidateQueries(["courses", courseId]);
+        }
       },
       retry: handleRetry
     }

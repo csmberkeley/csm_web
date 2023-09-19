@@ -324,11 +324,12 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
   // background-color: #fc4a14;
   background-color: #ff7272;
   cursor: pointer;
-  border-radius: 6px;
+  border-radius: 10px;
   border: none;
   outline: none;
   transition: background-color 0.4s;
-  box-shadow: 0px 8px 24px rgba(149, 157, 165, 0.5);
+  //box-shadow: 0px 8px 24px rgba(149, 157, 165, 0.5);
+  box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
 }
 
 .coordinator-delete-link {

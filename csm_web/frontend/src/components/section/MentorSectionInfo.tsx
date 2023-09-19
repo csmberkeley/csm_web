@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useSectionStudents } from "../../utils/queries/sections";
-import { Mentor, Spacetime, Student } from "../../utils/types";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useSectionStudents, useDropSectionMutation } from "../../utils/queries/sections";
+import { Mentor, Spacetime, Student, Course } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import MetaEditModal from "./MetaEditModal";
@@ -8,8 +9,21 @@ import { InfoCard, SectionSpacetime } from "./Section";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
-import { fetchWithMethod } from "../../utils/api";
+import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+
+import { useProfiles, useUserInfo } from "../../utils/queries/base";
+import { useCourses } from "../../utils/queries/courses";
+
 import Modal from "../Modal";
+
+import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
+import {
+  handleError,
+  handlePermissionsError,
+  handleRetry,
+  PermissionError,
+  ServerError
+} from "./../../utils/queries/helpers";
 
 // Images
 import XIcon from "../../../static/frontend/img/x.svg";
@@ -47,23 +61,30 @@ export default function MentorSectionInfo({
 }: MentorSectionInfoProps) {
   const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(sectionId);
 
+  const { data: courses, isSuccess: coursesLoaded, isError: coursesLoadError } = useCourses();
+
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
   const [isAddingStudent, setIsAddingStudent] = useState<boolean>(false);
   const [deleteType, setDeleteType] = useState<boolean>(false);
 
+  let courseIds = [];
+
   const closeModal = () => setShowModal(ModalStates.NONE);
-
-  // const [deletionStage, setDeletionStage] = useState<number>(0);
-
-  // function handleDelete() {
-  //   fetchWithMethod(`/sections/${sectionId}`, "DELETE")
-  //   setDeletionStage(0);
-  // }
 
   const closeAddModal = () => {
     setIsAddingStudent(false);
   };
+
+  if (coursesLoaded) {
+    const coursesById: Map<number, Course> = new Map();
+    for (const courseObj of courses) {
+      coursesById.set(courseObj.id, courseObj);
+    }
+
+    let courseIds = Array.from(coursesById.keys());
+    // console.log(courseIds)
+  }
 
   return (
     <React.Fragment>
@@ -242,29 +263,59 @@ export default function MentorSectionInfo({
           </InfoCard>
         </div>
       </div>
-      {/* {deletionStage === 1 && (
-        <Modal className="resourceDeleteConfirmation" closeModal={() => setDeletionStage(0)}>
-          <div className="resourceDeleteText">
-            <h2>Are you sure you want to delete this resource?</h2>
-            <p>This action is irreversible!</p>
-            <button className="danger-btn" onClick={() => handleDelete()}>
+      <DropSection sectionId={sectionId} courseIds={courseIds} />
+    </React.Fragment>
+  );
+}
+
+interface DropSectionProps {
+  sectionId: number;
+  courseIds: Array<number>;
+}
+
+enum DropSectionStage {
+  INITIAL = "INITIAL",
+  CONFIRM = "CONFIRM",
+  DROPPED = "DROPPED"
+}
+
+function DropSection({ sectionId, courseIds }: DropSectionProps) {
+  const sectionDropMutation = useDropSectionMutation(sectionId, courseIds);
+  const [stage, setStage] = useState<DropSectionStage>(DropSectionStage.INITIAL);
+
+  const performDrop = () => {
+    sectionDropMutation.mutate(undefined, {
+      onSuccess: () => {
+        // console.log(sectionId)
+        setStage(DropSectionStage.DROPPED);
+      }
+    });
+  };
+
+  switch (stage) {
+    case DropSectionStage.INITIAL:
+      return (
+        <InfoCard title="Drop Section" showTitle={false}>
+          <h5>Drop Section</h5>
+          <button className="danger-btn" onClick={() => setStage(DropSectionStage.CONFIRM)}>
+            <XIcon className="icon" />
+            Drop
+          </button>
+        </InfoCard>
+      );
+    case DropSectionStage.CONFIRM:
+      return (
+        <Modal closeModal={() => setStage(DropSectionStage.INITIAL)}>
+          <div className="drop-confirmation">
+            <h5>Are you sure you want to drop?</h5>
+            <p>You are not guaranteed an available spot in another section!</p>
+            <button className="danger-btn" onClick={performDrop}>
               Confirm
             </button>
           </div>
         </Modal>
-      )} */}
-      <div className="coordinator-delete-position">
-        <div className="coordinator-delete-button">
-          <NavLink
-            to="/courses"
-            onClick={() => fetchWithMethod(`/sections/${sectionId}`, "DELETE")}
-            className="coordinator-delete-link"
-          >
-            Remove This Section
-            <XIcon className="icon" />
-          </NavLink>
-        </div>
-      </div>
-    </React.Fragment>
-  );
+      );
+    case DropSectionStage.DROPPED:
+      return <Navigate to="/" />;
+  }
 }
