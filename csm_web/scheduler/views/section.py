@@ -126,6 +126,15 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
         section = get_object_or_error(self.get_queryset(), pk=pk)
         course = section.mentor.course
+        # If the course has students, we cannot delete the section
+        if section.students.count() > 0:
+            logger.error(
+                (
+                    "<Section Deletion:Failure> Could not delete section %s, it has"
+                    " students. Remove all students manually first."
+                ),
+                log_str(section),
+            )
         is_coordinator = course.coordinator_set.filter(user=request.user).exists()
         if not is_coordinator:
             logger.error(
@@ -138,9 +147,6 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             raise PermissionDenied(
                 "You must be a coordinator to delete this spacetime!"
             )
-        # Delete all students in the section
-        for student in section.students.all():
-            student.delete()
         # Delete all spacetimes in the section
         for spacetime in section.spacetimes.all():
             spacetime.delete()
