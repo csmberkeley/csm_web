@@ -68,7 +68,7 @@ export default function MentorSectionInfo({
   const [isAddingStudent, setIsAddingStudent] = useState<boolean>(false);
   const [deleteType, setDeleteType] = useState<boolean>(false);
 
-  let courseIds = [];
+  let courseIds: number[] = [];
 
   const closeModal = () => setShowModal(ModalStates.NONE);
 
@@ -82,7 +82,7 @@ export default function MentorSectionInfo({
       coursesById.set(courseObj.id, courseObj);
     }
 
-    let courseIds = Array.from(coursesById.keys());
+    courseIds = Array.from(coursesById.keys());
     // console.log(courseIds)
   }
 
