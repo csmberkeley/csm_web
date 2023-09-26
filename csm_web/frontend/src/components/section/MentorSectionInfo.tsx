@@ -74,16 +74,6 @@ export default function MentorSectionInfo({
     setIsAddingStudent(false);
   };
 
-  if (coursesLoaded) {
-    const coursesById: Map<number, Course> = new Map();
-    for (const courseObj of courses) {
-      coursesById.set(courseObj.id, courseObj);
-    }
-
-    let courseIds = Array.from(coursesById.keys());
-    // console.log(courseIds)
-  }
-
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">{`${
