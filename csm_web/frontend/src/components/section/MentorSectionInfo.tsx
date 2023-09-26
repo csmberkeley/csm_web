@@ -68,8 +68,6 @@ export default function MentorSectionInfo({
   const [isAddingStudent, setIsAddingStudent] = useState<boolean>(false);
   const [deleteType, setDeleteType] = useState<boolean>(false);
 
-  let courseIds = [];
-
   const closeModal = () => setShowModal(ModalStates.NONE);
 
   const closeAddModal = () => {
@@ -263,14 +261,13 @@ export default function MentorSectionInfo({
           </InfoCard>
         </div>
       </div>
-      <DropSection sectionId={sectionId} courseIds={courseIds} />
+      <DropSection sectionId={sectionId} />
     </React.Fragment>
   );
 }
 
 interface DropSectionProps {
   sectionId: number;
-  courseIds: Array<number>;
 }
 
 enum DropSectionStage {
@@ -279,8 +276,8 @@ enum DropSectionStage {
   DROPPED = "DROPPED"
 }
 
-function DropSection({ sectionId, courseIds }: DropSectionProps) {
-  const sectionDropMutation = useDropSectionMutation(sectionId, courseIds);
+function DropSection({ sectionId }: DropSectionProps) {
+  const sectionDropMutation = useDropSectionMutation(sectionId);
   const [stage, setStage] = useState<DropSectionStage>(DropSectionStage.INITIAL);
 
   const performDrop = () => {
@@ -296,10 +293,10 @@ function DropSection({ sectionId, courseIds }: DropSectionProps) {
     case DropSectionStage.INITIAL:
       return (
         <InfoCard title="Drop Section" showTitle={false}>
-          <h5>Drop Section</h5>
+          <h5>Delete Section</h5>
           <button className="danger-btn" onClick={() => setStage(DropSectionStage.CONFIRM)}>
             <XIcon className="icon" />
-            Drop
+            Delete
           </button>
         </InfoCard>
       );
@@ -307,8 +304,8 @@ function DropSection({ sectionId, courseIds }: DropSectionProps) {
       return (
         <Modal closeModal={() => setStage(DropSectionStage.INITIAL)}>
           <div className="drop-confirmation">
-            <h5>Are you sure you want to drop?</h5>
-            <p>You are not guaranteed an available spot in another section!</p>
+            <h5>Are you sure you want to delete?</h5>
+
             <button className="danger-btn" onClick={performDrop}>
               Confirm
             </button>

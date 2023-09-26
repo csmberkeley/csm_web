@@ -508,10 +508,7 @@ export const useSectionUpdateMutation = (
  *
  * Invalidates the current user profile query.
  */
-export const useDropSectionMutation = (
-  sectionId: number,
-  courseIds: Array<number>
-): UseMutationResult<void, ServerError, void> => {
+export const useDropSectionMutation = (sectionId: number): UseMutationResult<void, ServerError, void> => {
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, Error, void>(
     async () => {
@@ -529,10 +526,7 @@ export const useDropSectionMutation = (
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["sections", sectionId]);
-        for (const courseId of courseIds) {
-          // console.log(courseId)
-          queryClient.invalidateQueries(["courses", courseId]);
-        }
+        queryClient.invalidateQueries(["courses"]);
       },
       retry: handleRetry
     }
