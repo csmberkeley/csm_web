@@ -273,7 +273,6 @@ function DropSection({ sectionId }: DropSectionProps) {
   const performDrop = () => {
     sectionDropMutation.mutate(undefined, {
       onSuccess: () => {
-        // console.log(sectionId)
         setStage(DropSectionStage.DROPPED);
       }
     });
