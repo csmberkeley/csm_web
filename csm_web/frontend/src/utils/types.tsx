@@ -36,6 +36,9 @@ export interface UserInfo {
   lastName: string;
   email: string;
   priorityEnrollment?: DateTime;
+  isPrivate: boolean;
+  bio: string;
+  pronouns: string;
 }
 
 /**

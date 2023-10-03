@@ -1,6 +1,7 @@
-import React from "react";
+import React, { useState } from "react";
 import { useUserInfo } from "../utils/queries/base";
 import { UserInfo } from "../utils/types";
+import { useUserInfoUpdateMutation } from "../utils/queries/profiles";
 
 import "../css/profile.scss";
 
@@ -29,11 +30,95 @@ export const UserProfile = (): React.ReactElement => {
     </React.Fragment>
   );
 };
+
 interface UserInfoProps {
   userInfo: UserInfo | null;
 }
 
 const DisplayUser = ({ userInfo }: UserInfoProps) => {
+  /**
+   * Mutation to create a new section.
+   */
+  const createSectionMutation = useUserInfoUpdateMutation(userInfo.id);
+
+  const [editing, setEditing] = useState(false);
+  /**
+   * User First Name
+   */
+  const [userFirstName, setUserFirstName] = useState<string>("");
+
+  /**
+   * User Last Name
+   */
+  const [userLastName, setUserLastName] = useState<string>("");
+  /**
+   * User email
+   */
+  const [userEmail, setUserEmail] = useState<string>("");
+  /**
+   * User Pronoun
+   */
+  const [userPronoun, setUserPronoun] = useState<string>("");
+  /**
+   * User Bio
+   */
+  const [userBio, setUserBio] = useState<string>("");
+
+  const handleEditing = () => {
+    setEditing(true);
+  };
+
+  const handleCancel = () => {
+    // Reset form data if necessary
+    setEditing(false);
+  };
+
+  /**
+   * Handle save.
+   */
+  const handleSave = (event: React.MouseEvent<HTMLButtonElement>): void => {
+    event.preventDefault();
+    const data = {
+      userFirstName,
+      userLastName,
+      userEmail,
+      userBio,
+      userPronoun
+    };
+
+    createSectionMutation.mutate(data, {
+      onSuccess: () => {
+        setEditing(false);
+      }
+    });
+  };
+
+  /**
+   * Handle the change of a form field.
+   */
+  const handleChange = (name: string, value: string): void => {
+    switch (name) {
+      case "firstName":
+        setUserFirstName(value);
+        break;
+      case "lastName":
+        setUserLastName(value);
+        break;
+      case "email":
+        setUserEmail(value);
+        break;
+      case "pronouns":
+        setUserPronoun(value);
+        break;
+      case "bio":
+        setUserBio(value);
+        break;
+      default:
+        console.error("Unknown input name: " + name);
+        break;
+    }
+  };
+
   return (
     <div>
       {userInfo !== null ? (
@@ -46,8 +131,10 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
                     type="text"
                     name="firstname"
                     id="firstname"
-                    placeholder={userInfo.firstName}
+                    defaultValue={userInfo.firstName}
                     className="formbold-form-input"
+                    disabled={!editing}
+                    onChange={e => handleChange("firstName", e.target.value)}
                   />
                   <label className="formbold-form-label"> First name </label>
                 </div>
@@ -56,8 +143,10 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
                     type="text"
                     name="lastname"
                     id="lastname"
-                    placeholder={userInfo.lastName}
+                    defaultValue={userInfo.lastName}
                     className="formbold-form-input"
+                    disabled={!editing}
+                    onChange={e => handleChange("lastName", e.target.value)}
                   />
                   <label className="formbold-form-label"> Last name </label>
                 </div>
@@ -69,13 +158,23 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
                     type="email"
                     name="email"
                     id="email"
-                    placeholder={userInfo.email}
+                    defaultValue={userInfo.email}
                     className="formbold-form-input"
+                    disabled={!editing}
+                    onChange={e => handleChange("email", e.target.value)}
                   />
                   <label className="formbold-form-label"> Email </label>
                 </div>
                 <div>
-                  <input type="text" name="pronouns" id="pronouns" placeholder="" className="formbold-form-input" />
+                  <input
+                    type="text"
+                    name="pronouns"
+                    id="pronouns"
+                    placeholder=""
+                    className="formbold-form-input"
+                    disabled={!editing}
+                    onChange={e => handleChange("pronouns", e.target.value)}
+                  />
                   <label className="formbold-form-label"> Pronouns </label>
                 </div>
               </div>
@@ -86,14 +185,30 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
                   id="bio"
                   placeholder="Write your bio..."
                   className="formbold-form-input"
+                  disabled={!editing}
+                  onChange={e => handleChange("bio", e.target.value)}
                 ></textarea>
                 <label className="formbold-form-label"> Bio </label>
               </div>
-              <div className="button-wrapper">
-                <button className="formbold-btn">Save</button>
-                <button className="formbold-btn">Edit</button>
-              </div>
             </form>
+            <div className="button-wrapper">
+              <>
+                {!editing ? (
+                  <button className="formbold-btn" onClick={handleEditing}>
+                    Edit
+                  </button>
+                ) : (
+                  <>
+                    <button className="formbold-btn" onClick={handleSave}>
+                      Save
+                    </button>
+                    <button className="formbold-btn" onClick={handleCancel}>
+                      Cancel
+                    </button>
+                  </>
+                )}
+              </>
+            </div>
           </div>
         </div>
       ) : (
