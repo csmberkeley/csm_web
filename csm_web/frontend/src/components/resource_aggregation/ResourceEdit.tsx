@@ -655,17 +655,17 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   const hasLinks = existingLinkMap && newLinks && (existingLinkDisplay.length > 0 || newLinkDisplay.length > 0);
 
   const tabErrorDisplay = (
-    <div className="resourceTabErrorText">
-      <ExclamationCircle className="icon exclamationIcon" /> Errors present in {isEditingLinks ? "worksheets" : "links"}
+    <div className="resource-tab-error-text">
+      <ExclamationCircle className="icon" /> Errors present in {isEditingLinks ? "worksheets" : "links"}
     </div>
   );
 
   return (
-    <Modal closeModal={onCancel} className="resourceEditModal">
-      <div className="resourceEditContainer">
-        <div id="resourceEditInner">
-          <div className="resourceInfoEdit">
-            <label className="form-label resourceEditHeadItem">
+    <Modal closeModal={onCancel} className="resource-edit-modal">
+      <div className="resource-edit-container">
+        <div id="resource-edit-inner">
+          <div className="resource-info-edit">
+            <label className="form-label resource-edit-head-item">
               Week Number
               <input
                 className="form-input"
@@ -676,13 +676,13 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                 onBlur={() => handleBlur("weekNum")}
               />
             </label>
-            <div className="resourceValidationError">
-              {formErrors.weekNum && <ExclamationCircle className="icon exclamationIcon" />}
+            <div className="resource-validation-error">
+              {formErrors.weekNum && <ExclamationCircle className="icon" />}
               {formErrors.weekNum}
             </div>
           </div>
-          <div className="resourceInfoEdit">
-            <label className="form-label resourceEditHeadItem">
+          <div className="resource-info-edit">
+            <label className="form-label resource-edit-head-item">
               Date
               <input
                 className="form-date"
@@ -692,15 +692,15 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                 onBlur={() => handleBlur("date")}
               />
             </label>
-            <div className="resourceValidationError">
-              {formErrors.date && <ExclamationCircle className="icon exclamationIcon" />}
+            <div className="resource-validation-error">
+              {formErrors.date && <ExclamationCircle className="icon" />}
               {formErrors.date}
             </div>
           </div>
-          <div className="resourceInfoEdit">
-            <label className="form-label resourceEditHeadItem">
+          <div className="resource-info-edit">
+            <label className="form-label resource-edit-head-item">
               Topics
-              <div className="topicsTooltipWrapper">
+              <div className="topics-tooltip-wrapper">
                 <Tooltip
                   placement="bottom"
                   source={
@@ -718,8 +718,8 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                 </Tooltip>
               </div>
             </label>
-            <div className="resourceValidationError">
-              {formErrors.topics && <ExclamationCircle className="icon exclamationIcon" />}
+            <div className="resource-validation-error">
+              {formErrors.topics && <ExclamationCircle className="icon" />}
               {formErrors.topics}
             </div>
           </div>
@@ -742,20 +742,20 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
             Edit Links
           </button>
         </div>
-        <div className="resourceEditContentWrapper">
-          <div className="resourceEditContent">
+        <div className="resource-edit-content-wrapper">
+          <div className="resource-edit-content">
             {!isEditingLinks && (
-              <div className="resourceWorksheetContainer">
+              <div className="resource-worksheet-container">
                 {hasWorksheets && (
-                  <div className="resourceWorksheetHead">
-                    <div className="resourceWorksheetHeadItem">Name</div>
-                    <div className="resourceWorksheetHeadItem">Worksheet File</div>
-                    <div className="resourceWorksheetHeadItem">Solution File</div>
+                  <div className="resource-worksheet-head">
+                    <div className="resource-worksheet-head-item">Name</div>
+                    <div className="resource-worksheet-head-item">Worksheet File</div>
+                    <div className="resource-worksheet-head-item">Solution File</div>
                   </div>
                 )}
                 {existingWorksheetDisplay}
                 {newWorksheetDisplay}
-                <div className="resourceWorksheetActionsContainer">
+                <div className="resource-worksheet-actions-container">
                   <button onClick={handleAddWorksheet} className="secondary-btn">
                     <PlusIcon className="icon" />
                     Add Worksheet
@@ -764,16 +764,16 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
               </div>
             )}
             {isEditingLinks && (
-              <div className="resourceWorksheetContainer">
+              <div className="resource-worksheet-container">
                 {hasLinks && (
-                  <div className="resourceLinkHead">
-                    <div className="resourceWorksheetHeadItem">Name</div>
-                    <div className="resourceWorksheetHeadItem">URL</div>
+                  <div className="resource-link-head">
+                    <div className="resource-worksheet-head-item">Name</div>
+                    <div className="resource-worksheet-head-item">URL</div>
                   </div>
                 )}
                 {existingLinkDisplay}
                 {newLinkDisplay}
-                <div className="resourceWorksheetActionsContainer">
+                <div className="resource-worksheet-actions-container">
                   <button onClick={handleAddLink} className="secondary-btn">
                     <PlusIcon className="icon" />
                     Add Link
@@ -783,9 +783,9 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
             )}
           </div>
         </div>
-        <div className="resourceEditFooter">
+        <div className="resource-edit-footer">
           <button onClick={handleSubmit} className="primary-btn" disabled={!checkValid()}>
-            <CheckCircle className="icon" id="saveIcon" /> Save
+            <CheckCircle className="icon" id="save-icon" /> Save
           </button>
           {!(!isEditingLinks && formErrors["existingLinks"].size == 0 && formErrors["newLinks"].size == 0) &&
             !(isEditingLinks && formErrors["existingWorksheets"].size == 0 && formErrors["newWorksheets"].size == 0) &&

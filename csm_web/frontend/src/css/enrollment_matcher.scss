@@ -6,11 +6,10 @@
 
 #matcher-sidebar {
   display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
-  padding: 40px 30px 0 20px;
-  width: fit-content;
+  flex-flow: column wrap;
   gap: 10px;
+  width: fit-content;
+  padding: 40px 30px 0 20px;
 }
 
 #matcher-body {
@@ -22,9 +21,10 @@
 }
 
 #matcher-main input[type="time"]::-webkit-calendar-picker-indicator {
+  padding: 1px;
+
   /* display: none; */
   margin-left: 0;
-  padding: 1px;
 }
 
 /*
@@ -35,8 +35,8 @@
 .matcher-title {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
 }
 
 .matcher-stages {
@@ -58,9 +58,9 @@
 }
 
 .matcher-link {
-  text-decoration: none;
-  color: #000;
   padding: 15px 20px;
+  color: #000;
+  text-decoration: none;
   background-color: $csm-green-lightened;
   border-radius: 10px;
 }
@@ -80,11 +80,10 @@
 .matcher-body-footer,
 .matcher-body-footer-right,
 .matcher-body-footer-sticky {
-  margin-top: 20px;
-
   display: flex;
   flex-direction: row;
   align-items: center;
+  margin-top: 20px;
 }
 
 .matcher-body-footer {
@@ -98,19 +97,20 @@
 .matcher-body-footer-sticky {
   position: sticky;
   bottom: 0;
-  margin-top: 0;
   padding: 25px 0 15px;
+  margin-top: 0;
+  background: linear-gradient(to bottom, #fff9 0%, #fff 50%);
+
   /* fallback for gradient */
-  background-color: #ffffffcc;
-  background: linear-gradient(to bottom, #ffffff99 0%, #ffffff 50%);
+  background-color: #fffc;
 }
 
 .matcher-body-footer-status-container {
   display: flex;
   flex-direction: row;
+  gap: 4px;
   align-items: center;
   justify-content: center;
-  gap: 4px;
 }
 
 .matcher-body-footer-status-icon {
@@ -121,9 +121,10 @@
 .mentor-sidebar-left,
 .coordinator-sidebar-left {
   display: flex;
-  flex-direction: column;
+
   /* width: 20vw; */
   flex: 0.4;
+  flex-direction: column;
 }
 
 .mentor-sidebar-right,
@@ -133,9 +134,9 @@
 
 .matcher-sidebar-left-top {
   flex: 1;
+  padding: 15px;
   background-color: #f5f5f5;
   border-radius: 5px;
-  padding: 15px;
 }
 
 .matcher-sidebar-left-bottom {
@@ -191,12 +192,12 @@
 }
 
 .matcher-calendar-modal-contents {
-  width: 100%;
-  height: calc(100% - 40px);
   display: flex;
   flex-direction: column;
   align-items: stretch;
   justify-content: center;
+  width: 100%;
+  height: calc(100% - 40px);
 }
 
 .matcher-calendar-modal-header {
@@ -210,25 +211,24 @@
   display: flex;
   flex-direction: row;
   gap: 3px;
-
-  user-select: none;
   cursor: pointer;
+  user-select: none;
 }
 
 .matcher-table-sort-icon {
-  margin-top: 2px;
   width: 1em;
+  margin-top: 2px;
 }
 
 /* Buttons */
 
 .matcher-submit-btn {
-  background-color: $csm-green;
+  padding: 8px 15px !important;
   color: white;
+  user-select: none;
+  background-color: $csm-green;
   border: none;
   border-radius: 10px;
-  user-select: none;
-  padding: 8px 15px !important;
 }
 
 .matcher-submit-btn:hover {
@@ -236,17 +236,17 @@
 }
 
 .matcher-submit-btn:disabled {
-  background-color: $csm-neutral;
   cursor: not-allowed;
+  background-color: $csm-neutral;
 }
 
 .matcher-secondary-btn {
-  background-color: $csm-neutral;
+  padding: 8px 15px !important;
   color: white;
+  user-select: none;
+  background-color: $csm-neutral;
   border: none;
   border-radius: 10px;
-  user-select: none;
-  padding: 8px 15px !important;
 }
 
 .matcher-secondary-btn:hover {
@@ -254,17 +254,17 @@
 }
 
 .matcher-secondary-btn:disabled {
-  background-color: $csm-neutral;
   cursor: not-allowed;
+  background-color: $csm-neutral;
 }
 
 .matcher-danger-btn {
-  background-color: $csm-danger;
+  padding: 8px 15px !important;
   color: white;
+  user-select: none;
+  background-color: $csm-danger;
   border: none;
   border-radius: 10px;
-  user-select: none;
-  padding: 8px 15px !important;
 }
 
 .matcher-danger-btn:hover {
@@ -272,12 +272,12 @@
 }
 
 .matcher-toggle-btn {
-  cursor: pointer;
   font-size: 0.9rem;
   text-align: center;
+  cursor: pointer;
 }
 
-/* Mentor Preferences*/
+/* Mentor Preferences */
 
 .matcher-sidebar-pref-help {
   margin: 20px 0;
@@ -298,9 +298,9 @@
 .matcher-sidebar-tiling-bottom {
   display: flex;
   flex-direction: row;
+  gap: 8px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
   padding-top: 15px;
 }
 
@@ -308,9 +308,9 @@
 .matcher-sidebar-selected-bottom {
   display: flex;
   flex-direction: column;
+  gap: 20px;
   align-items: center;
   justify-content: center;
-  gap: 20px;
   padding-top: 15px;
 }
 
@@ -318,20 +318,19 @@
 .matcher-sidebar-selected-bottom-row {
   display: flex;
   flex-direction: row;
+  gap: 8px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
 }
 
 .matcher-sidebar-create-footer,
 .matcher-sidebar-selected-footer {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   justify-content: flex-end;
-
-  font-style: italic;
   font-size: 0.95rem;
+  font-style: italic;
 }
 
 .matcher-created-time-container {
@@ -345,9 +344,9 @@
 
 .matcher-created-times,
 .matcher-selected-times {
-  font-size: 0.95rem;
-  margin-bottom: 10px;
   padding-left: 10px;
+  margin-bottom: 10px;
+  font-size: 0.95rem;
 }
 
 .matcher-selected-times {
@@ -369,7 +368,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-
   margin-right: 5px;
 }
 
@@ -380,9 +378,9 @@
 
 .matcher-remove-time-icon {
   position: relative;
+  top: 1px;
   color: $csm-danger;
   cursor: pointer;
-  top: 1px;
 }
 
 .matcher-remove-time-icon:hover {
@@ -395,9 +393,9 @@
 }
 
 .matcher-select-time-input {
-  outline: none;
-  margin-left: 5px;
   margin-right: 5px;
+  margin-left: 5px;
+  outline: none;
 }
 
 .matcher-tiling-subheader {
@@ -487,9 +485,9 @@
 .mentor-list-top-search {
   display: flex;
   flex-direction: row;
+  gap: 15px;
   align-items: center;
   justify-content: space-between;
-  gap: 15px;
 }
 
 .mentor-list-num-submitted {
@@ -499,9 +497,9 @@
 .mentor-list-top-buttons {
   display: flex;
   flex-direction: row;
+  gap: 8px;
   align-items: center;
   justify-content: space-between;
-  gap: 8px;
 }
 
 .mentor-list-header {
@@ -509,21 +507,17 @@
   flex-direction: row;
   padding: 10px 30px 10px 15px;
   margin-top: 15px;
-
-  background-color: $csm-green;
-
   font-size: 0.9rem;
   font-weight: bold;
+  background-color: $csm-green;
 }
 
 .mentor-list {
   display: flex;
   flex-direction: column;
-
-  background-color: #f5f5f5;
-  padding: 15px 30px 15px 15px;
-
   gap: 3px;
+  padding: 15px 30px 15px 15px;
+  background-color: #f5f5f5;
 }
 
 .mentor-list-with-preferences,
@@ -553,11 +547,11 @@
 }
 
 .mentor-list-item-check {
-  min-width: 3em;
-  width: 10%;
   display: flex;
   align-items: center;
   justify-content: center;
+  width: 10%;
+  min-width: 3em;
 }
 
 .mentor-list-item-undo-remove,
@@ -594,13 +588,17 @@
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-
-  border-radius: 5px;
   padding: 15px;
+  border-radius: 5px;
 }
 
 .mentor-list-item-selected .mentor-list-item-view {
   color: $csm-green-darkened;
+  user-select: none;
+}
+
+.mentor-list-item-unclickable .mentor-list-item-view {
+  color: #888;
   user-select: none;
 }
 
@@ -609,25 +607,18 @@
   cursor: pointer;
 }
 
-.mentor-list-item-unclickable .mentor-list-item-view {
-  color: #888;
-  user-select: none;
-}
-
 .mentor-list-item-removed {
-  text-decoration: line-through;
   color: $csm-neutral;
+  text-decoration: line-through;
 }
 
 .mentor-add-textarea {
   width: calc(min(350px, 50vw));
   height: calc(min(200px, 50vh));
-
-  resize: none;
-
   margin-top: 10px;
-  margin-left: 10px;
   margin-bottom: 10px;
+  margin-left: 10px;
+  resize: none;
 }
 
 .release-container {
@@ -662,49 +653,47 @@
 }
 
 .matcher-configure-sidebar-header {
-  font-weight: bold;
   margin-bottom: 10px;
+  font-weight: bold;
 }
 
 .matcher-configure-input-container {
   display: flex;
   flex-direction: row;
+  gap: 10px;
   align-items: center;
   justify-content: space-between;
-  gap: 10px;
 }
 
 .matcher-configure-input-group {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   margin-bottom: 8px;
 }
 
 .matcher-configure-input {
-  font-family: inherit;
   width: 80%;
+  font-family: inherit;
 }
 
 .matcher-configure-sidebar-buttons {
-  width: 100%;
   display: flex;
   flex-direction: row;
+  gap: 10px;
   align-items: center;
   justify-content: center;
-  gap: 10px;
-
+  width: 100%;
   margin: 15px 0;
 }
 
 .matcher-configure-sidebar-footer {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   justify-content: flex-end;
-
-  font-style: italic;
   font-size: 0.95rem;
+  font-style: italic;
 }
 
 .matcher-configure-error {
@@ -715,15 +704,15 @@
 }
 
 .matcher-configure-error-text {
-  color: $csm-danger;
   font-size: 0.9rem;
   font-style: italic;
+  color: $csm-danger;
 }
 
 .matcher-configure-error-icon {
-  color: $csm-danger;
   width: 1.25em;
   height: 1.25em;
+  color: $csm-danger;
 }
 
 /* EditStage.tsx */
@@ -744,11 +733,11 @@
   display: flex;
   flex-direction: row;
   align-items: center;
-  background-color: $csm-green;
   padding: 10px 0;
   margin-bottom: 5px;
   font-size: 0.9rem;
   font-weight: bold;
+  background-color: $csm-green;
 }
 
 .matcher-assignment-row {
@@ -758,7 +747,7 @@
 }
 
 .matcher-assignment-row.unassigned {
-  background-color: #ffdddd;
+  background-color: #fdd;
 }
 
 .matcher-assignment-mentor-empty {
@@ -766,60 +755,59 @@
 }
 
 .matcher-assignment-mentor-select {
-  width: 25px;
-  margin-right: 2px;
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: center;
+  width: 25px;
+  margin-right: 2px;
 }
 
 .matcher-assignment-mentor-info {
-  flex: auto;
-  width: 25%;
-  margin-right: 5px;
-
   display: flex;
+  flex: auto;
   flex-direction: column;
   justify-content: center;
+  width: 25%;
+  margin-right: 5px;
 }
+
 .matcher-assignment-mentor-name {
   overflow-x: hidden;
   text-overflow: ellipsis;
 }
 
 .matcher-assignment-mentor-email {
+  overflow-x: hidden;
   font-size: 0.9rem;
   font-style: italic;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
   color: #888;
+  text-overflow: ellipsis;
 }
 
 .matcher-assignment-section-times {
+  display: flex;
   flex: auto;
+  flex-direction: row;
   width: 15%;
   margin-right: 5px;
   font-size: 0.95rem;
-
-  display: flex;
-  flex-direction: row;
 }
 
 .matcher-assignment-section-times-edit {
   display: flex;
   flex-direction: column;
   justify-content: center;
-  min-width: 18px;
   width: 18px;
+  min-width: 18px;
   padding-right: 5px;
 }
 
 .matcher-assignment-section-times-edit-icon {
-  user-select: none;
-  color: $csm-neutral;
   width: 100%;
   height: 100%;
+  color: $csm-neutral;
+  user-select: none;
 }
 
 .matcher-assignment-section-times-edit-icon:hover {
@@ -839,9 +827,9 @@
   height: 1.5rem;
   font-family: inherit;
   font-size: 0.95rem;
+  background-color: transparent;
   border: 2px solid $csm-neutral;
   border-radius: 3px;
-  background-color: transparent;
   outline: none;
 }
 
@@ -870,18 +858,18 @@
   justify-content: center;
 }
 
+.matcher-assignment-section-capacity-input,
+.matcher-assignment-section-description-input {
+  width: calc(100% - 10px);
+  font-family: inherit;
+  font-size: 0.95rem;
+  border: 2px solid $csm-neutral;
+  border-radius: 3px;
+}
+
 .matcher-assignment-section-capacity-input:focus,
 .matcher-assignment-section-description-input:focus {
   outline-color: #888;
-}
-
-.matcher-assignment-section-capacity-input,
-.matcher-assignment-section-description-input {
-  font-family: inherit;
-  font-size: 0.95rem;
-  width: calc(100% - 10px);
-  border: 2px solid $csm-neutral;
-  border-radius: 3px;
 }
 
 .matcher-assignment-burger {
@@ -930,12 +918,12 @@
 }
 
 .matcher-assignment-save-button {
-  background-color: $csm-neutral;
+  padding: 8px 20px;
   color: white;
+  text-decoration: none;
+  background-color: $csm-neutral;
   border: none;
   border-radius: 10px;
-  padding: 8px 20px;
-  text-decoration: none;
 }
 
 .matcher-assignment-save-button:hover {
@@ -950,17 +938,16 @@
 .matcher-assignment-confirm-modal-contents {
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   height: 65%;
-
   text-align: center;
 }
 
 .matcher-assignment-confirm-modal-footer {
   display: flex;
   flex-direction: row;
-  justify-content: space-evenly;
   align-items: center;
+  justify-content: space-evenly;
   width: 100%;
 }

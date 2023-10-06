@@ -3,461 +3,398 @@
 $modal-width: 80vw;
 $modal-height: 75vh;
 
-.resourceWrapperContainer {
-  margin: 20px auto;
+.resource-wrapper-container {
   max-width: 1064px;
+  margin: 20px auto;
 }
 
-.resourceTable {
+.resource-table {
   min-width: 750px;
 }
 
-.resourceTableContainer {
+.resource-table-container {
   overflow-x: auto;
 }
 
-.resourceContainer {
+.resource-container {
+  height: 100%;
+  padding: 24px 0;
+  margin: 16px auto;
   background-color: $csm-resources;
   border-radius: 8px;
-  box-shadow: 0 4px 6px -1px rgb(0 0 0 / 10%), 0 2px 0 -1px rgb(0 0 0 / 6%);
-  height: 100%;
-  margin: 16px auto;
-  padding: 24px 0;
+  box-shadow:
+    0 4px 6px -1px rgb(0 0 0 / 10%),
+    0 2px 0 -1px rgb(0 0 0 / 6%);
 }
 
-.resourceContainer,
-.resourceWrapperHeader {
-  grid-column: 1 / -1;
+.resource-container,
+.resource-wrapper-header {
   display: grid;
   grid-template-columns: repeat(2, minmax(50px, 1fr)) 2fr 2fr 1fr 40px;
+  grid-column: 1 / -1;
   column-gap: 10px;
-  text-align: center;
   width: 100%;
+  text-align: center;
 }
 
-.resourceEditContainer {
-  height: $modal-height;
+.resource-edit-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
+  height: $modal-height;
 }
 
-.resourceEditContentWrapper {
-  overflow: auto;
+.resource-edit-content-wrapper {
   // expand container of worksheets/links as much as possible
   flex: 1;
+  overflow: auto;
 }
 
-.resourceEditContent {
+.resource-edit-content {
   min-width: 600px;
 }
 
-.resourceEditModal {
+.resource-edit-modal {
   width: $modal-width !important;
   height: $modal-height !important;
 }
 
-.resourceEditModal .modal-contents {
+.resource-edit-modal .modal-contents {
   overflow: hidden;
 }
 
-.resourceWrapperHeader {
+.resource-wrapper-header {
   margin-bottom: 4px;
 }
 
-.resourceEditTabContainer {
+.resource-info,
+.resource-wrapper-header > div {
   display: flex;
-  flex-direction: row;
-  align-content: space-between;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.resourceEditTab {
-  margin: 20px;
-  background-color: $csm-neutral;
-  border: none;
-  border-radius: 8px;
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  justify-content: space-evenly;
-  padding: 8px;
-  width: 200px;
-}
-
-.topicTooltip {
-  text-align: center;
-}
-
-.resourceEditTab:hover {
-  background-color: $csm-neutral-darkened;
-}
-
-.resourceEditTab:disabled {
-  background-color: $csm-green;
-}
-
-.resourceInfo,
-.resourceWrapperHeader > div {
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
   align-items: center;
   justify-content: center;
-  margin: auto;
   padding: 0 8px;
+  margin: auto;
 }
 
-.resourceRow {
+.resource-row {
   hyphens: auto;
-  -webkit-hyphens: auto;
-  -moz-hyphens: auto;
-  -ms-hyphens: auto;
 }
 
-.resourceRowRender {
-  grid-column: 1 / -1;
+.resource-row-render {
   display: grid;
   grid-template-columns: repeat(3, minmax(100px, 1fr));
+  grid-column: 1 / -1;
 }
 
-.resourceWkst {
-  display: contents;
-  margin: 6px 0;
-}
-
-.resourceWkstFilesContainer {
+.resource-worksheet-files-container {
   display: grid;
-  align-items: center;
-  align-content: center;
-  justify-content: center;
   grid-auto-columns: 2fr 1.5fr;
   row-gap: 10px;
+  align-content: center;
+  align-items: center;
+  justify-content: center;
 }
 
-.resourceWkstFile,
-.resourceSoln,
-.resourceWkstFile a:link,
-.resourceSoln a:link,
-.resourceWkstFile a:visited,
-.resourceSoln a:visited,
-.resourceLink,
-.resourceLink a:link,
-.resourceLink a:visited {
-  color: $csm-green-darkened;
-}
-
-.resourceSoln a,
-.resourceLink a {
+.resource-solution a,
+.resource-link a {
   text-decoration: none;
 }
 
-.resourceWkstFile {
+.resource-worksheet-file,
+.resource-solution,
+.resource-worksheet-file a:link,
+.resource-solution a:link,
+.resource-worksheet-file a:visited,
+.resource-solution a:visited,
+.resource-link,
+.resource-link a:link,
+.resource-link a:visited {
+  color: $csm-green-darkened;
+}
+
+.resource-worksheet-file {
   grid-column: 1;
 }
 
-.resourceWkstFile a:link {
+.resource-worksheet-file a:link {
   text-decoration: underline;
 }
 
-.resourceSoln {
-  border: 2px solid $csm-green-darkened;
-  border-radius: 5px;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 2px;
-  text-align: center;
+.resource-solution {
+  grid-column: 2;
   width: 80px;
   height: fit-content;
+  padding: 2px;
   margin-left: 10px;
-  grid-column: 2;
+  font-size: 14px;
+  font-weight: 600;
+  text-align: center;
+  border: 2px solid $csm-green-darkened;
+  border-radius: 5px;
 }
 
-.resourceWkstFile a:hover,
-.resourceSoln a:hover,
-.resourceLink a:hover {
-  border-color: #4e7a5d;
+.resource-worksheet-file a:hover,
+.resource-solution a:hover,
+.resource-link a:hover {
   color: #4e7a5d;
   cursor: pointer;
+  border-color: #4e7a5d;
 }
 
 .topic {
+  padding: 4px 8px;
+  margin: 4px;
   background-color: $csm-green;
   border-radius: 4px;
-  margin: 4px;
-  padding: 4px 8px;
 }
 
-#resourceEditInner {
+#resource-edit-inner {
   display: flex;
   flex-direction: row;
   justify-content: center;
   width: 100%;
 }
 
-.resourceInfoEdit {
+.resource-info-edit {
   display: flex;
   flex-direction: column;
   align-items: center;
-  margin: 4px;
   padding: 4px;
+  margin: 4px;
 }
 
-.resourceInfoEdit input {
+.resource-info-edit input {
   width: 144px;
 }
 
-.resourceEditHeadItem {
+.resource-edit-head-item {
   align-items: center;
 }
 
-.resourceWorksheetEditItem > input {
+.resource-worksheet-edit-item > input {
   width: 100%;
-  max-width: 180px;
   min-width: 100px;
+  max-width: 180px;
 }
 
-.topicsTooltipWrapper {
+.topics-tooltip-wrapper {
   position: relative;
   font-weight: initial;
 }
 
-.resourceWorksheetContainer {
+.resource-worksheet-container {
   display: grid;
   gap: 10px;
-
   width: 70%;
   margin: 20px auto;
 }
 
-@media screen and (max-width: 1200px) {
-  .resourceWorksheetContainer {
+@media screen and (width <= 1200px) {
+  .resource-worksheet-container {
     width: 90%;
   }
 }
 
-.resourceWorksheetHead {
+.resource-worksheet-head {
   display: grid;
+
   /* name, worksheet, solution, delete */
   grid-template-columns: repeat(3, 1fr) 20px;
   column-gap: 10px;
   text-align: center;
 }
 
-.resourceLinkHead {
+.resource-link-head {
   display: grid;
+
   /* name, url, delete */
   grid-template-columns: 1fr 1fr 20px;
   column-gap: 10px;
   text-align: center;
 }
 
-.resourceWorksheet {
+.resource-worksheet {
   display: grid;
   grid-template-columns: repeat(3, 1fr) 20px;
   column-gap: 10px;
 }
 
-.resourceLink,
-.resourceLinkEdit {
+.resource-link,
+.resource-link-edit {
   display: grid;
   column-gap: 10px;
 }
 
-.resourceLinkEdit {
+.resource-link-edit {
   grid-template-columns: 1fr 1fr 20px;
 }
 
-.resourceLinksContainer {
+.resource-links-container {
   display: grid;
-  align-content: center;
   row-gap: 10px;
+  align-content: center;
 }
 
-.resourceWorksheetEditFile {
+.resource-worksheet-edit-file {
   display: flex;
   margin: auto 0;
 }
 
-.resourceWorksheetEditItem {
+.resource-worksheet-edit-item {
   margin: auto;
 }
 
-.fileUpload input[type="file"] {
+.file-upload input[type="file"] {
   display: none;
 }
 
-.fileUpload {
-  border: 2px solid #ccc;
-  border-right-width: 1px;
-  background-color: white;
-  cursor: pointer;
+.file-upload {
   display: flex;
+  flex: 100%;
   flex-direction: row;
   padding: 8px 12px;
   font-size: 90%;
-  flex: 100%;
+  cursor: pointer;
+  background-color: white;
+  border: 2px solid #ccc;
+  border-right-width: 1px;
+
   /* take up as much space as possible */
 }
 
-.fileUpload .fileUploadLabel {
+.file-upload .file-upload-label {
   flex: 100%;
-  text-align: left;
-  white-space: nowrap;
-  overflow-x: hidden;
-  text-overflow: ellipsis;
   width: 100px;
+  overflow-x: hidden;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.fileUpload:hover {
-  border-color: $csm-neutral-darkened;
+.file-upload:hover {
   color: $csm-green-darkened;
+  border-color: $csm-neutral-darkened;
 }
 
-.fileUpload:only-child {
+.file-upload:only-child {
   border-right-width: 2px;
 }
 
-button.clearFile {
+button.clear-file {
   display: inline-block;
-  border: none;
+  padding: 0 10px;
   background-color: #f8f8f8;
+  border: none;
   border: 2px solid #ccc;
   border-left: none;
-  padding: 0 10px;
 }
 
-button.clearFile:hover {
+button.clear-file:hover {
   color: red;
   background-color: #eee;
 }
 
-.deleteWorksheet {
-  background-color: transparent;
-  border: none;
+.delete-worksheet {
   padding: 0;
   font-size: 18px;
   color: $csm-neutral-darkened;
+  background-color: transparent;
+  border: none;
 }
 
-.deleteWorksheet:hover {
+.delete-worksheet:hover {
   color: red;
 }
 
-.uploadIcon {
+.upload-icon {
   width: 1em;
   margin-right: 5px !important;
 }
 
-.resourceWrapperHeader > div {
+.resource-wrapper-header > div {
   font-size: 16px;
   font-weight: 600;
 }
 
-.resourceWorksheetActionsContainer {
+.resource-worksheet-actions-container {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.resourceButtonsContainer {
+.resource-buttons-container {
   display: flex;
   flex-direction: column;
   justify-content: center;
   margin-right: 16px;
 }
 
-.resourceButton {
-  border: None;
-  color: $csm-neutral;
+.resource-button {
   font-size: 18px;
+  color: $csm-neutral;
+  border: none;
 }
 
-#editIcon:hover {
+#edit-icon:hover {
   color: $csm-green-darkened;
 }
 
-#deleteIcon:hover {
+#delete-icon:hover {
   color: $csm-danger-darkened;
 }
 
-.resourceTabErrorText {
+.resource-tab-error-text {
   display: flex;
   flex-direction: row;
-  align-items: center;
   gap: 4px;
-
-  text-align: center;
+  align-items: center;
   color: red;
+  text-align: center;
 }
 
-#saveIcon {
+#save-icon {
   margin: 0 !important;
 }
 
-#resourceButtonSubmit:hover {
+#resource-button-submit:hover {
   background-color: $csm-green-darkened;
 }
 
-.resourceValidationError {
+.resource-validation-error {
   display: flex;
   flex-direction: row;
-  align-items: center;
   gap: 4px;
-
-  color: red;
-  font-size: 80%;
+  align-items: center;
   margin: 3px 2px 4px;
+  font-size: 80%;
+  color: red;
 }
 
-.resourceTableOptions {
+.resource-table-options {
   display: flex;
-  flex-flow: wrap;
-  flex-direction: row;
+  flex-flow: row wrap;
+  gap: 8px;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-
   margin-bottom: 24px;
 }
 
-#toggleViewEditLabel:hover {
-  border-color: $csm-green-darkened;
-  color: $csm-green-darkened;
-  text-decoration: underline;
-}
-
-#toggleViewEditLabel {
-  cursor: pointer;
-  background-color: white;
-  border: 4px solid $csm-green;
-  border-radius: 8px;
+#toggle-view-edit-input {
   color: $csm-green;
-  display: flex;
-  flex-direction: row;
-  font-size: 16px;
-  font-weight: 700 !important;
-  justify-content: space-evenly;
-  padding: 12px 16px;
-  margin: 5px 10px;
-}
-
-#toggleViewEditInput {
   cursor: pointer;
-  color: $csm-green;
 }
 
-.resourceDeleteConfirmation .resourceDeleteText {
-  margin-bottom: 15px;
+.resource-delete-confirmation .resource-delete-text {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
   text-align: center;
 }
 
-.resourceEditFooter {
+.resource-edit-footer {
   display: flex;
   flex-direction: column;
   align-items: center;

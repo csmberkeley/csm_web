@@ -1,26 +1,24 @@
 @use "base/variables" as *;
 
-.deleteSpacetime {
-  margin: auto 0;
-  /* align-items: center; */
-  height: 90%;
+.delete-spacetime {
   display: flex;
   flex-direction: column;
+  gap: 10px;
   align-items: center;
   justify-content: space-evenly;
-  gap: 10px;
+  height: 90%;
+  margin: auto 0;
 }
 
-.spacetimeCheckboxLabel {
-  color: #646464;
-  font-size: 18px;
+.spacetime-checkbox-label {
   margin-left: 8px;
+  font-size: 18px;
+  color: #646464;
 }
 
-.spacetimeDeleteDropper {
+.spacetime-delete-dropper {
   display: flex;
   flex-direction: column;
   align-items: center;
-
   margin-top: 10px;
 }

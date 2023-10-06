@@ -1,33 +1,33 @@
 @use "base/variables" as *;
 
 #word-of-the-day-container {
-  border-top: 2px solid #e7e7e7;
   padding-top: 10px;
   margin-top: 25px;
+  border-top: 2px solid #e7e7e7;
 }
 
 #word-of-the-day-card {
-  border: 2px solid #e7e7e7;
-  box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
-  border-radius: 20px;
   padding: 30px 30px 15px;
   margin-bottom: 30px;
+  border: 2px solid #e7e7e7;
+  border-radius: 20px;
+  box-shadow: 0 4px 4px rgb(198 198 198 / 25%);
 }
 
 .word-of-the-day-action-container {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
   gap: 8px;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .word-of-the-day-input-container {
   display: flex;
   flex-direction: row;
-  justify-content: space-between;
-  align-items: center;
   gap: 8px;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .word-of-the-day-status.unselected {
@@ -43,14 +43,14 @@
 }
 
 .word-of-the-day-select {
-  max-width: 200px;
   width: 150px;
-  text-align-last: center;
+  max-width: 200px;
   padding: 6px;
-  border-radius: 6px;
-  border: none;
   margin-right: 5px;
-  font-family: "Montserrat";
+  font-family: Montserrat, sans-serif;
+  text-align-last: center;
+  border: none;
+  border-radius: 6px;
 }
 
 .word-of-the-day-select-container {
@@ -62,15 +62,15 @@
 .word-of-the-day-submit-container {
   display: flex;
   flex-direction: row;
-  align-items: center;
   gap: 15px;
+  align-items: center;
 }
 
 .word-of-the-day-status-bar {
-  padding: 10px 0;
-  font-size: 0.9rem;
   display: flex;
   justify-content: space-between;
+  padding: 10px 0;
+  font-size: 0.9rem;
 }
 
 .word-of-the-day-status-text {
