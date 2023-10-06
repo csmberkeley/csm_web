@@ -29,14 +29,14 @@ const ResourceFileField = ({ worksheet, fileType, onChange, onDelete }: Resource
     }
   }
   return (
-    <div className="resourceWorksheetEditFile">
-      <label className="fileUpload">
+    <div className="resource-worksheet-edit-file">
+      <label className="file-upload">
         <input type="file" onChange={onChange} />
-        <Upload className="icon uploadIcon" />
-        <span className="fileUploadLabel">{uploadLabel}</span>
+        <Upload className="icon upload-icon" />
+        <span className="file-upload-label">{uploadLabel}</span>
       </label>
       {worksheet[fileType] && !isDeleted && (
-        <button onClick={onDelete} className="clearFile">
+        <button onClick={onDelete} className="clear-file">
           <Times className="icon" />
         </button>
       )}
@@ -70,8 +70,8 @@ const ResourceWorksheetEdit = ({
 }: ResourceWorksheetEditProps): React.ReactElement => {
   const currentId = index == undefined ? worksheet.id : index;
   return (
-    <div className="resourceWorksheet">
-      <div className="resourceWorksheetEditItem">
+    <div className="resource-worksheet">
+      <div className="resource-worksheet-edit-item">
         <input
           className="form-input"
           type="text"
@@ -80,8 +80,8 @@ const ResourceWorksheetEdit = ({
           onChange={e => onChange(e, currentId, "name")}
           onBlur={() => onBlur()}
         />
-        <div className="resourceValidationError">
-          {formErrorsMap.get(currentId) && <ExclamationCircle className="icon exclamationIcon" />}
+        <div className="resource-validation-error">
+          {formErrorsMap.get(currentId) && <ExclamationCircle className="icon" />}
           {formErrorsMap.get(currentId)}
         </div>
       </div>
@@ -97,7 +97,7 @@ const ResourceWorksheetEdit = ({
         onChange={e => onChange(e, currentId, "solutionFile", true)}
         onDelete={() => onDeleteFile(currentId, "solutionFile")}
       />
-      <button onClick={() => onDelete(currentId)} className="deleteWorksheet">
+      <button onClick={() => onDelete(currentId)} className="delete-worksheet">
         <Trash className="icon" />
       </button>
     </div>

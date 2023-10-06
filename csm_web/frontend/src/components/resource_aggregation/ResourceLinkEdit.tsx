@@ -24,7 +24,7 @@ const ResourceLinkEdit = ({
   const currentId = index == undefined ? link.id : index;
   return (
     <React.Fragment>
-      <div className="resourceLinkEdit">
+      <div className="resource-link-edit">
         <input
           className="form-input"
           type="text"
@@ -42,12 +42,12 @@ const ResourceLinkEdit = ({
           onBlur={() => onBlur()}
         />
 
-        <button onClick={() => onDelete(currentId)} className="deleteWorksheet">
+        <button onClick={() => onDelete(currentId)} className="delete-worksheet">
           <Trash className="icon" />
         </button>
       </div>
-      <div className="resourceValidationError">
-        {formErrorsMap.get(currentId) && <ExclamationCircle className="icon exclamationIcon" />}
+      <div className="resource-validation-error">
+        {formErrorsMap.get(currentId) && <ExclamationCircle className="icon" />}
         {formErrorsMap.get(currentId)}
       </div>
     </React.Fragment>
