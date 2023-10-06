@@ -7,26 +7,27 @@ $modal-height: 75vh;
 $modal-effective-height: calc($modal-height - $modal-padding-y);
 
 .coordinator-add-student-modal {
-  overflow: hidden;
-  height: $modal-height;
   width: $modal-width;
+  height: $modal-height;
+  overflow: hidden;
 }
 
 .coordinator-add-student-modal-contents {
-  height: $modal-effective-height;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
+  height: $modal-effective-height;
   padding-bottom: 20px;
 }
 
-@media screen and (max-width: 800px) {
+@media screen and (width <= 800px) {
   .coordinator-add-student-modal {
     width: 85vw;
   }
 }
-@media screen and (max-width: 1000px) {
+
+@media screen and (width <= 1000px) {
   .coordinator-add-student-modal {
     width: 75vw;
   }
@@ -36,15 +37,15 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
   width: 95%;
   height: 75%;
   max-height: 75%;
-  overflow: auto;
   margin: auto;
+  overflow: auto;
 }
 
 .coordinator-email-input-list {
   display: flex;
   flex-direction: column;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 }
 
 .coordinator-email-input-item {
@@ -58,12 +59,14 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
 
 .coordinator-email-input-item .inline-plus-sign,
 .coordinator-email-response-item .inline-plus-sign {
+  line-height: 1.1rem;
   color: #777;
   cursor: pointer;
   user-select: none;
-  -webkit-user-select: none;
-  -moz-user-select: none;
-  line-height: 1.1rem;
+}
+
+.coordinator-email-response-item .inline-plus-sign {
+  margin-right: 3px;
 }
 
 .coordinator-email-input-item .inline-plus-sign:hover,
@@ -71,62 +74,56 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
   color: #aaa;
 }
 
-.coordinator-email-response-item .inline-plus-sign {
-  margin-right: 3px;
-}
-
 .coordinator-email-input {
-  max-width: 100%;
   width: 250px;
+  max-width: 100%;
   margin-left: 5px;
 }
 
 .coordinator-email-input-buttons {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
   gap: 8px;
+  align-items: center;
+  justify-content: center;
 }
 
 .coordinator-email-secondary-input-buttons {
   display: flex;
   flex-direction: column;
-  justify-content: center;
-  align-items: center;
-
   gap: 4px;
+  align-items: center;
+  justify-content: center;
 }
 
 .coordinator-email-input-buttons-top {
   display: flex;
   flex-direction: row;
-  justify-content: center;
   align-items: center;
+  justify-content: center;
 }
 
 .coordinator-email-input-add,
 .coordinator-email-modal-button {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  padding: 8px 20px;
+  margin: 3px auto;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
   background-color: $csm-neutral;
   border: none;
   border-radius: 8px;
-  color: white;
-  display: flex;
-  flex-direction: row;
-  font-size: 16px;
-  font-weight: 600;
-  justify-content: space-evenly;
-  margin: 3px auto 3px;
-  padding: 8px 20px;
 }
 
 .coordinator-email-modal-button {
+  padding: 8px;
+  margin: auto;
+  font-size: 0.95rem;
   font-weight: normal;
   background-color: $csm-neutral;
-  padding: 8px;
-  font-size: 0.95rem;
-  margin: auto;
 }
 
 .coordinator-email-input-add:hover,
@@ -135,17 +132,17 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
 }
 
 .coordinator-email-input-submit {
+  display: flex;
+  flex-direction: row;
+  justify-content: space-evenly;
+  padding: 10px 20px;
+  margin: 10px auto;
+  font-size: 16px;
+  font-weight: 600;
+  color: white;
   background-color: $csm-green;
   border: none;
   border-radius: 8px;
-  color: white;
-  display: flex;
-  flex-direction: row;
-  font-size: 16px;
-  font-weight: 600;
-  justify-content: space-evenly;
-  margin: 10px auto 10px;
-  padding: 10px 20px;
 }
 
 .coordinator-email-input-submit:hover {
@@ -153,16 +150,15 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
 }
 
 #coordinator-add-student-form input:not(.lock-validation):invalid {
-  background-color: #ffdddd;
+  background-color: #fdd;
 }
 
 .coordinator-email-response-list {
   display: flex;
   flex-direction: column;
-  text-align: left;
-  margin: auto;
   width: fit-content;
-  width: -moz-fit-content;
+  margin: auto;
+  text-align: left;
 }
 
 .coordinator-email-response-item {
@@ -176,15 +172,15 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
 .coordinator-email-response-email-status {
   display: flex;
   flex-direction: row;
-  justify-content: left;
   align-items: center;
+  justify-content: left;
 }
 
 .coordinator-email-response-form-info {
-  color: red;
-  font-size: 0.9rem;
-  margin-left: 20px;
   margin-bottom: 2px;
+  margin-left: 20px;
+  font-size: 0.9rem;
+  color: red;
 }
 
 .coordinator-email-response-form {
@@ -195,8 +191,8 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
 }
 
 .coordinator-email-response-form label {
-  font-size: 0.9rem;
   margin: 5px;
+  font-size: 0.9rem;
 }
 
 .coordinator-email-response-status {
@@ -227,8 +223,8 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
   width: 1.5rem;
   height: 1.5rem;
   padding-right: 6px;
-  fill: red;
   margin: 0 !important;
+  fill: red;
 }
 
 .coordinator-email-response-status-conflict,
@@ -249,9 +245,9 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
 }
 
 .coordinator-email-response-hr {
-  border: 1px solid #ccc;
   margin-top: -2px;
   margin-bottom: 10px;
+  border: 1px solid #ccc;
 }
 
 .coordinator-email-response-head {
@@ -263,12 +259,12 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
 }
 
 .coordinator-email-response-head-right {
-  grid-column: 2;
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
+  grid-column: 2;
   column-gap: 5px;
+  align-items: center;
+  justify-content: space-around;
   font-size: 0.9rem;
   text-align: center;
 }
@@ -297,12 +293,12 @@ $modal-effective-height: calc($modal-height - $modal-padding-y);
 }
 
 .coordinator-email-response-item-right {
-  grid-column: 2;
   display: flex;
   flex-direction: row;
-  justify-content: space-around;
-  align-items: center;
+  grid-column: 2;
   row-gap: 3px;
+  align-items: center;
+  justify-content: space-around;
 }
 
 .coordinator-email-response-item-right > * {

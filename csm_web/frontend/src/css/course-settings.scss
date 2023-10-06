@@ -1,11 +1,11 @@
 @use "base/variables" as *;
 
 .course-settings-btn {
-  font-size: 16px;
-  border: none;
-  cursor: pointer;
-  margin: 0 5px;
   display: block;
+  margin: 0 5px;
+  font-size: 16px;
+  cursor: pointer;
+  border: none;
 }
 
 .course-settings-title {
@@ -19,8 +19,8 @@
 }
 
 .course-settings-container {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: column;
   padding: 0 25px;
 }
@@ -32,11 +32,11 @@
 }
 
 .course-settings-label-container {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: row;
-  justify-content: flex-start;
   align-items: center;
+  justify-content: flex-start;
 }
 
 .course-settings-tooltip-container {
@@ -54,16 +54,16 @@
 }
 
 .course-settings-input-container {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-direction: row;
-  justify-content: flex-end;
   align-items: center;
+  justify-content: flex-end;
 }
 
 .course-settings-input {
-  font-family: inherit;
   width: 50%;
+  font-family: inherit;
 }
 
 .course-settings-input-post {
@@ -73,8 +73,7 @@
 .course-settings-footer {
   display: flex;
   flex-direction: row;
-  justify-content: center;
   align-items: center;
-
+  justify-content: center;
   margin-top: 25px;
 }

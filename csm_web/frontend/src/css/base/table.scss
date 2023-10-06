@@ -5,13 +5,14 @@
 .csm-table {
   max-width: 90vw;
   padding: 20px;
+
   border-spacing: 0;
 
   /// additional styling if the table is standalone
   &.standalone {
     border: 2px solid #e7e7e7;
-    box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
     border-radius: 20px;
+    box-shadow: 0 4px 4px rgb(198 198 198 / 25%);
   }
 }
 
@@ -20,9 +21,10 @@
 }
 
 .csm-table-head-row {
-  font-size: 1.5rem;
-  color: $csm-content-title-color;
   padding: 0 $table-padding;
+  font-size: 1.5rem;
+
+  color: $csm-content-title-color;
 }
 
 .csm-table-item {
