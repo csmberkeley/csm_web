@@ -1,11 +1,12 @@
+import { DateTime } from "luxon";
 import React, { useState } from "react";
+
+import { DEFAULT_TIMEZONE, formatDate } from "../../utils/datetime";
 import Modal from "../Modal";
 import { Resource } from "./ResourceTypes";
 
 import Pencil from "../../../static/frontend/img/pencil.svg";
 import Trash from "../../../static/frontend/img/trash-alt.svg";
-import { DEFAULT_TIMEZONE, formatDate } from "../../utils/datetime";
-import { DateTime } from "luxon";
 
 interface ResourceRowRenderProps {
   resource: Resource;

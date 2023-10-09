@@ -1,17 +1,15 @@
 import React from "react";
 import { NavLink, useParams } from "react-router-dom";
-import StudentSection from "./StudentSection";
-import MentorSection from "./MentorSection";
-import { Override, Spacetime } from "../../utils/types";
-import { useSection } from "../../utils/queries/sections";
-import LoadingSpinner from "../LoadingSpinner";
-import { formatSpacetimeInterval } from "../../utils/datetime";
 
-// Styles
+import { formatSpacetimeInterval } from "../../utils/datetime";
+import { useSection } from "../../utils/queries/sections";
+import { Override, Role, Spacetime } from "../../utils/types";
+import LoadingSpinner from "../LoadingSpinner";
+import MentorSection from "./MentorSection";
+import StudentSection from "./StudentSection";
+
 import scssColors from "../../css/base/colors-export.module.scss";
 import "../../css/section.scss";
-
-export const ROLES = Object.freeze({ COORDINATOR: "COORDINATOR", STUDENT: "STUDENT", MENTOR: "MENTOR" });
 
 export default function Section(): React.ReactElement | null {
   const { id } = useParams();
@@ -26,13 +24,14 @@ export default function Section(): React.ReactElement | null {
   }
 
   switch (section.userRole) {
-    case ROLES.COORDINATOR:
-    case ROLES.MENTOR:
+    case Role.COORDINATOR:
+    case Role.MENTOR:
       return <MentorSection {...section} />;
-    case ROLES.STUDENT:
+    case Role.STUDENT:
       return <StudentSection {...section} />;
+    default:
+      return null;
   }
-  return null;
 }
 
 interface SectionHeaderProps {

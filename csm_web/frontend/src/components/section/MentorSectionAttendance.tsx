@@ -1,20 +1,19 @@
+import randomWords from "random-words";
 import React, { useState, useEffect } from "react";
+
 import {
   useSectionAttendances,
   useUpdateStudentAttendancesMutation,
   useUpdateWordOfTheDayMutation,
   useWordOfTheDay
 } from "../../utils/queries/sections";
+import { Attendance } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { ATTENDANCE_LABELS } from "./Section";
 import { dateSortISO, formatDateLocaleShort } from "./utils";
-import { Attendance } from "../../utils/types";
-import randomWords from "random-words";
 
-// Image
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 
-// Styles
 import scssColors from "../../css/base/colors-export.module.scss";
 import "../../css/word-of-the-day.scss";
 

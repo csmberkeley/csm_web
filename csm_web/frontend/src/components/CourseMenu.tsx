@@ -1,14 +1,14 @@
+import { DateTime } from "luxon";
 import React, { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
-import { useCourses } from "../utils/queries/courses";
-import { useUserInfo } from "../utils/queries/base";
-import { Course as CourseType, UserInfo } from "../utils/types";
-import Course from "./course/Course";
-import LoadingSpinner from "./LoadingSpinner";
-import { DateTime } from "luxon";
-import { DEFAULT_LONG_LOCALE_OPTIONS, DEFAULT_TIMEZONE } from "../utils/datetime";
 
-// Styles
+import { DEFAULT_LONG_LOCALE_OPTIONS, DEFAULT_TIMEZONE } from "../utils/datetime";
+import { useUserInfo } from "../utils/queries/base";
+import { useCourses } from "../utils/queries/courses";
+import { Course as CourseType, UserInfo } from "../utils/types";
+import LoadingSpinner from "./LoadingSpinner";
+import Course from "./course/Course";
+
 import "../css/course-menu.scss";
 
 const CourseMenu = () => {
@@ -50,12 +50,10 @@ const CourseMenu = () => {
     userInfo = null;
   }
 
-  let show_enrollment_times = false;
   const enrollment_times_by_course: Array<{ courseName: string; enrollmentDate: DateTime }> = [];
 
   if (courses !== null) {
     for (const course of courses.values()) {
-      show_enrollment_times ||= !course.enrollmentOpen;
       if (!course.enrollmentOpen) {
         enrollment_times_by_course.push({
           courseName: course.name,

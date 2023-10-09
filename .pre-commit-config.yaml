@@ -47,6 +47,7 @@ repos:
         verbose: true # always display output
         files: \.[jt]sx?$ # *.js, *.jsx, *.ts and *.tsx
         types: [file]
+        args: ["--fix"]
   # (s)css
   - repo: https://github.com/thibaudcolas/pre-commit-stylelint
     rev: v15.10.3

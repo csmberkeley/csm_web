@@ -1,9 +1,9 @@
-import { Profile } from "./types";
+import { Profile, Role } from "./types";
 
 export interface Roles {
-  STUDENT: Set<number>;
-  MENTOR: Set<number>;
-  COORDINATOR: Set<number>;
+  [Role.STUDENT]: Set<number>;
+  [Role.MENTOR]: Set<number>;
+  [Role.COORDINATOR]: Set<number>;
 }
 
 /**
@@ -13,9 +13,9 @@ export interface Roles {
  */
 export function emptyRoles(): Roles {
   return {
-    STUDENT: new Set(),
-    MENTOR: new Set(),
-    COORDINATOR: new Set()
+    [Role.STUDENT]: new Set(),
+    [Role.MENTOR]: new Set(),
+    [Role.COORDINATOR]: new Set()
   };
 }
 
@@ -27,7 +27,7 @@ export function emptyRoles(): Roles {
 export function getRoles(profiles: Profile[]): Roles {
   const roles = emptyRoles();
   profiles.map(course => {
-    roles[course.role as keyof Roles].add(course.courseId);
+    roles[course.role].add(course.courseId);
   });
   return roles;
 }

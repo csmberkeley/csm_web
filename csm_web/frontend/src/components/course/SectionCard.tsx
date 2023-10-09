@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 
+import { formatSpacetimeInterval } from "../../utils/datetime";
 import { EnrollUserMutationResponse, useEnrollUserMutation } from "../../utils/queries/sections";
 import { Mentor, Spacetime } from "../../utils/types";
 import Modal, { ModalCloser } from "../Modal";
@@ -11,7 +12,6 @@ import GroupIcon from "../../../static/frontend/img/group.svg";
 import LocationIcon from "../../../static/frontend/img/location.svg";
 import UserIcon from "../../../static/frontend/img/user.svg";
 import XCircle from "../../../static/frontend/img/x_circle.svg";
-import { formatSpacetimeInterval } from "../../utils/datetime";
 
 interface SectionCardProps {
   id: number;

@@ -1,16 +1,15 @@
 import { DateTime } from "luxon";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+
 import { useUserEmails } from "../../utils/queries/base";
+import { useEnrollStudentMutation } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
-import { useEnrollStudentMutation } from "../../utils/queries/sections";
 
-// Images
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import ErrorCircle from "../../../static/frontend/img/error_outline.svg";
 
-// Styles
 import "../../css/coordinator-add-student.scss";
 
 enum CoordModalStates {

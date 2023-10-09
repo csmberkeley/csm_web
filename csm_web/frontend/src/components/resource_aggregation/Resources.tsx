@@ -1,9 +1,10 @@
 import React, { useMemo, useState } from "react";
+
 import { useProfiles } from "../../utils/queries/base";
 import { useCourses } from "../../utils/queries/courses";
 import { getRoles, Roles } from "../../utils/user";
 import LoadingSpinner from "../LoadingSpinner";
-import ResourceTable from "./ResourceTable";
+import { ResourceTable } from "./ResourceTable";
 
 export const Resources = (): React.ReactElement => {
   const [selectedCourseID, setSelectedCourseID] = useState<number>(1);

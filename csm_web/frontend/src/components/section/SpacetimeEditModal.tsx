@@ -1,5 +1,6 @@
 import { DateTime } from "luxon";
 import React, { useState } from "react";
+
 import { DAYS_OF_WEEK } from "../../utils/datetime";
 import { useSpacetimeModifyMutation, useSpacetimeOverrideMutation } from "../../utils/queries/spacetime";
 import { Spacetime } from "../../utils/types";
@@ -7,7 +8,6 @@ import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 import TimeInput from "../TimeInput";
 
-// Styles
 import "../../css/spacetime-edit.scss";
 
 interface SpacetimeEditModalProps {

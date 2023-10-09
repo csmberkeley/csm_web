@@ -2,6 +2,7 @@ import { Interval } from "luxon";
 import React, { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
+import { formatInterval } from "../../../utils/datetime";
 import {
   useMatcherAssignmentMutation,
   useMatcherCreateSectionsMutation,
@@ -11,10 +12,9 @@ import { Mentor, Profile } from "../../../utils/types";
 import Modal from "../../Modal";
 import { SearchBar } from "../../SearchBar";
 import { Tooltip } from "../../Tooltip";
+import { Assignment, Slot, SlotPreference, Time } from "../EnrollmentAutomationTypes";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime, DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
-import { Assignment, Slot, SlotPreference, Time } from "../EnrollmentAutomationTypes";
-import { formatInterval } from "../../../utils/datetime";
 
 import ErrorIcon from "../../../../static/frontend/img/error_outline.svg";
 import InfoIcon from "../../../../static/frontend/img/info.svg";

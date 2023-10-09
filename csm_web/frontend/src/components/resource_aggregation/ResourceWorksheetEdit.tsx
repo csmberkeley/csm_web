@@ -1,10 +1,11 @@
 import React from "react";
+
 import { Worksheet } from "./ResourceTypes";
 
 import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
+import Trash from "../../../static/frontend/img/trash-alt.svg";
 import Upload from "../../../static/frontend/img/upload.svg";
 import Times from "../../../static/frontend/img/x.svg";
-import Trash from "../../../static/frontend/img/trash-alt.svg";
 
 interface ResourceFileFieldProps {
   worksheet: Worksheet;

@@ -1,8 +1,8 @@
 import React, { useState } from "react";
+
 import { useSpacetimeDeleteMutation, useSpacetimeOverrideDeleteMutation } from "../../utils/queries/spacetime";
 import Modal from "../Modal";
 
-// Styles
 import "../../css/spacetime_delete.scss";
 
 interface SpacetimeDeleteProps {

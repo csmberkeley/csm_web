@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { dayOfWeekToEnglishString, DAYS_OF_WEEK } from "../../utils/datetime";
+
+import { DAYS_OF_WEEK } from "../../utils/datetime";
 import { useUserEmails } from "../../utils/queries/base";
 import { useSectionCreateMutation } from "../../utils/queries/sections";
 import { Spacetime } from "../../utils/types";

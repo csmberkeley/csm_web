@@ -1,23 +1,22 @@
+import { DateTime } from "luxon";
 import React, { useEffect, useState } from "react";
 import { Navigate, Route, Routes } from "react-router-dom";
+
+import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 import {
   useDropUserMutation,
   useStudentAttendances,
   useStudentSubmitWordOfTheDayMutation
 } from "../../utils/queries/sections";
-import { Mentor, Override, Spacetime } from "../../utils/types";
+import { Mentor, Override, Role, Spacetime } from "../../utils/types";
+import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
-import { ATTENDANCE_LABELS, InfoCard, ROLES, SectionDetail, SectionSpacetime } from "./Section";
+import { ATTENDANCE_LABELS, InfoCard, SectionDetail, SectionSpacetime } from "./Section";
 import { dateSortISO, formatDateLocaleShort, formatDateAbbrevWord } from "./utils";
 
-// Images
-import XIcon from "../../../static/frontend/img/x.svg";
-import LoadingSpinner from "../LoadingSpinner";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
-import { DateTime } from "luxon";
-import { DEFAULT_TIMEZONE } from "../../utils/datetime";
+import XIcon from "../../../static/frontend/img/x.svg";
 
-// Styles
 import scssColors from "../../css/base/colors-export.module.scss";
 import "../../css/word-of-the-day.scss";
 
@@ -44,7 +43,7 @@ export default function StudentSection({
     <SectionDetail
       course={course}
       courseTitle={courseTitle}
-      userRole={ROLES.STUDENT}
+      userRole={Role.STUDENT}
       links={[
         ["Section", ""],
         ["Attendance", "attendance"]
@@ -79,7 +78,7 @@ interface StudentSectionInfoProps {
 }
 
 // eslint-disable-next-line no-unused-vars
-function StudentSectionInfo({ mentor, spacetimes, override, associatedProfileId }: StudentSectionInfoProps) {
+function StudentSectionInfo({ mentor, spacetimes, associatedProfileId }: StudentSectionInfoProps) {
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">My Section</h3>

@@ -1,20 +1,20 @@
-import React, { useEffect, useState } from "react";
+import React, { Component, useEffect, useState } from "react";
 import { Link, NavLink, NavLinkProps, Outlet, Route, Routes, useLocation } from "react-router-dom";
+
 import { useProfiles } from "../utils/queries/base";
 import { useMatcherActiveCourses } from "../utils/queries/matcher";
+import { Role } from "../utils/types";
 import { emptyRoles, Roles } from "../utils/user";
 import CourseMenu from "./CourseMenu";
-import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 import Home from "./Home";
 import Policies from "./Policies";
+import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 import { Resources } from "./resource_aggregation/Resources";
 import Section from "./section/Section";
 
-// Images
-import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
+import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 
-// Styles
 import "../css/header.scss";
 import "../css/home.scss";
 
@@ -107,10 +107,10 @@ function Header(): React.ReactElement {
         // ignore if not active
         continue;
       }
-      if (profile.role === "COORDINATOR") {
-        roles["COORDINATOR"].add(profile.courseId);
-      } else if (profile.role === "MENTOR" && profile.sectionId === undefined) {
-        roles["MENTOR"].add(profile.courseId);
+      if (profile.role === Role.COORDINATOR) {
+        roles[Role.COORDINATOR].add(profile.courseId);
+      } else if (profile.role === Role.MENTOR && profile.sectionId === undefined) {
+        roles[Role.MENTOR].add(profile.courseId);
       }
     }
     setActiveMatcherRoles(roles);
@@ -128,7 +128,7 @@ function Header(): React.ReactElement {
         <NavLink to="/resources" className={navlinkClass}>
           <h3 className="site-title">Resources</h3>
         </NavLink>
-        {activeMatcherRoles["COORDINATOR"].size > 0 || activeMatcherRoles["MENTOR"].size > 0 ? (
+        {activeMatcherRoles[Role.COORDINATOR].size > 0 || activeMatcherRoles[Role.MENTOR].size > 0 ? (
           <NavLink to="/matcher" className={navlinkClass}>
             <h3 className="site-title">Matcher</h3>
           </NavLink>
@@ -175,7 +175,7 @@ interface ErrorPageProps {
  * Error boundary component; must be a class component,
  * as there is currently no equivalent hook.
  */
-class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
+class ErrorBoundary extends Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { error: null };

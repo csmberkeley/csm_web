@@ -1,14 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { Navigate, NavLink, Route, Routes, useParams } from "react-router-dom";
+
 import { useProfiles } from "../../utils/queries/base";
 import { useMatcherActiveCourses } from "../../utils/queries/matcher";
-import { Profile } from "../../utils/types";
-
+import { Profile, Role } from "../../utils/types";
 import { emptyRoles, Roles } from "../../utils/user";
-import { CoordinatorMatcherForm } from "./coordinator/CoordinatorMatcherForm";
 import { MentorSectionPreferences } from "./MentorSectionPreferences";
+import { CoordinatorMatcherForm } from "./coordinator/CoordinatorMatcherForm";
 
-// Styles
 import "../../css/enrollment_matcher.scss";
 
 export interface MatcherProfile {
@@ -24,7 +23,7 @@ export function EnrollmentMatcher(): JSX.Element {
   const [mentorProfileMap, setMentorProfileMap] = useState<Map<number, Profile>>(new Map());
   const [staffCourses, setStaffCourses] = useState<Array<MatcherProfile>>([]);
 
-  const [overrideProfile, setOverrideProfile] = useState<Map<number, "COORDINATOR" | "MENTOR">>(new Map());
+  const [overrideProfile, setOverrideProfile] = useState<Map<number, Role.COORDINATOR | Role.MENTOR>>(new Map());
 
   const { data: profiles, isSuccess: profilesLoaded } = useProfiles();
   const { data: activeCourses, isSuccess: activeCoursesLoaded } = useMatcherActiveCourses();
@@ -39,16 +38,16 @@ export function EnrollmentMatcher(): JSX.Element {
     const newRoles: Roles = emptyRoles();
     const newCoordProfileMap: Map<number, Profile> = new Map();
     const newMentorProfileMap: Map<number, Profile> = new Map();
-    const newOverrideProfile: Map<number, "COORDINATOR" | "MENTOR"> = new Map();
+    const newOverrideProfile: Map<number, Role.COORDINATOR | Role.MENTOR> = new Map();
 
     profiles.map((profile: Profile) => {
-      if (profile.role === "COORDINATOR") {
+      if (profile.role === Role.COORDINATOR) {
         newCoordProfileMap.set(profile.courseId, profile);
-      } else if (profile.role === "MENTOR") {
+      } else if (profile.role === Role.MENTOR) {
         newMentorProfileMap.set(profile.courseId, profile);
       }
 
-      if (profile.role === "COORDINATOR" || (profile.role === "MENTOR" && profile.sectionId == null)) {
+      if (profile.role === Role.COORDINATOR || (profile.role === Role.MENTOR && profile.sectionId == null)) {
         if (!activeCourses.includes(profile.courseId)) {
           // ignore if not active
           return;
@@ -61,10 +60,10 @@ export function EnrollmentMatcher(): JSX.Element {
         });
         newRoles[profile.role].add(profile.courseId);
 
-        if (profile.role === "COORDINATOR") {
-          newOverrideProfile.set(profile.courseId, "COORDINATOR");
-        } else if (profile.role === "MENTOR") {
-          newOverrideProfile.set(profile.courseId, "MENTOR");
+        if (profile.role === Role.COORDINATOR) {
+          newOverrideProfile.set(profile.courseId, Role.COORDINATOR);
+        } else if (profile.role === Role.MENTOR) {
+          newOverrideProfile.set(profile.courseId, Role.MENTOR);
         }
       }
     });
@@ -84,24 +83,24 @@ export function EnrollmentMatcher(): JSX.Element {
   const switchProfile = (courseId: number) => {
     if (overrideProfile.has(courseId)) {
       const newOverrideProfile = new Map(overrideProfile);
-      if (overrideProfile.get(courseId) === "COORDINATOR") {
-        newOverrideProfile.set(courseId, "MENTOR");
-      } else if (overrideProfile.get(courseId) === "MENTOR") {
-        newOverrideProfile.set(courseId, "COORDINATOR");
+      if (overrideProfile.get(courseId) === Role.COORDINATOR) {
+        newOverrideProfile.set(courseId, Role.MENTOR);
+      } else if (overrideProfile.get(courseId) === Role.MENTOR) {
+        newOverrideProfile.set(courseId, Role.COORDINATOR);
       }
       setOverrideProfile(newOverrideProfile);
     }
   };
 
-  if (roles["COORDINATOR"].size === 0 && roles["MENTOR"].size === 0) {
+  if (roles[Role.COORDINATOR].size === 0 && roles[Role.MENTOR].size === 0) {
     return <div>No matchers found</div>;
   }
 
   let defaultMatcher = <div>No valid roles found.</div>;
-  if (roles["COORDINATOR"].size > 0) {
-    defaultMatcher = <Navigate to={"/matcher/" + roles["COORDINATOR"].values().next().value} replace={true} />;
-  } else if (roles["MENTOR"].size > 0) {
-    defaultMatcher = <Navigate to={"/matcher/" + roles["MENTOR"].values().next().value} replace={true} />;
+  if (roles[Role.COORDINATOR].size > 0) {
+    defaultMatcher = <Navigate to={"/matcher/" + roles[Role.COORDINATOR].values().next().value} replace={true} />;
+  } else if (roles[Role.MENTOR].size > 0) {
+    defaultMatcher = <Navigate to={"/matcher/" + roles[Role.MENTOR].values().next().value} replace={true} />;
   }
 
   return (
@@ -136,7 +135,7 @@ export function EnrollmentMatcher(): JSX.Element {
 
 interface MatcherCourseWrapperProps {
   roles: Roles;
-  overrideProfile: Map<number, "COORDINATOR" | "MENTOR">;
+  overrideProfile: Map<number, Role.COORDINATOR | Role.MENTOR>;
   mentorProfileMap: Map<number, Profile>;
   coordProfileMap: Map<number, Profile>;
   switchProfile: (courseId: number) => void;
@@ -151,10 +150,10 @@ const MatcherCourseWrapper = ({
 }: MatcherCourseWrapperProps) => {
   const params = useParams();
   const courseId = parseInt(params.courseId!);
-  const coordAndMentor = roles["COORDINATOR"].has(courseId) && roles["MENTOR"].has(courseId);
+  const coordAndMentor = roles[Role.COORDINATOR].has(courseId) && roles[Role.MENTOR].has(courseId);
   const role = overrideProfile.get(courseId);
 
-  if (role === "COORDINATOR") {
+  if (role === Role.COORDINATOR) {
     return (
       <CoordinatorMatcherForm
         key={courseId} // key to force re-render upon profile switch
@@ -163,7 +162,7 @@ const MatcherCourseWrapper = ({
         switchProfile={() => switchProfile(courseId)}
       />
     );
-  } else if (role === "MENTOR") {
+  } else if (role === Role.MENTOR) {
     return (
       <MentorSectionPreferences
         key={courseId}

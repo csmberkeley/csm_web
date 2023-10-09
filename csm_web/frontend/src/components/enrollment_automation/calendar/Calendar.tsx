@@ -1,12 +1,11 @@
 import { DateTime, Duration, Interval } from "luxon";
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { DATETIME_INITIAL_INVALID, formatTime, INTERVAL_INITIAL_INVALID } from "../../../utils/datetime";
 
+import { DATETIME_INITIAL_INVALID, formatTime, INTERVAL_INITIAL_INVALID } from "../../../utils/datetime";
 import { Time } from "../EnrollmentAutomationTypes";
 import { CalendarDay, CalendarDayHeader } from "./CalendarDay";
 import { CalendarEvent, CalendarEventSingleTime, DAYS } from "./CalendarTypes";
 
-// Styles
 import "../../../css/calendar.scss";
 
 // default start and end times for calendar
@@ -300,7 +299,7 @@ export function Calendar({
    * @param day - the day (column) the user is currently dragging over
    * @param interval - the time interval (row) the user is currently dragging over
    */
-  const onCreateDragOver = (day: string, interval: Interval) => {
+  const onCreateDragOver = (_day: string, interval: Interval) => {
     if (!eventCreationEnabled || !creatingEvent) {
       return;
     }
@@ -316,7 +315,7 @@ export function Calendar({
    * @param day - the day (column) the user ended the drag in
    * @param interval - the time interval (row) the user ended the drag in
    */
-  const onCreateDragEnd = (day: string, interval: Interval) => {
+  const onCreateDragEnd = (_day: string, _interval: Interval) => {
     if (!eventCreationEnabled || !creatingEvent) {
       return;
     }
@@ -335,7 +334,7 @@ export function Calendar({
    *
    * @param e - event that caused the cancellation of the drag
    */
-  const onCreateDragEndCancel = (e: MouseEvent | FocusEvent) => {
+  const onCreateDragEndCancel = (_e: MouseEvent | FocusEvent) => {
     setCurCreatedEvent({
       day: "",
       start: DATETIME_INITIAL_INVALID,

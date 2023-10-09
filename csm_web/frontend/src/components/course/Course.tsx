@@ -1,21 +1,19 @@
 import { DateTime } from "luxon";
 import React, { useState } from "react";
 import { useParams } from "react-router-dom";
+import { DEFAULT_LONG_LOCALE_OPTIONS } from "../../utils/datetime";
 import { useCourseSections } from "../../utils/queries/courses";
 import { Course as CourseType } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { CreateSectionModal } from "./CreateSectionModal";
 import { DataExportModal } from "./DataExportModal";
 import { SectionCard } from "./SectionCard";
-import { WhitelistModal } from "./WhitelistModal";
 import { SettingsModal } from "./SettingsModal";
-import { DEFAULT_LONG_LOCALE_OPTIONS } from "../../utils/datetime";
+import { WhitelistModal } from "./WhitelistModal";
 
-// Images
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
 import PlusIcon from "../../../static/frontend/img/plus.svg";
 
-// Styles
 import "../../css/course.scss";
 
 const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({

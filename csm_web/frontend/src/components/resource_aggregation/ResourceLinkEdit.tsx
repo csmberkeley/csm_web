@@ -1,4 +1,5 @@
 import React from "react";
+
 import { Link } from "./ResourceTypes";
 
 import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";

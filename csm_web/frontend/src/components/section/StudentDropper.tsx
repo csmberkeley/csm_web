@@ -1,11 +1,10 @@
 import React, { useState } from "react";
+
 import { useDropStudentMutation } from "../../utils/queries/sections";
 import Modal from "../Modal";
 
-// Images
 import XIcon from "../../../static/frontend/img/x.svg";
 
-// Styles
 import "../../css/student_dropper.scss";
 
 interface StudentDropperProps {

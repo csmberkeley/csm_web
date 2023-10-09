@@ -1,15 +1,15 @@
 import _ from "lodash";
 import { DateTime, Duration, Interval } from "luxon";
-import React, { useEffect, useState } from "react";
+import React, { createRef, useEffect, useState } from "react";
 
+import { formatInterval } from "../../../utils/datetime";
+import { useMatcherSlotsMutation } from "../../../utils/queries/matcher";
 import { Profile } from "../../../utils/types";
 import { Tooltip } from "../../Tooltip";
+import { Slot, Time } from "../EnrollmentAutomationTypes";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime, DAYS, DAYS_ABBREV } from "../calendar/CalendarTypes";
-import { Slot, Time } from "../EnrollmentAutomationTypes";
 import { parseTime, serializeTime } from "../utils";
-import { useMatcherConfigMutation, useMatcherSlotsMutation } from "../../../utils/queries/matcher";
-import { formatInterval } from "../../../utils/datetime";
 
 import InfoIcon from "../../../../static/frontend/img/info.svg";
 import XIcon from "../../../../static/frontend/img/x.svg";
@@ -71,7 +71,6 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
    */
   const [edited, setEdited] = useState<boolean>(false);
 
-  const matcherConfigMutation = useMatcherConfigMutation(profile.courseId);
   const matcherSlotsMutation = useMatcherSlotsMutation(profile.courseId);
 
   /**
@@ -85,11 +84,11 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
    *  ref objects for tiled event details
    */
   const tileRefs = {
-    days: React.createRef<HTMLFormElement>(),
-    startTime: React.createRef<HTMLInputElement>(),
-    endTime: React.createRef<HTMLInputElement>(),
-    length: React.createRef<HTMLInputElement>(),
-    toggle: React.createRef<HTMLInputElement>()
+    days: createRef<HTMLFormElement>(),
+    startTime: createRef<HTMLInputElement>(),
+    endTime: createRef<HTMLInputElement>(),
+    length: createRef<HTMLInputElement>(),
+    toggle: createRef<HTMLInputElement>()
   };
 
   /**
@@ -304,7 +303,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     setTileDetails(newDetails);
   };
 
-  const editTiled_day = (e: React.ChangeEvent<HTMLFormElement>): void => {
+  const editTiled_day = (): void => {
     if (!tileRefs.days.current) {
       return;
     }
