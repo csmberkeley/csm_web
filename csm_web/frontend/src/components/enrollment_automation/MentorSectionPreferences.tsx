@@ -1,14 +1,14 @@
 import { Interval } from "luxon";
 import React, { useEffect, useState } from "react";
 
+import { formatInterval } from "../../utils/datetime";
+import { useMatcherPreferenceMutation, useMatcherPreferences, useMatcherSlots } from "../../utils/queries/matcher";
 import { Profile } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
+import { Slot } from "./EnrollmentAutomationTypes";
 import { Calendar } from "./calendar/Calendar";
 import { CalendarEvent, CalendarEventSingleTime } from "./calendar/CalendarTypes";
-import { Slot } from "./EnrollmentAutomationTypes";
 import { MAX_PREFERENCE, parseTime } from "./utils";
-import { useMatcherPreferenceMutation, useMatcherPreferences, useMatcherSlots } from "../../utils/queries/matcher";
-import { formatInterval } from "../../utils/datetime";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import ErrorCircle from "../../../static/frontend/img/x_circle.svg";

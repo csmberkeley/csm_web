@@ -1,14 +1,12 @@
 import React, { useEffect, useState } from "react";
 
-import LoadingSpinner from "../LoadingSpinner";
 import { useCourses, useCourseSettingsMutation } from "../../utils/queries/courses";
-import { Tooltip } from "../Tooltip";
+import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
+import { Tooltip } from "../Tooltip";
 
-// Images
 import InfoIcon from "../../../static/frontend/img/info.svg";
 
-// Styles
 import "../../css/course-settings.scss";
 
 interface SettingsModalProps {

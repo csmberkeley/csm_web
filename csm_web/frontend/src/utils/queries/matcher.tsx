@@ -2,15 +2,8 @@
  * Query hooks regarding the matcher.
  */
 
-import {
-  QueryClient,
-  useMutation,
-  UseMutationResult,
-  useQuery,
-  useQueryClient,
-  UseQueryResult
-} from "@tanstack/react-query";
-import { Assignment, Slot } from "../../components/enrollment_automation/EnrollmentAutomationTypes";
+import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
+import { Assignment } from "../../components/enrollment_automation/EnrollmentAutomationTypes";
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
 import { Mentor } from "../types";
 import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";

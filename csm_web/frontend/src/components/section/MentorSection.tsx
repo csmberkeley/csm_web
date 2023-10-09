@@ -1,10 +1,11 @@
 import React from "react";
-import { Mentor, Spacetime } from "../../utils/types";
-import { SectionDetail, ROLES } from "./Section";
 import { Routes, Route } from "react-router-dom";
+
+import { Mentor, Role, Spacetime } from "../../utils/types";
 import MentorSectionAttendance from "./MentorSectionAttendance";
-import MentorSectionRoster from "./MentorSectionRoster";
 import MentorSectionInfo from "./MentorSectionInfo";
+import MentorSectionRoster from "./MentorSectionRoster";
+import { SectionDetail } from "./Section";
 
 interface MentorSectionProps {
   id: number;
@@ -47,7 +48,7 @@ export default function MentorSection({
           index
           element={
             <MentorSectionInfo
-              isCoordinator={userRole === ROLES.COORDINATOR}
+              isCoordinator={userRole === Role.COORDINATOR}
               mentor={mentor}
               spacetimes={spacetimes}
               capacity={capacity}

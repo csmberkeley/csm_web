@@ -1,17 +1,15 @@
+import { groupBy } from "lodash";
 import React from "react";
 import { Link } from "react-router-dom";
-import { groupBy } from "lodash";
+
+import { formatSpacetimeInterval } from "../utils/datetime";
 import { useProfiles } from "../utils/queries/base";
 import { useCourses } from "../utils/queries/courses";
-import { ROLES } from "./section/Section";
-import { Profile, Course } from "../utils/types";
+import { Profile, Course, Role } from "../utils/types";
 import LoadingSpinner from "./LoadingSpinner";
-import { formatSpacetimeInterval } from "../utils/datetime";
 
-// Images
 import PlusIcon from "../../static/frontend/img/plus.svg";
 
-// Styles
 import scssColors from "../css/base/colors-export.module.scss";
 
 const Home = () => {
@@ -42,7 +40,7 @@ const Home = () => {
             }
           })
           .map(([course, courseProfiles]) => {
-            if (courseProfiles[0].role === ROLES.MENTOR) {
+            if (courseProfiles[0].role === Role.MENTOR) {
               const courseProfilesWithSection = courseProfiles.filter((profile: Profile) => profile.sectionId);
               if (courseProfilesWithSection.length > 0) {
                 return <CourseCard key={course} profiles={courseProfilesWithSection} />;
@@ -115,7 +113,7 @@ const CourseCard = ({ profiles }: CourseCardProps): React.ReactElement => {
     );
   };
 
-  if (role === ROLES.COORDINATOR) {
+  if (role === Role.COORDINATOR) {
     return (
       <Link to={`/courses/${courseId}`} className="course-card-link">
         <Card />

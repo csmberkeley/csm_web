@@ -1,7 +1,8 @@
 import React, { useState, useEffect, ChangeEvent, MouseEvent } from "react";
-import ResourceEdit from "./ResourceEdit";
-import { Link, Resource, Worksheet } from "./ResourceTypes";
+
+import { ResourceEdit } from "./ResourceEdit";
 import ResourceRowRender from "./ResourceRowRender";
+import { Link, Resource, Worksheet } from "./ResourceTypes";
 
 interface ResourceRowProps {
   initialResource: Resource;

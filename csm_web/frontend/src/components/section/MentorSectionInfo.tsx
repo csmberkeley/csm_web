@@ -1,19 +1,18 @@
 import React, { useState } from "react";
+
 import { useSectionStudents } from "../../utils/queries/sections";
 import { Mentor, Spacetime, Student } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import MetaEditModal from "./MetaEditModal";
 import { InfoCard, SectionSpacetime } from "./Section";
+import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
-import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 
-// Images
-import XIcon from "../../../static/frontend/img/x.svg";
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
+import XIcon from "../../../static/frontend/img/x.svg";
 
-// Styles
 import "../../css/coordinator-add-student.scss";
 
 enum ModalStates {

@@ -1,12 +1,12 @@
 import React, { useEffect, useRef, useState } from "react";
 
+import { formatInterval } from "../../../utils/datetime";
 import { useMatcherConfig, useMatcherConfigMutation } from "../../../utils/queries/matcher";
 import { Profile } from "../../../utils/types";
 import LoadingSpinner from "../../LoadingSpinner";
+import { Slot } from "../EnrollmentAutomationTypes";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
-import { Slot } from "../EnrollmentAutomationTypes";
-import { formatInterval } from "../../../utils/datetime";
 
 import CheckCircle from "../../../../static/frontend/img/check_circle.svg";
 import ErrorCircle from "../../../../static/frontend/img/error_outline.svg";
@@ -51,7 +51,7 @@ export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStag
 
     const minMentorMap = new Map();
     const maxMentorMap = new Map();
-    matcherConfig.slots.forEach((slot: any) => {
+    matcherConfig.slots.forEach(slot => {
       minMentorMap.set(slot.id, slot.minMentors);
       maxMentorMap.set(slot.id, slot.maxMentors);
     });
@@ -91,7 +91,7 @@ export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStag
     );
   };
 
-  const toggleSelectAll = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const toggleSelectAll = (_e: React.ChangeEvent<HTMLInputElement>) => {
     let newSelectedEventIndices: number[];
     if (selectedEventIndices.length == slots.length) {
       // currently selecting all, so select none

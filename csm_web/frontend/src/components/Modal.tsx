@@ -1,9 +1,8 @@
-import React, { useContext } from "react";
+import React, { createContext, useContext } from "react";
 
-// Images
 import XIcon from "../../static/frontend/img/x.svg";
 
-const ModalContext = React.createContext(Function.prototype);
+const ModalContext = createContext(Function.prototype);
 
 interface ModalProps {
   children: React.ReactNode;

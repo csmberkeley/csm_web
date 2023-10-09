@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
+
 import {
   useCourseAddWhitelistMutation,
   useCourseDeleteWhitelistMutation,
@@ -9,13 +10,11 @@ import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 import { SearchBar } from "../SearchBar";
 
-// Images
 import CheckCircleIcon from "../../../static/frontend/img/check_circle.svg";
 import ExclamationCircleIcon from "../../../static/frontend/img/exclamation-circle.svg";
 import UndoIcon from "../../../static/frontend/img/undo.svg";
 import XIcon from "../../../static/frontend/img/x.svg";
 
-// Styles
 import "../../css/whitelist_modal.scss";
 
 interface WhitelistModalProps {

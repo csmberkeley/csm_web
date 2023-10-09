@@ -1,9 +1,9 @@
 import { Duration, Interval } from "luxon";
 import React, { useEffect, useState } from "react";
 
+import { formatInterval } from "../../../utils/datetime";
 import { Time } from "../EnrollmentAutomationTypes";
 import { CalendarEventSingleTime } from "./CalendarTypes";
-import { formatInterval } from "../../../utils/datetime";
 
 const NO_CONTENT_WIDTH = 35;
 

@@ -1,6 +1,9 @@
-import React, { ChangeEvent, MouseEvent, useState, useEffect } from "react";
 import _ from "lodash";
+import React, { ChangeEvent, MouseEvent, useState, useEffect } from "react";
+
 import Modal from "../Modal";
+import { Tooltip } from "../Tooltip";
+import ResourceLinkEdit from "./ResourceLinkEdit";
 import {
   copyWorksheet,
   copyLink,
@@ -16,10 +19,7 @@ import {
   Resource
 } from "./ResourceTypes";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
-import ResourceLinkEdit from "./ResourceLinkEdit";
-import { Tooltip } from "../Tooltip";
 
-// Images
 import CheckCircle from "../../../static/frontend/img/check-circle-solid.svg";
 import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
 import PlusIcon from "../../../static/frontend/img/plus.svg";

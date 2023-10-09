@@ -1,15 +1,15 @@
 import { Interval } from "luxon";
 import React, { useEffect, useState } from "react";
 
-import { Profile } from "../../../utils/types";
-import { parseTime } from "../utils";
 import {
   useMatcherAssignment,
   useMatcherConfig,
   useMatcherPreferences,
   useMatcherSlots
 } from "../../../utils/queries/matcher";
+import { Profile } from "../../../utils/types";
 import { Assignment, Slot, SlotPreference, Time } from "../EnrollmentAutomationTypes";
+import { parseTime } from "../utils";
 import { ConfigureStage } from "./ConfigureStage";
 import { CreateStage } from "./CreateStage";
 import { EditStage } from "./EditStage";

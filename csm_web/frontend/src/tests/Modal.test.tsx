@@ -1,7 +1,7 @@
-import React from "react";
 import { fireEvent, render } from "@testing-library/react";
-import Modal, { ModalCloser } from "../components/Modal";
+import React from "react";
 import { act } from "react-dom/test-utils";
+import Modal, { ModalCloser } from "../components/Modal";
 
 /**
  * Returns a test Modal component.

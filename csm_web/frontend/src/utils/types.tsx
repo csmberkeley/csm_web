@@ -1,5 +1,11 @@
 import { DateTime } from "luxon";
 
+export enum Role {
+  COORDINATOR = "COORDINATOR",
+  MENTOR = "MENTOR",
+  STUDENT = "STUDENT"
+}
+
 export interface Override {
   date: string;
   spacetime: Spacetime;
@@ -18,7 +24,7 @@ export interface Profile {
   id: number;
   course: string;
   courseTitle: string;
-  role: string;
+  role: Role;
   sectionId: number;
   courseId: number;
   sectionSpacetimes: Array<Spacetime>;
@@ -48,7 +54,7 @@ export interface Section {
   numStudentsEnrolled: number;
   description: string;
   course: string;
-  userRole: string;
+  userRole: Role;
   courseTitle: string;
   courseRestricted: boolean;
 }

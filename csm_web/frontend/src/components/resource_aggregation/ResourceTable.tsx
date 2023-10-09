@@ -1,22 +1,21 @@
-import React, { useEffect, useState } from "react";
 import { DateTime, Duration } from "luxon";
+import React, { useEffect, useState } from "react";
 
+import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 import {
   useCreateResourceMutation,
   useDeleteResourceMutation,
   useResources,
   useUpdateResourceMutation
 } from "../../utils/queries/resources";
+import { Role } from "../../utils/types";
 import { Roles } from "../../utils/user";
-import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 import LoadingSpinner from "../LoadingSpinner";
-import ResourceRow from "./ResourceRow";
+import { ResourceRow } from "./ResourceRow";
 import { emptyResource, Link, Resource, Worksheet } from "./ResourceTypes";
 
-// Images
 import PlusIcon from "../../../static/frontend/img/plus.svg";
 
-// Styles
 import "../../css/resource_aggregation.scss";
 
 interface ResourceTableProps {
@@ -41,7 +40,7 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
    * Gets resource data for a specific course when courseID changes
    */
   useEffect(() => {
-    setCanEdit(roles["COORDINATOR"].has(courseID));
+    setCanEdit(roles[Role.COORDINATOR].has(courseID));
   }, [courseID, roles]);
 
   if (!resourcesLoaded) {

@@ -1,20 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { Mentor, Profile } from "../../../utils/types";
 
+import { formatInterval } from "../../../utils/datetime";
 import {
   useMatcherAddMentorsMutation,
   useMatcherConfigMutation,
   useMatcherMentors,
   useMatcherRemoveMentorsMutation
 } from "../../../utils/queries/matcher";
+import { Mentor, Profile } from "../../../utils/types";
 import LoadingSpinner from "../../LoadingSpinner";
 import Modal from "../../Modal";
 import { SearchBar } from "../../SearchBar";
 import { Tooltip } from "../../Tooltip";
+import { Slot, SlotPreference } from "../EnrollmentAutomationTypes";
 import { Calendar } from "../calendar/Calendar";
 import { CalendarEventSingleTime } from "../calendar/CalendarTypes";
-import { Slot, SlotPreference } from "../EnrollmentAutomationTypes";
-import { formatInterval } from "../../../utils/datetime";
 
 import CheckIcon from "../../../../static/frontend/img/check.svg";
 import CheckCircleIcon from "../../../../static/frontend/img/check_circle.svg";
