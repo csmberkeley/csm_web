@@ -124,17 +124,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         Handle request to delete section through the UI;
         deletes mentor and spacetimes along with it
         """
-        section = get_object_or_error(self.get_queryset(), pk=pk)
+        section = get_object_or_error(Course.objects.all(), pk=pk)
         course = section.mentor.course
-        # If the course has students, we cannot delete the section
-        if section.students.count() > 0:
-            logger.error(
-                (
-                    "<Section Deletion:Failure> Could not delete section %s, it has"
-                    " students. Remove all students manually first."
-                ),
-                log_str(section),
-            )
         is_coordinator = course.coordinator_set.filter(user=request.user).exists()
         if not is_coordinator:
             logger.error(
@@ -147,13 +138,24 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             raise PermissionDenied(
                 "You must be a coordinator to delete this spacetime!"
             )
+        # If the course has students, we cannot delete the section
+        if section.students.count() > 0:
+            logger.error(
+                (
+                    "<Section Deletion:Failure> Could not delete section %s, it has"
+                    " students. Remove all students manually first."
+                ),
+                log_str(section),
+            )
+            return PermissionDenied("Cannot delete section with students")
         # Delete all spacetimes in the section
-        for spacetime in section.spacetimes.all():
-            spacetime.delete()
-        # Delete the mentor
-        section.mentor.delete()
+        with transaction.atomic():
+            for spacetime in section.spacetimes.all():
+                spacetime.delete()
+            # Delete the mentor
+            section.mentor.delete()
 
-        section.delete()
+            section.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     def partial_update(self, request, pk=None):
