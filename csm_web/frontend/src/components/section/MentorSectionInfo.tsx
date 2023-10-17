@@ -8,6 +8,7 @@ import MetaEditModal from "./MetaEditModal";
 import { InfoCard, SectionSpacetime } from "./Section";
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 import SpacetimeEditModal from "./SpacetimeEditModal";
+import ProfileModal from "./ProfileModal";
 import StudentDropper from "./StudentDropper";
 
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
@@ -90,6 +91,15 @@ export default function MentorSectionInfo({
                             />
                           )}
                           <span className="student-info">{name || email}</span>
+                          <button
+                            className="secondary-link-btn info-card-edit-btn"
+                            onClick={() => {
+                              setShowModal(ModalStates.SPACETIME_EDIT);
+                            }}
+                          >
+                            <EyeIcon className="icon" /> View
+                          </button>
+                          {showModal === ModalStates.SPACETIME_EDIT && <ProfileModal closeModal={closeModal} />}
                         </td>
                       </tr>
                     )
