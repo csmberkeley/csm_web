@@ -114,7 +114,7 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
                 status_code = status.HTTP_202_ACCEPTED
             else:  # create
                 serializer = OverrideSerializer(
-                    data={"overriden_spacetime": spacetime.pk, **request.data}
+                    data={"overridden_spacetime": spacetime.pk, **request.data}
                 )
                 status_code = status.HTTP_201_CREATED
             if serializer.is_valid():
