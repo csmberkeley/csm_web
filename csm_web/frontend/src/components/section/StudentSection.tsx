@@ -183,7 +183,7 @@ function ProfileSection({ profileId }: ProfileSectionProps) {
   switch (stage) {
     case ProfileSectionStage.CLOSED:
       return (
-        <button className="primary-btn" onClick={() => setStage(ProfileSectionStage.OPENED)}>
+        <button className="primary-btn" style={{ margin: "Auto" }} onClick={() => setStage(ProfileSectionStage.OPENED)}>
           Profile
         </button>
       );
