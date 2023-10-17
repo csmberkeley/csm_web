@@ -4,7 +4,7 @@
 
 import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
-import { Attendance, RawAttendance, Section, Spacetime, Student } from "../types";
+import { Attendance, RawAttendance, Section, Spacetime, Student, UserInfo } from "../types";
 import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
 
 /* ===== Queries ===== */
@@ -111,6 +111,29 @@ export const useStudentAttendances = (studentId: number): UseQueryResult<Attenda
   handleError(queryResult);
   return queryResult;
 };
+
+// // Get all students attending this section. Need new backend entry points
+// export const useStudentList = (studentId: number): UseQueryResult<Student[], ServerError> => {
+//   const queryResult = useQuery<Student[], Error>(
+//     ["students", studentId, "attendance"],
+//     async () => {
+//       if (isNaN(studentId)) {
+//         throw new PermissionError("Invalid student id");
+//       }
+//       const response = await fetchNormalized(`/students/${studentId}/attendances`);
+//       if (response.ok) {
+//         return await response.json();
+//       } else {
+//         handlePermissionsError(response.status);
+//         throw new ServerError(`Failed to fetch student ${studentId} attendances`);
+//       }
+//     },
+//     { retry: handleRetry }
+//   );
+//
+//   handleError(queryResult);
+//   return queryResult;
+// };
 
 interface WordOfTheDayResponse {
   id: number; // section occurrence id
