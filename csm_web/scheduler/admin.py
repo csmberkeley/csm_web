@@ -895,11 +895,11 @@ class OverrideAdmin(BasePermissionModelAdmin):
     fields = (
         "date",
         "spacetime",
-        "overriden_spacetime",
+        "overridden_spacetime",
     )
     autocomplete_fields = (
         "spacetime",
-        "overriden_spacetime",
+        "overridden_spacetime",
     )
 
     list_filter = (
@@ -922,5 +922,5 @@ class OverrideAdmin(BasePermissionModelAdmin):
     def get_new_spacetime(self, obj: Override):
         """Format link to new spacetime object."""
         return get_admin_link_for(
-            obj.overriden_spacetime, "admin:scheduler_spacetime_change"
+            obj.overridden_spacetime, "admin:scheduler_spacetime_change"
         )

@@ -218,8 +218,8 @@ class OverrideFactory(factory.django.DjangoModelFactory):
         date = evaluate_faker(
             factory.Faker(
                 "date_between_dates",
-                date_start=self.overriden_spacetime.section.mentor.course.enrollment_start.date(),
-                date_end=self.overriden_spacetime.section.mentor.course.valid_until,
+                date_start=self.overridden_spacetime.section.mentor.course.enrollment_start.date(),
+                date_end=self.overridden_spacetime.section.mentor.course.valid_until,
             )
         )
         return date + timedelta(
