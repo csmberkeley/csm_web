@@ -6,13 +6,23 @@ import LoadingSpinner from "../LoadingSpinner";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import MetaEditModal from "./MetaEditModal";
 import { InfoCard, SectionSpacetime } from "./Section";
+<<<<<<< HEAD
+=======
+import SpacetimeEditModal from "./SpacetimeEditModal";
+import ProfileModal from "./ProfileModal";
+import StudentDropper from "./StudentDropper";
+>>>>>>> f904047 (modal for profile)
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import ProfileModal from "./ProfileModal";
 import StudentDropper from "./StudentDropper";
 
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
+<<<<<<< HEAD
 import XIcon from "../../../static/frontend/img/x.svg";
+=======
+import EyeIcon from "../../../static/frontend/img/eye.svg";
+>>>>>>> f904047 (modal for profile)
 
 import "../../css/coordinator-add-student.scss";
 
