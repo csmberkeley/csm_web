@@ -12,11 +12,22 @@ header {
   margin: 8px -8px 0 -8px;
 }
 
+body {
+  margin: 0;
+  padding: 0;
+}
+
 /// individual groups of site title items
 .site-title-group {
   display: flex;
   align-items: center;
   gap: 20px;
+  margin: 0;
+}
+
+.site-header {
+  background-color: black;
+  margin: 0;
 }
 
 #logo {
