@@ -141,7 +141,7 @@ function Header(): React.ReactElement {
           <h3 className="site-subtitle">Policies</h3>
         </NavLink>
         <a id="logout-btn" href="/logout" title="Log out">
-          <LogOutIcon width="1.25em" height="1.25em" />
+          <LogOutIcon className="icon" />
         </a>
       </div>
     </header>

@@ -66,6 +66,11 @@ h6 {
   stroke: currentcolor;
 }
 
+// some icons are outline icons that require no fill
+.icon.outline {
+  fill: none;
+}
+
 /// Styling for relation label; used across multiple pages
 .relation-label {
   min-width: 60px;
