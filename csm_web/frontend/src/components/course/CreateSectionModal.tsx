@@ -46,6 +46,8 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
    */
   const [capacity, setCapacity] = useState<string>("");
 
+  const [alertMessage, setAlertMessage] = useState<string | null>(null)
+
   /**
    * Create a new empty spacetime for the new section.
    */
@@ -87,10 +89,15 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
     }
   };
 
-  /**
-   * Handle form submission.
-   */
+  const hasEmptyLocation = () => {
+    return spacetimes.some(spacetime => !spacetime.location?.trim());
+  };
+
+  
   const handleSubmit = (event: React.MouseEvent<HTMLButtonElement>): void => {
+
+    
+
     event.preventDefault();
     const data = {
       mentorEmail,
@@ -100,6 +107,9 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
       courseId
     };
 
+    
+
+    
     createSectionMutation.mutate(data, {
       onSuccess: () => {
         closeModal();
@@ -110,6 +120,11 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
 
   return (
     <Modal className="create-section-modal" closeModal={closeModal}>
+      {alertMessage && (
+  <div className="alert">
+    {alertMessage}
+  </div>
+)}
       <form id="create-section-form" className="csm-form">
         <div id="create-section-form-contents">
           <div id="non-spacetime-fields">
@@ -219,7 +234,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
         <button className="secondary-btn" id="add-occurence-btn" onClick={appendSpacetime}>
           Add another occurence
         </button>
-        <button className="primary-btn" onClick={handleSubmit}>
+        <button className="primary-btn" onClick={handleSubmit} disabled={hasEmptyLocation()}>
           Submit
         </button>
       </div>
