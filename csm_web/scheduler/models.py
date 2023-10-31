@@ -528,14 +528,14 @@ class Override(ValidatingModel):
     spacetime = models.OneToOneField(
         Spacetime, on_delete=models.CASCADE, related_name="+"
     )
-    overriden_spacetime = models.OneToOneField(
+    overridden_spacetime = models.OneToOneField(
         Spacetime, related_name="_override", on_delete=models.CASCADE
     )
     date = models.DateField()
 
     def clean(self):
         super().clean()
-        if self.spacetime == self.overriden_spacetime:
+        if self.spacetime == self.overridden_spacetime:
             raise ValidationError("A spacetime cannot override itself")
         if self.spacetime.day_of_week != self.date.strftime("%A"):
             raise ValidationError(
@@ -548,7 +548,7 @@ class Override(ValidatingModel):
         return self.date < now.date()
 
     def __str__(self):
-        return f"Override for {self.overriden_spacetime.section} : {self.spacetime}"
+        return f"Override for {self.overridden_spacetime.section} : {self.spacetime}"
 
 
 class Matcher(ValidatingModel):

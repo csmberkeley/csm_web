@@ -33,7 +33,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AlterField(
             model_name='override',
-            name='overriden_spacetime',
+            name='overridden_spacetime',
             field=models.OneToOneField(on_delete=django.db.models.deletion.CASCADE,
                                        related_name='_override', to='scheduler.Spacetime'),
         ),

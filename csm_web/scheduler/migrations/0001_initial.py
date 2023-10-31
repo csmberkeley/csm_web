@@ -291,7 +291,7 @@ class Migration(migrations.Migration):
                 ),
                 ("date", models.DateField()),
                 (
-                    "overriden_spacetime",
+                    "overridden_spacetime",
                     models.OneToOneField(
                         on_delete=django.db.models.deletion.CASCADE,
                         to="scheduler.Spacetime",

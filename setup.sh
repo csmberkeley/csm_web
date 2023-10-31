@@ -20,10 +20,6 @@ elif ! ( command -v poetry ) > /dev/null
 then
     echo 'You must have poetry installed before running this script! (See https://python-poetry.org/docs/#installation)' 1>&2
     exit 1
-elif ! ( command -v psql ) > /dev/null
-then
-    echo 'You must have postgres installed before running this script! (See https://www.postgresql.org/download)' 1>&2
-    exit 1
 elif ! (command -v docker) > /dev/null
 then
     echo 'You must have docker installed before running this script! (See https://www.docker.com)' 1>&2
