@@ -22,8 +22,7 @@ then
     exit 1
 elif ! ( command -v psql ) > /dev/null
 then
-    echo 'You must have postgres installed before running this script! (See https://www.postgresql.org/download)' 1>&2
-    exit 1
+    echo 'You do not have PostgreSQL installed; this is okay, but you will be required to use Docker for any interactions with the database. (See https://www.postgresql.org/download for installation instructions.)' 1>&2
 elif ! (command -v docker) > /dev/null
 then
     echo 'You must have docker installed before running this script! (See https://www.docker.com)' 1>&2
@@ -49,8 +48,10 @@ sleep 1 # Give user time to read above message
 
 # Node and Python requirements
 npm ci
+# Before using Poetry, make sure poetry-plugin-export is added to poetry
+poetry self add poetry-plugin-export
 # The LDFLAGS are specified so that heroku's implicit psycopg2 (*not* binary) dependency will build successfully on macOS
-LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib" poetry install --no-root --with=dev
+LDFLAGS="-I/usr/local/opt/openssl/include -L/usr/local/opt/openssl/lib" poetry install --no-root
 # Activate virtual environment (only local to this script)
 source $(poetry env info --path)/bin/activate
 
