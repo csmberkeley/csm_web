@@ -60,6 +60,7 @@ class User(AbstractUser):
         is_associated = (
             self.student_set.filter(active=True, section__mentor__course=course).count()
             or self.mentor_set.filter(section__mentor__course=course).count()
+            or self.id not in course.coordinator_set.values_list("user", flat=True)
         )
         if bypass_enrollment_time:
             return not is_associated

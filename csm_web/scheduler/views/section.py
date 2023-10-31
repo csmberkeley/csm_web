@@ -374,42 +374,43 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 )
             if student_queryset.count() == 0:
-                # check if the user can actually enroll in the section
-                student_user, _ = User.objects.get_or_create(
-                    username=email.split("@")[0], email=email
-                )
-                if (
-                    student_user.id not in course_coords
-                    and student_user.can_enroll_in_course(
-                        section.mentor.course, bypass_enrollment_time=True
-                    )
-                ):
-                    # student does not exist yet; we can always create it
-                    db_actions.append(("create", email))
-                    curstatus["status"] = Status.OK
-                else:
-                    # user can't enroll; give details on the reason why
-                    curstatus["status"] = Status.CONFLICT
-                    if not student_user.is_whitelisted_for(section.mentor.course):
-                        if (
-                            email_obj.get("restricted_action")
-                            == RestrictedAction.WHITELIST
-                        ):
-                            db_actions.append(("create", email))
-                            curstatus["status"] = Status.OK
-                        else:
-                            any_invalid = True
-                            curstatus["status"] = Status.RESTRICTED
+                # There are no students in the course with this email.
+                # Check if student exists.
+                try:
+                    student_user = User.objects.get(email=email)
+                    # Check if the student is associated with the course.
+                    if student_user.id in course_coords:
+                        curstatus["status"] = Status.CONFLICT
+                        curstatus["detail"] = {"reason": "coordinator"}
+                    elif student_user.mentor_set.filter(
+                        course=section.mentor.course
+                    ).exists():
+                        curstatus["status"] = Status.CONFLICT
+                        curstatus["detail"] = {"reason": "mentor"}
+                    # Check if the course is available.
+                    elif (
+                        not student_user.is_whitelisted_for(section.mentor.course)
+                        and not email_obj.get("restricted_action")
+                        == RestrictedAction.WHITELIST
+                    ):
+                        any_invalid = True
+                        curstatus["status"] = Status.RESTRICTED
+                    # Everything is okay: enroll student.
+                    else:
+                        db_actions.append(("enroll", student))
+                        curstatus["status"] = Status.OK
+                except User.DoesNotExist:
+                    # If the course is not restricted, or if they are allowed to whitelist, allow.
+                    if (
+                        not section.mentor.course.is_restricted
+                        or email_obj.get("restricted_action")
+                        == RestrictedAction.WHITELIST
+                    ):
+                        db_actions.append(("create", email))
+                        curstatus["status"] = Status.OK
                     else:
                         any_invalid = True
-                        reason = "other"
-                        if student_user.id in course_coords:
-                            reason = "coordinator"
-                        elif student_user.mentor_set.filter(
-                            course=section.mentor.course
-                        ).exists():
-                            reason = "mentor"
-                        curstatus["detail"] = {"reason": reason}
+                        curstatus["status"] = Status.RESTRICTED
             else:  # student_queryset.count() == 1
                 student = student_queryset.get()
 
