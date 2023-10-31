@@ -119,6 +119,45 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         serializer = self.serializer_class(section)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
+    def destroy(self, request, pk=None):
+        """
+        Handle request to delete section through the UI;
+        deletes mentor and spacetimes along with it
+        """
+        section = get_object_or_error(Course.objects.all(), pk=pk)
+        course = section.mentor.course
+        is_coordinator = course.coordinator_set.filter(user=request.user).exists()
+        if not is_coordinator:
+            logger.error(
+                (
+                    "<Spacetime Deletion:Failure> Could not delete spacetime, user %s"
+                    " does not have proper permissions"
+                ),
+                log_str(request.user),
+            )
+            raise PermissionDenied(
+                "You must be a coordinator to delete this spacetime!"
+            )
+        # If the course has students, we cannot delete the section
+        if section.students.count() > 0:
+            logger.error(
+                (
+                    "<Section Deletion:Failure> Could not delete section %s, it has"
+                    " students. Remove all students manually first."
+                ),
+                log_str(section),
+            )
+            return PermissionDenied("Cannot delete section with students")
+        # Delete all spacetimes in the section
+        with transaction.atomic():
+            for spacetime in section.spacetimes.all():
+                spacetime.delete()
+            # Delete the mentor
+            section.mentor.delete()
+
+            section.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
     def partial_update(self, request, pk=None):
         """Update section metadata (capacity and description)"""
         section = get_object_or_error(self.get_queryset(), pk=pk)

@@ -1,6 +1,7 @@
 import React, { useState } from "react";
-import { useSectionStudents } from "../../utils/queries/sections";
-import { Mentor, Spacetime, Student } from "../../utils/types";
+import { Navigate, Route, Routes } from "react-router-dom";
+import { useSectionStudents, useDropSectionMutation } from "../../utils/queries/sections";
+import { Mentor, Spacetime, Student, Course } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import MetaEditModal from "./MetaEditModal";
@@ -8,6 +9,21 @@ import { InfoCard, SectionSpacetime } from "./Section";
 import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
+import { fetchWithMethod, HTTP_METHODS } from "../../utils/api";
+
+import { useProfiles, useUserInfo } from "../../utils/queries/base";
+import { useCourses } from "../../utils/queries/courses";
+
+import Modal from "../Modal";
+
+import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
+import {
+  handleError,
+  handlePermissionsError,
+  handleRetry,
+  PermissionError,
+  ServerError
+} from "./../../utils/queries/helpers";
 
 // Images
 import XIcon from "../../../static/frontend/img/x.svg";
@@ -15,6 +31,7 @@ import PencilIcon from "../../../static/frontend/img/pencil.svg";
 
 // Styles
 import "../../css/coordinator-add-student.scss";
+import { NavLink } from "react-router-dom";
 
 enum ModalStates {
   NONE = "NONE",
@@ -43,6 +60,8 @@ export default function MentorSectionInfo({
   courseRestricted
 }: MentorSectionInfoProps) {
   const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(sectionId);
+
+  const { data: courses, isSuccess: coursesLoaded, isError: coursesLoadError } = useCourses();
 
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
@@ -232,6 +251,57 @@ export default function MentorSectionInfo({
           </InfoCard>
         </div>
       </div>
+      <DropSection sectionId={sectionId} />
     </React.Fragment>
   );
+}
+
+interface DropSectionProps {
+  sectionId: number;
+}
+
+enum DropSectionStage {
+  INITIAL = "INITIAL",
+  CONFIRM = "CONFIRM",
+  DROPPED = "DROPPED"
+}
+
+function DropSection({ sectionId }: DropSectionProps) {
+  const sectionDropMutation = useDropSectionMutation(sectionId);
+  const [stage, setStage] = useState<DropSectionStage>(DropSectionStage.INITIAL);
+
+  const performDrop = () => {
+    sectionDropMutation.mutate(undefined, {
+      onSuccess: () => {
+        setStage(DropSectionStage.DROPPED);
+      }
+    });
+  };
+
+  switch (stage) {
+    case DropSectionStage.INITIAL:
+      return (
+        <InfoCard title="Drop Section" showTitle={false}>
+          <h5>Delete Section</h5>
+          <button className="danger-btn" onClick={() => setStage(DropSectionStage.CONFIRM)}>
+            <XIcon className="icon" />
+            Delete
+          </button>
+        </InfoCard>
+      );
+    case DropSectionStage.CONFIRM:
+      return (
+        <Modal closeModal={() => setStage(DropSectionStage.INITIAL)}>
+          <div className="drop-confirmation">
+            <h5>Are you sure you want to delete?</h5>
+
+            <button className="danger-btn" onClick={performDrop}>
+              Confirm
+            </button>
+          </div>
+        </Modal>
+      );
+    case DropSectionStage.DROPPED:
+      return <Navigate to="/" />;
+  }
 }
