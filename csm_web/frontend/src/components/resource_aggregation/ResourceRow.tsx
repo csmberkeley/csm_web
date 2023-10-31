@@ -94,7 +94,7 @@ export const ResourceRow = ({
   }
 
   return (
-    <div className="resourceRow">
+    <div className="resource-row">
       {!addingResource && (
         <ResourceRowRender
           resource={resource}

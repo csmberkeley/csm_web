@@ -4,14 +4,13 @@
 @use "base/variables" as *;
 
 .override-label {
-  background-color: #ffd874;
-  color: white;
-  font-size: 15px;
   width: fit-content;
-  width: -moz-fit-content;
   padding: 3px 5px;
-  border-radius: 4px;
   margin: 10px 0;
+  font-size: 15px;
+  color: white;
+  background-color: #ffd874;
+  border-radius: 4px;
 }
 
 .section-detail-info-card-contents {
@@ -22,8 +21,8 @@
 .section-detail-info-card-contents,
 #mentor-attendance {
   border: 2px solid #e7e7e7;
-  box-shadow: 0px 4px 4px rgba(198, 198, 198, 0.25);
   border-radius: 20px;
+  box-shadow: 0 4px 4px rgb(198 198 198 / 25%);
 }
 
 /// only add padding if specified,
@@ -34,14 +33,14 @@
 }
 
 .section-detail-info-card-contents h5 {
+  margin: 0 auto 0.5em;
   font-size: 25px;
   color: #727070;
-  margin: 0 auto 0.5em auto;
 }
 
 .section-detail-info-card-contents .location-link {
+  margin: 0 auto 0.5em;
   font-size: 25px;
-  margin: 0 auto 0.5em auto;
 }
 
 .section-detail-info-card-contents.mentor {
@@ -54,16 +53,14 @@
 
 #section-detail-sidebar {
   display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
+  flex-flow: column wrap;
   width: fit-content;
-  width: -moz-fit-content;
 }
 
 #section-detail-sidebar a {
+  margin: 0 100px 20px 0;
   font-size: 18px;
   color: #4b4b4b;
-  margin: 0 100px 20px 0;
   text-decoration: none;
 }
 
@@ -79,27 +76,26 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-
   text-align: center;
 }
 
 .drop-confirmation h5 {
+  margin: 0 auto 0.5rem;
   font-size: 25px;
   color: #727070;
-  margin: 0 auto 0.5rem;
 }
 
 .drop-confirmation p {
+  margin-top: 0;
   font-size: 14px;
   color: #bfbfbf;
-  margin-top: 0;
 }
 
 #section-detail-body {
   display: flex;
 }
 
-@media screen and (max-width: 1100px) {
+@media screen and (width <= 1100px) {
   /* only wrap for medium/small screens */
   #section-detail-body {
     flex-wrap: wrap;
@@ -107,57 +103,56 @@
 }
 
 #students-table .inline-plus-sign {
+  position: relative;
   display: inline-block;
   color: $csm-danger;
   cursor: pointer;
-  position: relative;
 }
 
 #students-table .csm-table-item {
-  padding: 20px 30px;
-
   display: flex;
   flex-direction: row;
+  gap: $button-icon-gap;
   align-items: center;
   justify-content: flex-start;
-  gap: $button-icon-gap;
+  padding: 20px 30px;
 }
 
 .should-ban-prompt {
-  font-size: 0.8em;
-  width: 10em;
-  text-align: center;
-  box-shadow: 0px 2px 10px 0px rgba(0, 0, 0, 0.15);
-  background-color: white;
-  padding: 10px;
   position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
   bottom: 2rem;
+  left: 50%;
+  width: 10em;
+  padding: 10px;
+  font-size: 0.8em;
+  text-align: center;
+  background-color: white;
   border-radius: 8px;
+  box-shadow: 0 2px 10px 0 rgb(0 0 0 / 15%);
+  transform: translateX(-50%);
 }
 
 .should-ban-prompt::before {
-  content: "";
+  position: absolute;
+  right: 0;
+  bottom: calc(-1 * $arrow-size);
+  left: 0;
   display: block;
   width: 0;
   height: 0;
-  position: absolute;
-  border-left: $arrow-size solid transparent;
-  border-right: $arrow-size solid transparent;
-  border-top: $arrow-size solid white;
-  left: 0;
-  right: 0;
   margin: 0 auto;
-  bottom: calc(-1 * $arrow-size);
+  content: "";
+  border-top: $arrow-size solid white;
+  border-right: $arrow-size solid transparent;
+  border-left: $arrow-size solid transparent;
 }
 
 .should-ban-prompt .ban-cancel {
   position: absolute !important;
   top: -5px;
   right: 3px;
-  color: #dedede !important;
   font-size: 1.5rem;
+  color: #dedede !important;
 }
 
 .should-ban-prompt .btn-group {
@@ -167,9 +162,9 @@
 }
 
 .should-ban-prompt .btn-group button {
+  cursor: pointer;
   border: unset;
   border-radius: 5px;
-  cursor: pointer;
 }
 
 .should-ban-prompt .btn-group button.yes {
@@ -188,29 +183,23 @@
   background-color: #aeaeae;
 }
 
-.newStudentErrorContainer {
-  display: flex;
-  flex-direction: column;
-  color: red;
-  font-size: 0.8rem;
-}
-
 #students-table .csm-form {
   display: flex;
   padding-left: 0;
 }
 
 #students-table .csm-form input[type="submit"] {
-  color: $csm-green;
-  transform: none;
-  margin: auto;
-  background-color: inherit;
-  padding: 0;
   position: relative;
-  bottom: 3px;
   top: unset;
+  bottom: 3px;
   display: inline-block;
+  padding: 0;
+  margin: auto;
+  color: $csm-green;
+  background-color: inherit;
+  transform: none;
 }
+
 #students-table .csm-form input[type="submit"]:hover {
   color: $csm-green-darkened;
 }
@@ -238,10 +227,10 @@
 /* Section details */
 
 .section-detail-header .relation-label {
-  border-radius: 4px;
   padding: 5px 14px;
-  font-size: 14px;
   margin-bottom: 40px;
+  font-size: 14px;
+  border-radius: 4px;
 }
 
 .section-detail-header-title {
@@ -251,23 +240,24 @@
 }
 
 .section-detail-header-title > h3 {
-  font-size: 30px;
   margin: 0 20px 0 0;
+  font-size: 30px;
   line-height: 30px;
 }
 
 .section-detail-header-title > h4 {
-  color: #bfbfbf;
+  margin: 0;
   font-size: 25px;
   font-weight: normal;
-  margin: 0;
+  color: #bfbfbf;
 }
 
 .section-detail-page-title {
+  margin: 0 0 45px;
+
   // color: #646464;
   font-size: 30px;
   font-weight: bold;
-  margin: 0 0 45px;
 }
 
 .section-info-cards-container {
@@ -276,8 +266,8 @@
 }
 
 .section-info-cards-right {
-  flex: 1;
   display: flex;
+  flex: 1;
   flex-wrap: wrap;
 }
 
@@ -305,8 +295,8 @@
 // }
 
 .section-detail-info-card.drop-section {
-  flex-basis: 100%;
   display: flex;
+  flex-basis: 100%;
   text-align: center;
 }
 
@@ -319,38 +309,40 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-
   border-color: #ffadad;
 }
 
 %info-card-action {
   font-size: 14px;
+
   // position: absolute;
 }
 
 .info-card-actions {
-  margin: -30px -30px 10px -30px;
-
   display: flex;
   flex-direction: row;
   align-items: center;
   justify-content: space-between;
+  margin: -30px -30px 10px;
 }
 
 .info-card-edit-btn {
   @extend %info-card-action;
+
   top: 10px;
   right: 10px;
 }
 
 .override-info-card-edit-btn {
   @extend %info-card-action;
+
   top: 170px;
   right: 10px;
 }
 
 .delete-spacetime-btn {
   @extend %info-card-action;
+
   top: 10px;
   left: 10px;
 }
@@ -375,8 +367,8 @@
 
 .mentor-attendance-page {
   display: flex;
-  align-items: center;
   flex-wrap: wrap;
+  align-items: center;
 }
 
 #mentor-attendance {
@@ -395,14 +387,15 @@
 }
 
 #attendance-date-tabs-container > div {
+  padding: 15px 30px;
+  font-size: 15px;
+  color: #5e5e5e;
+  cursor: pointer;
   background-color: #f0f0f0;
   border: 1px solid #e9e9e9;
-  border-radius: 10px 10px 0px 0px;
-  padding: 15px 30px;
-  color: #5e5e5e;
-  font-size: 15px;
-  cursor: pointer;
+  border-radius: 10px 10px 0 0;
 }
+
 #attendance-date-tabs-container > div:hover {
   background-color: #dedede;
 }
@@ -417,12 +410,12 @@
 }
 
 #mentor-attendance-controls {
-  margin-top: 25px;
-  max-width: 780px;
   display: flex;
   flex-direction: row;
-  justify-content: flex-end;
   gap: 15px;
+  justify-content: flex-end;
+  max-width: 780px;
+  margin-top: 25px;
 }
 
 .mentor-attendance-input {
@@ -431,9 +424,9 @@
 
 /// student attendance table status
 .attendance-status {
-  text-align: center;
-  color: white;
-  padding: 5px 10px;
   width: 200px;
+  padding: 5px 10px;
+  color: white;
+  text-align: center;
   border-radius: 6px;
 }

@@ -1,7 +1,7 @@
 import { Time } from "../EnrollmentAutomationTypes";
 
 export const DAYS: readonly string[] = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
-export const DAYS_ABBREV: Record<typeof DAYS[number], string> = {
+export const DAYS_ABBREV: Record<(typeof DAYS)[number], string> = {
   Monday: "Mon",
   Tuesday: "Tue",
   Wednesday: "Wed",

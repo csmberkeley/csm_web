@@ -6,11 +6,11 @@
   position: relative;
   width: 320px;
   min-width: 320px;
-  border-radius: 16px;
-  box-shadow: 0px 5px 50px rgba(0, 0, 0, 0.15);
   min-height: 180px;
   border-top: 30px solid;
   border-top-color: $csm-theme-default;
+  border-radius: 16px;
+  box-shadow: 0 5px 50px rgb(0 0 0 / 15%);
 }
 
 .course-card-link {
@@ -19,21 +19,20 @@
   cursor: pointer;
 }
 
-.course-card-link:hover > .course-card {
-  background-color: $csm-link-hover;
-}
-
 .course-cards-container > .course-card,
 .course-card-link {
   margin: 0 75px 50px 0;
 }
 
+.course-card-link:hover > .course-card {
+  background-color: $csm-link-hover;
+}
+
 .course-card-contents {
-  padding: 30px;
-  min-height: 120px;
   display: flex;
-  flex-wrap: wrap;
-  flex-direction: column;
+  flex-flow: column wrap;
+  min-height: 120px;
+  padding: 30px;
 }
 
 .course-card-contents > *:nth-last-child(2) {
@@ -50,8 +49,8 @@
 /* Format course card section time lists */
 .course-card-section-time:not(:last-of-type)::after {
   display: block;
-  content: "&";
   font-size: 1.2em;
+  content: "&";
 }
 
 .course-card-title {
@@ -68,20 +67,20 @@
 
 #home-courses-heading {
   display: flex;
-  align-items: center;
-  width: 50%;
-  justify-content: space-between;
   flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  width: 50%;
   max-width: 300px;
   margin-bottom: 40px;
 }
 
 .section-link {
+  padding: 10px;
+  font-size: 14px;
   color: unset;
   text-decoration: none;
   cursor: pointer;
-  padding: 10px;
-  font-size: 14px;
   border-radius: 9px;
 }
 

@@ -1,0 +1,6 @@
+{
+  "extends": ["stylelint-config-standard-scss", "stylelint-config-recess-order", "stylelint-config-css-modules"],
+  "rules": {
+    "declaration-empty-line-before": null
+  }
+}

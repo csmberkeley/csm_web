@@ -45,8 +45,8 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
   return (
     <React.Fragment>
       {deletionStage === 1 && (
-        <Modal className="resourceDeleteConfirmation" closeModal={() => setDeletionStage(0)}>
-          <div className="resourceDeleteText">
+        <Modal className="resource-delete-confirmation" closeModal={() => setDeletionStage(0)}>
+          <div className="resource-delete-text">
             <h2>Are you sure you want to delete this resource?</h2>
             <p>This action is irreversible!</p>
             <button className="danger-btn" onClick={() => handleDelete()}>
@@ -55,27 +55,27 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
           </div>
         </Modal>
       )}
-      <div className="resourceContainer">
-        <div className="resourceInfo weekNum">
+      <div className="resource-container">
+        <div className="resource-info week-num">
           <div>Week {resource.weekNum}</div>
         </div>
-        <div className="resourceInfo dateCell">
+        <div className="resource-info date-cell">
           <div>{formatDate(DateTime.fromISO(resource.date, { zone: DEFAULT_TIMEZONE }))}</div>
         </div>
-        <div className="resourceInfo resourceTopics">
+        <div className="resource-info resource-topics">
           <ResourceTopics topics={resource.topics} />
         </div>
-        <div className="resourceWkstFilesContainer">
+        <div className="resource-worksheet-files-container">
           {resource.worksheets &&
             resource.worksheets.map(worksheet => (
-              <div key={worksheet.id} className="resourceWkst">
-                <div className="resourceWkstFile">
+              <div key={worksheet.id} className="resource-worksheet">
+                <div className="resource-worksheet-file">
                   <a href={worksheet.worksheetFile as string} target="_blank" rel="noreferrer">
                     {worksheet.name}
                   </a>
                 </div>
                 {worksheet.solutionFile && (
-                  <div className="resourceSoln">
+                  <div className="resource-solution">
                     <a href={worksheet.solutionFile as string} target="_blank" rel="noreferrer">
                       Solutions
                     </a>
@@ -84,11 +84,11 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
               </div>
             ))}
         </div>
-        <div className="resourceLinksContainer">
+        <div className="resource-links-container">
           {resource.links &&
             resource.links.map(link => (
-              <div key={link.id} className="resourceLink">
-                <div className="resourceLink">
+              <div key={link.id} className="resource-link">
+                <div className="resource-link">
                   <a href={link.url} target="_blank" rel="noreferrer">
                     {link.name}
                   </a>
@@ -97,12 +97,12 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
             ))}
         </div>
         {canEdit && (
-          <div className="resourceButtonsContainer">
-            <button onClick={onSetEdit} className="resourceButton">
-              <Pencil className="icon" id="editIcon" />
+          <div className="resource-buttons-container">
+            <button onClick={onSetEdit} className="resource-button">
+              <Pencil className="icon" id="edit-icon" />
             </button>
-            <button onClick={() => setDeletionStage(1)} className="resourceButton">
-              <Trash className="icon" id="deleteIcon" />
+            <button onClick={() => setDeletionStage(1)} className="resource-button">
+              <Trash className="icon" id="delete-icon" />
             </button>
           </div>
         )}

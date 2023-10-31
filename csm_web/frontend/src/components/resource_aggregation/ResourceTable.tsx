@@ -250,29 +250,29 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
   }
 
   return (
-    <div className="resourceWrapperContainer">
+    <div className="resource-wrapper-container">
       {canEdit && (
-        <div className="resourceTableOptions">
-          <button onClick={handleSetAddingResource} className="primary-outline-btn" id="addResourceButton">
+        <div className="resource-table-options">
+          <button onClick={handleSetAddingResource} className="primary-outline-btn" id="add-resource-button">
             <PlusIcon className="icon" />
             <div>Add Resource</div>
           </button>
-          <div className="toggleViewEditContainer">
-            <label htmlFor="toggleViewEditInput" className="primary-outline-btn">
-              <input type="checkbox" checked={viewEdit} id="toggleViewEditInput" onChange={handleToggleViewEdit} />
+          <div className="toggle-view-edit-container">
+            <label htmlFor="toggle-view-edit-input" className="primary-outline-btn">
+              <input type="checkbox" checked={viewEdit} id="toggle-view-edit-input" onChange={handleToggleViewEdit} />
               Toggle Edit
             </label>
           </div>
         </div>
       )}
-      <div className="resourceTableContainer">
-        <div className="resourceTable">
-          <div className="resourceWrapperHeader">
-            <div className="weekNum">Week</div>
-            <div className="dateCell">Date</div>
-            <div className="resourceTopics">Topics</div>
-            <div className="resourceWkst">Worksheets</div>
-            <div className="resourceLinks">Links</div>
+      <div className="resource-table-container">
+        <div className="resource-table">
+          <div className="resource-wrapper-header">
+            <div className="week-num">Week</div>
+            <div className="date-cell">Date</div>
+            <div className="resource-topics">Topics</div>
+            <div className="resource-worksheet">Worksheets</div>
+            <div className="resource-links">Links</div>
           </div>
           {addingResource && (
             <ResourceRow

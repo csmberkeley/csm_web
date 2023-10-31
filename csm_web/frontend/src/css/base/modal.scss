@@ -1,6 +1,5 @@
 /* Modal styling */
 @use "sass:math" as math;
-
 @use "variables" as *;
 @use "button";
 
@@ -9,11 +8,13 @@
   position: fixed;
   top: 0;
   left: 0;
-  width: 100%;
-  height: 100%;
-  max-width: unset !important;
   z-index: 999;
-  background: rgba(0, 0, 0, 0.6);
+
+  width: 100%;
+  max-width: unset !important;
+  height: 100%;
+
+  background: rgb(0 0 0 / 60%);
 }
 
 /// Modal container; controls the positioning within the screen.
@@ -21,14 +22,16 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%);
-  max-width: 90vw;
-  max-height: 90vh;
-  width: max-content;
-  height: max-content;
   z-index: 1000;
+
+  width: max-content;
+  max-width: 90vw;
+  height: max-content;
+  max-height: 90vh;
+
   background-color: white;
   border-radius: 20px;
+  transform: translate(-50%, -50%);
 }
 
 /// Contents of the modal; all children are put into this container.
@@ -40,27 +43,30 @@
 /// Top bar in the modal that contains the close button.
 .modal-close-container {
   position: sticky;
+
   display: flex;
   align-items: flex-end;
   justify-content: flex-end;
-  margin-right: 1em;
 
   height: $modal-close-height;
+  margin-right: 1em;
 }
 
 .modal-close-x {
-  border: none;
-  outline: none;
-  cursor: pointer;
-  user-select: none;
-  background-color: inherit;
-  color: black;
-  padding: 0;
-
   // center the x icon vertically and horizontally
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 0;
+
+  color: black;
+  cursor: pointer;
+
+  user-select: none;
+
+  background-color: inherit;
+  border: none;
+  outline: none;
 
   &:hover {
     color: gray;

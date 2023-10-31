@@ -34,15 +34,15 @@ export default function SpacetimeDeleteModal({
 
   return (
     <Modal closeModal={closeModal}>
-      <div className="deleteSpacetime">
+      <div className="delete-spacetime">
         <h2>Delete {overrideDelete ? "Override" : "Spacetime"}</h2>
         <div>
           <input type="checkbox" id="drop" name="drop" onChange={e => setDrop(e.target.checked)} />
-          <label className="spacetimeCheckboxLabel" htmlFor="drop">
+          <label className="spacetime-checkbox-label" htmlFor="drop">
             I understand this {overrideDelete ? "override" : "spacetime"} will be permenantly deleted.
           </label>
         </div>
-        <div className="spacetimeDeleteDropper">
+        <div className="spacetime-delete-dropper">
           <button className="danger-btn" disabled={!drop} onClick={handleClickDrop}>
             Submit
           </button>
