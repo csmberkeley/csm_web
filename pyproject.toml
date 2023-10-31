@@ -17,7 +17,6 @@ boto3 = "^1.26.39"
 django = "^4.1.4"
 django-csp = "^3.7"
 django-extensions = "^3.2.1"
-django-heroku = "^0.3.1"
 django-postgres-extra = "^2.0.6"
 django-storages = "^1.13.2"
 djangorestframework = "^3.14.0"
@@ -35,6 +34,10 @@ freezegun = "^1.2.2"
 # console
 ipython = "^8.7.0"
 
+# prod dependencies that are still imported
+sentry-sdk = "^1.12.1"
+social-auth-app-django = "^5.0.0"
+
 [tool.poetry.group.dev.dependencies]
 # formatting/linting
 black = "^22.12.0"
@@ -43,13 +46,16 @@ pre-commit = "^2.21.0"
 pylint = "^2.15.9"
 pylint-django = "^2.5.3"
 
+[tool.poetry.group.prod]
+# mark prod as optional; these are not needed during development
+optional = true
+
 [tool.poetry.group.prod.dependencies]
 # django
+django-heroku = "^0.3.1"
 psycopg2-binary = "^2.9.5"
-social-auth-app-django = "^5.0.0"
 # heroku
 gunicorn = "^20.1.0"
-sentry-sdk = "^1.12.1"
 
 ### tools ###
 
