@@ -52,7 +52,7 @@ export const useUserInfoUpdateMutation = (userId: number): UseMutationResult<voi
       if (isNaN(userId)) {
         throw new PermissionError("Invalid user id");
       }
-      const response = await fetchWithMethod(`/user/${userId}/profile`, HTTP_METHODS.PATCH, body);
+      const response = await fetchWithMethod(`/user/${userId}/profile`, HTTP_METHODS.PUT, body);
       if (response.ok) {
         return;
       } else {
