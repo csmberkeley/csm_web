@@ -2,14 +2,21 @@ import React, { useState } from "react";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 import { useUserInfo } from "../../utils/queries/base";
+import { UseUserInfoWithId } from "../../utils/queries/profiles";
 import { UserInfo } from "../../utils/types";
+import { useSectionStudents } from "../../utils/queries/sections";
 
 interface ProfileModalProps {
+  id: number;
   closeModal: () => void;
 }
 
-const ProfileModal = ({ closeModal }: ProfileModalProps): React.ReactElement => {
-  const { data: jsonUserInfo, isSuccess: userInfoLoaded } = useUserInfo();
+const ProfileModal = ({ id, closeModal }: ProfileModalProps): React.ReactElement => {
+  // const { data: jsonUserInfo, isSuccess: userInfoLoaded } = UseUserInfoWithId(id);
+  const { data: jsonUserInfo, isSuccess: userInfoLoaded } = useSectionStudents(id);
+  console.log(id);
+  console.log();
+  console.log(jsonUserInfo);
 
   let userInfo: UserInfo | null;
   if (userInfoLoaded) {

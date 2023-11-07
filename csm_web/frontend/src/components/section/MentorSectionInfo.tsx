@@ -109,7 +109,9 @@ export default function MentorSectionInfo({
                           >
                             <EyeIcon className="icon" /> View
                           </button>
-                          {showModal === ModalStates.SPACETIME_EDIT && <ProfileModal closeModal={closeModal} />}
+                          {showModal === ModalStates.SPACETIME_EDIT && (
+                            <ProfileModal id={studentId} closeModal={closeModal} />
+                          )}
                         </td>
                       </tr>
                     )

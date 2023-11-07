@@ -6,6 +6,7 @@ import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResul
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
 import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
 import { DateTime } from "luxon";
+import { RawUserInfo } from "../types";
 
 /* ===== Mutation ===== */
 /**
@@ -22,6 +23,28 @@ export interface UpdateUserInfo {
   pronouns: string;
 }
 
+/**
+ * Hook to get the user's info.
+ */
+export const useStudentsInfo = (): UseQueryResult<RawUserInfo, Error> => {
+  const queryResult = useQuery<RawUserInfo, Error>(
+    ["students"],
+    async () => {
+      const response = await fetchNormalized("/students");
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError("Failed to fetch user info");
+      }
+    },
+    { retry: handleRetry }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+
 export const useUserInfoUpdateMutation = (userId: number): UseMutationResult<void, ServerError, UpdateUserInfo> => {
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, Error, UpdateUserInfo>(
@@ -29,12 +52,12 @@ export const useUserInfoUpdateMutation = (userId: number): UseMutationResult<voi
       if (isNaN(userId)) {
         throw new PermissionError("Invalid user id");
       }
-      const response = await fetchWithMethod(`/users/${userId}/`, HTTP_METHODS.PATCH, body);
+      const response = await fetchWithMethod(`/user/${userId}/profile`, HTTP_METHODS.PATCH, body);
       if (response.ok) {
         return;
       } else {
         handlePermissionsError(response.status);
-        throw new ServerError(`Failed to create section`);
+        throw new ServerError(`Failed to update user info`);
       }
     },
     {
@@ -48,4 +71,26 @@ export const useUserInfoUpdateMutation = (userId: number): UseMutationResult<voi
 
   handleError(mutationResult);
   return mutationResult;
+};
+
+/**
+ * Hook to get a section with a given id.
+ */
+export const UseUserInfoWithId = (id: number): UseQueryResult<RawUserInfo, Error> => {
+  const queryResult = useQuery<RawUserInfo, Error>(
+    ["userinfo", id],
+    async () => {
+      const response = await fetchNormalized("/userinfo");
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError("Failed to fetch user info");
+      }
+    },
+    { retry: handleRetry }
+  );
+
+  handleError(queryResult);
+  return queryResult;
 };
