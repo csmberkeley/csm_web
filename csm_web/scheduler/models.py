@@ -59,9 +59,9 @@ class User(AbstractUser):
 
     pronouns = models.CharField(choices=Pronouns.choices, blank=True)
     is_private = models.BooleanField(default=False)
-    pronunciation = models.CharField(max_length=20)
+    pronunciation = models.CharField(max_length=20, default="")
 
-    bio = models.CharField(max_length=300)
+    bio = models.CharField(max_length=300, default="Default bio given to everyone~")
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         """Determine whether this user is allowed to enroll in the given course."""
@@ -272,19 +272,15 @@ class Student(Profile):
             ):
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
                     logger.info(
-                        (
-                            "<SectionOccurrence> SO automatically created for student"
-                            " %s in course %s for date %s"
-                        ),
+                        "<SectionOccurrence> SO automatically created for student"
+                        " %s in course %s for date %s",
                         self.user.email,
                         course.name,
                         now.date(),
                     )
                     logger.info(
-                        (
-                            "<Attendance> Attendance automatically created for student"
-                            " %s in course %s for date %s"
-                        ),
+                        "<Attendance> Attendance automatically created for student"
+                        " %s in course %s for date %s",
                         self.user.email,
                         course.name,
                         now.date(),
