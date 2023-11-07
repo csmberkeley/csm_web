@@ -2,13 +2,5 @@
   "endOfLine": "lf",
   "printWidth": 120,
   "arrowParens": "avoid",
-  "trailingComma": "none",
-  "overrides": [
-    {
-      "files": "*.css",
-      "options": {
-        "useTabs": true
-      }
-    }
-  ]
+  "trailingComma": "none"
 }
