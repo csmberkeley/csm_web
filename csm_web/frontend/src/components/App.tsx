@@ -14,6 +14,7 @@ import Section from "./section/Section";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
 import Pumpkin from "../../static/frontend/img/pumpkin.svg";
+import Turkey from "../../static/frontend/img/yummy-turkey-dinner.svg"; 
 
 // Styles
 import "../css/header.scss";
@@ -127,12 +128,14 @@ function Header(): React.ReactElement {
           <h3 className="site-title">
             Scheduler
             <Pumpkin />
+            <Turkey className="turkey"/>
           </h3>
         </NavLink>
         <NavLink to="/resources" className={navlinkClass}>
           <h3 className="site-title">
             Resources
             <Pumpkin />
+            <Turkey className="turkey"/>
           </h3>
         </NavLink>
         {activeMatcherRoles["COORDINATOR"].size > 0 || activeMatcherRoles["MENTOR"].size > 0 ? (
@@ -140,6 +143,7 @@ function Header(): React.ReactElement {
             <h3 className="site-title">
               Matcher
               <Pumpkin />
+              <Turkey className="turkey"/>
             </h3>
           </NavLink>
         ) : null}
@@ -149,6 +153,7 @@ function Header(): React.ReactElement {
           <h3 className="site-subtitle">
             Policies
             <Pumpkin />
+            <Turkey className="turkey"/>
           </h3>
         </NavLink>
         <a id="logout-btn" href="/logout" title="Log out">
