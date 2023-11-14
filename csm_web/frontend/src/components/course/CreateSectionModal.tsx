@@ -91,11 +91,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
     return spacetimes.some(spacetime => !spacetime.location?.trim());
   };
 
-  
   const handleSubmit = (event: React.MouseEvent<HTMLButtonElement>): void => {
-
-    
-
     event.preventDefault();
     const data = {
       mentorEmail,
@@ -105,7 +101,6 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
       courseId
     };
 
-    
     createSectionMutation.mutate(data, {
       onSuccess: () => {
         closeModal();
