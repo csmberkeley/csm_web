@@ -46,8 +46,6 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
    */
   const [capacity, setCapacity] = useState<string>("");
 
-  const [alertMessage, setAlertMessage] = useState<string | null>(null)
-
   /**
    * Create a new empty spacetime for the new section.
    */
@@ -108,8 +106,6 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
     };
 
     
-
-    
     createSectionMutation.mutate(data, {
       onSuccess: () => {
         closeModal();
@@ -120,11 +116,6 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
 
   return (
     <Modal className="create-section-modal" closeModal={closeModal}>
-      {alertMessage && (
-  <div className="alert">
-    {alertMessage}
-  </div>
-)}
       <form id="create-section-form" className="csm-form">
         <div id="create-section-form-contents">
           <div id="non-spacetime-fields">
