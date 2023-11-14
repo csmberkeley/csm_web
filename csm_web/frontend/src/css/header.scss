@@ -4,12 +4,12 @@
 
 /// container separating left and right groups of header items
 header {
-  box-shadow: 0px 4px 4px rgba(188, 188, 188, 0.25);
-  padding: 30px 2rem;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin: 8px -8px 0 -8px;
+  padding: 30px 2rem;
+  margin: 8px -8px 0;
+  box-shadow: 0 4px 4px rgb(188 188 188 / 25%);
 }
 
 body {
@@ -20,14 +20,17 @@ body {
 /// individual groups of site title items
 .site-title-group {
   display: flex;
-  align-items: center;
   gap: 20px;
+<<<<<<< HEAD
   margin: 0;
 }
 
 .site-header {
   background-color: black;
   margin: 0;
+=======
+  align-items: center;
+>>>>>>> 60f719876a864e59c4892755095029e15fb2ac4b
 }
 
 #logo {
@@ -36,24 +39,24 @@ body {
 }
 
 .site-title {
-  font-weight: 600;
-  font-size: 23px;
-  line-height: 18px;
   margin-bottom: 0;
+  font-size: 23px;
+  font-weight: 600;
+  line-height: 18px;
   user-select: none;
 }
 
 .site-subtitle {
-  font-weight: 600;
-  font-size: 18px;
   margin-bottom: 0;
+  font-size: 18px;
+  font-weight: 600;
   user-select: none;
 }
 
 .site-title-link,
 .site-subtitle-link {
+  color: #bbb;
   text-decoration: none;
-  color: #bbbbbb;
 
   &.is-active {
     color: #808080;
@@ -61,10 +64,10 @@ body {
 }
 
 #user-profile-pic {
-  border: 2px solid #ffffff;
-  border-radius: 26px;
   box-sizing: border-box;
-  box-shadow: 0px 4px 4px rgba(136, 136, 136, 0.25);
+  border: 2px solid #fff;
+  border-radius: 26px;
+  box-shadow: 0 4px 4px rgb(136 136 136 / 25%);
 }
 
 #logout-btn {
@@ -72,8 +75,8 @@ body {
 }
 
 #logout-btn * {
-  fill: #808080;
   vertical-align: middle;
+  fill: #808080;
 }
 
 #logout-btn:hover * {
@@ -81,7 +84,7 @@ body {
 }
 
 /* smaller screens */
-@media screen and (max-width: 500px) {
+@media screen and (width <= 500px) {
   header {
     flex-direction: column;
     align-items: center;
@@ -101,22 +104,21 @@ body {
   }
 
   .site-subtitle-link {
-    margin: 0px auto 0px auto;
+    margin: 0 auto;
   }
 
   #logout-btn {
-    margin: 0px auto auto auto;
+    margin: 0 auto auto;
   }
 }
 
 .page-title {
-  font-style: normal;
-  font-weight: bold;
-  font-size: 24px;
-  color: #646464;
-
   // remove bottom margin; top margin removed by base style
   margin-bottom: 0;
+  font-size: 24px;
+  font-style: normal;
+  font-weight: bold;
+  color: #646464;
 }
 
 .center-title {

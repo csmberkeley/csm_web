@@ -6,37 +6,43 @@
 %button {
   display: flex;
   flex-direction: row;
+  gap: $button-icon-gap;
   align-items: center;
   justify-content: center;
-  gap: $button-icon-gap;
 
   padding: 8px 15px;
-  // rounded corners
-  border-radius: 10px;
-  // no border around button
-  border: none;
-  outline: none;
-  // default text
-  text-decoration: none;
+
   // need to respecify the font family on buttons
   font-family: $default-font;
-  // don't allow selecting text in buttons
-  user-select: none;
+
+  // default text
+  text-decoration: none;
+
   // set cursor
   cursor: pointer;
 
+  // don't allow selecting text in buttons
+  user-select: none;
+
+  // no border around button
+  border: none;
+
+  // rounded corners
+  border-radius: 10px;
+  outline: none;
+
   &:disabled,
   &:disabled:hover {
-    background-color: $csm-neutral;
     cursor: not-allowed;
+    background-color: $csm-neutral;
   }
 }
 
 .primary-btn {
   @extend %button;
+  color: white;
 
   background-color: $csm-green;
-  color: white;
 
   &:not(:disabled):hover {
     background-color: $csm-green-darkened;
@@ -45,9 +51,9 @@
 
 .secondary-btn {
   @extend %button;
+  color: white;
 
   background-color: $csm-neutral;
-  color: white;
 
   &:not(:disabled):hover {
     background-color: $csm-neutral-darkened;
@@ -56,9 +62,9 @@
 
 .danger-btn {
   @extend %button;
+  color: white;
 
   background-color: $csm-danger;
-  color: white;
 
   &:not(:disabled):hover {
     background-color: $csm-danger-darkened;
@@ -68,11 +74,11 @@
 .primary-link-btn {
   @extend %button;
 
-  background-color: inherit;
-  color: $csm-green;
-
   // bolder font
   font-weight: bold;
+  color: $csm-green;
+
+  background-color: inherit;
 
   &:not(:disabled):hover {
     color: $csm-green-darkened;
@@ -81,9 +87,9 @@
 
 .secondary-link-btn {
   @extend %button;
+  color: $csm-neutral;
 
   background-color: inherit;
-  color: $csm-neutral;
 
   &:not(:disabled):hover {
     color: $csm-neutral-darkened;
@@ -92,14 +98,15 @@
 
 .primary-outline-btn {
   @extend %button;
-
-  background-color: inherit;
   font-weight: bold;
   color: $csm-green;
+
+  background-color: inherit;
   border: 3px solid $csm-green;
 
   &:not(:disabled):hover {
     color: $csm-green-darkened;
+
     border-color: $csm-green-darkened;
   }
 }
@@ -108,10 +115,12 @@
   // flex box with centered content
   display: flex;
   flex-direction: row;
-  align-items: center;
-  justify-content: center;
+
   // small gap between tabs
   gap: 8px;
+  align-items: center;
+  justify-content: center;
+
   // extra margins on top and bottom
   margin-top: 12px;
   margin-bottom: 12px;
@@ -120,11 +129,12 @@
 .tab {
   @extend %button;
 
-  background-color: $csm-neutral;
-  color: white;
-
   // extra padding for tabs
   padding: 12px 15px;
+
+  color: white;
+
+  background-color: $csm-neutral;
 
   // active tab styling
   &.active {

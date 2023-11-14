@@ -4,13 +4,15 @@
 
 html,
 body {
-  height: 100%;
   width: 100%;
+  height: 100%;
+
   font-family: $default-font;
 }
 
 body {
   max-width: 100%;
+
   /* Usually set by browser stylesheet, but we standardize it here to account for different browsers */
   margin: 8px;
   overflow-x: hidden;
@@ -24,6 +26,7 @@ main {
 button {
   // use parent font instead of default button font
   font-family: inherit;
+
   // use parent font size instead of default button font size
   font-size: inherit;
 
@@ -45,32 +48,34 @@ h6 {
 
 /// Styling for inline + or x signs, mostly used for add or close buttons.
 .inline-plus-sign {
-  font-weight: 600;
   font-size: 1.5rem;
+  font-weight: 600;
   vertical-align: sub;
 }
 
 .icon {
   display: inline-block;
-  font-size: inherit;
   width: 1rem;
   height: 1rem;
-  overflow: visible;
   margin-top: -0.125em;
+  overflow: visible;
 
-  fill: currentColor;
-  stroke: currentColor;
+  font-size: inherit;
+
+  fill: currentcolor;
+  stroke: currentcolor;
 }
 
 /// Styling for relation label; used across multiple pages
 .relation-label {
-  text-transform: capitalize;
-  padding: 8px 16px;
-  color: white;
   min-width: 60px;
   max-width: fit-content;
-  max-width: -moz-fit-content;
-  text-align: center;
-  border-radius: 20px;
+  padding: 8px 16px;
   margin-top: auto;
+
+  color: white;
+  text-align: center;
+  text-transform: capitalize;
+
+  border-radius: 20px;
 }

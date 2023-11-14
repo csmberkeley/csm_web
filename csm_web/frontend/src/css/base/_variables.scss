@@ -12,26 +12,22 @@ $csm-theme-csm88: #e46495;
 $csm-theme-csm16a: #707eff;
 $csm-theme-csm16b: #ffe070;
 $csm-theme-default: black;
-
 $csm-mentor: $csm-green;
 $csm-coordinator: #6517b3;
 $csm-student: #ffab2e;
-
 $csm-danger: #ff7272;
 $csm-danger-darkened: #eb6060;
 $csm-neutral: #c0c0c0;
 $csm-neutral-darkened: #b6b6b6;
 $csm-resources: #ededed;
 $csm-link-blue: #039be5;
-$csm-link-hover: rgba(196, 196, 196, 0.28);
-
+$csm-link-hover: rgb(196 196 196 / 28%);
 $csm-attendance-present: $csm-green;
 $csm-attendance-excused: #797979;
 $csm-attendance-unexcused: $csm-danger;
 $csm-attendance-present-fg: black;
 $csm-attendance-excused-fg: white;
 $csm-attendance-unexcused-fg: black;
-
 $csm-content-title-color: #646464;
 
 /// calendar colors
@@ -39,10 +35,8 @@ $calendar-header-bg: #f5f5f5;
 $calendar-header-border: #e5e5e5;
 $calendar-border: #ddd;
 $calendar-fg: #333;
-
 $calendar-label-fg: #666;
 $calendar-day-bg: white;
-
 $calendar-dragging-event: #ffd6dd;
 $calendar-creating-event: lightpink;
 $calendar-hover-event: #d2ffd2;
@@ -60,6 +54,7 @@ $button-icon-gap: 4px;
 
 /// Height of the top close bar.
 $modal-close-height: 2em;
+
 /// Total padding in the modal contents.
 $modal-padding-y: 40px;
 

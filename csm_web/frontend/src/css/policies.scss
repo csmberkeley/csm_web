@@ -1,8 +1,8 @@
 @use "base/variables" as *;
 
 .policy-sections {
-  margin: auto;
   width: 60%;
+  margin: auto;
   font-size: 1.05em;
   line-height: 1.5em;
 }
@@ -12,8 +12,8 @@
 }
 
 .policy-sections h1 {
-  color: $csm-green;
   line-height: 125%;
+  color: $csm-green;
 }
 
 .policy-sections a {
@@ -23,8 +23,8 @@
 
 .policy-sections .divider {
   height: 1px;
-  background-color: #e0e0e0;
   padding: 0;
   margin-top: 1em;
   margin-bottom: 2em;
+  background-color: #e0e0e0;
 }
