@@ -46,7 +46,7 @@ class StudentViewSet(viewsets.GenericViewSet):
         student.save()
 
         logger.info(
-            "<Drop> User %s dropped SEction %s for Student user %s",
+            "<Drop> User %s dropped Section %s for Student user %s",
             request.user,
             student.section,
             student.user,
@@ -110,13 +110,13 @@ class StudentViewSet(viewsets.GenericViewSet):
         if serializer.is_valid():
             attendance = serializer.save()
             logger.info(
-                "<Attendance:Success> Attednace %s taken for User %s",
+                "<Attendance:Success> Attendance %s taken for User %s",
                 attendance,
                 request.user,
             )
             return Response(status=status.HTTP_204_NO_CONTENT)
         logger.error(
-            "<Attedance:FAILURE> Could not record attendance for User %s, errors %s",
+            "<Attendance:FAILURE> Could not record attendance for User %s, errors %s",
             request.user,
             serializer.errors,
         )
