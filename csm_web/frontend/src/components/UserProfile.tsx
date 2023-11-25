@@ -62,7 +62,7 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
   /**
    * User Bio
    */
-  const [userBio, setUserBio] = useState<string>("");
+  const [bio, setBio] = useState<string>("");
 
   const handleEditing = () => {
     setEditing(true);
@@ -82,7 +82,7 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
       userFirstName,
       userLastName,
       userEmail,
-      userBio,
+      bio,
       userPronoun
     };
 
@@ -111,7 +111,7 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
         setUserPronoun(value);
         break;
       case "bio":
-        setUserBio(value);
+        setBio(value);
         break;
       default:
         console.error("Unknown input name: " + name);
@@ -160,7 +160,7 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
                     id="email"
                     defaultValue={userInfo.email}
                     className="formbold-form-input"
-                    disabled={!editing}
+                    disabled={true}
                     onChange={e => handleChange("email", e.target.value)}
                   />
                   <label className="formbold-form-label"> Email </label>
@@ -172,6 +172,7 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
                     id="pronouns"
                     placeholder=""
                     className="formbold-form-input"
+                    defaultValue={userInfo.pronouns}
                     disabled={!editing}
                     onChange={e => handleChange("pronouns", e.target.value)}
                   />
@@ -186,6 +187,7 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
                   placeholder="Write your bio..."
                   className="formbold-form-input"
                   disabled={!editing}
+                  defaultValue={userInfo.bio}
                   onChange={e => handleChange("bio", e.target.value)}
                 ></textarea>
                 <label className="formbold-form-label"> Bio </label>
