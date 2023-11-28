@@ -13,7 +13,7 @@ import Section from "./section/Section";
 // Images
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
-import Turkey from "../../static/frontend/img/yummy-turkey-dinner.svg"; 
+import ChristmasTree from "../../static/frontend/img/christmas-tree.svg"; 
 
 // Styles
 import "../css/header.scss";
@@ -126,20 +126,20 @@ function Header(): React.ReactElement {
         <NavLink className={homeNavlinkClass} to="/">
           <h3 className="site-title">
             Scheduler
-            <Turkey className="turkey"/>
+            <ChristmasTree className="christmastree"/>
           </h3>
         </NavLink>
         <NavLink to="/resources" className={navlinkClass}>
           <h3 className="site-title">
             Resources
-            <Turkey className="turkey"/>
+            <ChristmasTree className="christmastree"/>
           </h3>
         </NavLink>
         {activeMatcherRoles["COORDINATOR"].size > 0 || activeMatcherRoles["MENTOR"].size > 0 ? (
           <NavLink to="/matcher" className={navlinkClass}>
             <h3 className="site-title">
               Matcher
-              <Turkey className="turkey"/>
+              <ChristmasTree className="christmastreey"/>
             </h3>
           </NavLink>
         ) : null}
@@ -148,7 +148,7 @@ function Header(): React.ReactElement {
         <NavLink to="/policies" className={navlinkClassSubtitle}>
           <h3 className="site-subtitle">
             Policies
-            <Turkey className="turkey"/>
+            <ChristmasTree className="christmastree"/>
           </h3>
         </NavLink>
         <a id="logout-btn" href="/logout" title="Log out">
