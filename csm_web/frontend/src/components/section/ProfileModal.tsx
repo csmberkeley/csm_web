@@ -93,6 +93,16 @@ const ProfileModal = ({ id, closeModal }: ProfileModalProps): React.ReactElement
 
                 <div className="formbold-textarea">
                   <textarea
+                    name="pronunciation"
+                    id="pronunciation"
+                    placeholder="How to pronounce your name"
+                    className="formbold-form-input"
+                    disabled={true}
+                  ></textarea>
+                  <label className="formbold-form-label"> Pronunciation </label>
+                </div>
+                <div className="formbold-textarea">
+                  <textarea
                     name="bio"
                     id="bio"
                     placeholder="Write your bio..."

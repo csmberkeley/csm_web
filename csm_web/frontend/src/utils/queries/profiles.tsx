@@ -7,6 +7,7 @@ import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
 import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
 import { DateTime } from "luxon";
 import { RawUserInfo } from "../types";
+import { isNull } from "lodash";
 
 /* ===== Mutation ===== */
 /**
@@ -21,6 +22,7 @@ export interface UpdateUserInfo {
   isPrivate: boolean;
   bio: string;
   pronouns: string;
+  pronunciation: string;
 }
 
 /**
@@ -45,11 +47,13 @@ export const useStudentsInfo = (): UseQueryResult<RawUserInfo, Error> => {
   return queryResult;
 };
 
-export const useUserInfoUpdateMutation = (userId: number): UseMutationResult<void, ServerError, UpdateUserInfo> => {
+export const useUserInfoUpdateMutation = (
+  userId: number | undefined
+): UseMutationResult<void, ServerError, UpdateUserInfo> => {
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, Error, UpdateUserInfo>(
     async (body: UpdateUserInfo) => {
-      if (isNaN(userId)) {
+      if (isNull(userId)) {
         throw new PermissionError("Invalid user id");
       }
       const response = await fetchWithMethod(`/user/${userId}/profile`, HTTP_METHODS.PUT, body);

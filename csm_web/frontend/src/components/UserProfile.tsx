@@ -1,45 +1,54 @@
 import React, { useState } from "react";
 import { useUserInfo } from "../utils/queries/base";
-import { UserInfo } from "../utils/types";
+import { RawUserInfo, UserInfo } from "../utils/types";
 import { useUserInfoUpdateMutation } from "../utils/queries/profiles";
+import { DateTime } from "luxon";
 
 import "../css/profile.scss";
 
 export const UserProfile = (): React.ReactElement => {
   const { data: jsonUserInfo, isSuccess: userInfoLoaded } = useUserInfo();
 
-  let userInfo: UserInfo | null;
-  if (userInfoLoaded) {
-    let priorityEnrollment = undefined;
-    if (jsonUserInfo.priorityEnrollment) {
-      priorityEnrollment = new Date(Date.parse(jsonUserInfo.priorityEnrollment));
-    }
-    const convertedUserInfo: UserInfo = {
-      ...jsonUserInfo,
-      priorityEnrollment
-    };
-    userInfo = convertedUserInfo;
-  } else {
-    // not done loading yet
-    userInfo = null;
-  }
+  // let userInfo: UserInfo;
+  // if (userInfoLoaded) {
+  //   let priorityEnrollment = undefined;
+  //   if (jsonUserInfo.priorityEnrollment) {
+  //     priorityEnrollment = DateTime.fromISO(jsonUserInfo.priorityEnrollment);
+  //   }
+  //   const convertedUserInfo: UserInfo = {
+  //     ...jsonUserInfo,
+  //     priorityEnrollment
+  //   };
+  //   userInfo = convertedUserInfo;
+  // }
+  // else {
+  //   // not done loading yet
+  //   userInfo = null;
+  // }
 
   return (
     <React.Fragment>
-      <div>{userInfoLoaded ? <DisplayUser userInfo={userInfo} /> : <></>}</div>
+      <div>
+        {userInfoLoaded ? (
+          <DisplayUser userInfo={jsonUserInfo} priorityEnrollment={jsonUserInfo.priorityEnrollment} />
+        ) : (
+          <></>
+        )}
+      </div>
     </React.Fragment>
   );
 };
 
 interface UserInfoProps {
-  userInfo: UserInfo | null;
+  userInfo: RawUserInfo;
+  priorityEnrollment?: string;
 }
 
-const DisplayUser = ({ userInfo }: UserInfoProps) => {
+const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
   /**
    * Mutation to create a new section.
    */
-  const createSectionMutation = useUserInfoUpdateMutation(userInfo.id);
+  const createSectionMutation = useUserInfoUpdateMutation(userInfo?.id);
 
   const [editing, setEditing] = useState(false);
   /**
@@ -63,6 +72,17 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
    * User Bio
    */
   const [bio, setBio] = useState<string>("");
+  /**
+   * Pronunciation
+   */
+  const [pronunciation, setPronunciation] = useState<string>("");
+  /**
+   * Pronunciation
+   */
+  let priority: DateTime | undefined;
+  if (priorityEnrollment) {
+    priority = DateTime.fromISO(priorityEnrollment);
+  }
 
   const handleEditing = () => {
     setEditing(true);
@@ -79,13 +99,17 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
   const handleSave = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
     const data = {
-      userFirstName,
-      userLastName,
-      userEmail,
+      id: userInfo.id,
+      firstName: userFirstName,
+      lastName: userLastName,
+      email: userEmail,
+      isPrivate: userInfo.isPrivate,
       bio,
-      userPronoun
+      priorityEnrollment: priority,
+      pronouns: userPronoun,
+      pronunciation
     };
-
+    console.log(data);
     createSectionMutation.mutate(data, {
       onSuccess: () => {
         setEditing(false);
@@ -112,6 +136,9 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
         break;
       case "bio":
         setBio(value);
+        break;
+      case "pronunciation":
+        setPronunciation(value);
         break;
       default:
         console.error("Unknown input name: " + name);
@@ -179,7 +206,16 @@ const DisplayUser = ({ userInfo }: UserInfoProps) => {
                   <label className="formbold-form-label"> Pronouns </label>
                 </div>
               </div>
-
+              <div className="formbold-textarea">
+                <textarea
+                  name="pronunciation"
+                  id="pronunciation"
+                  placeholder="How to pronounce your name"
+                  className="formbold-form-input"
+                  disabled={true}
+                ></textarea>
+                <label className="formbold-form-label"> Pronunciation </label>
+              </div>
               <div className="formbold-textarea">
                 <textarea
                   name="bio"
