@@ -356,10 +356,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             if student_queryset.count() > 1:
                 # something bad happened, return immediately with error
                 logger.error(
-                    (
-                        "<Enrollment:Critical> Multiple student objects exist in the"
-                        " database (Students %s)!"
-                    ),
+                    "<Enrollment:Critical> Multiple student objects exist in the"
+                    " database (Students %s)!",
                     student_queryset.all(),
                 )
                 return Response(
@@ -377,40 +375,47 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 # There are no students in the course with this email.
                 # Check if student exists.
                 try:
-                    student_user = User.objects.get(email=email)
+                    user = User.objects.get(email=email)
                     # Check if the student is associated with the course.
-                    if student_user.id in course_coords:
-                        curstatus["status"] = Status.CONFLICT
-                        curstatus["detail"] = {"reason": "coordinator"}
-                    elif student_user.mentor_set.filter(
-                        course=section.mentor.course
-                    ).exists():
-                        curstatus["status"] = Status.CONFLICT
-                        curstatus["detail"] = {"reason": "mentor"}
-                    # Check if the course is available.
-                    elif (
-                        not student_user.is_whitelisted_for(section.mentor.course)
-                        and not email_obj.get("restricted_action")
-                        == RestrictedAction.WHITELIST
-                    ):
-                        any_invalid = True
-                        curstatus["status"] = Status.RESTRICTED
-                    # Everything is okay: enroll student.
-                    else:
-                        db_actions.append(("enroll", student))
-                        curstatus["status"] = Status.OK
-                except User.DoesNotExist:
-                    # If the course is not restricted, or if they are allowed to whitelist, allow.
                     if (
-                        not section.mentor.course.is_restricted
-                        or email_obj.get("restricted_action")
-                        == RestrictedAction.WHITELIST
+                        user.id not in course_coords
+                        and user.can_enroll_in_course(
+                            section.mentor.course, bypass_enrollment_time=True
+                        )
+                        or (
+                            not user.is_whitelisted_for(section.mentor.course)
+                            and email_obj.get("restricted_action")
+                            == RestrictedAction.WHITELIST
+                        )
                     ):
-                        db_actions.append(("create", email))
+                        db_actions.append("create", email)
+                        curstatus["status"] = Status.OK
+                    else:
+                        any_invalid = True
+                        reason = "other"
+                        if not user.is_whitelisted_for(section.mentor.course):
+                            curstatus["status"] = Status.RESTRICTED
+                            reason = "restricted"
+                        elif user.id in course_coords:
+                            curstatus["status"] = Status.CONFLICT
+                            reason = "coordinator"
+                        elif user.mentor_set.filter(
+                            course=section.mentor.course
+                        ).exists():
+                            reason = "mentor"
+                        curstatus["detail"] = {"reason": reason}
+                except User.DoesNotExist:
+                    # Create user. If they would be allowed to enroll, also create student.
+                    User.objects.create(username=email.split("@")[0], email=email)
+                    if user.can_enroll_in_course(
+                        section.mentor.course, bypass_enrollment_time=True
+                    ):
+                        db_actions.append("create", email)
                         curstatus["status"] = Status.OK
                     else:
                         any_invalid = True
                         curstatus["status"] = Status.RESTRICTED
+                        curstatus["detail"] = {"reason": "new users restricted"}
             else:  # student_queryset.count() == 1
                 student = student_queryset.get()
 
@@ -537,10 +542,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
                 student.save()
                 logger.info(
-                    (
-                        "<Enrollment:Success> User %s swapped into Section %s from"
-                        " Section %s"
-                    ),
+                    "<Enrollment:Success> User %s swapped into Section %s from"
+                    " Section %s",
                     log_str(student.user),
                     log_str(section),
                     log_str(old_section),
@@ -565,26 +568,20 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
         if not request.user.can_enroll_in_course(section.mentor.course):
             logger.warning(
-                (
-                    "<Enrollment:Failure> User %s was unable to enroll in Section %s"
-                    " because they are already involved in this course"
-                ),
+                "<Enrollment:Failure> User %s was unable to enroll in Section %s"
+                " because they are already involved in this course",
                 log_str(request.user),
                 log_str(section),
             )
             raise PermissionDenied(
-                (
-                    "You are already either mentoring for this course or enrolled in a"
-                    " section, or the course is closed for enrollment"
-                ),
+                "You are already either mentoring for this course or enrolled in a"
+                " section, or the course is closed for enrollment",
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         if section.current_student_count >= section.capacity:
             logger.warning(
-                (
-                    "<Enrollment:Failure> User %s was unable to enroll in Section %s"
-                    " because it was full"
-                ),
+                "<Enrollment:Failure> User %s was unable to enroll in Section %s"
+                " because it was full",
                 log_str(request.user),
                 log_str(section),
             )
@@ -597,18 +594,14 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         )
         if student_queryset.count() > 1:
             logger.error(
-                (
-                    "<Enrollment:Critical> Multiple student objects exist in the"
-                    " database (Students %s)!"
-                ),
+                "<Enrollment:Critical> Multiple student objects exist in the"
+                " database (Students %s)!",
                 student_queryset.all(),
             )
             return PermissionDenied(
-                (
-                    "An internal error occurred; email mentors@berkeley.edu"
-                    " immediately. (Duplicate students exist in the database (Students"
-                    f" {student_queryset.all()}))"
-                ),
+                "An internal error occurred; email mentors@berkeley.edu"
+                " immediately. (Duplicate students exist in the database (Students"
+                f" {student_queryset.all()}))",
                 code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         if student_queryset.count() == 1:

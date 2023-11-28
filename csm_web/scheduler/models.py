@@ -60,7 +60,6 @@ class User(AbstractUser):
         is_associated = (
             self.student_set.filter(active=True, section__mentor__course=course).count()
             or self.mentor_set.filter(section__mentor__course=course).count()
-            or self.id in course.coordinator_set.values_list("user", flat=True)
         )
         if bypass_enrollment_time:
             return not is_associated
@@ -261,19 +260,15 @@ class Student(Profile):
             ):
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
                     logger.info(
-                        (
-                            "<SectionOccurrence> SO automatically created for student"
-                            " %s in course %s for date %s"
-                        ),
+                        "<SectionOccurrence> SO automatically created for student"
+                        " %s in course %s for date %s",
                         self.user.email,
                         course.name,
                         now.date(),
                     )
                     logger.info(
-                        (
-                            "<Attendance> Attendance automatically created for student"
-                            " %s in course %s for date %s"
-                        ),
+                        "<Attendance> Attendance automatically created for student"
+                        " %s in course %s for date %s",
                         self.user.email,
                         course.name,
                         now.date(),
