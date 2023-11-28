@@ -139,7 +139,7 @@ function Header(): React.ReactElement {
           <NavLink to="/matcher" className={navlinkClass}>
             <h3 className="site-title">
               Matcher
-              <ChristmasTree className="christmastreey"/>
+              <ChristmasTree className="christmastree"/>
             </h3>
           </NavLink>
         ) : null}
