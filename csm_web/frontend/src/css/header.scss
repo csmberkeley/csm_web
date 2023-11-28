@@ -12,11 +12,16 @@ header {
   box-shadow: 0 4px 4px rgb(188 188 188 / 25%);
 }
 
+body {
+  margin: 0;
+  padding: 0;
+}
+
 /// individual groups of site title items
 .site-title-group {
   display: flex;
   gap: 20px;
-  align-items: center;
+  margin: 0;
 }
 
 #logo {
@@ -109,4 +114,9 @@ header {
 
 .center-title {
   text-align: center;
+}
+
+.christmastree {
+  height: 30px;
+  width: 30px;
 }
