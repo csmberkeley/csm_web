@@ -373,7 +373,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
             if student_queryset.count() == 0:
                 # There are no students in the course with this email.
-                # Check if student exists.
+                # Check if user exists.
                 try:
                     user = User.objects.get(email=email)
                     # Check if the student is associated with the course.
@@ -392,18 +392,17 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                         curstatus["status"] = Status.OK
                     else:
                         any_invalid = True
-                        reason = "other"
+                        curstatus["status"] = Status.CONFLICT
                         if not user.is_whitelisted_for(section.mentor.course):
                             curstatus["status"] = Status.RESTRICTED
-                            reason = "restricted"
                         elif user.id in course_coords:
-                            curstatus["status"] = Status.CONFLICT
-                            reason = "coordinator"
+                            curstatus["detail"] = {"reason": "coordinator"}
                         elif user.mentor_set.filter(
                             course=section.mentor.course
                         ).exists():
-                            reason = "mentor"
-                        curstatus["detail"] = {"reason": reason}
+                            curstatus["detail"] = {"reason": "mentor"}
+                        else:
+                            curstatus["detail"] = {"reason": "other"}
                 except User.DoesNotExist:
                     # Create user. If they would be allowed to enroll, also create student.
                     User.objects.create(username=email.split("@")[0], email=email)
