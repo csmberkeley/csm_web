@@ -215,7 +215,7 @@ const EnrollmentMenu = ({ courses }: EnrollmentMenuProps) => {
   return (
     <React.Fragment>
       <h3 className="page-title center-title">Which course would you like to enroll in?</h3>
-      {courses !== null ? (
+      {courses !== null && courses.size !== 0 ? (
         <div id="course-menu">
           {Array.from(courses.entries()).map(([id, course]) => (
             <Link className="primary-btn" to={`${id}`} key={id}>
@@ -224,7 +224,10 @@ const EnrollmentMenu = ({ courses }: EnrollmentMenuProps) => {
           ))}
         </div>
       ) : (
-        <LoadingSpinner id="course-menu-loading-spinner" />
+        <div>
+          <br></br>
+          <h2 className="page-title center-title">Enrollment Times: TBD</h2>
+        </div>
       )}
     </React.Fragment>
   );
