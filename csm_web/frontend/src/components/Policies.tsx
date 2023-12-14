@@ -25,7 +25,6 @@ export default class Policies extends React.Component {
               <a href={intro.body.p1_a.link}>{intro.body.p1_a.text}</a>
               {intro.body.p1}
             </p>
-            asdf
             <p>
               <b>{intro.body.p2}</b>
             </p>
