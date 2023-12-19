@@ -28,7 +28,7 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
@@ -40,14 +40,8 @@ jobs:
       - name: Install npm dependencies
         run: |
           npm ci
-      - name: Install Chrome 106
-        run: |
-          sudo wget --no-verbose -O /usr/src/google-chrome-stable_current_amd64.deb "http://dl.google.com/linux/chrome/deb/pool/main/g/google-chrome-stable/google-chrome-stable_106.0.5249.91-1_amd64.deb" && \
-          sudo dpkg -i /usr/src/google-chrome-stable_current_amd64.deb ; \
-          sudo apt-get install -f -y && \
-          sudo rm -f /usr/src/google-chrome-stable_current_amd64.deb
       - name: Run Cypress
-        uses: cypress-io/github-action@v4
+        uses: cypress-io/github-action@v6
         with:
           record: true
           build: npm run build
@@ -55,7 +49,7 @@ jobs:
           wait-on: http://localhost:8000
           browser: chrome
           parallel: true
-          group: Tests on Chrome 106
+          group: Tests on Chrome
         env:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DJANGO_ENV: dev
@@ -84,7 +78,7 @@ jobs:
         options: --health-cmd pg_isready --health-interval 10s --health-timeout 5s --health-retries 5
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Set up Python ${{ env.PYTHON_VERSION }}
         uses: actions/setup-python@v4
         with:
@@ -96,14 +90,8 @@ jobs:
       - name: Install npm dependencies
         run: |
           npm ci
-      - name: Install Firefox 106
-        run: |
-          sudo wget --no-verbose -O /tmp/firefox.tar.bz2 https://download-installer.cdn.mozilla.net/pub/firefox/releases/106.0.2/linux-x86_64/en-US/firefox-106.0.2.tar.bz2 && \
-          sudo tar -C /opt -xjf /tmp/firefox.tar.bz2 && \
-          sudo rm /tmp/firefox.tar.bz2 && \
-          sudo ln -fs /opt/firefox/firefox /usr/bin/firefox
       - name: Run Cypress
-        uses: cypress-io/github-action@v4
+        uses: cypress-io/github-action@v6
         with:
           record: true
           build: npm run build
@@ -111,7 +99,7 @@ jobs:
           wait-on: http://localhost:8000
           browser: firefox
           parallel: true
-          group: Tests on Firefox 106
+          group: Tests on Firefox
         env:
           SECRET_KEY: ${{ secrets.SECRET_KEY }}
           DJANGO_ENV: dev
