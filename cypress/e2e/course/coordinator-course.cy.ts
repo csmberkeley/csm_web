@@ -34,7 +34,7 @@ const checkCardOrder = () => {
       .text()
       .trim()
       // replace all weird spaces; see https://jkorpela.fi/chars/spaces.html
-      .replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/, " ");
+      .replace(/[\u00A0\u1680\u180E\u2000-\u200B\u202F\u205F\u3000\uFEFF]/g, " ");
     // time of form [day] [start]-[end] [AM/PM]
     //   or of form [day] [start] [AM/PM]-[end] [AM/PM]
     const matches = text.match(/\w+, (\d\d?:\d\d(?: AM| PM)?)\s*–\s*(\d\d?:\d\d (?:A|P)M)/g);
