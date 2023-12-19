@@ -14,7 +14,7 @@ python = "~3.9.13"
 # AWS
 boto3 = "^1.26.39"
 # django
-django = "^4.1.4"
+django = "^4.2.3"
 django-csp = "^3.7"
 django-extensions = "^3.2.1"
 django-heroku = "^0.3.1"
