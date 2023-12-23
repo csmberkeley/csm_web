@@ -19,6 +19,12 @@ jobs:
       - name: Parse Python version from runtime.txt
         run: |
           sed 's/[^0-9.]//g' runtime.txt | head > .python-version
+      - name: Set up Pylint pre-commit
+        run: |
+          # remove all instances of docker compose exec; github CI doesn't use docker
+          sed -E 's/docker compose exec -T \w+\s*//g' .pre-commit-config.yaml > .pre-commit-config-ci.yaml
+          mv .pre-commit-config-ci.yaml .pre-commit-config.yaml
+          touch .env  # ensure .env file exists
       - name: Set up Python
         uses: actions/setup-python@v4
       - name: Install Poetry
@@ -29,7 +35,7 @@ jobs:
           installer-parallel: true
       - name: Install dependencies with Poetry
         run: |
-          poetry install --no-root --with=dev --no-interaction --no-ansi
+          poetry install --no-root --with=prod --no-interaction --no-ansi
           # add virtual environment to path for future steps
           echo $(poetry env info --path)/bin >> $GITHUB_PATH
       - name: Install npm dependencies

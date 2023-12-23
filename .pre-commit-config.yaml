@@ -20,7 +20,7 @@ repos:
     hooks:
       - id: pylint
         name: pylint
-        entry: pylint
+        entry: docker compose exec -T django pylint
         language: system
         types: [python]
         args: [
