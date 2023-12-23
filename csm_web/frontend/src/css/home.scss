@@ -70,9 +70,21 @@
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  width: 50%;
-  max-width: 300px;
   margin-bottom: 40px;
+}
+
+#home-courses-heading-left {
+  display: flex;
+  flex: 1;
+  flex-direction: row;
+  gap: 20px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+#home-courses-heading-right {
+  display: flex;
+  flex-direction: row;
 }
 
 .section-link {
