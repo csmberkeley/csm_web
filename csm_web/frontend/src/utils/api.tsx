@@ -21,13 +21,21 @@ export function normalizeEndpoint(endpoint: string) {
   return `/api/${endpoint}`;
 }
 
-export function fetchWithMethod(endpoint: string, method: string, data: any = {}, isFormData = false) {
+export function fetchWithMethod(
+  endpoint: string,
+  method: string,
+  data: any = {},
+  isFormData = false,
+  queryParams: URLSearchParams | null = null
+) {
   if (!Object.prototype.hasOwnProperty.call(HTTP_METHODS, method)) {
     // check that method choice is valid
     throw new Error("HTTP method must be one of: POST, GET, PUT, PATCH, or DELETE");
   }
+  const normalizedEndpoint = endpointWithQueryParams(normalizeEndpoint(endpoint), queryParams);
+
   if (isFormData) {
-    return fetch(normalizeEndpoint(endpoint), {
+    return fetch(normalizedEndpoint, {
       method: method,
       credentials: "same-origin",
       headers: {
@@ -36,7 +44,7 @@ export function fetchWithMethod(endpoint: string, method: string, data: any = {}
       body: data
     });
   }
-  return fetch(normalizeEndpoint(endpoint), {
+  return fetch(normalizedEndpoint, {
     method: method,
     credentials: "same-origin",
     headers: {
@@ -51,11 +59,27 @@ export function fetchWithMethod(endpoint: string, method: string, data: any = {}
 /**
  * Fetch data from normalized endpoint.
  */
-export async function fetchNormalized(endpoint: string) {
-  return await fetch(normalizeEndpoint(endpoint), { credentials: "same-origin" });
+export async function fetchNormalized(endpoint: string, queryParams: URLSearchParams | null = null) {
+  const normalizedEndpoint = normalizeEndpoint(endpoint);
+  return await fetch(endpointWithQueryParams(normalizedEndpoint, queryParams), { credentials: "same-origin" });
 }
 
-export async function fetchJSON(endpoint: string) {
-  const response = await fetch(normalizeEndpoint(endpoint), { credentials: "same-origin" });
+export async function fetchJSON(endpoint: string, queryParams: URLSearchParams | null = null) {
+  const normalizedEndpoint = normalizeEndpoint(endpoint);
+  const response = await fetch(endpointWithQueryParams(normalizedEndpoint, queryParams), {
+    credentials: "same-origin"
+  });
   return await response.json();
+}
+
+/**
+ * Add query parameters to the endpoint, if necessary.
+ * If no query parameters, then the endpoint is returned unchanged.
+ */
+export function endpointWithQueryParams(endpoint: string, queryParams: URLSearchParams | null = null) {
+  if (queryParams !== null) {
+    return `${endpoint}?${queryParams}`;
+  } else {
+    return endpoint;
+  }
 }

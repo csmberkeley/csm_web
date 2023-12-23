@@ -8,6 +8,7 @@ import { emptyRoles, Roles } from "../utils/user";
 import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Policies from "./Policies";
+import { DataExport } from "./data_export/DataExport";
 import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 import { Resources } from "./resource_aggregation/Resources";
 import Section from "./section/Section";
@@ -39,6 +40,7 @@ const App = () => {
           <Route path="resources/*" element={<Resources />} />
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
           <Route path="policies/*" element={<Policies />} />
+          <Route path="export/*" element={<DataExport />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

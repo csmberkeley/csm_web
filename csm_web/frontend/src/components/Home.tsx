@@ -8,6 +8,7 @@ import { useCourses } from "../utils/queries/courses";
 import { Profile, Course, Role } from "../utils/types";
 import LoadingSpinner from "./LoadingSpinner";
 
+import FileExport from "../../static/frontend/img/file-export.svg";
 import PlusIcon from "../../static/frontend/img/plus.svg";
 
 import scssColors from "../css/base/colors-export.module.scss";
@@ -17,6 +18,7 @@ const Home = () => {
   const { data: courses, isSuccess: coursesLoaded, isError: coursesLoadError } = useCourses();
 
   let content = null;
+  let headingRight = null;
   if (profilesLoaded && coursesLoaded) {
     // loaded, no error
     const coursesById: Map<number, Course> = new Map();
@@ -52,6 +54,17 @@ const Home = () => {
           })}
       </div>
     );
+
+    const isCoordinator = profiles!.some(profile => profile.role === Role.COORDINATOR);
+
+    if (isCoordinator) {
+      headingRight = (
+        <Link className="primary-btn" to="/export">
+          <FileExport className="icon" />
+          Export
+        </Link>
+      );
+    }
   } else if (profilesLoadError) {
     // error during load
     content = <h3>Profiles not found</h3>;
@@ -66,11 +79,14 @@ const Home = () => {
   return (
     <div id="home-courses">
       <div id="home-courses-heading">
-        <h3 className="page-title">My courses</h3>
-        <Link className="primary-btn" to="/courses">
-          <PlusIcon className="icon inline-plus-icon" />
-          Add Course
-        </Link>
+        <div id="home-courses-heading-left">
+          <h3 className="page-title">My courses</h3>
+          <Link className="primary-btn" to="/courses">
+            <PlusIcon className="icon inline-plus-icon" />
+            Add Course
+          </Link>
+        </div>
+        <div id="home-courses-heading-right">{headingRight}</div>
       </div>
       {content}
     </div>

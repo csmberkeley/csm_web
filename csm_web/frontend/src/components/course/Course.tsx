@@ -6,7 +6,6 @@ import { useCourseSections } from "../../utils/queries/courses";
 import { Course as CourseType } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { CreateSectionModal } from "./CreateSectionModal";
-import { DataExportModal } from "./DataExportModal";
 import { SectionCard } from "./SectionCard";
 import { SettingsModal } from "./SettingsModal";
 import { WhitelistModal } from "./WhitelistModal";
@@ -27,7 +26,6 @@ const DAY_OF_WEEK_ABREVIATIONS: { [day: string]: string } = Object.freeze({
 });
 
 const COURSE_MODAL_TYPE = Object.freeze({
-  exportData: "csv",
   createSection: "mksec",
   whitelist: "whitelist",
   settings: "settings"
@@ -83,9 +81,7 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
    * Render the currently chosen modal.
    */
   const renderModal = (): React.ReactElement | null => {
-    if (whichModal == COURSE_MODAL_TYPE.exportData) {
-      return <DataExportModal closeModal={() => setShowModal(false)} />;
-    } else if (whichModal == COURSE_MODAL_TYPE.createSection) {
+    if (whichModal == COURSE_MODAL_TYPE.createSection) {
       return (
         <CreateSectionModal
           reloadSections={reloadSections}
@@ -167,15 +163,6 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
             >
               <PlusIcon className="icon" />
               Create Section
-            </button>
-            <button
-              className="primary-btn"
-              onClick={() => {
-                setShowModal(true);
-                setWhichModal(COURSE_MODAL_TYPE.exportData);
-              }}
-            >
-              Export Data
             </button>
             <button
               className="primary-btn"
