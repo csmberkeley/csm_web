@@ -11,6 +11,7 @@ import Policies from "./Policies";
 import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 import { Resources } from "./resource_aggregation/Resources";
 import Section from "./section/Section";
+import UserProfile from "./UserProfile";
 
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
@@ -39,6 +40,7 @@ const App = () => {
           <Route path="resources/*" element={<Resources />} />
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
           <Route path="policies/*" element={<Policies />} />
+          <Route path="profile/*" element={<UserProfile />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
@@ -85,6 +87,7 @@ function Header(): React.ReactElement {
     if (
       location.pathname.startsWith("/resources") ||
       location.pathname.startsWith("/matcher") ||
+      location.pathname.startsWith("/profile") ||
       location.pathname.startsWith("/policies")
     ) {
       isActive = false;
@@ -135,6 +138,9 @@ function Header(): React.ReactElement {
         ) : null}
       </div>
       <div className="site-title-group">
+        <NavLink to="/profile" className={navlinkClassSubtitle}>
+          <h3 className="site-subtitle">Profile</h3>
+        </NavLink>
         <NavLink to="/policies" className={navlinkClassSubtitle}>
           <h3 className="site-subtitle">Policies</h3>
         </NavLink>

@@ -1,0 +1,117 @@
+@use "base/variables" as *;
+@use "base/button";
+
+$default-font: "Montserrat", sans-serif;
+
+textarea {
+  height: "auto";
+}
+
+.formbold-main-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 48px;
+  font-family: $default-font;
+}
+
+.formbold-form-wrapper {
+  width: 100%;
+  max-width: 550px;
+  margin: 0 auto;
+  background: white;
+}
+
+.formbold-input-flex {
+  display: flex;
+  gap: 20px;
+  margin-bottom: 22px;
+}
+
+.formbold-input-flex > div {
+  display: flex;
+  flex-direction: column-reverse;
+  width: 50%;
+}
+
+.formbold-textarea {
+  display: flex;
+  flex-direction: column-reverse;
+}
+
+.formbold-form-input {
+  width: 100%;
+  padding-bottom: 10px;
+  font-family: $default-font;
+  font-size: 16px;
+  font-weight: 500;
+  color: #07074d;
+  resize: none;
+  background: #fff;
+  border: none;
+  border-bottom: 1px solid #dde3ec;
+  outline: none;
+}
+
+.formbold-form-input-bio {
+  width: 100%;
+  height: auto;
+  min-height: 200px;
+  padding-bottom: 10px;
+  overflow: "hidden";
+  font-family: $default-font;
+  font-size: 16px;
+  font-weight: 500;
+  color: #07074d;
+  resize: none;
+  background: #fff;
+  border: none;
+  border-bottom: 1px solid #dde3ec;
+  outline: none;
+}
+
+.formbold-form-input::placeholder {
+  color: #536387;
+}
+
+.formbold-form-input:focus {
+  border-color: #6a64f1;
+}
+
+.formbold-form-label {
+  display: block;
+  margin-bottom: 18px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 24px;
+  color: #07074d;
+}
+
+.formbold-form-input:focus + .formbold-form-label {
+  color: #6a64f1;
+}
+
+.button-wrapper {
+  display: flex;
+  flex-direction: row-reverse;
+  align-items: center;
+  justify-content: space-evenly;
+  padding: 5px;
+  margin: 10px;
+}
+
+.formbold-btn {
+  padding: 12px 25px;
+  margin-top: 25px;
+  font-size: 16px;
+  font-weight: 500;
+  color: black;
+  cursor: pointer;
+  background-color: var(--csm-green);
+  border: none;
+  border-radius: 5px;
+}
+
+.formbold-btn:hover {
+  box-shadow: 0 3px 8px rgb(0 0 0 / 5%);
+}

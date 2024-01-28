@@ -6,7 +6,8 @@ import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 import {
   useDropUserMutation,
   useStudentAttendances,
-  useStudentSubmitWordOfTheDayMutation
+  useStudentSubmitWordOfTheDayMutation,
+  useSectionStudents
 } from "../../utils/queries/sections";
 import { Mentor, Override, Role, Spacetime } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
@@ -46,7 +47,8 @@ export default function StudentSection({
       userRole={Role.STUDENT}
       links={[
         ["Section", ""],
-        ["Attendance", "attendance"]
+        ["Attendance", "attendance"],
+        ["Students", "students"]
       ]}
     >
       <Routes>
@@ -54,6 +56,7 @@ export default function StudentSection({
           path="attendance"
           element={<StudentSectionAttendance associatedProfileId={associatedProfileId} id={id} />}
         />
+        <Route path="students" element={<StudentList associatedProfileId={associatedProfileId} id={id} />} />
         <Route
           index
           element={
@@ -86,9 +89,11 @@ function StudentSectionInfo({ mentor, spacetimes, associatedProfileId }: Student
         {mentor && (
           <InfoCard title="Mentor">
             <h5>{mentor.name}</h5>
-            <a href={`mailto:${mentor.email}`}>{mentor.email}</a>
+            {/* <a href={`mailto:${mentor.email}`}>{mentor.email}</a> */}
+            <ProfileSection profileId={associatedProfileId} />
           </InfoCard>
         )}
+
         {spacetimes.map(({ override, ...spacetime }, index) => (
           <SectionSpacetime
             manySpacetimes={spacetimes.length > 1}
@@ -151,6 +156,46 @@ function DropSection({ profileId }: DropSectionProps) {
       );
     case DropSectionStage.DROPPED:
       return <Navigate to="/" />;
+  }
+}
+
+interface ProfileSectionProps {
+  profileId: number;
+}
+
+enum ProfileSectionStage {
+  CLOSED = "CLOSED",
+  OPENED = "OPENED"
+}
+
+function ProfileSection({ profileId }: ProfileSectionProps) {
+  // const studentDropMutation = useDropUserMutation(profileId);
+  const [stage, setStage] = useState<ProfileSectionStage>(ProfileSectionStage.CLOSED);
+
+  // const performDrop = () => {
+  //   studentDropMutation.mutate(undefined, {
+  //     onSuccess: () => {
+  //       setStage(ProfileSectionStage.CLOSED);
+  //     }
+  //   });
+  // };
+
+  switch (stage) {
+    case ProfileSectionStage.CLOSED:
+      return (
+        <button className="primary-btn" style={{ margin: "Auto" }} onClick={() => setStage(ProfileSectionStage.OPENED)}>
+          Profile
+        </button>
+      );
+    case ProfileSectionStage.OPENED:
+      return (
+        <Modal closeModal={() => setStage(ProfileSectionStage.CLOSED)}>
+          <div className="profile-information">
+            <h5>Are you sure you want to drop?</h5>
+            <p>You are not guaranteed an available spot in another section!</p>
+          </div>
+        </Modal>
+      );
   }
 }
 
@@ -353,6 +398,64 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
     </React.Fragment>
   ) : attendancesLoadError ? (
     <h3>Attendances could not be loaded</h3>
+  ) : (
+    <LoadingSpinner className="spinner-centered" />
+  );
+}
+
+interface StudentListProps {
+  associatedProfileId: number;
+  id: number;
+}
+
+// Need permission for student to load student list, or new backend point?
+function StudentList({ associatedProfileId, id }: StudentListProps) {
+  const {
+    data: studentList,
+    isSuccess: listLoaded,
+    isError: listLoadError,
+    refetch: refetchStudentList
+  } = useSectionStudents(associatedProfileId);
+
+  return listLoaded ? (
+    <React.Fragment>
+      <div id="word-of-the-day-card">
+        <h3 className="word-of-the-day-title">Submit Word of the Day</h3>
+        <div className="word-of-the-day-action-container">
+          <div className="word-of-the-day-submit-container"></div>
+        </div>
+        <div className="word-of-the-day-status-bar">
+          <div className="word-of-the-day-deadline-container"></div>
+        </div>
+      </div>
+      <table id="attendance-table" className="csm-table standalone">
+        <thead className="csm-table-head">
+          <tr className="csm-table-head-row">
+            <th className="csm-table-item">Name</th>
+            <th className="csm-table-item">Profile</th>
+          </tr>
+        </thead>
+        <tbody>
+          {studentList
+            // convert to a table row
+            .map(({ name, email }) => {
+              // const [label, cssSuffix] = ATTENDANCE_LABELS[presence];
+              // const attendanceColor = scssColors[`attendance-${cssSuffix}`];
+              // const attendanceFgColor = scssColors[`attendance-${cssSuffix}-fg`];
+              return (
+                <tr key={email} className="csm-table-row">
+                  <td className="csm-table-item">{name}</td>
+                  <td className="csm-table-item">
+                    <div className="attendance-status">{email}</div>
+                  </td>
+                </tr>
+              );
+            })}
+        </tbody>
+      </table>
+    </React.Fragment>
+  ) : listLoadError ? (
+    <h3>Student List could not be loaded</h3>
   ) : (
     <LoadingSpinner className="spinner-centered" />
   );
