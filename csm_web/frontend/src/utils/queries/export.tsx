@@ -23,6 +23,12 @@ export const useDataExportPreviewMutation = (): UseMutationResult<
 > => {
   const mutationResult = useMutation<string[][], Error, DataExportPreviewMutationRequest>(
     async (body: DataExportPreviewMutationRequest) => {
+      if (body.courses.length === 0) {
+        // if no courses specified, then return an empty table;
+        // no request is needed
+        return [[]];
+      }
+
       const response = await fetchNormalized(
         "/export",
         new URLSearchParams({

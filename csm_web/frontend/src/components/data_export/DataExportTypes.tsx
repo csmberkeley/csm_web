@@ -12,10 +12,10 @@ export enum ExportType {
  * Object for displaying export types in the UI
  */
 export const EXPORT_TYPE_DATA = new Map<ExportType, string>([
-  [ExportType.STUDENT_DATA, "Student data"],
-  [ExportType.ATTENDANCE_DATA, "Attendance data"],
-  [ExportType.SECTION_DATA, "Section data"],
-  [ExportType.COURSE_DATA, "Course data"]
+  [ExportType.STUDENT_DATA, "Student"],
+  [ExportType.ATTENDANCE_DATA, "Attendance"],
+  [ExportType.SECTION_DATA, "Section"],
+  [ExportType.COURSE_DATA, "Course"]
 ]);
 
 export const EXPORT_COLUMNS: {
@@ -27,14 +27,18 @@ export const EXPORT_COLUMNS: {
   [ExportType.ATTENDANCE_DATA]: {
     required: {
       student_email: "Student email",
-      student_name: "Student name"
+      student_name: "Student name",
+      attendance_data: "Attendance data"
     },
     optional: {
       course_name: "Course name",
       active: "Active",
       section_id: "Section ID",
       mentor_name: "Mentor name",
-      mentor_email: "Mentor email"
+      mentor_email: "Mentor email",
+      num_present: "Present attendance count",
+      num_excused: "Excused absence count",
+      num_unexcused: "Unexcused absence count"
     }
   },
   [ExportType.COURSE_DATA]: {
