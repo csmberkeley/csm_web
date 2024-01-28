@@ -61,7 +61,7 @@ class User(AbstractUser):
     is_private = models.BooleanField(default=False)
     pronunciation = models.CharField(max_length=20, default="")
 
-    bio = models.CharField(max_length=300, default="Default bio given to everyone~")
+    bio = models.CharField(max_length=500, default="")
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         """Determine whether this user is allowed to enroll in the given course."""

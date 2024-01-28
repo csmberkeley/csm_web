@@ -1,30 +1,13 @@
+import { DateTime } from "luxon";
 import React, { useState } from "react";
 import { useUserInfo } from "../utils/queries/base";
-import { RawUserInfo, UserInfo } from "../utils/types";
 import { useUserInfoUpdateMutation } from "../utils/queries/profiles";
-import { DateTime } from "luxon";
+import { RawUserInfo } from "../utils/types";
 
 import "../css/profile.scss";
 
 export const UserProfile = (): React.ReactElement => {
   const { data: jsonUserInfo, isSuccess: userInfoLoaded } = useUserInfo();
-
-  // let userInfo: UserInfo;
-  // if (userInfoLoaded) {
-  //   let priorityEnrollment = undefined;
-  //   if (jsonUserInfo.priorityEnrollment) {
-  //     priorityEnrollment = DateTime.fromISO(jsonUserInfo.priorityEnrollment);
-  //   }
-  //   const convertedUserInfo: UserInfo = {
-  //     ...jsonUserInfo,
-  //     priorityEnrollment
-  //   };
-  //   userInfo = convertedUserInfo;
-  // }
-  // else {
-  //   // not done loading yet
-  //   userInfo = null;
-  // }
 
   return (
     <React.Fragment>
@@ -54,31 +37,32 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
   /**
    * User First Name
    */
-  const [userFirstName, setUserFirstName] = useState<string>("");
+  const userFirstName = userInfo.firstName;
 
   /**
    * User Last Name
    */
-  const [userLastName, setUserLastName] = useState<string>("");
+
+  const userLastName = userInfo.lastName;
   /**
    * User email
    */
-  const [userEmail, setUserEmail] = useState<string>("");
+  const userEmail = userInfo.email;
   /**
    * User Pronoun
    */
-  const [userPronoun, setUserPronoun] = useState<string>("");
+  const [userPronoun, setUserPronoun] = useState<string>(userInfo.pronouns);
   /**
    * User Bio
    */
-  const [bio, setBio] = useState<string>("");
+  const [userBio, setUserBio] = useState<string>(userInfo.bio);
   /**
    * Pronunciation
    */
-  const [pronunciation, setPronunciation] = useState<string>("");
-  /**
-   * Pronunciation
-   */
+  const [userPreferredName, setUserPreferredName] = useState<string>(userInfo.preferredName);
+
+  const CHARACTER_LIMIT = 500;
+
   let priority: DateTime | undefined;
   if (priorityEnrollment) {
     priority = DateTime.fromISO(priorityEnrollment);
@@ -104,10 +88,10 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
       lastName: userLastName,
       email: userEmail,
       isPrivate: userInfo.isPrivate,
-      bio,
+      bio: userBio,
       priorityEnrollment: priority,
       pronouns: userPronoun,
-      pronunciation
+      preferredName: userPreferredName
     };
     console.log(data);
     createSectionMutation.mutate(data, {
@@ -122,29 +106,24 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
    */
   const handleChange = (name: string, value: string): void => {
     switch (name) {
-      case "firstName":
-        setUserFirstName(value);
-        break;
-      case "lastName":
-        setUserLastName(value);
-        break;
-      case "email":
-        setUserEmail(value);
-        break;
       case "pronouns":
         setUserPronoun(value);
         break;
       case "bio":
-        setBio(value);
+        setUserBio(value);
         break;
-      case "pronunciation":
-        setPronunciation(value);
+      case "preferredName":
+        setUserPreferredName(value);
         break;
       default:
         console.error("Unknown input name: " + name);
         break;
     }
   };
+
+  // const handleBio = (value: string): void => {
+  //   setUserBio()
+  // }
 
   return (
     <div>
@@ -160,8 +139,7 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
                     id="firstname"
                     defaultValue={userInfo.firstName}
                     className="formbold-form-input"
-                    disabled={!editing}
-                    onChange={e => handleChange("firstName", e.target.value)}
+                    disabled={true}
                   />
                   <label className="formbold-form-label"> First name </label>
                 </div>
@@ -172,13 +150,24 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
                     id="lastname"
                     defaultValue={userInfo.lastName}
                     className="formbold-form-input"
-                    disabled={!editing}
-                    onChange={e => handleChange("lastName", e.target.value)}
+                    disabled={true}
                   />
                   <label className="formbold-form-label"> Last name </label>
                 </div>
               </div>
-
+              <div className="formbold-textarea">
+                <textarea
+                  name="bio"
+                  id="bio"
+                  placeholder="Write your bio..."
+                  className="formbold-form-input-bio"
+                  disabled={!editing}
+                  defaultValue={userInfo.bio}
+                  maxLength={500}
+                  onChange={e => handleChange("bio", e.target.value)}
+                ></textarea>
+                <label className="formbold-form-label"> Bio {`[${userBio.length} / ${CHARACTER_LIMIT}]`}</label>
+              </div>
               <div className="formbold-input-flex">
                 <div>
                   <input
@@ -188,7 +177,6 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
                     defaultValue={userInfo.email}
                     className="formbold-form-input"
                     disabled={true}
-                    onChange={e => handleChange("email", e.target.value)}
                   />
                   <label className="formbold-form-label"> Email </label>
                 </div>
@@ -201,6 +189,7 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
                     className="formbold-form-input"
                     defaultValue={userInfo.pronouns}
                     disabled={!editing}
+                    maxLength={20}
                     onChange={e => handleChange("pronouns", e.target.value)}
                   />
                   <label className="formbold-form-label"> Pronouns </label>
@@ -208,25 +197,16 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
               </div>
               <div className="formbold-textarea">
                 <textarea
-                  name="pronunciation"
-                  id="pronunciation"
-                  placeholder="How to pronounce your name"
-                  className="formbold-form-input"
-                  disabled={true}
-                ></textarea>
-                <label className="formbold-form-label"> Pronunciation </label>
-              </div>
-              <div className="formbold-textarea">
-                <textarea
-                  name="bio"
-                  id="bio"
-                  placeholder="Write your bio..."
+                  name="preferredName"
+                  id="preferredName"
+                  placeholder=""
                   className="formbold-form-input"
                   disabled={!editing}
-                  defaultValue={userInfo.bio}
-                  onChange={e => handleChange("bio", e.target.value)}
+                  defaultValue={userInfo.preferredName}
+                  maxLength={50}
+                  onChange={e => handleChange("preferredName", e.target.value)}
                 ></textarea>
-                <label className="formbold-form-label"> Bio </label>
+                <label className="formbold-form-label"> Preferred Name </label>
               </div>
             </form>
             <div className="button-wrapper">

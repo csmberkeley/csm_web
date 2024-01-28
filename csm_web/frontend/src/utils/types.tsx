@@ -39,7 +39,7 @@ export interface UserInfo {
   isPrivate: boolean;
   bio: string;
   pronouns: string;
-  pronunciation: string;
+  preferredName: string;
 }
 
 /**

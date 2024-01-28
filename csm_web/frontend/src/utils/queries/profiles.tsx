@@ -3,11 +3,11 @@
  */
 
 import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
-import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
-import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
-import { DateTime } from "luxon";
-import { RawUserInfo } from "../types";
 import { isNull } from "lodash";
+import { DateTime } from "luxon";
+import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
+import { RawUserInfo } from "../types";
+import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
 
 /* ===== Mutation ===== */
 /**
@@ -20,9 +20,9 @@ export interface UpdateUserInfo {
   email: string;
   priorityEnrollment?: DateTime;
   isPrivate: boolean;
-  bio: string;
-  pronouns: string;
-  pronunciation: string;
+  bio?: string;
+  pronouns?: string;
+  pronunciation?: string;
 }
 
 /**

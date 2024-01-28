@@ -12,9 +12,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name="user",
             name="bio",
-            field=models.CharField(
-                default="Default bio given to everyone~", max_length=300
-            ),
+            field=models.CharField(default="", max_length=500),
         ),
         migrations.AddField(
             model_name="user",

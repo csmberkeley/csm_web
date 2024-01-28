@@ -6,23 +6,14 @@ import LoadingSpinner from "../LoadingSpinner";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import MetaEditModal from "./MetaEditModal";
 import { InfoCard, SectionSpacetime } from "./Section";
-<<<<<<< HEAD
-=======
-import SpacetimeEditModal from "./SpacetimeEditModal";
-import ProfileModal from "./ProfileModal";
-import StudentDropper from "./StudentDropper";
->>>>>>> f904047 (modal for profile)
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 import SpacetimeEditModal from "./SpacetimeEditModal";
-import ProfileModal from "./ProfileModal";
+// import ProfileModal from "./ProfileModal";
 import StudentDropper from "./StudentDropper";
 
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
-<<<<<<< HEAD
+// import EyeIcon from "../../../static/frontend/img/eye.svg";
 import XIcon from "../../../static/frontend/img/x.svg";
-=======
-import EyeIcon from "../../../static/frontend/img/eye.svg";
->>>>>>> f904047 (modal for profile)
 
 import "../../css/coordinator-add-student.scss";
 
@@ -101,7 +92,7 @@ export default function MentorSectionInfo({
                             />
                           )}
                           <span className="student-info">{name || email}</span>
-                          <button
+                          {/* <button
                             className="secondary-link-btn info-card-edit-btn"
                             onClick={() => {
                               setShowModal(ModalStates.SPACETIME_EDIT);
@@ -111,7 +102,7 @@ export default function MentorSectionInfo({
                           </button>
                           {showModal === ModalStates.SPACETIME_EDIT && (
                             <ProfileModal id={studentId} closeModal={closeModal} />
-                          )}
+                          )} */}
                         </td>
                       </tr>
                     )
