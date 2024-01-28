@@ -4,16 +4,16 @@ import { useDataExportMutation, useDataExportPreviewMutation } from "../../utils
 import { Role } from "../../utils/types";
 import { AutoGrid } from "../AutoGrid";
 import LoadingSpinner from "../LoadingSpinner";
+import { Tooltip } from "../Tooltip";
 import { ExportType, EXPORT_COLUMNS } from "./DataExportTypes";
 
 import RefreshIcon from "../../../static/frontend/img/refresh.svg";
 
 interface ExportPageProps {
   dataExportType: ExportType;
-  onBack: () => void;
 }
 
-export const ExportPage = ({ dataExportType, onBack }: ExportPageProps) => {
+export const ExportPage = ({ dataExportType }: ExportPageProps) => {
   const { data: profiles, isSuccess: profilesLoaded, isError: profilesError } = useProfiles();
   const [includedCourses, setIncludedCourses] = useState<number[]>([]);
   const [includedFields, setIncludedFields] = useState<string[]>(
@@ -28,6 +28,10 @@ export const ExportPage = ({ dataExportType, onBack }: ExportPageProps) => {
       setIncludedCourses(coordinatorProfiles.map(profile => profile.courseId));
     }
   }, [profilesLoaded, profiles]);
+
+  useEffect(() => {
+    setIncludedFields(Array.from(Object.keys(EXPORT_COLUMNS[dataExportType].optional)));
+  }, [dataExportType]);
 
   if (profilesError) {
     return <h3>Profiles not found</h3>;
@@ -111,6 +115,11 @@ export const ExportPage = ({ dataExportType, onBack }: ExportPageProps) => {
    * Download the data; open a new page with the data
    */
   const downloadData = () => {
+    if (includedCourses.length === 0) {
+      // no data to download
+      return;
+    }
+
     dataExportMutation.mutate({
       courses: includedCourses,
       fields: includedFields,
@@ -120,19 +129,13 @@ export const ExportPage = ({ dataExportType, onBack }: ExportPageProps) => {
 
   return (
     <div className="export-page-container">
-      <div className="export-page-header">
-        <h3 className="page-title">Export Data</h3>
-        <button className="secondary-btn" onClick={onBack}>
-          Back
-        </button>
-      </div>
       <div className="export-page-config">
         <div className="export-page-sidebar sidebar-left">{courseSelection}</div>
         <div className="export-page-sidebar sidebar-right">{columnSelection}</div>
       </div>
-      <ExportPagePreview courses={includedCourses} fields={includedFields} exportType={dataExportType} preview={3} />
+      <ExportPagePreview courses={includedCourses} fields={includedFields} exportType={dataExportType} />
       <div className="export-page-footer">
-        <button className="primary-btn" onClick={downloadData}>
+        <button className="primary-btn" onClick={downloadData} disabled={includedCourses.length === 0}>
           Download Data
         </button>
       </div>
@@ -146,7 +149,6 @@ interface ExportPagePreviewProps {
   courses: number[];
   fields: string[];
   exportType: ExportType;
-  preview: number;
 }
 
 /**
@@ -157,11 +159,12 @@ const ExportPagePreview = ({ exportType, courses, fields }: ExportPagePreviewPro
   const [preview, setPreview] = useState<number>(10);
   const [data, setData] = useState<string[][]>([]);
 
-  const refreshPreview = () => {
-    if (courses.length == 0) {
-      return;
-    }
+  // automatically refresh on change
+  useEffect(() => {
+    refreshPreview();
+  }, [courses, fields, preview]);
 
+  const refreshPreview = () => {
     dataExportPreviewMutation.mutate(
       {
         courses: courses,
@@ -182,54 +185,73 @@ const ExportPagePreview = ({ exportType, courses, fields }: ExportPagePreviewPro
     setPreview(selectedValue);
   };
 
+  let dataTable = null;
+
+  if (data?.length > 1) {
+    // if has header and at least one row of content, display it
+    dataTable = (
+      <table className="export-preview-table">
+        <thead>
+          <tr className="export-preview-table-header">
+            {data?.length > 0 &&
+              data[0].map((cell, cellIdx) => (
+                <th key={cellIdx} className="export-preview-table-header-item">
+                  {cell}
+                </th>
+              ))}
+          </tr>
+        </thead>
+        <tbody>
+          {data.map(
+            (row, rowIdx) =>
+              rowIdx > 0 && (
+                <tr key={rowIdx}>
+                  {row.map((cell, cellIdx) => (
+                    <td key={cellIdx} className="export-preview-table-item">
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              )
+          )}
+          {data?.length >= preview && (
+            <tr className="export-preview-table-more-row">
+              <td className="export-preview-table-more-row-item" colSpan={data[0].length}>
+                <i>(More rows clipped)</i>
+              </td>
+            </tr>
+          )}
+        </tbody>
+      </table>
+    );
+  } else {
+    // not enough data
+    dataTable = <i>Preview query returned no data.</i>;
+  }
+
   return (
     <div className="export-page-preview-container">
-      <h3>Preview</h3>
-      <div className="export-preview-header">
-        Rows:
-        <select className="export-preview-select form-select" onChange={handlePreviewSelect} value={preview}>
-          {PREVIEW_OPTIONS.map(count => (
-            <option key={count} value={count}>
-              {count}
-            </option>
-          ))}
-        </select>
-        <RefreshIcon className="export-preview-icon icon" onClick={refreshPreview} />
-      </div>
-      <div className="export-preview-table-container">
-        <table className="export-preview-table">
-          <thead>
-            <tr className="export-preview-table-header">
-              {data?.length > 0 &&
-                data[0].map((cell, cellIdx) => (
-                  <th key={cellIdx} className="export-preview-table-header-item">
-                    {cell}
-                  </th>
-                ))}
-            </tr>
-          </thead>
-          <tbody>
-            {data.map(
-              (row, rowIdx) =>
-                rowIdx > 0 && (
-                  <tr key={rowIdx}>
-                    {row.map((cell, cellIdx) => (
-                      <td key={cellIdx} className="export-preview-table-item">
-                        {cell}
-                      </td>
-                    ))}
-                  </tr>
-                )
-            )}
-            {data?.length >= preview && (
-              <tr className="export-preview-table-more-row">
-                <td className="export-preview-table-more-row-item" colSpan={data[0].length}>
-                  <i>(More rows clipped)</i>
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+      <h3 className="export-page-preview-title">Preview</h3>
+      <div className="export-page-preview-wrapper">
+        <div className="export-preview-header">
+          Rows:
+          <select className="export-preview-select form-select" onChange={handlePreviewSelect} value={preview}>
+            {PREVIEW_OPTIONS.map(count => (
+              <option key={count} value={count}>
+                {count}
+              </option>
+            ))}
+          </select>
+          <div className="export-preview-refresh-tooltip-container">
+            <Tooltip
+              source={<RefreshIcon className="export-preview-icon icon" onClick={refreshPreview} />}
+              placement="right"
+            >
+              Refresh
+            </Tooltip>
+          </div>
+        </div>
+        <div className="export-preview-table-container">{dataTable}</div>
       </div>
     </div>
   );

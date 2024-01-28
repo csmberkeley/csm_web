@@ -102,6 +102,7 @@ def get_section_times_dict(courses: List[int], section_ids: Iterable[int]):
         # filter for courses
         mentor__course__id__in=courses
     ).annotate(
+        _num_spacetimes=Count("spacetimes"),
         _location=ArrayAgg("spacetimes__location"),
         _start_time=ArrayAgg("spacetimes__start_time"),
         _duration=ArrayAgg("spacetimes__duration"),
@@ -121,14 +122,17 @@ def get_section_times_dict(courses: List[int], section_ids: Iterable[int]):
         "_start_time",
         "_duration",
         "_day",
+        "_num_spacetimes",
     )
     # format values in a dictionary for efficient lookup
     return {d["id"]: d for d in section_time_values}
 
 
-def format_section_times(section_info: dict):
+def format_section_times(section_info: dict) -> list[str]:
     """
     Format a dictionary of section time info.
+
+    Returns a list of formatted section spacetimes.
     """
     # format the section times
     locations = section_info["_location"]
@@ -144,9 +148,8 @@ def format_section_times(section_info: dict):
         )
         end_formatted = end_datetime.time().strftime("%I:%M %p")
         time_list.append(f"{loc}, {day} {start_formatted}-{end_formatted}")
-    formatted_times = "; ".join(time_list)
 
-    return formatted_times
+    return time_list
 
 
 def prepare_csv(
@@ -218,6 +221,9 @@ def prepare_attendance_data(
         - section_id
         - mentor_email
         - mentor_name
+        - num_present
+        - num_excused
+        - num_unexcused
     """
     student_queryset = Student.objects.filter(course__id__in=courses).annotate(
         full_name=Concat(
@@ -255,6 +261,24 @@ def prepare_attendance_data(
         )
         export_fields.append("mentor_name")
         export_headers.append("Mentor name")
+    if "num_present" in fields:
+        student_queryset = student_queryset.annotate(
+            num_present=Count("attendance", filter=Q(attendance__presence="PR"))
+        )
+        export_fields.append("num_present")
+        export_headers.append("Present count")
+    if "num_unexcused" in fields:
+        student_queryset = student_queryset.annotate(
+            num_unexcused=Count("attendance", filter=Q(attendance__presence="UN"))
+        )
+        export_fields.append("num_unexcused")
+        export_headers.append("Unexcused count")
+    if "num_excused" in fields:
+        student_queryset = student_queryset.annotate(
+            num_excused=Count("attendance", filter=Q(attendance__presence="EX"))
+        )
+        export_fields.append("num_excused")
+        export_headers.append("Excused count")
 
     if preview is not None and preview > 0:
         # limit queryset
@@ -426,16 +450,32 @@ def prepare_section_data(
         # limit queryset
         section_queryset = section_queryset[:preview]
 
-    # query database for values
-    values = section_queryset.values(*export_fields)
+    # query database for values; always fetch id
+    values = section_queryset.values("id", *export_fields)
 
     section_time_dict = {}
+    max_spacetime_count = 0
     if "section_times" in fields:
         used_ids = set(d["id"] for d in values)
         section_time_dict = get_section_times_dict(courses, used_ids)
 
-        export_fields.append("section_times")
-        export_headers.append("Section times")
+        # get the maximum number of section spacetimes
+        if len(section_time_dict) > 0:
+            max_spacetime_count = max(
+                d["_num_spacetimes"] for d in section_time_dict.values()
+            )
+
+        # these appends are only for the csv writer
+        if max_spacetime_count > 1:
+            for spacetime_idx in range(1, max_spacetime_count + 1):
+                export_fields.append(f"section_times_{spacetime_idx}")
+                export_headers.append(f"Section times ({spacetime_idx})")
+        else:
+            # if there is zero or one spacetime, the header doesn't need to differentiate
+            # between indices; we still keep the index in the raw field,
+            # to simplify the code in writing to the csv
+            export_fields.append("section_times_1")
+            export_headers.append("Section times")
 
     csv_writer, get_formatted_row = create_csv_dict_writer(export_fields)
 
@@ -451,7 +491,13 @@ def prepare_section_data(
             # fetch section info from auxiliary query
             section_info = section_time_dict[row["id"]]
             formatted_times = format_section_times(section_info)
-            final_row["section_times"] = formatted_times
+
+            # write formatted spacetimes in separate columns
+            for spacetime_idx in range(max_spacetime_count):
+                cur_formatted = ""  # default to empty string to pad extras
+                if spacetime_idx < len(formatted_times):
+                    cur_formatted = formatted_times[spacetime_idx]
+                final_row[f"section_times_{spacetime_idx + 1}"] = cur_formatted
 
         csv_writer.writerow(final_row)
         yield get_formatted_row()
@@ -553,6 +599,7 @@ def prepare_student_data(
 
     # default empty dict (not used if section_times is not specified)
     section_time_dict = {}
+    max_spacetime_count = 0
     if "section_times" in fields:
         # A second aggregate query on a different related field
         # causes two OUTER JOIN operations in the SQL; this means that
@@ -567,8 +614,23 @@ def prepare_student_data(
         used_ids = set(d["section__id"] for d in values)
         section_time_dict = get_section_times_dict(courses, used_ids)
 
-        export_fields.append("section_times")
-        export_headers.append("Section times")
+        # get the maximum number of section spacetimes
+        if len(section_time_dict) > 0:
+            max_spacetime_count = max(
+                d["_num_spacetimes"] for d in section_time_dict.values()
+            )
+
+        # these appends are only for the csv writer
+        if max_spacetime_count > 1:
+            for spacetime_idx in range(max_spacetime_count):
+                export_fields.append(f"section_times_{spacetime_idx + 1}")
+                export_headers.append(f"Section times ({spacetime_idx + 1})")
+        else:
+            # if there is zero or one spacetime, the header doesn't need to differentiate
+            # between indices; we still keep the index in the raw field,
+            # to simplify the code in writing to the csv
+            export_fields.append("section_times_1")
+            export_headers.append("Section times")
 
     csv_writer, get_formatted_row = create_csv_dict_writer(export_fields)
 
@@ -584,7 +646,12 @@ def prepare_student_data(
             # fetch section info from auxiliary query
             section_info = section_time_dict[row["section__id"]]
             formatted_times = format_section_times(section_info)
-            final_row["section_times"] = formatted_times
+            # write formatted spacetimes in separate columns
+            for spacetime_idx in range(max_spacetime_count):
+                cur_formatted = ""  # default to empty string to pad extras
+                if spacetime_idx < len(formatted_times):
+                    cur_formatted = formatted_times[spacetime_idx]
+                final_row[f"section_times_{spacetime_idx + 1}"] = cur_formatted
 
         csv_writer.writerow(final_row)
         yield get_formatted_row()
