@@ -59,7 +59,7 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
   /**
    * Pronunciation
    */
-  const [userPreferredName, setUserPreferredName] = useState<string>(userInfo.preferredName);
+  const [userPreferredName, setUserPreferredName] = useState<string>(userInfo.pronunciation);
 
   const CHARACTER_LIMIT = 500;
 
@@ -91,7 +91,7 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
       bio: userBio,
       priorityEnrollment: priority,
       pronouns: userPronoun,
-      preferredName: userPreferredName
+      pronunciation: userPreferredName
     };
     console.log(data);
     createSectionMutation.mutate(data, {
@@ -202,7 +202,7 @@ const DisplayUser = ({ userInfo, priorityEnrollment }: UserInfoProps) => {
                   placeholder=""
                   className="formbold-form-input"
                   disabled={!editing}
-                  defaultValue={userInfo.preferredName}
+                  defaultValue={userInfo.pronunciation}
                   maxLength={50}
                   onChange={e => handleChange("preferredName", e.target.value)}
                 ></textarea>
