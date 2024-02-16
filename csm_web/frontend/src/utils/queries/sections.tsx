@@ -442,7 +442,7 @@ export interface SectionCreateMutationBody {
   mentorEmail: string;
   spacetimes: Spacetime[];
   description: string;
-  capacity: string;
+  capacity: number;
   courseId: number;
 }
 
