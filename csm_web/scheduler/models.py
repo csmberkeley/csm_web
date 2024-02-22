@@ -260,19 +260,15 @@ class Student(Profile):
             ):
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
                     logger.info(
-                        (
-                            "<SectionOccurrence> SO automatically created for student"
-                            " %s in course %s for date %s"
-                        ),
+                        "<SectionOccurrence> SO automatically created for student"
+                        " %s in course %s for date %s",
                         self.user.email,
                         course.name,
                         now.date(),
                     )
                     logger.info(
-                        (
-                            "<Attendance> Attendance automatically created for student"
-                            " %s in course %s for date %s"
-                        ),
+                        "<Attendance> Attendance automatically created for student"
+                        " %s in course %s for date %s",
                         self.user.email,
                         course.name,
                         now.date(),
@@ -331,6 +327,7 @@ class Coordinator(Profile):
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
+    waitlist_capacity = models.PositiveSmallIntegerField(default=3)
     mentor = OneToOneOrNoneField(
         Mentor, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -380,6 +377,16 @@ class Section(ValidatingModel):
             f"{course_name} section ({enrolled_count}/{capacity}, {mentor_name},"
             f" {spacetimes})"
         )
+
+
+class WaitlistEntry(ValidatingModel):
+    section = models.ForeignKey(Section, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    time = models.DateTimeField(
+        db_comment="Date and time that student signed on for waitlist."
+    )
+
+    # class Meta:
 
 
 def worksheet_path(instance, filename):

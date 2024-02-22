@@ -17,11 +17,13 @@ from scheduler.models import (
     Spacetime,
     Student,
     User,
+    WaitlistEntry,
 )
 from scheduler.serializers import (
     SectionOccurrenceSerializer,
     SectionSerializer,
     StudentSerializer,
+    WaitlistEntrySerializer,
 )
 
 from .utils import (
@@ -356,10 +358,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             if student_queryset.count() > 1:
                 # something bad happened, return immediately with error
                 logger.error(
-                    (
-                        "<Enrollment:Critical> Multiple student objects exist in the"
-                        " database (Students %s)!"
-                    ),
+                    "<Enrollment:Critical> Multiple student objects exist in the"
+                    " database (Students %s)!",
                     student_queryset.all(),
                 )
                 return Response(
@@ -536,10 +536,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
                 student.save()
                 logger.info(
-                    (
-                        "<Enrollment:Success> User %s swapped into Section %s from"
-                        " Section %s"
-                    ),
+                    "<Enrollment:Success> User %s swapped into Section %s from"
+                    " Section %s",
                     log_str(student.user),
                     log_str(section),
                     log_str(old_section),
@@ -564,26 +562,20 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
         if not request.user.can_enroll_in_course(section.mentor.course):
             logger.warning(
-                (
-                    "<Enrollment:Failure> User %s was unable to enroll in Section %s"
-                    " because they are already involved in this course"
-                ),
+                "<Enrollment:Failure> User %s was unable to enroll in Section %s"
+                " because they are already involved in this course",
                 log_str(request.user),
                 log_str(section),
             )
             raise PermissionDenied(
-                (
-                    "You are already either mentoring for this course or enrolled in a"
-                    " section, or the course is closed for enrollment"
-                ),
+                "You are already either mentoring for this course or enrolled in a"
+                " section, or the course is closed for enrollment",
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         if section.current_student_count >= section.capacity:
             logger.warning(
-                (
-                    "<Enrollment:Failure> User %s was unable to enroll in Section %s"
-                    " because it was full"
-                ),
+                "<Enrollment:Failure> User %s was unable to enroll in Section %s"
+                " because it was full",
                 log_str(request.user),
                 log_str(section),
             )
@@ -596,18 +588,14 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         )
         if student_queryset.count() > 1:
             logger.error(
-                (
-                    "<Enrollment:Critical> Multiple student objects exist in the"
-                    " database (Students %s)!"
-                ),
+                "<Enrollment:Critical> Multiple student objects exist in the"
+                " database (Students %s)!",
                 student_queryset.all(),
             )
             return PermissionDenied(
-                (
-                    "An internal error occurred; email mentors@berkeley.edu"
-                    " immediately. (Duplicate students exist in the database (Students"
-                    f" {student_queryset.all()}))"
-                ),
+                "An internal error occurred; email mentors@berkeley.edu"
+                " immediately. (Duplicate students exist in the database (Students"
+                f" {student_queryset.all()}))",
                 code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         if student_queryset.count() == 1:
@@ -779,3 +767,106 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             return Response({}, status=status.HTTP_200_OK)
 
         raise PermissionDenied()
+
+    @action(detail=True, methods=["get", "post"])
+    def waitlist_add(self, request, pk=None):
+        """
+        GET: Fetch the waitlist.
+            If the request.user is a coordinator, returns the emails of the waitlist.
+            If a student, returns the size and position (if they are on the waitlist).
+
+        POST: Attempts to add someone onto the waitlist.
+                request.user: user that wants to add students
+                pk: primary key of section to enroll into
+                request.data['email']: email of the user to be added.
+            Can fail if:
+                Added user is already part of 3 waitlists for a course.
+                User cannot enroll in the course.
+                Section already has over its capacity of waitlist objects.
+
+        """
+        user_max_waitlists = 3
+        section = get_object_or_error(Section.objects, pk=pk)
+        course = section.mentor.course
+
+        is_coordinator = bool(
+            section.mentor.course.coordinator_set.filter(user=request.user).count()
+        )
+
+        if request.method == "GET":
+            if is_coordinator:
+                return self._coordinator_waitlist_get(request, section)
+            return self._student_waitlist_get(request, section)
+
+        if request.method == "POST":
+            # TOD make sure this is best way to get target user?
+            # does it need to be split up into a coordinator and student version?
+            # eg. for coordinator add, mb it should prompt them to increase the waitlist capacity.
+            target_email = request.data["email"]
+            target_user, _ = User.objects.get_or_create(
+                email=target_email, username=target_email.split("@")[0]
+            )
+
+            user_waitlists = target_user.waitlistentry_set.filter(course=course)
+            section_waitlists = section.waitlistentry_set.all()
+
+            if not target_user.can_enroll_in_course(course=course):
+                # TOD throw error; what code?
+                return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+            if user_waitlists.count() > user_max_waitlists:
+                # TOD throw error; what code?
+                return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+            if section_waitlists.count() > section.waitlist_capacity:
+                # TOD throw error; what code?
+                return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+            WaitlistEntry.objects.create(
+                section=section, user=target_user, time=datetime.datetime.now()
+            )
+            return Response({}, status=status.HTTP_200_OK)
+        raise PermissionDenied
+
+    def _coordinator_waitlist_get(self, request, section):
+        # TOD return emails and times or just serializer?
+        return Response(
+            WaitlistEntrySerializer(
+                section.waitlist_entry_set.all(),
+                many=True,
+            ).data
+        )
+
+    def _student_waitlist_get(self, request, section):
+        section_waitlist = section.waitlist_entry_set.all().order_by("time")
+        waitlist_size = section_waitlist.count()
+        # TOD is there a smarter way to do membership and index in django?
+        if section_waitlist.filter(user=request.user).count():
+            waitlist_entry_object = section_waitlist.filter(user=request.user)
+            waitlist_position = (
+                section_waitlist.filter(time__lt=waitlist_entry_object.time).count() + 1
+            )
+        else:
+            waitlist_position = -1
+        return Response(
+            {
+                "size": waitlist_size,
+                "pos": waitlist_position,
+            }
+        )
+
+    @action(detail=True, methods=["post"])
+    def waitlist_enroll(self, request, pk=None):
+        """
+        POST: Attempts to enroll someone off of the waitlist.
+        """
+        section = get_object_or_error(Section.objects, pk=pk)
+        if section.current_student_count() >= section.capacity:
+            return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
+
+        first_user = section.waitlist_entry_set.all().order_by("time")[0].user
+        student = Student.objects.create(
+            user=first_user, section=section, course=section.mentor.course
+        )
+        # user.waitlist_entry_set.filter(course=section.mentor.course).delete()
+        return Response(StudentSerializer(student).data)

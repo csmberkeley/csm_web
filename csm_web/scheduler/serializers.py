@@ -312,6 +312,11 @@ class SectionSerializer(serializers.ModelSerializer):
         )
 
 
+class WaitlistEntrySerializer(serializers.ModelSerializer):
+    class Meta:
+        fields = ["id", "section", "user", "time"]
+
+
 class WorksheetSerializer(serializers.ModelSerializer):
     class Meta:
         model = Worksheet
