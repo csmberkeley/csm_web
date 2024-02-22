@@ -41,7 +41,7 @@ const SpaceTimeEditModal = ({
     if (validationText !== "") {
       validateSpacetime();
     }
-  }, [location, time, date]);
+  }, [location, day, time, date, isPermanent]);
 
   /**
    * Validate current spacetime values.
@@ -50,6 +50,10 @@ const SpaceTimeEditModal = ({
     // validate spacetime fields
     if (location === null || location === undefined || location.length === 0) {
       setValidationText("All section locations must be specified");
+      return false;
+    } else if (isPermanent && day <= 0) {
+      // only check this if it's for permanent changes
+      setValidationText("All section occurrences must have a specified day of week");
       return false;
     } else if (time === "") {
       setValidationText("All section occurrences must have a specified start time");
@@ -169,7 +173,7 @@ const SpaceTimeEditModal = ({
                 disabled={!isPermanent}
                 value={isPermanent ? day : "---"}
               >
-                {[["---", ""], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
+                {[["---", -1], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
                   <option key={value} value={value} disabled={value === "---"}>
                     {label}
                   </option>

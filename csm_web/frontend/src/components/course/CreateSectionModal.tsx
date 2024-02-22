@@ -92,6 +92,9 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
       if (spacetime.location === null || spacetime.location === undefined || spacetime.location === "") {
         setValidationText("All section locations must be specified");
         return false;
+      } else if (spacetime.dayOfWeek <= 0) {
+        setValidationText("All section occurrences must have a specified day of week");
+        return false;
       } else if (spacetime.startTime === "") {
         setValidationText("All section occurrences must have a specified start time");
         return false;
@@ -240,7 +243,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                     value={dayOfWeek}
                     required
                   >
-                    {[["---", ""], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
+                    {[["---", -1], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
                       <option key={value} value={value} disabled={value === "---"}>
                         {label}
                       </option>
