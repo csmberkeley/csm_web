@@ -24,4 +24,5 @@ urlpatterns += [
     path("matcher/<int:pk>/configure/", views.matcher.configure),
     path("matcher/<int:pk>/create/", views.matcher.create),
     path("user/<int:pk>/profile/", views.user.profile),
+    path("user/<int:pk>/fetch_user_id/", views.user.fetch_user_pk),
 ]

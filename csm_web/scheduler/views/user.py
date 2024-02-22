@@ -4,7 +4,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from scheduler.serializers import UserSerializer
 
-from ..models import Coordinator, User
+from ..models import Coordinator, Mentor, Student, User
 from .utils import viewset_with
 
 
@@ -75,4 +75,29 @@ def profile(request, pk=None):
         user.is_private = private
     user.save()
     serializer = UserSerializer(user)
+    return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["GET"])
+def fetch_user_pk(request, pk=None):
+    """
+    Function for getting user IDs from profile IDs
+    GET: Gets the user serializer for a user given a mentor ID, student ID, or coordinator ID.
+    Request: {'type': string}
+    Response: status code, as well as user serializer
+    """
+    profile_type = request.data.get("type")
+    queryset = None
+    if profile_type == "student":
+        queryset = Student.objects.all()
+    elif profile_type == "mentor":
+        queryset = Mentor.objects.all()
+    elif profile_type == "coordinator":
+        queryset = Coordinator.objects.all()
+    else:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+    person = queryset.get(pk=pk)
+
+    serializer = UserSerializer(person.user.id)
     return Response(serializer.data, status=status.HTTP_200_OK)
