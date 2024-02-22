@@ -82,7 +82,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
     } else if (spacetimes.length === 0) {
       setValidationText("Must have at least one section time");
       return false;
-    } else if (capacity === null) {
+    } else if (isNaN(capacity)) {
       setValidationText("Capacity must not be blank");
       return false;
     }
@@ -98,7 +98,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
       } else if (spacetime.startTime === "") {
         setValidationText("All section occurrences must have a specified start time");
         return false;
-      } else if (spacetime.duration === 0) {
+      } else if (isNaN(spacetime.duration) || spacetime.duration === 0) {
         setValidationText("All section occurrences must have nonzero duration");
         return false;
       }
@@ -202,7 +202,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                 min="0"
                 inputMode="numeric"
                 pattern="[0-9]+"
-                value={capacity}
+                value={isNaN(capacity) ? "" : capacity.toString()}
                 onChange={e => handleChange(-1, "capacity", e.target.value)}
               />
             </label>
@@ -240,11 +240,11 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                     className="form-select"
                     onChange={e => handleChange(index, "dayOfWeek", e.target.value)}
                     name={`dayOfWeek|${index}`}
-                    value={dayOfWeek}
+                    value={dayOfWeek.toString()}
                     required
                   >
                     {[["---", -1], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
-                      <option key={value} value={value} disabled={value === "---"}>
+                      <option key={value} value={value} disabled={label === "---"}>
                         {label}
                       </option>
                     ))}
@@ -266,7 +266,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                     className="form-input"
                     type="number"
                     name={`duration|${index}`}
-                    value={duration}
+                    value={isNaN(duration) ? "" : duration.toString()}
                     min={0}
                     onChange={e => handleChange(index, "duration", e.target.value)}
                   />
