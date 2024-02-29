@@ -98,8 +98,8 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
       } else if (spacetime.startTime === "") {
         setValidationText("All section occurrences must have a specified start time");
         return false;
-      } else if (isNaN(spacetime.duration) || spacetime.duration === 0) {
-        setValidationText("All section occurrences must have nonzero duration");
+      } else if (isNaN(spacetime.duration) || spacetime.duration <= 0) {
+        setValidationText("All section occurrences must have duration greater than 0");
         return false;
       }
     }
