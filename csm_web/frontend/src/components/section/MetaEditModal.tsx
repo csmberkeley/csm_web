@@ -31,7 +31,11 @@ export default function MetaEditModal({
   });
 
   const handleChange = ({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) => {
-    setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
+    if (name === "capacity") {
+      setFormState(prevFormState => ({ ...prevFormState, [name]: parseInt(value) }));
+    } else {
+      setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
+    }
   };
 
   const validateForm = () => {
@@ -74,7 +78,7 @@ export default function MetaEditModal({
             min="0"
             inputMode="numeric"
             pattern="[0-9]*"
-            value={formState.capacity}
+            value={isNaN(formState.capacity) ? "" : formState.capacity.toString()}
             onChange={handleChange}
             autoFocus
           />
