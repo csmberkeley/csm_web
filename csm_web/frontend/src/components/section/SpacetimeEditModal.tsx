@@ -48,7 +48,7 @@ const SpaceTimeEditModal = ({
    */
   const validateSpacetime = (): boolean => {
     // validate spacetime fields
-    if (location === null || location === undefined || location.length === 0) {
+    if (location === null || location === undefined || location.trim() === "") {
       setValidationText("All section locations must be specified");
       return false;
     } else if (isPermanent && day <= 0) {
@@ -60,7 +60,7 @@ const SpaceTimeEditModal = ({
       return false;
     }
 
-    if (!isPermanent && (date === null || date === "")) {
+    if (!isPermanent && (date === null || date.trim() === "")) {
       setValidationText("Section date to override must be specified");
       return false;
     }
