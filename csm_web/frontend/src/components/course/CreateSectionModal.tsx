@@ -76,26 +76,26 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
    */
   const validateSectionForm = (): boolean => {
     // all fields must be filled out
-    if (mentorEmail === null || mentorEmail === "") {
+    if (mentorEmail === null || mentorEmail.trim() === "") {
       setValidationText("Mentor email must not be blank");
       return false;
     } else if (spacetimes.length === 0) {
       setValidationText("Must have at least one section time");
       return false;
-    } else if (isNaN(capacity)) {
-      setValidationText("Capacity must not be blank");
+    } else if (isNaN(capacity) || capacity < 0) {
+      setValidationText("Capacity must not be blank and must be positive");
       return false;
     }
 
     // validate spacetime fields
     for (const spacetime of spacetimes) {
-      if (spacetime.location === null || spacetime.location === undefined || spacetime.location === "") {
+      if (spacetime.location === null || spacetime.location === undefined || spacetime.location.trim() === "") {
         setValidationText("All section locations must be specified");
         return false;
       } else if (spacetime.dayOfWeek <= 0) {
         setValidationText("All section occurrences must have a specified day of week");
         return false;
-      } else if (spacetime.startTime === "") {
+      } else if (spacetime.startTime.trim() === "") {
         setValidationText("All section occurrences must have a specified start time");
         return false;
       } else if (isNaN(spacetime.duration) || spacetime.duration <= 0) {
@@ -165,6 +165,9 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
       onSuccess: () => {
         closeModal();
         reloadSections();
+      },
+      onError: () => {
+        setValidationText("Error occurred on create");
       }
     });
   };
