@@ -1,7 +1,9 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { useSectionUpdateMutation } from "../../utils/queries/sections";
 import Modal from "../Modal";
+
+import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
 
 interface MetaEditModalProps {
   sectionId: number;
@@ -18,19 +20,49 @@ export default function MetaEditModal({
 }: MetaEditModalProps): React.ReactElement {
   // use existing capacity and description as initial values
   const [formState, setFormState] = useState({ capacity: capacity, description: description });
+  const [validationText, setValidationText] = useState("");
 
   const sectionUpdateMutation = useSectionUpdateMutation(sectionId);
 
-  function handleChange({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) {
-    setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
-  }
+  useEffect(() => {
+    if (validationText !== "") {
+      validateForm();
+    }
+  });
 
-  function handleSubmit(event: React.MouseEvent<HTMLButtonElement>) {
+  const handleChange = ({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) => {
+    if (name === "capacity") {
+      setFormState(prevFormState => ({ ...prevFormState, [name]: parseInt(value) }));
+    } else {
+      setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
+    }
+  };
+
+  const validateForm = () => {
+    if (isNaN(formState.capacity) || formState.capacity < 0) {
+      setValidationText("Capacity must be non-negative");
+      return false;
+    }
+
+    setValidationText("");
+    return true;
+  };
+
+  const handleSubmit = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault();
-    //TODO: Handle API Failure
-    sectionUpdateMutation.mutate(formState);
-    closeModal();
-  }
+
+    if (!validateForm()) {
+      // don't do anything if invalid
+      return;
+    }
+
+    sectionUpdateMutation.mutate(formState, {
+      onSuccess: closeModal,
+      onError: () => {
+        setValidationText("Error occurred on save");
+      }
+    });
+  };
 
   return (
     <Modal closeModal={closeModal}>
@@ -46,7 +78,7 @@ export default function MetaEditModal({
             min="0"
             inputMode="numeric"
             pattern="[0-9]*"
-            value={formState.capacity}
+            value={isNaN(formState.capacity) ? "" : formState.capacity.toString()}
             onChange={handleChange}
             autoFocus
           />
@@ -62,6 +94,12 @@ export default function MetaEditModal({
           />
         </label>
         <div className="form-actions">
+          {validationText !== "" && (
+            <div className="spacetime-edit-form-validation-container">
+              <ExclamationCircle className="icon" />
+              <span className="spacetime-edit-form-validation-text">{validationText}</span>
+            </div>
+          )}
           <button className="primary-btn" onClick={handleSubmit}>
             Save
           </button>

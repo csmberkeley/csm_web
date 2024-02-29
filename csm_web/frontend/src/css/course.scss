@@ -120,8 +120,7 @@
   grid-template-rows: repeat(auto-fit, 30px);
   grid-template-columns: repeat(3, 1fr);
   gap: 1%;
-  align-items: center;
-  justify-items: center;
+  place-items: center center;
   width: 100%;
   height: 50%;
 }
@@ -275,4 +274,13 @@ $create-section-modal-height: 65vh;
 
 #create-section-form .create-section-submit-container {
   grid-area: submit;
+}
+
+.create-section-validation-text-container {
+  margin-bottom: 8px;
+  color: red;
+}
+
+.create-section-validation-text {
+  margin-left: 4px;
 }

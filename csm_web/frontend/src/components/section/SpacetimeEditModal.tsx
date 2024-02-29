@@ -1,5 +1,5 @@
 import { DateTime } from "luxon";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { DAYS_OF_WEEK } from "../../utils/datetime";
 import { useSpacetimeModifyMutation, useSpacetimeOverrideMutation } from "../../utils/queries/spacetime";
@@ -7,6 +7,8 @@ import { Spacetime } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 import TimeInput from "../TimeInput";
+
+import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
 
 import "../../css/spacetime-edit.scss";
 
@@ -30,26 +32,84 @@ const SpaceTimeEditModal = ({
   const [date, setDate] = useState<string>("");
   const [mode, setMode] = useState<string>(prevLocation && prevLocation.startsWith("http") ? "virtual" : "inperson");
   const [showSaveSpinner, setShowSaveSpinner] = useState<boolean>(false);
+  const [validationText, setValidationText] = useState<string>("");
 
   const spacetimeModifyMutation = useSpacetimeModifyMutation(sectionId, spacetimeId);
   const spacetimeOverrideMutation = useSpacetimeOverrideMutation(sectionId, spacetimeId);
 
+  useEffect(() => {
+    if (validationText !== "") {
+      validateSpacetime();
+    }
+  }, [location, day, time, date, isPermanent]);
+
+  /**
+   * Validate current spacetime values.
+   */
+  const validateSpacetime = (): boolean => {
+    // validate spacetime fields
+    if (location === null || location === undefined || location.trim() === "") {
+      setValidationText("All section locations must be specified");
+      return false;
+    } else if (isPermanent && day <= 0) {
+      // only check this if it's for permanent changes
+      setValidationText("All section occurrences must have a specified day of week");
+      return false;
+    } else if (time === "") {
+      setValidationText("All section occurrences must have a specified start time");
+      return false;
+    }
+
+    if (!isPermanent && (date === null || date.trim() === "")) {
+      setValidationText("Section date to override must be specified");
+      return false;
+    }
+
+    // all valid
+    setValidationText("");
+    return true;
+  };
+
   const handleSubmit = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
-    //TODO: Handle API failure
+
+    if (!validateSpacetime()) {
+      // don't do anythinng if invalid
+      return;
+    }
+
     setShowSaveSpinner(true);
-    isPermanent
-      ? spacetimeModifyMutation.mutate({
+    if (isPermanent) {
+      spacetimeModifyMutation.mutate(
+        {
           dayOfWeek: day,
           location: location,
           startTime: time
-        })
-      : spacetimeOverrideMutation.mutate({
+        },
+        {
+          onSuccess: closeModal,
+          onError: () => {
+            setValidationText("Error occurred on save");
+            setShowSaveSpinner(false);
+          }
+        }
+      );
+    } else {
+      spacetimeOverrideMutation.mutate(
+        {
           location: location,
           startTime: time,
           date: date
-        });
-    closeModal();
+        },
+        {
+          onSuccess: closeModal,
+          onError: () => {
+            setValidationText("Error occurred on save");
+            setShowSaveSpinner(false);
+          }
+        }
+      );
+    }
   };
 
   const today = DateTime.now().toISODate()!;
@@ -113,7 +173,7 @@ const SpaceTimeEditModal = ({
                 disabled={!isPermanent}
                 value={isPermanent ? day : "---"}
               >
-                {[["---", ""], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
+                {[["---", -1], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
                   <option key={value} value={value} disabled={value === "---"}>
                     {label}
                   </option>
@@ -186,6 +246,12 @@ const SpaceTimeEditModal = ({
             )}
           </div>
           <div className="form-actions">
+            {validationText !== "" && (
+              <div className="spacetime-edit-form-validation-container">
+                <ExclamationCircle className="icon" />
+                <span className="spacetime-edit-form-validation-text">{validationText}</span>
+              </div>
+            )}
             {showSaveSpinner ? (
               <LoadingSpinner />
             ) : (

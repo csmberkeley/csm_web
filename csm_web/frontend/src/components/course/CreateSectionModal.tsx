@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 import { DAYS_OF_WEEK } from "../../utils/datetime";
 import { useUserEmails } from "../../utils/queries/base";
@@ -6,6 +6,8 @@ import { useSectionCreateMutation } from "../../utils/queries/sections";
 import { Spacetime } from "../../utils/types";
 import Modal from "../Modal";
 import TimeInput from "../TimeInput";
+
+import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
 
 const makeSpacetime = (): Spacetime => {
   return { id: -1, duration: 0, dayOfWeek: 1, startTime: "", location: "" };
@@ -45,7 +47,21 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
   /**
    * Capacity for the new section.
    */
-  const [capacity, setCapacity] = useState<string>("");
+  const [capacity, setCapacity] = useState<number>(0);
+
+  /**
+   * Validation text; if empty string, no validation text is displayed.
+   */
+  const [validationText, setValidationText] = useState<string>("");
+
+  /**
+   * Automatically re-validate form if there was a previous validation error.
+   */
+  useEffect(() => {
+    if (validationText !== "") {
+      validateSectionForm();
+    }
+  }, [mentorEmail, spacetimes, description, capacity]);
 
   /**
    * Create a new empty spacetime for the new section.
@@ -53,6 +69,44 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
   const appendSpacetime = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.preventDefault(); // Annoyingly the submit event for the form gets fired, so we have to suppress it
     setSpacetimes(oldSpacetimes => [...oldSpacetimes, makeSpacetime()]);
+  };
+
+  /**
+   * Validate current spacetime values.
+   */
+  const validateSectionForm = (): boolean => {
+    // all fields must be filled out
+    if (mentorEmail === null || mentorEmail.trim() === "") {
+      setValidationText("Mentor email must not be blank");
+      return false;
+    } else if (spacetimes.length === 0) {
+      setValidationText("Must have at least one section time");
+      return false;
+    } else if (isNaN(capacity) || capacity < 0) {
+      setValidationText("Capacity must be non-negative");
+      return false;
+    }
+
+    // validate spacetime fields
+    for (const spacetime of spacetimes) {
+      if (spacetime.location === null || spacetime.location === undefined || spacetime.location.trim() === "") {
+        setValidationText("All section locations must be specified");
+        return false;
+      } else if (spacetime.dayOfWeek <= 0) {
+        setValidationText("All section occurrences must have a specified day of week");
+        return false;
+      } else if (spacetime.startTime.trim() === "") {
+        setValidationText("All section occurrences must have a specified start time");
+        return false;
+      } else if (isNaN(spacetime.duration) || spacetime.duration <= 0) {
+        setValidationText("All section occurrences must have duration greater than 0");
+        return false;
+      }
+    }
+
+    // all valid
+    setValidationText("");
+    return true;
   };
 
   /**
@@ -79,7 +133,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
           setDescription(value);
           break;
         case "capacity":
-          setCapacity(value);
+          setCapacity(parseInt(value));
           break;
         default:
           console.error("Unknown input name: " + name);
@@ -93,6 +147,12 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
    */
   const handleSubmit = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
+
+    if (!validateSectionForm()) {
+      // don't do anything if invalid
+      return;
+    }
+
     const data = {
       mentorEmail,
       spacetimes,
@@ -105,6 +165,9 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
       onSuccess: () => {
         closeModal();
         reloadSections();
+      },
+      onError: () => {
+        setValidationText("Error occurred on create");
       }
     });
   };
@@ -141,8 +204,8 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                 type="number"
                 min="0"
                 inputMode="numeric"
-                pattern="[0-9]*"
-                value={capacity}
+                pattern="[0-9]+"
+                value={isNaN(capacity) ? "" : capacity.toString()}
                 onChange={e => handleChange(-1, "capacity", e.target.value)}
               />
             </label>
@@ -180,11 +243,11 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                     className="form-select"
                     onChange={e => handleChange(index, "dayOfWeek", e.target.value)}
                     name={`dayOfWeek|${index}`}
-                    value={dayOfWeek}
+                    value={dayOfWeek.toString()}
                     required
                   >
-                    {[["---", ""], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
-                      <option key={value} value={value} disabled={value === "---"}>
+                    {[["---", -1], ...Array.from(DAYS_OF_WEEK)].map(([label, value]) => (
+                      <option key={value} value={value} disabled={label === "---"}>
                         {label}
                       </option>
                     ))}
@@ -206,7 +269,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
                     className="form-input"
                     type="number"
                     name={`duration|${index}`}
-                    value={duration}
+                    value={isNaN(duration) ? "" : duration.toString()}
                     min={0}
                     onChange={e => handleChange(index, "duration", e.target.value)}
                   />
@@ -217,6 +280,12 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
         </div>
       </form>
       <div className="create-section-submit-container">
+        {validationText !== "" && (
+          <div className="create-section-validation-text-container">
+            <ExclamationCircle className="icon outline" />
+            <span className="create-section-validation-text">{validationText}</span>
+          </div>
+        )}
         <button className="secondary-btn" id="add-occurence-btn" onClick={appendSpacetime}>
           Add another occurence
         </button>

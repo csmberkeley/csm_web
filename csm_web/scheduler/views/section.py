@@ -1,6 +1,7 @@
 import datetime
 import re
 
+from django.core.exceptions import ValidationError as ModelValidationError
 from django.db import transaction
 from django.db.models import Prefetch, Q
 from django.utils import timezone
@@ -83,37 +84,83 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         # any objects created within the atomic block before the point of failure are rolled back.
         with transaction.atomic():
             mentor_user, _ = User.objects.get_or_create(
-                email=self.request.data["mentor_email"],
-                username=self.request.data["mentor_email"].split("@")[0],
+                email=request.data["mentor_email"],
+                username=request.data["mentor_email"].split("@")[0],
             )
 
-            if "spacetimes" not in self.request.data:
-                return ValidationError("Spacetimes must be provided")
+            if "spacetimes" not in request.data:
+                raise ValidationError("Spacetimes must be provided")
+
+            request_spacetimes = request.data["spacetimes"]
+            request_description = request.data.get("description", "")
+            request_capacity = request.data.get("capacity", 0)
 
             spacetime_objects = []
-            for spacetime in self.request.data["spacetimes"]:
+            for spacetime in request_spacetimes:
+                spacetime_duration = spacetime.get("duration", None)
+                if spacetime_duration is None:
+                    raise ValidationError("Spacetime durations must all be specified")
+
+                spacetime_day_of_week = spacetime.get("day_of_week", None)
+                try:
+                    spacetime_day_of_week = int(spacetime_day_of_week)
+                except ValueError as err:
+                    raise ValidationError(
+                        "Spacetime day of week must be an integer"
+                    ) from err
+                if spacetime_day_of_week is None:
+                    raise ValidationError("Spacetime day of week must be specified")
+                if spacetime_day_of_week < 1 or spacetime_day_of_week > 7:
+                    raise ValidationError(
+                        "Spacetime day of week must be between 1 and 7 inclusive"
+                    )
+
+                spacetime_location = spacetime.get("location", None)
+                if spacetime_location is None:
+                    raise ValidationError("Spacetime location must be specified")
+                spacetime_start_time = spacetime.get("start_time", None)
+                if spacetime_start_time is None:
+                    raise ValidationError("Spacetime start time must be specified")
+
                 # create and validate all spacetimes prior to saving them
-                converted_duration = datetime.timedelta(minutes=spacetime["duration"])
-                converted_day_of_week = weekday_iso_to_string(spacetime["day_of_week"])
+                converted_duration = datetime.timedelta(minutes=spacetime_duration)
+                converted_day_of_week = weekday_iso_to_string(spacetime_day_of_week)
                 new_spacetime = Spacetime(
                     location=spacetime.get("location"),
                     start_time=spacetime.get("start_time"),
                     duration=converted_duration,
                     day_of_week=converted_day_of_week,
                 )
-                new_spacetime.full_clean()
+
+                try:
+                    new_spacetime.full_clean()
+                except ModelValidationError as err:
+                    raise ValidationError(err.error_dict) from err
+
                 spacetime_objects.append(new_spacetime)
 
             for spacetime in spacetime_objects:
+                try:
+                    spacetime.full_clean()
+                except ModelValidationError as err:
+                    raise ValidationError(err.error_dict) from err
+
                 spacetime.save()
 
-            mentor = Mentor.objects.create(user=mentor_user, course=course)
-            section = Section.objects.create(
-                mentor=mentor,
-                description=self.request.data["description"],
-                capacity=self.request.data["capacity"],
-            )
-            section.spacetimes.set(spacetime_objects)
+            try:
+                mentor = Mentor.objects.create(user=mentor_user, course=course)
+                section = Section.objects.create(
+                    mentor=mentor,
+                    description=request_description,
+                    capacity=request_capacity,
+                )
+                section.spacetimes.set(spacetime_objects)
+
+                section.full_clean()
+            except ModelValidationError as err:
+                # re-raise any validation errors
+                raise ValidationError(err.error_dict) from err
+
             section.save()
 
         serializer = self.serializer_class(section)
@@ -356,10 +403,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             if student_queryset.count() > 1:
                 # something bad happened, return immediately with error
                 logger.error(
-                    (
-                        "<Enrollment:Critical> Multiple student objects exist in the"
-                        " database (Students %s)!"
-                    ),
+                    "<Enrollment:Critical> Multiple student objects exist in the"
+                    " database (Students %s)!",
                     student_queryset.all(),
                 )
                 return Response(
@@ -536,10 +581,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
                 student.save()
                 logger.info(
-                    (
-                        "<Enrollment:Success> User %s swapped into Section %s from"
-                        " Section %s"
-                    ),
+                    "<Enrollment:Success> User %s swapped into Section %s from"
+                    " Section %s",
                     log_str(student.user),
                     log_str(section),
                     log_str(old_section),
@@ -564,26 +607,20 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
         if not request.user.can_enroll_in_course(section.mentor.course):
             logger.warning(
-                (
-                    "<Enrollment:Failure> User %s was unable to enroll in Section %s"
-                    " because they are already involved in this course"
-                ),
+                "<Enrollment:Failure> User %s was unable to enroll in Section %s"
+                " because they are already involved in this course",
                 log_str(request.user),
                 log_str(section),
             )
             raise PermissionDenied(
-                (
-                    "You are already either mentoring for this course or enrolled in a"
-                    " section, or the course is closed for enrollment"
-                ),
+                "You are already either mentoring for this course or enrolled in a"
+                " section, or the course is closed for enrollment",
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         if section.current_student_count >= section.capacity:
             logger.warning(
-                (
-                    "<Enrollment:Failure> User %s was unable to enroll in Section %s"
-                    " because it was full"
-                ),
+                "<Enrollment:Failure> User %s was unable to enroll in Section %s"
+                " because it was full",
                 log_str(request.user),
                 log_str(section),
             )
@@ -596,18 +633,14 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         )
         if student_queryset.count() > 1:
             logger.error(
-                (
-                    "<Enrollment:Critical> Multiple student objects exist in the"
-                    " database (Students %s)!"
-                ),
+                "<Enrollment:Critical> Multiple student objects exist in the"
+                " database (Students %s)!",
                 student_queryset.all(),
             )
             return PermissionDenied(
-                (
-                    "An internal error occurred; email mentors@berkeley.edu"
-                    " immediately. (Duplicate students exist in the database (Students"
-                    f" {student_queryset.all()}))"
-                ),
+                "An internal error occurred; email mentors@berkeley.edu"
+                " immediately. (Duplicate students exist in the database (Students"
+                f" {student_queryset.all()}))",
                 code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         if student_queryset.count() == 1:
