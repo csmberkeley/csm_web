@@ -21,9 +21,15 @@ const OutputTableRow = ({
   mentorname: string;
   absences: number;
 }) => {
+  const handleCheckboxChange = (isChecked: boolean) => {
+    // Handle checkbox change if needed
+    console.log(`Checkbox ${id} is now ${isChecked ? "checked" : "unchecked"}`);
+  };
   return (
     <tr>
-      {/*need to add checkbox component */}
+      <td>
+        <Checkbox label={1} onChange={handleCheckboxChange} />
+      </td>
       <td>{fullname}</td>
       <td>{email}</td>
       <td>{mentorname}</td>
