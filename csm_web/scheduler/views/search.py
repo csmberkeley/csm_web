@@ -1,0 +1,63 @@
+from django.db.models import Count, Q
+from rest_framework import status
+from rest_framework.decorators import api_view
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
+from scheduler.models import Section
+from scheduler.serializers import SectionSerializer
+
+
+@api_view(["GET"])
+def get_sections_of_user(request):
+    """
+    Gets all sections that match the queried user.
+    """
+
+    is_coordinator = bool(
+        request.user.coordinator_set.filter(user=request.user).count()
+    )
+    if not is_coordinator:
+        raise PermissionDenied(
+            "You are not authorized to search through sections of this course."
+        )
+
+    query = request.query_params.get("query", "")
+    student_absences = request.query_params.get("student_absences", None)
+
+    if not query and student_absences is None:
+        return Response(
+            {"error": "Please provide a query"}, status=status.HTTP_400_BAD_REQUEST
+        )
+
+    sections = Section.objects.all()
+
+    if query:
+        sections = sections.filter(
+            # pylint: disable-next=unsupported-binary-operation
+            Q(students__user__first_name__icontains=query)
+            | Q(students__user__last_name__icontains=query)
+            | Q(students__user__email__icontains=query)
+            | Q(mentor__user__first_name__icontains=query)
+            | Q(mentor__user__last_name__icontains=query)
+            | Q(mentor__user__email__icontains=query)
+        ).distinct()
+
+    if student_absences is not None:
+        try:
+            num_absences = int(student_absences)
+            sections = sections.annotate(num_abs=Count("students__absences")).filter(
+                num_abs=num_absences
+            )
+        except ValueError:
+            return Response(
+                {
+                    "error": (
+                        "Invalid value for student_absences. Please provide an integer."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    serializer = SectionSerializer(sections, many=True, context={"request": request})
+
+    return Response(serializer.data, status=status.HTTP_200_OK)
