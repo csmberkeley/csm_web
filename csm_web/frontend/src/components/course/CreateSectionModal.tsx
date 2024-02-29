@@ -83,7 +83,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
       setValidationText("Must have at least one section time");
       return false;
     } else if (isNaN(capacity) || capacity < 0) {
-      setValidationText("Capacity must not be blank and must be positive");
+      setValidationText("Capacity must be non-negative");
       return false;
     }
 

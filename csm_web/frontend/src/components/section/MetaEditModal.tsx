@@ -36,7 +36,7 @@ export default function MetaEditModal({
 
   const validateForm = () => {
     if (isNaN(formState.capacity) || formState.capacity < 0) {
-      setValidationText("Capacity must not be blank and must be positive");
+      setValidationText("Capacity must be non-negative");
       return false;
     }
 
