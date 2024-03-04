@@ -66,7 +66,7 @@ export function CoordinatorMatcherForm({
         return {
           interval: Interval.fromDateTimes(parseTime(time.startTime), parseTime(time.endTime)),
           day: time.day,
-          isLinked: slot.times.length > 0
+          isLinked: slot.times.length > 1
         };
       });
       return {
@@ -159,7 +159,7 @@ export function CoordinatorMatcherForm({
           {profile.course} ({relation})
         </h2>
         {switchProfileEnabled && (
-          <button className="matcher-secondary-btn" onClick={switchProfile}>
+          <button className="secondary-btn" onClick={switchProfile}>
             Switch profile
           </button>
         )}

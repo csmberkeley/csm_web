@@ -5,6 +5,7 @@ import React, { createRef, useEffect, useState } from "react";
 import { formatInterval } from "../../../utils/datetime";
 import { useMatcherSlotsMutation } from "../../../utils/queries/matcher";
 import { Profile } from "../../../utils/types";
+import Modal from "../../Modal";
 import { Tooltip } from "../../Tooltip";
 import { Slot, Time } from "../EnrollmentAutomationTypes";
 import { Calendar } from "../calendar/Calendar";
@@ -60,7 +61,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
    */
   const [tileDetails, setTileDetails] = useState<TileDetails>({
     days: [],
-    daysLinked: true,
+    daysLinked: false,
     start: DateTime.invalid("initial value"),
     end: DateTime.invalid("initial value"),
     length: Duration.fromObject({ hours: 1 })
@@ -70,6 +71,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
    * Whether or not anything has been edited
    */
   const [edited, setEdited] = useState<boolean>(false);
+
+  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
   const matcherSlotsMutation = useMatcherSlotsMutation(profile.courseId);
 
@@ -265,7 +268,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
       setTileDetails({
         ...tileDetails,
         days: [],
-        daysLinked: true,
+        daysLinked: false,
         start: DateTime.invalid("initial value"),
         end: DateTime.invalid("initial value")
       });
@@ -431,6 +434,122 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     );
   };
 
+  /**
+   * Confirm modal prior to submitting the slots.
+   */
+  let slotConfirmModal = null;
+  if (showConfirmModal) {
+    const linkedSlots = slots
+      .filter(slot => slot.times.some(time => time.isLinked))
+      .sort((a, b) => {
+        return (
+          Math.min(...a.times.map(time => DAYS.indexOf(time.day))) -
+          Math.min(...b.times.map(time => DAYS.indexOf(time.day)))
+        );
+      });
+    const unlinkedSlots = slots
+      .filter(slot => slot.times.every(time => !time.isLinked))
+      .sort((a, b) => {
+        let diff =
+          Math.min(...a.times.map(time => DAYS.indexOf(time.day))) -
+          Math.min(...b.times.map(time => DAYS.indexOf(time.day)));
+        if (diff != 0) return diff;
+
+        diff =
+          Math.min(...a.times.map(time => time.interval.start?.toUnixInteger() ?? 0)) -
+          Math.min(...b.times.map(time => time.interval.start?.toUnixInteger() ?? 0));
+        return diff;
+      });
+
+    if (slots.length > 0) {
+      const formattedLinkedSlots = linkedSlots.map((slot, slotIdx) => (
+        <li className="matcher-confirm-modal-list-item" key={slotIdx}>
+          {slot.times.map((time, timeIdx) => (
+            <React.Fragment key={timeIdx}>
+              <span>
+                {time.day} {formatInterval(time.interval)}
+              </span>
+              {timeIdx < slot.times.length - 1 && <br />}
+            </React.Fragment>
+          ))}
+        </li>
+      ));
+      const formattedUnlinkedSlots = unlinkedSlots.map((slot, slotIdx) => (
+        <li className="matcher-confirm-modal-list-item" key={slotIdx}>
+          {slot.times.map((time, timeIdx) => (
+            <React.Fragment key={timeIdx}>
+              <span>
+                {time.day} {formatInterval(time.interval)}
+              </span>
+              {timeIdx < slot.times.length - 1 && <br />}
+            </React.Fragment>
+          ))}
+        </li>
+      ));
+
+      slotConfirmModal = (
+        <Modal closeModal={() => setShowConfirmModal(false)}>
+          <h2 className="matcher-confirm-modal-header">
+            Submit {slots.length} slot{slots.length > 1 && "s"}?
+          </h2>
+          <h3>Linked Slots</h3>
+          {linkedSlots.length > 0 ? (
+            <ul className="matcher-confirm-modal-list">{formattedLinkedSlots}</ul>
+          ) : (
+            <p className="matcher-confirm-modal-empty-list-text">No linked slots.</p>
+          )}
+          <h3>Individual Slots</h3>
+          {unlinkedSlots.length > 0 ? (
+            <React.Fragment>
+              <ul className="matcher-confirm-modal-list">{formattedUnlinkedSlots}</ul>
+            </React.Fragment>
+          ) : (
+            <p className="matcher-confirm-modal-empty-list-text">No individual slots.</p>
+          )}
+          <div className="matcher-confirm-modal-buttons">
+            <button className="secondary-btn" onClick={() => setShowConfirmModal(false)}>
+              Cancel
+            </button>
+            <button
+              className="primary-btn"
+              onClick={() => {
+                setShowConfirmModal(false);
+                postSlots();
+              }}
+            >
+              Submit
+            </button>
+          </div>
+        </Modal>
+      );
+    } else {
+      // empty slots
+      slotConfirmModal = (
+        <Modal closeModal={() => setShowConfirmModal(false)}>
+          <h2 className="matcher-confirm-modal-header">Clear Slots?</h2>
+          <p>No slots to submit.</p>
+          <p>
+            <b>This will clear all existing slots from the database.</b>
+          </p>
+          <div className="matcher-confirm-modal-buttons">
+            <button className="secondary-btn" onClick={() => setShowConfirmModal(false)}>
+              Cancel
+            </button>
+            <button
+              className="danger-btn"
+              onClick={() => {
+                setShowConfirmModal(false);
+                postSlots();
+              }}
+            >
+              Clear slots
+            </button>
+          </div>
+        </Modal>
+      );
+    }
+  }
+
   let topContents = <div>Click and drag to create a new section slot, or click an existing slot to edit.</div>;
   if (creatingTiledEvents) {
     topContents = (
@@ -450,7 +569,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
               </form>
               <div className="matcher-tiling-link-day-container">
                 <label className="matcher-tiling-link-day-label">
-                  <input type="checkbox" defaultChecked onChange={editTiled_linked} />
+                  <input type="checkbox" onChange={editTiled_linked} />
                   Link days?
                 </label>
                 <div className="matcher-tooltip-container">
@@ -465,39 +584,45 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
 
             <div className="matcher-tiling-range-container">
               <div className="matcher-tiling-subheader">Range:</div>
-              <input
-                type="time"
-                ref={tileRefs.startTime}
-                defaultValue={tileDetails.start.isValid ? serializeTime(tileDetails.start) : ""}
-                step="900"
-                onChange={e => editTiled_interval("start", parseTime(e.target.value))}
-              />
-              &#8211;
-              <input
-                type="time"
-                ref={tileRefs.endTime}
-                defaultValue={tileDetails.end.isValid ? serializeTime(tileDetails.end) : ""}
-                step="900"
-                onChange={e => editTiled_interval("end", parseTime(e.target.value))}
-              />
+              <div className="matcher-tiling-range-input-container">
+                <input
+                  className="form-date light"
+                  type="time"
+                  ref={tileRefs.startTime}
+                  defaultValue={tileDetails.start.isValid ? serializeTime(tileDetails.start) : ""}
+                  step="900"
+                  onChange={e => editTiled_interval("start", parseTime(e.target.value))}
+                />
+                &#8211;
+                <input
+                  className="form-date light"
+                  type="time"
+                  ref={tileRefs.endTime}
+                  defaultValue={tileDetails.end.isValid ? serializeTime(tileDetails.end) : ""}
+                  step="900"
+                  onChange={e => editTiled_interval("end", parseTime(e.target.value))}
+                />
+              </div>
             </div>
             <div className="matcher-tiling-length-container">
               <div className="matcher-tiling-subheader">Length:</div>
-              <input
-                className="matcher-tiling-length-input"
-                type="number"
-                ref={tileRefs.length}
-                min={15}
-                step={5}
-                defaultValue={tileDetails.length.as("minutes")}
-                onChange={e => e.target.validity.valid && editTiled_length(parseInt(e.target.value))}
-              />
-              mins
+              <div className="matcher-tiling-length-input-container">
+                <input
+                  className="matcher-tiling-length-input form-input light"
+                  type="number"
+                  ref={tileRefs.length}
+                  min={15}
+                  step={5}
+                  defaultValue={tileDetails.length.as("minutes")}
+                  onChange={e => e.target.validity.valid && editTiled_length(parseInt(e.target.value))}
+                />
+                mins
+              </div>
             </div>
           </div>
         </div>
         <div className="matcher-sidebar-tiling-bottom">
-          <button className="matcher-secondary-btn" onClick={saveTiledEvents}>
+          <button className="secondary-btn" onClick={saveTiledEvents}>
             Save
           </button>
         </div>
@@ -517,6 +642,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                 </div>
                 <div className="matcher-created-time">
                   <select
+                    className="form-select light matcher-created-time-day-input"
                     defaultValue={time.day}
                     key={`day_${time_idx}/${selectedEventIndices}`}
                     onChange={e => editTime_day(time_idx, e.target.value)}
@@ -528,6 +654,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                     ))}
                   </select>
                   <input
+                    className="form-date light"
                     type="time"
                     key={`start_${time_idx}/${selectedEventIndices}`}
                     defaultValue={serializeTime(time.interval.start!)}
@@ -536,6 +663,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                   />
                   &#8211;
                   <input
+                    className="form-date light"
                     type="time"
                     key={`end_${time_idx}/${selectedEventIndices}`}
                     defaultValue={serializeTime(time.interval.end!)}
@@ -549,15 +677,15 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
         </div>
         <div className="matcher-sidebar-create-bottom">
           <div className="matcher-sidebar-create-bottom-row">
-            <button className="matcher-secondary-btn" onClick={saveEvent}>
+            <button className="secondary-btn" onClick={saveEvent}>
               Save
             </button>
-            <button className="matcher-secondary-btn" onClick={cancelEvent}>
+            <button className="secondary-btn" onClick={cancelEvent}>
               Cancel
             </button>
           </div>
           <div className="matcher-sidebar-create-bottom-row">
-            <button className="matcher-danger-btn" onClick={deleteEvent}>
+            <button className="danger-btn" onClick={deleteEvent}>
               Delete
             </button>
           </div>
@@ -592,13 +720,13 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
         <div className="matcher-sidebar-selected-bottom">
           {selectedEvents.length === 1 && (
             <div className="matcher-sidebar-selected-bottom-row">
-              <button className="matcher-secondary-btn" onClick={editSelectedEvent}>
+              <button className="secondary-btn" onClick={editSelectedEvent}>
                 Edit
               </button>
             </div>
           )}
           <div className="matcher-sidebar-selected-bottom-row">
-            <button className="matcher-danger-btn" onClick={deleteSelectedEvent}>
+            <button className="danger-btn" onClick={deleteSelectedEvent}>
               Delete
             </button>
           </div>
@@ -614,11 +742,11 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
         <div className="coordinator-sidebar-left">
           <div className="matcher-sidebar-left-top">{topContents}</div>
           <div className="matcher-sidebar-left-bottom">
-            <label className="matcher-submit-btn matcher-tiling-toggle matcher-toggle-btn">
+            <label className="secondary-btn">
               <input type="checkbox" onChange={toggleCreatingTiledEvents} ref={tileRefs.toggle} />
               Create tiled events
             </label>
-            <button className="matcher-submit-btn" onClick={postSlots}>
+            <button className="primary-btn" onClick={() => setShowConfirmModal(true)}>
               Submit
             </button>
           </div>
@@ -641,10 +769,11 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
         <div className="matcher-unsaved-changes-container">
           {edited && <span className="matcher-unsaved-changes">You have unsaved changes!</span>}
         </div>
-        <button className="matcher-submit-btn" onClick={nextStage} disabled={edited}>
+        <button className="primary-btn" onClick={nextStage} disabled={edited}>
           Continue
         </button>
       </div>
+      {showConfirmModal && slotConfirmModal}
     </React.Fragment>
   );
 }

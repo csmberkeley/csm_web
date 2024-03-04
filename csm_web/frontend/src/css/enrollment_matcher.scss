@@ -142,6 +142,7 @@
 .matcher-sidebar-left-bottom {
   display: flex;
   flex-direction: column;
+  gap: 3px;
   align-items: center;
   padding: 15px;
 }
@@ -178,12 +179,6 @@
   font-size: 0.9rem;
 }
 
-.matcher-input {
-  width: 40px;
-  margin-left: 5px;
-  outline: none;
-}
-
 /* Modal */
 
 .matcher-calendar-modal {
@@ -205,6 +200,33 @@
   font-weight: bold;
 }
 
+.matcher-confirm-modal-header {
+  text-align: center;
+}
+
+.matcher-confirm-modal-list {
+  column-count: 2;
+}
+
+.matcher-confirm-modal-empty-list-text {
+  margin-left: 1em;
+}
+
+.matcher-confirm-modal-list-item {
+  margin-right: 16px;
+  margin-bottom: 5px;
+  list-style-position: outside;
+}
+
+.matcher-confirm-modal-buttons {
+  display: flex;
+  flex-direction: row;
+  gap: 16px;
+  justify-content: center;
+
+  margin-top: 16px;
+}
+
 /* Table */
 
 .matcher-table-sort-group {
@@ -218,63 +240,6 @@
 .matcher-table-sort-icon {
   width: 1em;
   margin-top: 2px;
-}
-
-/* Buttons */
-
-.matcher-submit-btn {
-  padding: 8px 15px !important;
-  color: white;
-  user-select: none;
-  background-color: $csm-green;
-  border: none;
-  border-radius: 10px;
-}
-
-.matcher-submit-btn:hover {
-  background-color: $csm-green-darkened;
-}
-
-.matcher-submit-btn:disabled {
-  cursor: not-allowed;
-  background-color: $csm-neutral;
-}
-
-.matcher-secondary-btn {
-  padding: 8px 15px !important;
-  color: white;
-  user-select: none;
-  background-color: $csm-neutral;
-  border: none;
-  border-radius: 10px;
-}
-
-.matcher-secondary-btn:hover {
-  background-color: $csm-neutral-darkened;
-}
-
-.matcher-secondary-btn:disabled {
-  cursor: not-allowed;
-  background-color: $csm-neutral;
-}
-
-.matcher-danger-btn {
-  padding: 8px 15px !important;
-  color: white;
-  user-select: none;
-  background-color: $csm-danger;
-  border: none;
-  border-radius: 10px;
-}
-
-.matcher-danger-btn:hover {
-  background-color: $csm-danger-darkened;
-}
-
-.matcher-toggle-btn {
-  font-size: 0.9rem;
-  text-align: center;
-  cursor: pointer;
 }
 
 /* Mentor Preferences */
@@ -360,6 +325,10 @@
 }
 
 .matcher-created-time {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
   padding: 5px 0;
 }
 
@@ -369,6 +338,11 @@
   align-items: center;
   justify-content: center;
   margin-right: 5px;
+}
+
+.matcher-created-time-day-input {
+  width: fit-content;
+  padding-right: 25px;
 }
 
 .matcher-sidebar-header {
@@ -385,17 +359,6 @@
 
 .matcher-remove-time-icon:hover {
   color: $csm-danger-darkened;
-}
-
-.matcher-select-day-input {
-  height: 1.5rem;
-  outline: none;
-}
-
-.matcher-select-time-input {
-  margin-right: 5px;
-  margin-left: 5px;
-  outline: none;
 }
 
 .matcher-tiling-subheader {
@@ -420,13 +383,24 @@
   padding: 5px 0;
 }
 
+.matcher-tiling-range-input-container {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.matcher-tiling-length-input-container {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  margin-top: 4px;
+}
+
 .matcher-tiling-length-input {
   width: 75px;
   margin-right: 5px;
-}
-
-.matcher-tiling-toggle {
-  margin-bottom: 3px;
 }
 
 .matcher-tooltip-container {
@@ -640,6 +614,14 @@
   font-weight: normal;
 }
 
+.matcher-pref-input-label {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+}
+
 /* ConfigureStage.tsx */
 
 .matcher-mentor-min-max {
@@ -674,7 +656,6 @@
 
 .matcher-configure-input {
   width: 80%;
-  font-family: inherit;
 }
 
 .matcher-configure-sidebar-buttons {
@@ -823,18 +804,13 @@
 }
 
 .matcher-assignment-section-times-input {
-  width: 100%;
-  height: 1.5rem;
-  font-family: inherit;
-  font-size: 0.95rem;
-  background-color: transparent;
-  border: 2px solid $csm-neutral;
-  border-radius: 3px;
-  outline: none;
+  width: initial;
+  max-width: initial;
 }
 
 .matcher-assignment-section-times-input:focus {
   border-color: #888;
+  outline-color: #888;
 }
 
 .matcher-assignment-section-times-option {
@@ -860,11 +836,7 @@
 
 .matcher-assignment-section-capacity-input,
 .matcher-assignment-section-description-input {
-  width: calc(100% - 10px);
-  font-family: inherit;
-  font-size: 0.95rem;
-  border: 2px solid $csm-neutral;
-  border-radius: 3px;
+  width: calc(100% - 20px);
 }
 
 .matcher-assignment-section-capacity-input:focus,

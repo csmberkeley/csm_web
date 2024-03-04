@@ -44,6 +44,15 @@
   padding: 6px 8px;
 }
 
+// light version
+.light {
+  &.form-input,
+  &.form-date,
+  &.form-select {
+    background-color: white;
+  }
+}
+
 /// Select element
 
 .form-select {

@@ -186,7 +186,7 @@ export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStag
     <div className="matcher-configure-sidebar-contents">
       <div className="matcher-configure-input-container">Click on a time slot to configure it.</div>
       <div className="matcher-configure-sidebar-buttons">
-        <button className="matcher-submit-btn" onClick={saveConfig}>
+        <button className="primary-btn" onClick={saveConfig}>
           Save
         </button>
         <div className="matcher-submit-status-container">{statusContent}</div>
@@ -208,7 +208,7 @@ export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStag
           <div key={`${slot.id}-${selectedEventIndices.length}-min`} className="matcher-configure-input-group">
             <span>Min</span>
             <input
-              className="matcher-configure-input"
+              className="form-input light matcher-configure-input"
               type="number"
               min={0}
               max={maxMentor}
@@ -221,7 +221,7 @@ export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStag
           <div key={`${slot.id}-${selectedEventIndices.length}-max`} className="matcher-configure-input-group">
             <span>Max</span>
             <input
-              className="matcher-configure-input"
+              className="form-input light matcher-configure-input"
               type="number"
               min={minMentor}
               defaultValue={maxMentor}
@@ -239,7 +239,7 @@ export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStag
         )}
         <div className="matcher-configure-sidebar-footer">Shift-click to select more slots.</div>
         <div className="matcher-configure-sidebar-buttons">
-          <button className="matcher-submit-btn" onClick={saveConfig}>
+          <button className="primary-btn" onClick={saveConfig}>
             Save
           </button>
           <div className="matcher-submit-status-container">{statusContent}</div>
@@ -254,7 +254,7 @@ export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStag
         <div className="coordinator-sidebar-left">
           <div className="matcher-sidebar-left-top">{sidebarContents}</div>
           <div className="matcher-sidebar-left-bottom">
-            <label className="matcher-submit-btn matcher-toggle-btn">
+            <label className="secondary-btn">
               <input ref={selectAllRef} type="checkbox" onChange={toggleSelectAll} />
               Select All
             </label>
@@ -268,12 +268,12 @@ export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStag
             getEventDetails={getEventDetails}
             eventCreationEnabled={false}
             limitScrolling={true}
-            brighterLinkedTimes={false}
+            brighterLinkedTimes={true}
           />
         </div>
       </div>
       <div className="matcher-body-footer">
-        <button className="matcher-secondary-btn" onClick={reopenForm}>
+        <button className="secondary-btn" onClick={reopenForm}>
           Reopen Form
         </button>
         {matcherError && (
@@ -282,7 +282,7 @@ export const ConfigureStage = ({ profile, slots, recomputeStage }: ConfigureStag
             <span className="matcher-configure-error-text">{matcherError}</span>
           </div>
         )}
-        <button className="matcher-submit-btn" onClick={runMatcher}>
+        <button className="primary-btn" onClick={runMatcher}>
           Run Matcher
         </button>
       </div>

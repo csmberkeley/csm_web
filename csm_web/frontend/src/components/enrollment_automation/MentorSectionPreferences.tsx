@@ -188,10 +188,10 @@ export function MentorSectionPreferences({
             // multiple selected events
             <div className="matcher-sidebar-header">Multiple selected events</div>
           )}
-          <label>
+          <label className="matcher-pref-input-label">
             Preference:
             <input
-              className="matcher-input"
+              className="form-input light"
               type="number"
               key={event.id}
               defaultValue={event.preference}
@@ -236,7 +236,7 @@ export function MentorSectionPreferences({
           {profile.course} ({relation})
         </h2>
         {switchProfileEnabled && (
-          <button className="matcher-secondary-btn" onClick={switchProfile}>
+          <button className="secondary-btn" onClick={switchProfile}>
             Switch profile
           </button>
         )}
@@ -245,7 +245,7 @@ export function MentorSectionPreferences({
         <div className="mentor-sidebar-left">
           <div className="matcher-sidebar-left-top">{sidebarContents}</div>
           <div className="matcher-sidebar-left-bottom-row">
-            <button className="matcher-submit-btn" onClick={postPreferences}>
+            <button className="primary-btn" onClick={postPreferences}>
               Submit
             </button>
             <div className="matcher-submit-status-container">{statusContent}</div>
