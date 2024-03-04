@@ -1,4 +1,4 @@
-import React, { LabelHTMLAttributes, useState } from "react";
+import React, { useState } from "react";
 import "../../css/filtertable.scss";
 export const FilterTable = () => {
   return (
@@ -38,7 +38,7 @@ const OutputTableRow = ({
   return (
     <tr>
       <td>
-        <Checkbox label={0} onChange={handleCheckboxChange} />
+        <Checkbox label={id} onChange={handleCheckboxChange} />
       </td>
       <td>{fullname}</td>
       <td>{email}</td>
