@@ -1,9 +1,19 @@
 import React, { LabelHTMLAttributes, useState } from "react";
-const Table = () => {
+import "../../css/filtertable.scss";
+export const FilterTable = () => {
   return (
-    <table>
+    <table className="filtered-table">
+      <thead>
+        <tr>
+          <th>Select</th>
+          <th>Full Name</th>
+          <th>Email</th>
+          <th>Mentor Name</th>
+          <th>Absences</th>
+        </tr>
+      </thead>
       <tbody>
-        <OutputTableRow id={1} fullname="John Doe" email="john@example.com" mentorname="Mentor" absences={3} />
+        <OutputTableRow id={1} fullname="John Doe" email="john@example.com" mentorname="Bob The Builder" absences={3} />
       </tbody>
     </table>
   );
@@ -28,7 +38,7 @@ const OutputTableRow = ({
   return (
     <tr>
       <td>
-        <Checkbox label={1} onChange={handleCheckboxChange} />
+        <Checkbox label={0} onChange={handleCheckboxChange} />
       </td>
       <td>{fullname}</td>
       <td>{email}</td>
@@ -48,7 +58,6 @@ const Checkbox = ({ label, onChange }: { label: number; onChange: (isChecked: bo
   return (
     <label>
       <input type="checkbox" checked={isChecked} onChange={handleCheckboxChange} />
-      {label}
     </label>
   );
 };

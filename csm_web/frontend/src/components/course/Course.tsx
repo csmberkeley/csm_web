@@ -219,7 +219,9 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
             />
           ))
         ) : (
-          <h3 id="course-section-list-empty">No sections available, please select a different day</h3>
+          <div>
+            <h3 id="course-section-list-empty">No sections available, please select a different day</h3>
+          </div>
         )}
       </div>
       {userIsCoordinator && showModal && renderModal()}
