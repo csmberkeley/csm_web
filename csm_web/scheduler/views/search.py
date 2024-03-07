@@ -59,9 +59,16 @@ def get_sections_of_user(request):
     if student_absences is not None:
         try:
             num_absences = int(student_absences)
-            sections = sections.annotate(num_abs=Count("students__absences")).filter(
-                num_abs=num_absences
+            students = (
+                Student.objects.annotate(
+                    num_absences=Count(
+                        "attendance", filter=Q(attendance__presence="UN")
+                    )
+                )
+                .filter(num_absences=num_absences, section__in=sections)
+                .distinct()
             )
+            sections = sections.filter(students__in=students).distinct()
         except ValueError:
             return Response(
                 {
