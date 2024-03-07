@@ -548,7 +548,7 @@ function MentorListItem({
     <div className={classString}>
       {removeIcon}
       <EyeIcon
-        className="icon mentor-list-icon mentor-list-item-view"
+        className="icon outline mentor-list-icon mentor-list-item-view"
         onClick={() => hasPreferences && setSelectedMentor(mentor)}
       />
       <div className="mentor-list-item-name">{mentor.name}</div>

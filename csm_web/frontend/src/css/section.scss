@@ -213,6 +213,7 @@
 }
 
 #copy-student-emails {
+  margin-right: 8px;
   cursor: pointer;
 }
 
@@ -382,8 +383,7 @@
 #attendance-date-tabs-container {
   display: flex;
   margin: 0 -40px;
-  overflow-x: scroll;
-  overflow-y: hidden;
+  overflow: scroll hidden;
 }
 
 #attendance-date-tabs-container > div {

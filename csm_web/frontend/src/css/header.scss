@@ -60,12 +60,12 @@ header {
   margin: auto 5px auto 30px;
 }
 
-#logout-btn * {
+#logout-btn .icon {
   vertical-align: middle;
   fill: #808080;
 }
 
-#logout-btn:hover * {
+#logout-btn:hover .icon {
   fill: #5e5e5e;
 }
 
