@@ -58,16 +58,33 @@ def get_sections_of_user(request):
 
     if student_absences is not None:
         try:
-            num_absences = int(student_absences)
-            students = (
-                Student.objects.annotate(
-                    num_absences=Count(
-                        "attendance", filter=Q(attendance__presence="UN")
+            # Check if the query is a range or single number
+            if "-" in student_absences:
+                start, end = student_absences.split("-")
+                students = (
+                    Student.objects.annotate(
+                        num_absences=Count(
+                            "attendance", filter=Q(attendance__presence="UN")
+                        )
                     )
+                    .filter(
+                        num_absences__gte=start,
+                        num_absences__lte=end,
+                        section__in=sections,
+                    )
+                    .distinct()
                 )
-                .filter(num_absences=num_absences, section__in=sections)
-                .distinct()
-            )
+            else:
+                num_absences = int(student_absences)
+                students = (
+                    Student.objects.annotate(
+                        num_absences=Count(
+                            "attendance", filter=Q(attendance__presence="UN")
+                        )
+                    )
+                    .filter(num_absences=num_absences, section__in=sections)
+                    .distinct()
+                )
             sections = sections.filter(students__in=students).distinct()
         except ValueError:
             return Response(
