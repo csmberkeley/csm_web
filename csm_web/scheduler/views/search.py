@@ -3,8 +3,8 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from scheduler.models import Section
-from scheduler.serializers import SectionSerializer
+from scheduler.models import Section, Student
+from scheduler.serializers import SectionSerializer, StudentSerializer
 
 
 @api_view(["GET"])
@@ -31,6 +31,12 @@ def get_sections_of_user(request):
 
     sections = Section.objects.all()
 
+    # Fetch courses associated with the user's coordinator role
+    courses = request.user.coordinator_set.values_list("course", flat=True)
+
+    # Filter sections based on the courses associated with the user's coordinator role
+    sections = sections.filter(mentor__course__in=courses)
+
     if query:
         sections = sections.filter(
             # pylint: disable-next=unsupported-binary-operation
@@ -40,6 +46,14 @@ def get_sections_of_user(request):
             | Q(mentor__user__first_name__icontains=query)
             | Q(mentor__user__last_name__icontains=query)
             | Q(mentor__user__email__icontains=query)
+        ).distinct()
+
+        students = Student.objects.filter(
+            # pylint: disable-next=unsupported-binary-operation
+            Q(user__first_name__icontains=query)
+            | Q(user__last_name__icontains=query)
+            | Q(user__email__icontains=query),
+            section__in=sections,
         ).distinct()
 
     if student_absences is not None:
@@ -58,6 +72,14 @@ def get_sections_of_user(request):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    serializer = SectionSerializer(sections, many=True, context={"request": request})
+    student_serializer = StudentSerializer(students, many=True)
 
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    section_serializer = SectionSerializer(
+        sections, many=True, context={"request": request}
+    )
+    combined_data = {
+        "sections": section_serializer.data,
+        "students": student_serializer.data,
+    }
+
+    return Response(combined_data, status=status.HTTP_200_OK)
