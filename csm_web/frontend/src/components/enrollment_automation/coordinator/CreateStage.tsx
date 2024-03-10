@@ -622,9 +622,11 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
           </div>
         </div>
         <div className="matcher-sidebar-tiling-bottom">
-          <button className="secondary-btn" onClick={saveTiledEvents}>
-            Save
-          </button>
+          {curCreatedTimes.length > 0 && (
+            <button className="primary-btn" onClick={saveTiledEvents}>
+              Save
+            </button>
+          )}
         </div>
       </div>
     );
@@ -677,11 +679,11 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
         </div>
         <div className="matcher-sidebar-create-bottom">
           <div className="matcher-sidebar-create-bottom-row">
-            <button className="secondary-btn" onClick={saveEvent}>
-              Save
-            </button>
             <button className="secondary-btn" onClick={cancelEvent}>
               Cancel
+            </button>
+            <button className="primary-btn" onClick={saveEvent}>
+              Save
             </button>
           </div>
           <div className="matcher-sidebar-create-bottom-row">
@@ -746,9 +748,6 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
               <input type="checkbox" onChange={toggleCreatingTiledEvents} ref={tileRefs.toggle} />
               Create tiled events
             </label>
-            <button className="primary-btn" onClick={() => setShowConfirmModal(true)}>
-              Submit
-            </button>
           </div>
         </div>
         <div className="coordinator-sidebar-right">
@@ -767,11 +766,30 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
       </div>
       <div className="matcher-body-footer-right">
         <div className="matcher-unsaved-changes-container">
-          {edited && <span className="matcher-unsaved-changes">You have unsaved changes!</span>}
+          {edited && curCreatedTimes.length === 0 && (
+            <button className="primary-btn" onClick={() => setShowConfirmModal(true)}>
+              Submit
+            </button>
+          )}
         </div>
-        <button className="primary-btn" onClick={nextStage} disabled={edited}>
-          Continue
-        </button>
+        {edited || curCreatedTimes.length > 0 ? (
+          <div className="matcher-tooltip-container">
+            <Tooltip
+              placement="top"
+              source={
+                <button className="primary-btn" disabled={true}>
+                  Continue
+                </button>
+              }
+            >
+              <div className="matcher-tiling-tooltip-body">You have unsaved changes!</div>
+            </Tooltip>
+          </div>
+        ) : (
+          <button className="primary-btn" onClick={nextStage}>
+            Continue
+          </button>
+        )}
       </div>
       {showConfirmModal && slotConfirmModal}
     </React.Fragment>
