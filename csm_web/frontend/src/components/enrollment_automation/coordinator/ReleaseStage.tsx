@@ -138,7 +138,11 @@ function MentorList({
   /**
    * Whether to show the add mentors modal
    */
-  const [showAddMentorsModal, setShowAddMentorsModal] = useState(false);
+  const [showAddMentorsModal, setShowAddMentorsModal] = useState<boolean>(false);
+  /**
+   * Whether to show the open form confirmation modal
+   */
+  const [showConfirmModal, setShowConfirmModal] = useState<boolean>(false);
 
   /**
    * Attribute to sort the table by,
@@ -387,14 +391,41 @@ function MentorList({
     formStatusIcon = <CheckCircleIcon className="matcher-body-footer-status-icon" />;
   }
 
+  let confirmOpenFormModal = null;
+  if (showConfirmModal) {
+    confirmOpenFormModal = (
+      <Modal closeModal={() => setShowConfirmModal(false)}>
+        <h2 className="matcher-confirm-modal-header">Open Form</h2>
+        <p>Are you sure you want to open the form for mentors?</p>
+        <p>
+          <b>Once mentors submit preferences, you will not be able to edit slots.</b>
+        </p>
+        <div className="matcher-confirm-modal-buttons">
+          <button className="secondary-btn" onClick={() => setShowConfirmModal(false)}>
+            Cancel
+          </button>
+          <button
+            className="primary-btn"
+            onClick={() => {
+              setShowConfirmModal(false);
+              openForm();
+            }}
+          >
+            Open form
+          </button>
+        </div>
+      </Modal>
+    );
+  }
+
   return (
     <React.Fragment>
       {showAddMentorsModal && (
         <Modal closeModal={() => setShowAddMentorsModal(false)}>
           <div className="mentor-list-right">
             <span className="mentor-add-label">Add mentor emails (one per line, or separated by commas):</span>
-            <textarea className="mentor-add-textarea" ref={addMentorTextArea}></textarea>
-            <button className="matcher-submit-btn" onClick={submitMentorList}>
+            <textarea className="mentor-add-textarea form-input" ref={addMentorTextArea}></textarea>
+            <button className="primary-btn" onClick={submitMentorList}>
               Submit
             </button>
           </div>
@@ -409,7 +440,7 @@ function MentorList({
             </span>
           </div>
           <div className="mentor-list-top-buttons">
-            <button className="matcher-submit-btn" onClick={() => setShowAddMentorsModal(true)}>
+            <button className="primary-btn" onClick={() => setShowAddMentorsModal(true)}>
               Add Mentors
             </button>
           </div>
@@ -456,12 +487,12 @@ function MentorList({
       <div className="matcher-body-footer-sticky matcher-body-footer">
         <div>
           {mentorList.every(mentor => !hasPreferences(mentor)) && (
-            <button className="matcher-secondary-btn" onClick={prevStage}>
+            <button className="secondary-btn" onClick={prevStage}>
               Back
             </button>
           )}
           {removedMentorList.length > 0 && (
-            <button className="matcher-secondary-btn" onClick={submitMentorRemovals}>
+            <button className="secondary-btn" onClick={submitMentorRemovals}>
               Update
             </button>
           )}
@@ -469,16 +500,17 @@ function MentorList({
         <div className="matcher-body-footer-status-container">
           {formStatusIcon}
           {formIsOpen ? (
-            <button className="matcher-submit-btn" onClick={closeForm}>
+            <button className="primary-btn" onClick={closeForm}>
               Close Form
             </button>
           ) : (
-            <button className="matcher-submit-btn" onClick={openForm}>
+            <button className="primary-btn" onClick={() => setShowConfirmModal(true)}>
               Open Form
             </button>
           )}
         </div>
       </div>
+      {showConfirmModal && confirmOpenFormModal}
     </React.Fragment>
   );
 }

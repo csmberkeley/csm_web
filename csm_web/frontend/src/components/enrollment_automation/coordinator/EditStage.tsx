@@ -498,7 +498,7 @@ export const EditStage = ({
       <div>
         <div className="matcher-assignment-above-head">
           <SearchBar className="matcher-assignment-search" onChange={e => handleSearchChange(e.target.value)} />
-          <button className="matcher-submit-btn" onClick={() => setDistModalOpen(true)}>
+          <button className="primary-btn" onClick={() => setDistModalOpen(true)}>
             View Distribution
           </button>
         </div>
@@ -546,7 +546,7 @@ export const EditStage = ({
       </div>
       <div className="matcher-body-footer matcher-body-footer-sticky">
         <div className="matcher-assignment-button-div">
-          <button className="matcher-secondary-btn" onClick={() => prevStage()}>
+          <button className="secondary-btn" onClick={() => prevStage()}>
             Back
           </button>
         </div>
@@ -568,10 +568,10 @@ export const EditStage = ({
           )}
         </div>
         <div className="matcher-assignment-button-div">
-          <button className="matcher-secondary-btn" onClick={() => saveAssignment()}>
+          <button className="secondary-btn" onClick={() => saveAssignment()}>
             Save
           </button>
-          <button className="matcher-danger-btn" onClick={() => setCreateConfirmModalOpen(true)}>
+          <button className="danger-btn" onClick={() => setCreateConfirmModalOpen(true)}>
             Create
           </button>
         </div>
@@ -766,7 +766,7 @@ const EditTableRow = ({
           {editingTimes ? (
             <select
               ref={selectTimesRef}
-              className="matcher-assignment-section-times-input"
+              className="form-select matcher-assignment-section-times-input"
               defaultValue={row.slotId}
               onChange={e => handleChangeRow(e, "times")}
               onBlur={handleBlurSelect}
@@ -797,7 +797,7 @@ const EditTableRow = ({
       <div className="matcher-assignment-section-capacity">
         <input
           key={capacityKey}
-          className="matcher-assignment-section-capacity-input"
+          className="form-input matcher-assignment-section-capacity-input"
           type="number"
           min={0}
           defaultValue={row.capacity}
@@ -809,7 +809,7 @@ const EditTableRow = ({
       <div className="matcher-assignment-section-description">
         <input
           key={descriptionKey}
-          className="matcher-assignment-section-description-input"
+          className="form-input matcher-assignment-section-description-input"
           type="text"
           defaultValue={row.description}
           onChange={e => handleChangeRow(e, "description")}
@@ -937,10 +937,10 @@ const CreateConfirmModal = ({
           </p>
         </div>
         <div className="matcher-assignment-confirm-modal-footer">
-          <button className="matcher-secondary-btn" onClick={closeModal}>
+          <button className="secondary-btn" onClick={closeModal}>
             Cancel
           </button>
-          <button className="matcher-danger-btn" onClick={createSections}>
+          <button className="danger-btn" onClick={createSections}>
             Confirm
           </button>
         </div>
