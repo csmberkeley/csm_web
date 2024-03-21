@@ -792,9 +792,10 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         is_coordinator = bool(
             section.mentor.course.coordinator_set.filter(user=request.user).count()
         )
+        is_mentor = section.mentor.user == request.user
 
         if request.method == "GET":
-            if is_coordinator:
+            if is_coordinator or is_mentor:
                 return self._coordinator_waitlist_get(request, section)
             return self._student_waitlist_get(request, section)
 
@@ -863,10 +864,13 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         section = get_object_or_error(Section.objects, pk=pk)
         if section.current_student_count() >= section.capacity:
             return Response({}, status=status.HTTP_406_NOT_ACCEPTABLE)
-
+        if self.waitlist_entry_set.count() < 1:
+            return Response(
+                {"detail": "empty waitlist"}, status=status.HTTP_404_NOT_FOUND
+            )
         first_user = section.waitlist_entry_set.all().order_by("time")[0].user
         student = Student.objects.create(
             user=first_user, section=section, course=section.mentor.course
         )
-        # user.waitlist_entry_set.filter(course=section.mentor.course).delete()
+        first_user.waitlist_entry_set.filter(course=section.mentor.course).delete()
         return Response(StudentSerializer(student).data)
