@@ -96,14 +96,28 @@ def get_sections_of_user(request):
                 status=status.HTTP_400_BAD_REQUEST,
             )
 
-    student_serializer = StudentSerializer(students, many=True)
-
     section_serializer = SectionSerializer(
         sections, many=True, context={"request": request}
     )
+
+    student_data = []
+    for student in students:
+        # attendance_data = student.attendance.filter(presence="UN")
+        student_serializer = StudentSerializer(student)
+        student_data.append(
+            {
+                "id": student_serializer.data["id"],
+                "name": student_serializer.data["name"],
+                "email": student_serializer.data["email"],
+                "section": student_serializer.data["section"],
+                "mentor": student.section.mentor.user.get_full_name(),
+                "num_absences": student.num_absences,
+            }
+        )
+
     combined_data = {
         "sections": section_serializer.data,
-        "students": student_serializer.data,
+        "students": student_data,
     }
 
     return Response(combined_data, status=status.HTTP_200_OK)
