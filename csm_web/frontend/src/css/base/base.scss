@@ -4,85 +4,70 @@
 
 /* The best font ever. In case someone doesn't have it installed. */
 @font-face {
-    font-family: "Comic Sans Fallback";
-    src: url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.eot");
-    src: url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.eot?#iefix")format("embedded-opentype"),
-    url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.woff2")format("woff2"),
-    url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.woff")format("woff"),
-    url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.ttf")format("truetype"),
-    url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.svg#Comic Sans MS")format("svg");
+  font-family: "Comic Sans Fallback";
+  src: url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.eot");
+  src:
+    url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.eot?#iefix") format("embedded-opentype"),
+    url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.woff2") format("woff2"),
+    url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.woff") format("woff"),
+    url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.ttf") format("truetype"),
+    url("https://db.onlinewebfonts.com/t/7cc6719bd5f0310be3150ba33418e72e.svg#Comic Sans MS") format("svg");
 }
-
 
 html,
 body {
   width: 100%;
   height: 100%;
 
-	font-family: "Comic Sans MS", "Comic Sans", "Comic Sans Fallback", Arial, sans-serif;
-	backdrop-filter: saturate(0);
-	animation: background-cycle 30s linear infinite;
-}
-
-header {
-	animation: marquee 20s linear infinite;
+  font-family: "Comic Sans MS", "Comic Sans", "Comic Sans Fallback", Arial, sans-serif;
+  backdrop-filter: saturate(0);
+  animation: background-cycle 30s linear infinite;
 }
 
 @keyframes background-cycle {
-	0% {
-		background-color: #ffe2e2;
-	}
+  0% {
+    background-color: #ffe2e2;
+  }
 
-	10% {
-		background-color: #fffbe9;
-	}
+  10% {
+    background-color: #fffbe9;
+  }
 
-	20% {
-		background-color: #f6ffea;
-	}
+  20% {
+    background-color: #f6ffea;
+  }
 
-	30% {
-		background-color: #e7ffea;
-	}
+  30% {
+    background-color: #e7ffea;
+  }
 
-	40% {
-		background-color: #dffff0;
-	}
+  40% {
+    background-color: #dffff0;
+  }
 
-	50% {
-		background-color: #e0f6ff;
-	}
+  50% {
+    background-color: #e0f6ff;
+  }
 
-	60% {
-		background-color: #e0ebff;
-	}
+  60% {
+    background-color: #e0ebff;
+  }
 
-	70% {
-		background-color: #d7d9ff;
-	}
+  70% {
+    background-color: #d7d9ff;
+  }
 
-	80% {
-		background-color: #ece8ff;
-	}
+  80% {
+    background-color: #ece8ff;
+  }
 
-	90% {
-		background-color: #f1e1ff;
-	}
+  90% {
+    background-color: #f1e1ff;
+  }
 
-	100% {
-		background-color: #ffe2e2;
-	}
-}
-
-@keyframes marquee {
-	0% {
-		transform: translateX(100%);
-	}
-
-	100% {
-		transform: translateX(-100%);
-	}
-
+  100% {
+    background-color: #ffe2e2;
+  }
 }
 
 body {
