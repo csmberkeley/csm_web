@@ -22,6 +22,7 @@
 
 <body>
   {% block body %} {% endblock %}
+  <button style="position: fixed; bottom: 25px; left: 50%;" id="stop-april-fools">Stop dodging</button>
 </body>
 {% block after_body %} {% endblock %}
 
@@ -30,7 +31,7 @@
   // move all buttons away from cursor when it gets close
   const mouseMove = (e) => {
     if (!APRIL_FOOLS_ACTIVE) return;
-    const buttons = document.querySelectorAll("a, button");
+    const buttons = document.querySelectorAll("a, button:not(#stop-april-fools)");
     const x = e.x;
     const y = e.y;
     for (let i = 0; i < buttons.length; i++) {
@@ -49,8 +50,8 @@
 
       if (edgedist < 100) {
         // move button away from cursor
-        const x_offset = dx / dist * 5;
-        const y_offset = dy / dist * 5;
+        const x_offset = dx / dist * 2;
+        const y_offset = dy / dist * 2;
         const t = button.style.transform;
         const match = t.match(/translate\((-?\d+\.?\d*)px, (-?\d+\.?\d*)px\)/);
         if (match) {
@@ -72,6 +73,10 @@
       APRIL_FOOLS_ACTIVE = false;
     }
   });
+  document.getElementById("stop-april-fools").addEventListener("mousedown", (e) => {
+    APRIL_FOOLS_ACTIVE = false;
+    document.getElementById("stop-april-fools").remove()
+  })
 </script>
 
 </html>
