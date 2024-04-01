@@ -308,11 +308,16 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
         "'self'",
         "https://unpkg.com/react@18/umd/",
         "https://unpkg.com/react-dom@18/umd/",
+        "'unsafe-inline'",
     )
-    CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")
+    CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com", "'unsafe-inline'")
     CSP_CONNECT_SRC = ("'self'",)
     CSP_IMG_SRC = ("'self'", "data:")
-    CSP_FONT_SRC = ("'self'", "https://fonts.gstatic.com", "https://db.onlinewebfonts.com")
+    CSP_FONT_SRC = (
+        "'self'",
+        "https://fonts.gstatic.com",
+        "https://db.onlinewebfonts.com",
+    )
     CSP_FRAME_ANCESTORS = ("'none'",)
     CSP_BLOCK_ALL_MIXED_CONTENT = True
 
