@@ -216,7 +216,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             Error status format:
             - 'OK': student is ready to be enrolled (but no action has been taken)
             - 'CONFLICT': student is already enrolled in another section
-                - if there is a cnoflicting section:
+                - if there is a conflicting section:
                     detail = { 'section': serialized section }
                 - if user can't enroll:
                     detail = { 'reason': reason }
@@ -356,10 +356,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             if student_queryset.count() > 1:
                 # something bad happened, return immediately with error
                 logger.error(
-                    (
-                        "<Enrollment:Critical> Multiple student objects exist in the"
-                        " database (Students %s)!"
-                    ),
+                    "<Enrollment:Critical> Multiple student objects exist in the"
+                    " database (Students %s)!",
                     student_queryset.all(),
                 )
                 return Response(
@@ -536,10 +534,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 )
                 student.save()
                 logger.info(
-                    (
-                        "<Enrollment:Success> User %s swapped into Section %s from"
-                        " Section %s"
-                    ),
+                    "<Enrollment:Success> User %s swapped into Section %s from"
+                    " Section %s",
                     log_str(student.user),
                     log_str(section),
                     log_str(old_section),
@@ -564,26 +560,20 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
         if not request.user.can_enroll_in_course(section.mentor.course):
             logger.warning(
-                (
-                    "<Enrollment:Failure> User %s was unable to enroll in Section %s"
-                    " because they are already involved in this course"
-                ),
+                "<Enrollment:Failure> User %s was unable to enroll in Section %s"
+                " because they are already involved in this course",
                 log_str(request.user),
                 log_str(section),
             )
             raise PermissionDenied(
-                (
-                    "You are already either mentoring for this course or enrolled in a"
-                    " section, or the course is closed for enrollment"
-                ),
+                "You are already either mentoring for this course or enrolled in a"
+                " section, or the course is closed for enrollment",
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
         if section.current_student_count >= section.capacity:
             logger.warning(
-                (
-                    "<Enrollment:Failure> User %s was unable to enroll in Section %s"
-                    " because it was full"
-                ),
+                "<Enrollment:Failure> User %s was unable to enroll in Section %s"
+                " because it was full",
                 log_str(request.user),
                 log_str(section),
             )
@@ -596,18 +586,14 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         )
         if student_queryset.count() > 1:
             logger.error(
-                (
-                    "<Enrollment:Critical> Multiple student objects exist in the"
-                    " database (Students %s)!"
-                ),
+                "<Enrollment:Critical> Multiple student objects exist in the"
+                " database (Students %s)!",
                 student_queryset.all(),
             )
             return PermissionDenied(
-                (
-                    "An internal error occurred; email mentors@berkeley.edu"
-                    " immediately. (Duplicate students exist in the database (Students"
-                    f" {student_queryset.all()}))"
-                ),
+                "An internal error occurred; email mentors@berkeley.edu"
+                " immediately. (Duplicate students exist in the database (Students"
+                f" {student_queryset.all()}))",
                 code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
         if student_queryset.count() == 1:

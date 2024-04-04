@@ -10,7 +10,25 @@ from scheduler.serializers import SectionSerializer, StudentSerializer
 @api_view(["GET"])
 def get_sections_of_user(request):
     """
-    Gets all sections that match the queried user.
+    Gets sections and associated students based on query parameters.
+
+    Query Parameters:
+    - `query`: (optional) Search query to filter sections and students by name or email.
+    - `student_absences`: (optional) Filter students by num absences (exact int or int range).
+
+    Returns:
+    - JSON response containing sections matching the query, along with associated student details.
+
+    Raises:
+    - PermissionDenied: If user lacks permission to search sections.
+    - HTTP 400 Bad Request: If neither query parameters provided,
+                            or invalid value for `student_absences`.
+
+    Note:
+    - Only `query` provided: returns sections & students matching the query.
+    - Only `student_absences` provided: returns sections & students filtered by absences.
+    - Both `query` and `student_absences` provided: returns sections and students
+                                                  filtered by both query and absences.
     """
 
     is_coordinator = bool(
@@ -48,13 +66,20 @@ def get_sections_of_user(request):
             | Q(mentor__user__email__icontains=query)
         ).distinct()
 
-        students = Student.objects.filter(
-            # pylint: disable-next=unsupported-binary-operation
-            Q(user__first_name__icontains=query)
-            | Q(user__last_name__icontains=query)
-            | Q(user__email__icontains=query),
-            section__in=sections,
-        ).distinct()
+        students = (
+            Student.objects.filter(
+                # pylint: disable-next=unsupported-binary-operation
+                Q(user__first_name__icontains=query)
+                | Q(user__last_name__icontains=query)
+                | Q(user__email__icontains=query),
+                section__in=sections,
+            )
+            .distinct()
+            .annotate(
+                num_absences=Count("attendance", filter=Q(attendance__presence="UN"))
+            )
+        )
+        student_query_results = students
 
     if student_absences is not None:
         try:
@@ -90,11 +115,17 @@ def get_sections_of_user(request):
             return Response(
                 {
                     "error": (
-                        "Invalid value for student_absences. Please provide an integer."
+                        "Invalid value for student_absences. Please provide an integer"
+                        " or an integer range of format start-end."
                     )
                 },
                 status=status.HTTP_400_BAD_REQUEST,
             )
+        student_absences_results = students
+
+    if query and student_absences:
+        # Filter students based on query
+        students = student_query_results.intersection(student_absences_results)
 
     section_serializer = SectionSerializer(
         sections, many=True, context={"request": request}

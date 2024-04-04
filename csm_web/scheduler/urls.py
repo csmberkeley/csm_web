@@ -23,7 +23,5 @@ urlpatterns += [
     path("matcher/<int:pk>/mentors/", views.matcher.mentors),
     path("matcher/<int:pk>/configure/", views.matcher.configure),
     path("matcher/<int:pk>/create/", views.matcher.create),
-    path(
-        "search/get-sections/", views.get_sections_of_user, name="get_sections_of_user"
-    ),
+    path("search/sections/", views.get_sections_of_user, name="get_sections_of_user"),
 ]
