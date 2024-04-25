@@ -1,0 +1,135 @@
+@use "base/variables" as *;
+
+.calendar-month-header {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: space-between;
+  padding: 5px 0;
+}
+
+.calendar-month-header-left {
+  display: flex;
+}
+
+.calendar-month-header-right {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+
+.calendar-month-title {
+  font-size: 1.5rem;
+  font-weight: bold;
+  text-align: center;
+}
+
+.calendar-month-nav-icon {
+  width: 0.9rem;
+  height: fit-content;
+  margin: 0 8px;
+
+  color: #333;
+
+  cursor: pointer;
+  user-select: none;
+}
+
+.calendar-month-nav-icon:hover {
+  color: #888;
+}
+
+.calendar-month-today-btn {
+  width: fit-content;
+  padding: 4px 8px;
+  margin: 8px 16px 8px 0;
+
+  font-weight: bold;
+  color: #333;
+  cursor: pointer;
+  user-select: none;
+  background-color: transparent;
+
+  border: 2px solid #555;
+  border-radius: 8px;
+}
+
+.calendar-month-today-btn:hover {
+  color: #888;
+  border-color: #aaa;
+}
+
+.calendar-month-weekday-headers {
+  display: grid;
+  grid-template-columns: repeat(7, 5.5em);
+  gap: 2px;
+
+  padding: 5px 0;
+
+  text-align: center;
+  user-select: none;
+  background-color: $calendar-header-bg;
+}
+
+.calendar-month-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 5.5em);
+  gap: 2px;
+
+  background-color: $calendar-border;
+  border: 2px solid $calendar-border;
+}
+
+.calendar-month-week {
+  display: contents;
+}
+
+.calendar-month-day {
+  position: relative;
+  box-sizing: border-box;
+  height: 4em;
+
+  user-select: none;
+
+  border: 2px solid transparent;
+}
+
+.calendar-month-day:not(.transparent) {
+  background-color: $calendar-day-bg;
+}
+
+.calendar-month-day.with-occurrence {
+  background-color: $calendar-day-occurrence;
+}
+
+.calendar-month-day.with-occurrence:hover {
+  cursor: pointer;
+  background-color: $calendar-day-occurrence-hover;
+}
+
+.calendar-month-day.selected {
+  background-color: $calendar-day-selected;
+}
+
+.calendar-month-day.today {
+  border-color: $calendar-day-today;
+}
+
+.calendar-month-day.past {
+  filter: brightness(0.95);
+}
+
+.calendar-month-day-number {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+}
+
+.calendar-month-day-text {
+  position: absolute;
+  right: 3px;
+  bottom: 3px;
+
+  font-style: italic;
+  color: #555;
+}

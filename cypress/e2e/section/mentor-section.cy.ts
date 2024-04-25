@@ -98,6 +98,15 @@ describe("attendances", () => {
     cy.get("#attendance-date-tabs-container")
       .children()
       .should("have.length", 2)
+      // click first (inactive) tab (it's in the future)
+      .first()
+      .then($tab => {
+        cy.wrap($tab).should("not.have.class", "active").click();
+        cy.wrap($tab).should("have.class", "active");
+      });
+
+    cy.get("#attendance-date-tabs-container")
+      .children()
       // click second (inactive) tab
       .last()
       .then($tab => {
