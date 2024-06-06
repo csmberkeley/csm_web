@@ -1,16 +1,14 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.utils import timezone
-from scheduler.models import Attendance, SectionOccurrence
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-import datetime
 
-from .utils import log_str, logger, get_object_or_error
 from ..models import Student
 from ..serializers import AttendanceSerializer, StudentSerializer
+from .utils import get_object_or_error, log_str, logger
 
 
 class StudentViewSet(viewsets.GenericViewSet):
@@ -28,6 +26,10 @@ class StudentViewSet(viewsets.GenericViewSet):
 
     @action(detail=True, methods=["patch"])
     def drop(self, request, pk=None):
+        """
+        Drops a student form a course.
+        PATCH: Drop a given student. Check for student ban if coordinator made request
+        """
         student = get_object_or_error(self.get_queryset(), pk=pk)
         is_coordinator = student.course.coordinator_set.filter(
             user=request.user
@@ -43,7 +45,10 @@ class StudentViewSet(viewsets.GenericViewSet):
                 student.course.whitelist.remove(student.user)
         student.save()
         logger.info(
-            f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)} for Student user {log_str(student.user)}"
+            "<Drop> User %s dropped section %s for Student %s.",
+            log_str(request.user),
+            log_str(student.section),
+            log_str(student.user),
         )
         # filter attendances and delete future attendances
         now = timezone.now().astimezone(timezone.get_default_timezone())
@@ -51,15 +56,25 @@ class StudentViewSet(viewsets.GenericViewSet):
             Q(
                 sectionOccurrence__date__gte=now.date(),
                 sectionOccurrence__section=student.section,
+                presence="",
             )
         ).delete()
         logger.info(
-            f"<Drop> Deleted {num_deleted} attendances for user {log_str(student.user)} in Section {log_str(student.section)} after {now.date()}"
+            "<Drop> Deleted %s attendances for user %s in Section %s after %s",
+            num_deleted,
+            log_str(student.user),
+            log_str(student.section),
+            now.date(),
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["get", "put"])
     def attendances(self, request, pk=None):
+        """
+        Method for updating attendances.
+        GET: Gets the attendances for a student
+        PUT: Updates the attendances for a student
+        """
         student = get_object_or_error(self.get_queryset(), pk=pk)
         if request.method == "GET":
             return Response(
@@ -81,18 +96,26 @@ class StudentViewSet(viewsets.GenericViewSet):
             )
         except ObjectDoesNotExist:
             logger.error(
-                f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, used non-existent attendance id {request.data['id']}"
+                (
+                    "<Attendance:Failure> Could not record attendance for User %s, used"
+                    " non-existent attendance ID %s"
+                ),
+                log_str(request.user),
+                request.data["id"],
             )
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if serializer.is_valid():
             attendance = serializer.save()
             logger.info(
-                f"<Attendance:Success> Attendance {log_str(attendance)} recorded for User {log_str(request.user)}"
+                "<Attendance:Success> Attendance %s recorded for User %s",
+                log_str(attendance),
+                log_str(request.user),
             )
             return Response(status=status.HTTP_204_NO_CONTENT)
         logger.error(
-            f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, errors: {serializer.errors}"
+            "<Attendance:Failure> Could not record attendance for User %s, errors: %s",
+            log_str(request.user),
+            serializer.errors,
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-
