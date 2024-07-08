@@ -1,8 +1,11 @@
 import { DateTime } from "luxon";
-import React, { useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import * as React from "react";
+import { useEffect, useState } from "react";
+import { Navigate, Route, Routes, useParams } from "react-router-dom";
+import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../../utils/api";
 
 import { DEFAULT_TIMEZONE } from "../../utils/datetime";
+import { useMentorProfile } from "../../utils/queries/profiles";
 import {
   useDropUserMutation,
   useStudentAttendances,
@@ -40,6 +43,31 @@ export default function StudentSection({
   override,
   associatedProfileId
 }: StudentSectionType) {
+  const { sectionId } = useParams();
+  // console.log(id);
+
+  // const mentorID = mentor.id;
+  // let mentorProfile;
+  // // console.log(mentor)
+
+  // const fetchTemp = async () => {
+  //   await fetchWithMethod(`/user/${mentorID}/fetch_user_id`, HTTP_METHODS.POST, {'type': "mentor"}).then(response =>
+  //     response.json().then(data => mentorProfile = data))
+
+  //   // const response = await fetchWithMethod(`/user/${mentorID}/fetch_user_id`, HTTP_METHODS.POST, {'type': "mentor"});
+  //   // if (response.ok) {
+  //   //   console.log(await response.json())
+  //   // } else {
+  //   //   return
+  //   // }
+  // }
+
+  // console.log(useMentorProfile(mentorID));
+
+  // fetchTemp();
+
+  // console.log(mentor);
+
   return (
     <SectionDetail
       course={course}
@@ -90,7 +118,7 @@ function StudentSectionInfo({ mentor, spacetimes, associatedProfileId }: Student
           <InfoCard title="Mentor">
             <h5>{mentor.name}</h5>
             {/* <a href={`mailto:${mentor.email}`}>{mentor.email}</a> */}
-            <ProfileSection profileId={associatedProfileId} />
+            <ProfileSection profileId={mentor.id} />
           </InfoCard>
         )}
 
@@ -171,14 +199,49 @@ enum ProfileSectionStage {
 function ProfileSection({ profileId }: ProfileSectionProps) {
   // const studentDropMutation = useDropUserMutation(profileId);
   const [stage, setStage] = useState<ProfileSectionStage>(ProfileSectionStage.CLOSED);
+  const [mentorProfile, setMentorProfile] = useState();
 
-  // const performDrop = () => {
-  //   studentDropMutation.mutate(undefined, {
-  //     onSuccess: () => {
-  //       setStage(ProfileSectionStage.CLOSED);
-  //     }
-  //   });
-  // };
+  useEffect(() => {
+    fetchData();
+  }, []);
+
+  const fetchData = async () => {
+    const result = fetchWithMethod(`/user/${profileId}/fetch_user_id`, HTTP_METHODS.POST, { type: "mentor" }).then(
+      response =>
+        response.json().then(data => {
+          setMentorProfile(data);
+          console.log(data);
+          return data;
+        })
+    );
+    return result;
+  };
+
+  // current user's id from Students
+
+  // console.log(profileId);
+
+  // const { data: jsonUserInfo, isSuccess: userInfoLoaded } = useMentorProfile(profileId);
+
+  // const response = async () => await fetchNormalized(`/user/${profileId}/profile`).then((data) => data.json());
+
+  // const mentorID = mentor.id;
+  // console.log(mentor)
+
+  const fetchTemp = async () => {
+    // await fetchWithMethod(`/user/${profileId}/fetch_user_id`, HTTP_METHODS.POST, {'type': "mentor"}).then(response =>
+    //   response.json().then(data => setMentorProfile(data)))
+    // const response = await fetchWithMethod(`/user/${mentorID}/fetch_user_id`, HTTP_METHODS.POST, {'type': "mentor"});
+    // if (response.ok) {
+    //   console.log(await response.json())
+    // } else {
+    //   return
+    // }
+  };
+
+  // fetchTemp();
+
+  // console.log(mentorProfile);
 
   switch (stage) {
     case ProfileSectionStage.CLOSED:
@@ -191,8 +254,17 @@ function ProfileSection({ profileId }: ProfileSectionProps) {
       return (
         <Modal closeModal={() => setStage(ProfileSectionStage.CLOSED)}>
           <div className="profile-information">
-            <h5>Are you sure you want to drop?</h5>
-            <p>You are not guaranteed an available spot in another section!</p>
+            {mentorProfile ? (
+              <>
+                <h5>{mentorProfile.firstName}</h5>
+                <h5>{mentorProfile.lastName}</h5>
+                <h5>{mentorProfile.bio}</h5>
+                <h5>{mentorProfile.pronouns}</h5>
+                <h5>{mentorProfile.email}</h5>
+              </>
+            ) : (
+              ""
+            )}
           </div>
         </Modal>
       );
@@ -415,19 +487,10 @@ function StudentList({ associatedProfileId, id }: StudentListProps) {
     isSuccess: listLoaded,
     isError: listLoadError,
     refetch: refetchStudentList
-  } = useSectionStudents(associatedProfileId);
+  } = useSectionStudents(id);
 
   return listLoaded ? (
     <React.Fragment>
-      <div id="word-of-the-day-card">
-        <h3 className="word-of-the-day-title">Submit Word of the Day</h3>
-        <div className="word-of-the-day-action-container">
-          <div className="word-of-the-day-submit-container"></div>
-        </div>
-        <div className="word-of-the-day-status-bar">
-          <div className="word-of-the-day-deadline-container"></div>
-        </div>
-      </div>
       <table id="attendance-table" className="csm-table standalone">
         <thead className="csm-table-head">
           <tr className="csm-table-head-row">

@@ -78,7 +78,7 @@ def profile(request, pk=None):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(["GET"])
+@api_view(["POST"])
 def fetch_user_pk(request, pk=None):
     """
     Function for getting user IDs from profile IDs
@@ -92,12 +92,18 @@ def fetch_user_pk(request, pk=None):
         queryset = Student.objects.all()
     elif profile_type == "mentor":
         queryset = Mentor.objects.all()
+        print(queryset)
     elif profile_type == "coordinator":
         queryset = Coordinator.objects.all()
     else:
         return Response(status=status.HTTP_400_BAD_REQUEST)
+    print(pk)
 
     person = queryset.get(pk=pk)
 
-    serializer = UserSerializer(person.user.id)
+    print(person)
+
+    serializer = UserSerializer(person.user)
+
+    print(serializer.data)
     return Response(serializer.data, status=status.HTTP_200_OK)

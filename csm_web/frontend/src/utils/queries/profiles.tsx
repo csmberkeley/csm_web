@@ -6,7 +6,7 @@ import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResul
 import { isNull } from "lodash";
 import { DateTime } from "luxon";
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
-import { RawUserInfo } from "../types";
+import { RawUserInfo, Section } from "../types";
 import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
 
 /* ===== Mutation ===== */
@@ -38,6 +38,33 @@ export const useStudentsInfo = (): UseQueryResult<RawUserInfo, Error> => {
       } else {
         handlePermissionsError(response.status);
         throw new ServerError("Failed to fetch user info");
+      }
+    },
+    { retry: handleRetry }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+
+/**
+ * Hook to get a mentor profile within section
+ */
+export const useMentorProfile = (id: number): UseQueryResult<Section, ServerError> => {
+  const queryResult = useQuery<Section, Error>(
+    ["sections", id],
+    async () => {
+      if (isNaN(id)) {
+        throw new PermissionError("Invalid section id");
+      }
+      const response = await fetchNormalized(`/sections/${id}`);
+      if (response.ok) {
+        const section = await response.json();
+        const mentor = section.mentor;
+        return mentor;
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to fetch section ${id}`);
       }
     },
     { retry: handleRetry }

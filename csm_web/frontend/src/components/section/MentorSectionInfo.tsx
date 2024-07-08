@@ -1,18 +1,19 @@
-import React, { useState } from "react";
+import * as React from "react";
+import { useState } from "react";
 
 import { useSectionStudents } from "../../utils/queries/sections";
 import { Mentor, Spacetime, Student } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import MetaEditModal from "./MetaEditModal";
+import ProfileModal from "./ProfileModal";
 import { InfoCard, SectionSpacetime } from "./Section";
 import SpacetimeDeleteModal from "./SpacetimeDeleteModal";
 import SpacetimeEditModal from "./SpacetimeEditModal";
-// import ProfileModal from "./ProfileModal";
 import StudentDropper from "./StudentDropper";
 
+import EyeIcon from "../../../static/frontend/img/eye.svg";
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
-// import EyeIcon from "../../../static/frontend/img/eye.svg";
 import XIcon from "../../../static/frontend/img/x.svg";
 
 import "../../css/coordinator-add-student.scss";
@@ -92,7 +93,7 @@ export default function MentorSectionInfo({
                             />
                           )}
                           <span className="student-info">{name || email}</span>
-                          {/* <button
+                          <button
                             className="secondary-link-btn info-card-edit-btn"
                             onClick={() => {
                               setShowModal(ModalStates.SPACETIME_EDIT);
@@ -102,7 +103,7 @@ export default function MentorSectionInfo({
                           </button>
                           {showModal === ModalStates.SPACETIME_EDIT && (
                             <ProfileModal id={studentId} closeModal={closeModal} />
-                          )} */}
+                          )}
                         </td>
                       </tr>
                     )
