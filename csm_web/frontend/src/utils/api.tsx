@@ -21,10 +21,44 @@ export function normalizeEndpoint(endpoint: string) {
   return `/api/${endpoint}`;
 }
 
+/**
+ * Endpoint for logging out the user.
+ * Must end in a slash, otherwise Django will complain, since this will redirect to the login endpoint.
+ */
+const LOGOUT_ENDPOINT = "/logout/";
+
+/**
+ * Log out the current user by sending a POST request to ``/logout/`.
+ *
+ * Since we must also redirect after sending the POST request (following the server response),
+ * this sends the request using a newly created form with the CSRF token added.
+ */
+export function logout() {
+  const csrfToken = Cookies.get("csrftoken") ?? "";
+
+  // must use a form to allow redirect after the POST request
+  const form = document.createElement("form");
+  form.method = "POST";
+  form.action = LOGOUT_ENDPOINT;
+
+  // add the csrf token
+  const csrfInput = document.createElement("input");
+  csrfInput.type = "hidden";
+  csrfInput.name = "csrfmiddlewaretoken";
+  csrfInput.value = csrfToken;
+  form.appendChild(csrfInput);
+
+  // form must also be present in the document body
+  document.body.appendChild(form);
+
+  // submitting the form logs the user out and redirects to the login screen
+  form.submit();
+}
+
 export function fetchWithMethod(
   endpoint: string,
   method: string,
-  data: any = {},
+  data: any = {}, // eslint-disable-line @typescript-eslint/no-explicit-any
   isFormData = false,
   queryParams: URLSearchParams | null = null
 ) {
