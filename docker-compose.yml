@@ -52,6 +52,10 @@ services:
         source: ./
         target: /opt/csm_web
         read_only: true
+      # output from migrations
+      - type: bind
+        source: ./csm_web/scheduler/migrations/
+        target: /opt/csm_web/csm_web/scheduler/migrations/
     depends_on:
       postgres:
         condition: service_healthy
