@@ -1,6 +1,7 @@
 import React, { Component, useEffect, useState } from "react";
 import { Link, NavLink, NavLinkProps, Outlet, Route, Routes, useLocation } from "react-router-dom";
 
+import { logout } from "../utils/api";
 import { useProfiles } from "../utils/queries/base";
 import { useMatcherActiveCourses } from "../utils/queries/matcher";
 import { Role } from "../utils/types";
@@ -140,7 +141,7 @@ function Header(): React.ReactElement {
         <NavLink to="/policies" className={navlinkClassSubtitle}>
           <h3 className="site-subtitle">Policies</h3>
         </NavLink>
-        <a id="logout-btn" href="/logout" title="Log out">
+        <a id="logout-btn" href="#" onClick={logout} title="Log out">
           <LogOutIcon className="icon" />
         </a>
       </div>
