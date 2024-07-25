@@ -67,6 +67,8 @@ INSTALLED_APPS = [
     "frontend",
     "django_extensions",
     "django.contrib.postgres",
+    # scheduling
+    "django_q",
 ]
 
 SHELL_PLUS_SUBCLASSES_IMPORT = [ModelSerializer, Serializer, DjangoModelFactory]
@@ -288,6 +290,15 @@ LOGGING = {
             "propogate": True,
         },
     },
+}
+
+# Scheduling setup
+Q_CLUSTER = {
+    "name": "csm_web",
+    "workers": 1,
+    "orm": "default" if DEBUG else "pg",
+    "timeout": 60,
+    "retry": 90,
 }
 
 if DJANGO_ENV in (PRODUCTION, STAGING):

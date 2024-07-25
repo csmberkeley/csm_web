@@ -10,6 +10,9 @@ ENV PYTHONUNBUFFERED 1
 
 ENV PATH $POETRY_HOME/bin:$PATH
 
+# install GNU parallel
+RUN apt update && apt-get install -y parallel
+
 # set up dependencies, create virtual environment
 RUN mkdir -p /opt/csm_web
 WORKDIR /opt/csm_web
