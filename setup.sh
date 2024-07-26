@@ -65,7 +65,8 @@ WEB_CONCURRENCY=4" > .env
 # Get a new key
 echo "Generating Django secret key..."
 export SECRET_KEY='temp'  # set temporary secret key
-export SECRET_KEY=$(python3 csm_web/manage.py shell -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())")
+# Note: this secret key doesn't have much cryptographic complexity, but it'll only be used for development
+export SECRET_KEY=$(python3 -c "import secrets; print(secrets.token_hex(32))")
 echo "SECRET_KEY='$SECRET_KEY'" >> .env
 
 # Pull AWS S3 credentials
