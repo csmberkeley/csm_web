@@ -41,6 +41,9 @@ const App = () => {
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
           <Route path="policies/*" element={<Policies />} />
           <Route path="export/*" element={<DataExport />} />
+          {
+            // TODO: add route for profiles (/user/:id/* element = {UserProfile})
+          }
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

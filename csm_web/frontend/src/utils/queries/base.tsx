@@ -35,6 +35,7 @@ export const useProfiles = (): UseQueryResult<Profile[], Error> => {
   return queryResult;
 };
 
+// TODO: move to new queries/users.tsx
 /**
  * Hook to get the user's info.
  */
@@ -57,6 +58,7 @@ export const useUserInfo = (): UseQueryResult<RawUserInfo, Error> => {
   return queryResult;
 };
 
+// TODO: move to new queries/users.tsx
 /**
  * Hook to get a list of all user emails.
  */
