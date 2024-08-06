@@ -32,10 +32,36 @@ def has_permission(request_user, target_user):
     """
     Returns True if the user has permission to access or edit the target user's profile
     """
-    # Does not account for users who are both mentors and students of different courses
-    # need separation of concerns:
-    # coordinators/mentor should only have coordinator/mentor access for their course
-    # Check if request_user is a mentor
+
+    # if request_user.is_superuser: return True
+    if request_user == target_user:
+        return True
+
+    # if requestor is a student, get all the sections they are in
+    # if the target user is a student in any of those sections, return True
+    if Student.objects.filter(user=request_user).exists():
+        if Student.objects.filter(user=target_user).exists():
+            request_user_sections = Student.objects.filter(
+                user=request_user
+            ).values_list("section", flat=True)
+            target_user_sections = Student.objects.filter(user=target_user).values_list(
+                "section", flat=True
+            )
+            if set(request_user_sections) & set(target_user_sections):
+                return True
+
+        # if the target user is a mentor in any of the courses the student is in, return True
+        if Mentor.objects.filter(user=target_user).exists():
+            target_user_courses = Mentor.objects.filter(user=target_user).values_list(
+                "course", flat=True
+            )
+            if Student.objects.filter(
+                user=request_user, course__in=target_user_courses
+            ).exists():
+                return True
+
+    # if requestor is a mentor, get all the courses they mentor
+    # if the target user is a student or mentor in any of those courses, return True
     if Mentor.objects.filter(user=request_user).exists():
         mentor_courses = Mentor.objects.filter(user=request_user).values_list(
             "course", flat=True
@@ -46,31 +72,24 @@ def has_permission(request_user, target_user):
         if Mentor.objects.filter(user=target_user, course__in=mentor_courses).exists():
             return True
 
-    # Check if request_user is a student in the same course as target_user
-    # Students in the same section can see each other
-    if (
-        Student.objects.filter(user=request_user).exists()
-        and Student.objects.filter(user=target_user).exists()
-    ):
-        request_user_courses = Student.objects.filter(user=request_user).values_list(
+    # if requestor is a coordinator, get all the courses they coordinate
+    # if the target user is a student or mentor in any of those courses, return True
+    if Coordinator.objects.filter(user=request_user).exists():
+        coordinator_courses = Coordinator.objects.filter(user=request_user).values_list(
             "course", flat=True
         )
-        target_user_courses = Student.objects.filter(user=target_user).values_list(
-            "course", flat=True
-        )
-
-        if set(request_user_courses) & set(target_user_courses):
+        if Student.objects.filter(
+            user=target_user, course__in=coordinator_courses
+        ).exists():
             return True
-
-    # Coordinator access
-    if Coordinator.objects.filter(
-        user=request_user
-    ).exists():  # or if request_user.is_superuser
-        return True
-
-    # Request user accessing their own profile
-    if request_user == target_user:
-        return True
+        if Mentor.objects.filter(
+            user=target_user, course__in=coordinator_courses
+        ).exists():
+            return True
+        if Coordinator.objects.filter(
+            user=target_user, course__in=coordinator_courses
+        ).exists():
+            return True
 
     return False
 
@@ -97,14 +116,22 @@ def user_update(request, pk):
     """
     Update user profile. Only accessible by Coordinators and the user themselves.
     """
+    # raise PermissionDenied("You do not have permission to edit this profile")
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    if not (
-        (request.user == user) or Coordinator.objects.filter(user=request.user).exists()
-    ):
+    if not request.user == user:
+        raise PermissionDenied("You do not have permission to edit this profile")
+
+    coordinator_courses = Coordinator.objects.filter(user=request.user).values_list(
+        "course", flat=True
+    )
+
+    if not Coordinator.objects.filter(
+        user=request.user, course_in=coordinator_courses
+    ).exists():
         raise PermissionDenied("You do not have permission to edit this profile")
 
     serializer = UserSerializer(user, data=request.data, partial=True)
