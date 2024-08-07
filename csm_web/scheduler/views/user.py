@@ -37,6 +37,10 @@ def has_permission(request_user, target_user):
     if request_user == target_user:
         return True
 
+    # if the target user is a mentor, return True
+    if Mentor.objects.filter(user=target_user).exists():
+        return True
+
     # if requestor is a student, get all the sections they are in
     # if the target user is a student in any of those sections, return True
     if Student.objects.filter(user=request_user).exists():
@@ -51,14 +55,14 @@ def has_permission(request_user, target_user):
                 return True
 
         # if the target user is a mentor in any of the courses the student is in, return True
-        if Mentor.objects.filter(user=target_user).exists():
-            target_user_courses = Mentor.objects.filter(user=target_user).values_list(
-                "course", flat=True
-            )
-            if Student.objects.filter(
-                user=request_user, course__in=target_user_courses
-            ).exists():
-                return True
+        # if Mentor.objects.filter(user=target_user).exists():
+        #     target_user_courses = Mentor.objects.filter(user=target_user).values_list(
+        #         "course", flat=True
+        #     )
+        #     if Student.objects.filter(
+        #         user=request_user, course__in=target_user_courses
+        #     ).exists():
+        #         return True
 
     # if requestor is a mentor, get all the courses they mentor
     # if the target user is a student or mentor in any of those courses, return True
@@ -69,8 +73,8 @@ def has_permission(request_user, target_user):
 
         if Student.objects.filter(user=target_user, course__in=mentor_courses).exists():
             return True
-        if Mentor.objects.filter(user=target_user, course__in=mentor_courses).exists():
-            return True
+        # if Mentor.objects.filter(user=target_user, course__in=mentor_courses).exists():
+        #     return True
 
     # if requestor is a coordinator, get all the courses they coordinate
     # if the target user is a student or mentor in any of those courses, return True
@@ -82,10 +86,10 @@ def has_permission(request_user, target_user):
             user=target_user, course__in=coordinator_courses
         ).exists():
             return True
-        if Mentor.objects.filter(
-            user=target_user, course__in=coordinator_courses
-        ).exists():
-            return True
+        # if Mentor.objects.filter(
+        #     user=target_user, course__in=coordinator_courses
+        # ).exists():
+        #     return True
         if Coordinator.objects.filter(
             user=target_user, course__in=coordinator_courses
         ).exists():
@@ -122,17 +126,17 @@ def user_update(request, pk):
     except User.DoesNotExist:
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
-    if not request.user == user:
-        raise PermissionDenied("You do not have permission to edit this profile")
-
-    coordinator_courses = Coordinator.objects.filter(user=request.user).values_list(
-        "course", flat=True
-    )
-
-    if not Coordinator.objects.filter(
-        user=request.user, course_in=coordinator_courses
-    ).exists():
-        raise PermissionDenied("You do not have permission to edit this profile")
+    if request.user == user:
+        pass
+    else:
+        # Check if the user is a coordinator and has permission
+        coordinator_courses = Coordinator.objects.filter(user=request.user).values_list(
+            "course", flat=True
+        )
+        if not Coordinator.objects.filter(
+            user=request.user, course__in=coordinator_courses
+        ).exists():
+            raise PermissionDenied("You do not have permission to edit this profile")
 
     serializer = UserSerializer(user, data=request.data, partial=True)
     if serializer.is_valid():

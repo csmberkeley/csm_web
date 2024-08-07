@@ -53,6 +53,7 @@ class User(AbstractUser):
 
     pronouns = models.CharField(max_length=20, default="", blank=True)
     pronunciation = models.CharField(max_length=50, default="", blank=True)
+    # xTODO: configure to use the Django Settings bucket backend
     # profile_pic = models.ImageField(upload_to='profiles/', null=True, blank=True)
     # if profile picture is implemented
     bio = models.CharField(max_length=500, default="", blank=True)
