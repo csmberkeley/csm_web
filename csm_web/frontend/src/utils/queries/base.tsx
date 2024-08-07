@@ -41,9 +41,9 @@ export const useProfiles = (): UseQueryResult<Profile[], Error> => {
  */
 export const useUserInfo = (): UseQueryResult<RawUserInfo, Error> => {
   const queryResult = useQuery<RawUserInfo, Error>(
-    ["userinfo"],
+    ["user"],
     async () => {
-      const response = await fetchNormalized("/userinfo");
+      const response = await fetchNormalized("/user");
       if (response.ok) {
         return await response.json();
       } else {
