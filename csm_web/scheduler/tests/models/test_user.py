@@ -3,7 +3,6 @@ import json
 import pytest
 from django.urls import reverse
 from scheduler.factories import (
-    CoordinatorFactory,
     CourseFactory,
     MentorFactory,
     SectionFactory,
@@ -47,7 +46,6 @@ def fixture_setup_permissions():
     # Assign mentors to courses
     mentor_a = MentorFactory(user=mentor_user, course=course_a)
     mentor_b = MentorFactory(user=other_mentor_user, course=course_b)
-    coordinator = CoordinatorFactory(user=coordinator_user, course=course_a)
 
     # Create sections associated with the correct course via the mentor
     section_a1 = SectionFactory(mentor=mentor_a)
@@ -64,7 +62,7 @@ def fixture_setup_permissions():
         "other_student_user": other_student_user,
         "mentor_user": mentor_user,
         "other_mentor_user": other_mentor_user,
-        "coordinator_user": coordinator,
+        "coordinator_user": coordinator_user,
         "course_a": course_a,
         "course_b": course_b,
         "section_a1": section_a1,
