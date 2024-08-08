@@ -3,8 +3,8 @@ import React, { useEffect, useState } from "react";
 import { Link, Route, Routes } from "react-router-dom";
 
 import { DEFAULT_LONG_LOCALE_OPTIONS, DEFAULT_TIMEZONE } from "../utils/datetime";
-import { useUserInfo } from "../utils/queries/base";
 import { useCourses } from "../utils/queries/courses";
+import { useUserInfo } from "../utils/queries/user";
 import { Course as CourseType, UserInfo } from "../utils/types";
 import LoadingSpinner from "./LoadingSpinner";
 import Course from "./course/Course";

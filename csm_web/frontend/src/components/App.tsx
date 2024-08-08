@@ -9,6 +9,7 @@ import { emptyRoles, Roles } from "../utils/user";
 import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Policies from "./Policies";
+import UserProfile from "./UserProfile";
 import { DataExport } from "./data_export/DataExport";
 import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 import { Resources } from "./resource_aggregation/Resources";
@@ -43,8 +44,12 @@ const App = () => {
           <Route path="policies/*" element={<Policies />} />
           <Route path="export/*" element={<DataExport />} />
           {
-            // TODO: add route for profiles (/user/:id/* element = {UserProfile})
+            // TODO: add route for profiles (/profile/:id/* element = {UserProfile})
+            // TODO: add route for your own profile /profile/*
+            // reference Section
           }
+          <Route path="profile/*" element={<UserProfile />} />
+          <Route path="profile/:id/*" element={<UserProfile />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>
@@ -83,7 +88,7 @@ function Header(): React.ReactElement {
   };
 
   /**
-   * Helper function to determine class name for the home NavLInk component;
+   * Helper function to determine class name for the home NavLnk component;
    * is always active unless we're in another tab.
    */
   const homeNavlinkClass = () => {
@@ -143,6 +148,9 @@ function Header(): React.ReactElement {
       <div className="site-title-group">
         <NavLink to="/policies" className={navlinkClassSubtitle}>
           <h3 className="site-subtitle">Policies</h3>
+        </NavLink>
+        <NavLink to="/profile" className={navlinkClassSubtitle}>
+          <h3 className="site-subtitle">Profile</h3>
         </NavLink>
         <a id="logout-btn" href="#" onClick={logout} title="Log out">
           <LogOutIcon className="icon" />
