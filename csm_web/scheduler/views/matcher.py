@@ -1,4 +1,5 @@
 import datetime
+import random
 
 from django.db import transaction
 from django.db.models import Q
@@ -559,6 +560,13 @@ def run_matcher(course: Course):
             matcher_preferences,
         )
     )
+
+    # randomize lists, seeded with the course id;
+    # this ensures that tiebreaks are approximately uniform
+    random.seed(course.id)
+    random.shuffle(mentor_list)
+    random.shuffle(slot_list)
+    random.shuffle(preference_list)
 
     # run the matcher
     return get_matches(mentor_list, slot_list, preference_list)
