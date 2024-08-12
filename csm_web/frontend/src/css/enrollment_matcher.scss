@@ -361,7 +361,8 @@
   color: $csm-danger-darkened;
 }
 
-.matcher-tiling-subheader {
+.matcher-tiling-subheader,
+.matcher-sidebar-subheader {
   /* font-style: italic; */
   font-weight: 600;
 }
@@ -430,6 +431,19 @@
 .matcher-tiling-tooltip-body {
   width: fit-content;
   max-width: 250px;
+}
+
+.matcher-tiling-metadata-container,
+.matcher-sidebar-metadata-container {
+  padding-top: 5px;
+}
+
+.matcher-description-text {
+  max-width: 350px;
+  margin-top: 5px;
+  margin-left: 5px;
+
+  overflow-wrap: break-word;
 }
 
 .matcher-unsaved-changes-container {
@@ -620,6 +634,7 @@
   gap: 8px;
   align-items: center;
   margin-top: 8px;
+  font-weight: bold;
 }
 
 /* ConfigureStage.tsx */
