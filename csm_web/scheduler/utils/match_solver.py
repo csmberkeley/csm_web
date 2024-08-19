@@ -10,7 +10,12 @@ SLOT_NODE_PREFIX = "slot"
 MENTOR_NODE_PREFIX = "mentor"
 
 MentorTuple = namedtuple("MentorTuple", "id")
-SlotTuple = namedtuple("SlotTuple", "id min_mentors max_mentors description")
+SlotTuple = namedtuple(
+    "SlotTuple",
+    ["id", "min_mentors", "max_mentors", "description"],
+    # default description to empty string
+    defaults=[""],
+)
 PreferenceTuple = namedtuple("PreferenceTuple", "mentor_id slot_id preference_value")
 
 
