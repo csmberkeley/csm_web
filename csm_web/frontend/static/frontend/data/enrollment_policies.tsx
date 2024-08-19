@@ -163,7 +163,7 @@ export const SECTIONS = {
         "and will instead cover the worksheets at a slower pace and with more conceptual discussion.",
         i3_b: "Program-affiliated sections",
       i3_2:
-        "We partner with other programs on campus (e.g. CS Scholars, EOP Schooars, and SEED Scholars) " +
+        "We partner with other programs on campus (e.g. CS Scholars, EOP Scholars, and SEED Scholars) " +
         "to offer sections designated for students enrolled in these programs. Please only enroll in one " +
         "of these sections if you are also enrolled in the corresponding program. " +
         "Feel free to enroll in a regular section even if you are a program member.",
