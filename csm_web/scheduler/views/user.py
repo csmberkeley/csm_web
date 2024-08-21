@@ -7,8 +7,6 @@ from scheduler.serializers import UserSerializer
 from ..models import Coordinator, Mentor, Student, User
 from .utils import viewset_with
 
-# can create pytest to test this
-
 
 class UserViewSet(*viewset_with("list")):
     serializer_class = None
@@ -19,8 +17,8 @@ class UserViewSet(*viewset_with("list")):
         Lists the emails of all users in the system. Only accessible by coordinators and superusers.
         """
         if not (
-            # request.user.is_superuser or
-            Coordinator.objects.filter(user=request.user).exists()
+            request.user.is_superuser
+            or Coordinator.objects.filter(user=request.user).exists()
         ):
             raise PermissionDenied(
                 "Only coordinators and superusers may view the user email list"
@@ -28,12 +26,25 @@ class UserViewSet(*viewset_with("list")):
         return Response(self.queryset.order_by("email").values_list("email", flat=True))
 
 
+def user_editable(user):
+    """
+    Returns True if the user is allowed to edit their profile
+    """
+    coordinator_courses = Coordinator.objects.filter(user=user).values_list(
+        "course", flat=True
+    )
+    if Coordinator.objects.filter(user=user, course__in=coordinator_courses).exists():
+        return True
+    return False
+
+
 def has_permission(request_user, target_user):
     """
     Returns True if the user has permission to access or edit the target user's profile
     """
 
-    # if request_user.is_superuser: return True
+    if request_user.is_superuser:
+        return True
     if request_user == target_user:
         return True
 
@@ -54,16 +65,6 @@ def has_permission(request_user, target_user):
             if set(request_user_sections) & set(target_user_sections):
                 return True
 
-        # if the target user is a mentor in any of the courses the student is in, return True
-        # if Mentor.objects.filter(user=target_user).exists():
-        #     target_user_courses = Mentor.objects.filter(user=target_user).values_list(
-        #         "course", flat=True
-        #     )
-        #     if Student.objects.filter(
-        #         user=request_user, course__in=target_user_courses
-        #     ).exists():
-        #         return True
-
     # if requestor is a mentor, get all the courses they mentor
     # if the target user is a student or mentor in any of those courses, return True
     if Mentor.objects.filter(user=request_user).exists():
@@ -73,8 +74,6 @@ def has_permission(request_user, target_user):
 
         if Student.objects.filter(user=target_user, course__in=mentor_courses).exists():
             return True
-        # if Mentor.objects.filter(user=target_user, course__in=mentor_courses).exists():
-        #     return True
 
     # if requestor is a coordinator, get all the courses they coordinate
     # if the target user is a student or mentor in any of those courses, return True
@@ -86,10 +85,6 @@ def has_permission(request_user, target_user):
             user=target_user, course__in=coordinator_courses
         ).exists():
             return True
-        # if Mentor.objects.filter(
-        #     user=target_user, course__in=coordinator_courses
-        # ).exists():
-        #     return True
         if Coordinator.objects.filter(
             user=target_user, course__in=coordinator_courses
         ).exists():
@@ -112,7 +107,7 @@ def user_retrieve(request, pk):
         raise PermissionDenied("You do not have permission to access this profile")
 
     serializer = UserSerializer(user)
-    return Response(serializer.data)
+    return Response({**serializer.data, "isEditable": user_editable(request.user)})
 
 
 @api_view(["PUT"])
@@ -120,7 +115,6 @@ def user_update(request, pk):
     """
     Update user profile. Only accessible by Coordinators and the user themselves.
     """
-    # raise PermissionDenied("You do not have permission to edit this profile")
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
@@ -128,20 +122,13 @@ def user_update(request, pk):
 
     if request.user == user:
         pass
-    else:
-        # Check if the user is a coordinator and has permission
-        coordinator_courses = Coordinator.objects.filter(user=request.user).values_list(
-            "course", flat=True
-        )
-        if not Coordinator.objects.filter(
-            user=request.user, course__in=coordinator_courses
-        ).exists():
-            raise PermissionDenied("You do not have permission to edit this profile")
+    elif not user_editable(request.user):
+        raise PermissionDenied("You do not have permission to edit this profile")
 
     serializer = UserSerializer(user, data=request.data, partial=True)
     if serializer.is_valid():
         serializer.save()
-        return Response(serializer.data)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

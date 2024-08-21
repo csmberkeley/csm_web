@@ -39,6 +39,7 @@ export interface UserInfo {
   bio: string;
   pronouns: string;
   pronunciation: string;
+  isEditable: boolean;
 }
 
 /**
