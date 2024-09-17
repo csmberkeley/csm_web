@@ -79,7 +79,7 @@ export const SECTIONS = {
         "To sign up for a section, create an account on Scheduler. Once you are logged in, " +
         "click the course you want to enroll in on the home page. You will then see a list " +
         "of sections that you can enroll in for that course. Select one and click enroll. If " +
-        "you\u2019d like to enroll in another course, click “Sections” and “Enroll in a section” " +
+        "you'd like to enroll in another course, click “Sections” and “Enroll in a section” " +
         "in the top right."
     }
   },
@@ -103,11 +103,20 @@ export const SECTIONS = {
         "However, if your entire group agrees, you can bring in questions from discussion " +
         "worksheets, guerrilla sections, etc. In this case, please give your mentor a head up " +
         "so that they can prepare.",
-      i4_1: "You may optionally choose to receive one P/NP unit for your participation in CSM. You will receive this unit if you attend section (same time, same place) each week and fulfill a few other requirements.",
+      i4_1:
+        "You may optionally choose to receive one P/NP unit for your participation in CSM. " +
+        "You will receive this unit if you attend section (same time, same place) each week " +
+        "and fulfill a few other requirements.",
       i4_b: "Sign up for a section you are confident that you can make " + "it for the entire semester. ",
       i4_2: "You can have two unexcused absences over the course of the semester. ",
-      i4_b2: "Department policy limits you to one units, no matter how many CSM sections you may be enrolled in.",
-      i5: "We will release two surveys (one midway through the semester and one at the end of the semester) to collect feedback on your mentor and your experience with CSM. We strive to continuously improve the student experience with each passing semester and will greatly appreciate your feedback. These surveys are mandatory if you are enrolled in a CSM section (see below for more details), but we promise they will not take long to fill out."
+      i4_b2: "Department policy limits you to one units, no matter how many CSM sections you " + "may be enrolled in.",
+      i5:
+        "We will release two surveys (one midway through the semester and one at the end of " +
+        "the semester) to collect feedback on your mentor and your experience with CSM. We " +
+        "strive to continuously improve the student experience with each passing semester and " +
+        "will greatly appreciate your feedback. These surveys are mandatory if you are enrolled " +
+        "in a CSM section (see below for more details), but we promise they will not take long " +
+        "to fill out."
     }
   },
   affinitySections: {
@@ -123,7 +132,10 @@ export const SECTIONS = {
         "in the Berkeley EECS community. Types of affinity sections that we have offered previously or hope to offer, " +
         "include: woman affinity sections, LGBTQ+ affinity sections, Hispanic/Latinx affinity sections, and Transfer Student sections.",
       i2_b: "No Prior Experience (CS 61A & CS 61B only)",
-      i2_2: " - 1-2 hour sections that are specifically geared towards students with no or limited prior experience in computer science. They meet twice a week (in CS 61A) rather than once a week. They do not cover any more material than a regular section, and will instead cover the worksheets at a slower pace and with more conceptual discussion.",
+      i2_2:
+        " - 1-2 hour sections that are specifically geared towards students with no or limited prior experience in computer science." +
+        "They meet twice a week (in CS 61A) rather than once a week. They do not cover any more material than a regular section, and " +
+        "will instead cover the worksheets at a slower pace and with more conceptual discussion.",
       i3_b: "Program-affiliated sections",
       i3_2:
         " - We partner with other programs on campus (e.g. CS Scholars, EOP Scholars, and SEED Scholars) " +
@@ -153,7 +165,10 @@ export const SECTIONS = {
         link: "mailto:mentors@berkeley.edu",
         text: "mentors@berkeley.edu"
       },
-      p2_2: ". For communications specific to your CSM course, some courses will have a CSM Piazza/Ed, which will be titled CSM [Course Code]. Your mentor will be your primary contact for questions regarding your section."
+      p2_2:
+        ". For communications specific to your CSM course, some courses will have a CSM Piazza/Ed, which " +
+        "will be titled CSM [Course Code]. Your mentor will be your primary contact for questions regarding " +
+        "your section."
     }
   },
   csmForUnit: {
@@ -161,7 +176,11 @@ export const SECTIONS = {
     body: {
       p1_1: "Students who participate in CSM sections may ",
       p1_b: "optionally",
-      p1_2: " enroll in CS 198-142: Collaborative Small-Group Mentorship, which is a one-unit, COCI-approved course on teaching and learning techniques. You may only receive one unit of credit for CSM each semester, regardless of the number of sections you are enrolled in. (When you sign up, you will choose the one course for which you will be graded.)",
+      p1_2:
+        " enroll in CS 198-142: Collaborative Small-Group Mentorship, which is a one-unit, COCI-approved " +
+        "course on teaching and learning techniques. You may only receive one unit of credit for CSM each " +
+        "semester, regardless of the number of sections you are enrolled in. (When you sign up, you will " +
+        "choose the one course for which you will be graded.)",
       p2_1: "Enrollment in the unit on CalCentral is ",
       p2_b: "not automatic",
       p2_2:
@@ -183,7 +202,10 @@ export const SECTIONS = {
       p4_1: "If you drop the CS course you are enrolled in, you should drop " + "your CSM Section on Scheduler ",
       p4_b: "and",
       p4_2: " on CalCentral, to avoid receiving an NP.",
-      p5_b: "Because unit enrollment is managed through CalCentral, your college's normal policies and deadlines for adding and dropping courses will apply to the CSM unit.",
+      p5_b:
+        "Because unit enrollment is managed through CalCentral, your " +
+        "college's normal policies and deadlines for adding and dropping " +
+        "courses will apply to the CSM unit.",
       p5_1:
         "This means that if you attempt to add the " +
         "CSM unit after your college's add deadline, or drop the unit " +
@@ -204,7 +226,10 @@ export const SECTIONS = {
       li2_3: "Completing the End-of-Semester Feedback Evaluation, which will be sent via email",
       p7_1: "Additionally, there are a variety of ",
       p7_b: "ungraded, optional",
-      p7_2: " weekly readings on teaching and learning, and an optional one-hour weekly lecture on Wednesday from 7-8 p.m. in Soda 405. Lectures will be recorded and posted for student reference. Lecture attendance is not recorded and has no bearing on your grade.",
+      p7_2:
+        " weekly readings on teaching and learning, and an optional one-hour weekly lecture on " +
+        "Wednesday from 7-8 p.m. in Soda 405. Lectures will be recorded and posted for student reference. " +
+        "Lecture attendance is not recorded and has no bearing on your grade.",
       p8_1: "A syllabus for CS 198-142 is available ",
       p8_a: {
         link: "https://docs.google.com/document/d/1mXSfXSOg5u4ZVs9Ff5BPVpllh4fplVtK15er0SVCqT0/edit?usp=sharing",
