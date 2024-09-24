@@ -220,6 +220,21 @@ class Profile(ValidatingModel):
         abstract = True
 
 
+
+class WaitlistedStudent(Profile):
+    """
+    Represents a given "instance" of a waitlisted student. Every section in which a student enrolls
+    on the waitlist should have a new WaitlistedStudent profile.
+    """
+    section = models.ForeignKey(
+        "Section", on_delete=models.CASCADE
+    )
+    active = models.BooleanField(
+        default=True, help_text="An inactive student is a dropped student."
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+
 class Student(Profile):
     """
     Represents a given "instance" of a student. Every section in which a student enrolls should
@@ -341,6 +356,7 @@ class Section(ValidatingModel):
             ' or "early start".'
         ),
     )
+    waitlist_capacity = models.PositiveSmallIntegerField()
 
     # @functional.cached_property
     # def course(self):
