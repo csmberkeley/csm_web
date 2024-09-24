@@ -20,6 +20,7 @@ from .models import (
     Spacetime,
     Student,
     User,
+    WaitlistedStudent,
     Worksheet,
     day_to_number,
 )
@@ -247,6 +248,14 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = ("id", "name", "email", "attendances", "section")
+
+
+class WaitlistedStudentSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email")
+
+    class Meta:
+        model = WaitlistedStudent
+        fieds = ("id", "name", "email", "section")
 
 
 class SectionSerializer(serializers.ModelSerializer):
