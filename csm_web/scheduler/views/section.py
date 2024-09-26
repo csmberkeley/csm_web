@@ -601,6 +601,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
         return Response(status=status.HTTP_200_OK)
 
+    # def _waitliststudent_add(self, request, section):
+    #     return True
+
     def _student_add(self, request, section):
         """
         Adds a student to a section (initiated by a student)
@@ -617,6 +620,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 " section, or the course is closed for enrollment",
                 status.HTTP_422_UNPROCESSABLE_ENTITY,
             )
+
         if section.current_student_count >= section.capacity:
             logger.warning(
                 "<Enrollment:Failure> User %s was unable to enroll in Section %s"

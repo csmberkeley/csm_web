@@ -170,6 +170,7 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
+    max_waitlist = models.SmallIntegerField(default=3)
     # time limit for wotd submission;
     # section occurrence date + day limit, rounded to EOD
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
@@ -220,14 +221,14 @@ class Profile(ValidatingModel):
         abstract = True
 
 
-
 class WaitlistedStudent(Profile):
     """
     Represents a given "instance" of a waitlisted student. Every section in which a student enrolls
     on the waitlist should have a new WaitlistedStudent profile.
     """
+
     section = models.ForeignKey(
-        "Section", on_delete=models.CASCADE
+        "Section", on_delete=models.CASCADE, related_name="waitlistedstudents"
     )
     active = models.BooleanField(
         default=True, help_text="An inactive student is a dropped student."
@@ -345,6 +346,7 @@ class Coordinator(Profile):
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
+    waitlist_capacity = models.PositiveSmallIntegerField(default=3)
     mentor = OneToOneOrNoneField(
         Mentor, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -356,7 +358,6 @@ class Section(ValidatingModel):
             ' or "early start".'
         ),
     )
-    waitlist_capacity = models.PositiveSmallIntegerField()
 
     # @functional.cached_property
     # def course(self):
@@ -366,6 +367,11 @@ class Section(ValidatingModel):
     def current_student_count(self):
         """Query the number of students currently enrolled in this section."""
         return self.students.filter(active=True).count()
+
+    @functional.cached_property
+    def current_waitlistedstudent_count(self):
+        """Query the number of waitlisted students currently enrolled in this section."""
+        return self.waitlistedstudents.filter(active=True).count()
 
     def delete(self, *args, **kwargs):
         if self.current_student_count and not kwargs.get("force"):
