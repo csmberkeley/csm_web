@@ -15,7 +15,9 @@ router.register(r"resources", views.ResourceViewSet, basename="resource")
 urlpatterns = router.urls
 
 urlpatterns += [
-    path("userinfo/", views.userinfo, name="userinfo"),
+    path("user/", views.user_info, name="user"),
+    path("user/<int:pk>/", views.user_retrieve, name="user_retrieve"),
+    path("user/<int:pk>/update/", views.user_update, name="user_update"),
     path("matcher/active/", views.matcher.active),
     path("matcher/<int:pk>/slots/", views.matcher.slots),
     path("matcher/<int:pk>/preferences/", views.matcher.preferences),
