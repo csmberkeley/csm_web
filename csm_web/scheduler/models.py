@@ -53,9 +53,9 @@ class User(AbstractUser):
 
     pronouns = models.CharField(max_length=20, default="", blank=True)
     pronunciation = models.CharField(max_length=50, default="", blank=True)
-    # xTODO: configure to use the Django Settings bucket backend
-    # profile_pic = models.ImageField(upload_to='profiles/', null=True, blank=True)
-    # if profile picture is implemented
+    profile_image = models.ImageField(
+        upload_to="csm-profile-images/", null=True, blank=True
+    )
     bio = models.CharField(max_length=500, default="", blank=True)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
@@ -316,7 +316,7 @@ class Mentor(Profile):
 
 class Coordinator(Profile):
     """
-    This profile is used to allow coordinators to acess the admin page.
+    This profile is used to allow coordinators to access the admin page.
     """
 
     def save(self, *args, **kwargs):
