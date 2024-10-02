@@ -1,3 +1,4 @@
+import { DateTime } from "luxon";
 import randomWords from "random-words";
 import React, { useState, useEffect } from "react";
 
@@ -7,11 +8,13 @@ import {
   useUpdateWordOfTheDayMutation,
   useWordOfTheDay
 } from "../../utils/queries/sections";
-import { Attendance } from "../../utils/types";
+import { Attendance, AttendancePresence } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { ATTENDANCE_LABELS } from "./Section";
+import { CalendarMonth } from "./month_calendar/MonthCalendar";
 import { dateSortISO, formatDateLocaleShort } from "./utils";
 
+import CalendarIcon from "../../../static/frontend/img/calendar.svg";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 
 import scssColors from "../../css/base/colors-export.module.scss";
@@ -79,12 +82,16 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
   const [responseStatus, setResponseStatus] = useState<ResponseStatus>(ResponseStatus.NONE);
   const [responseText, setResponseText] = useState<string | null>(null);
 
+  const [calendarVisible, setCalendarVisible] = useState<boolean>(true);
+  const [calendarTextMap, setCalendarTextMap] = useState<Map<string, string>>(new Map());
+
   /**
    * Update state based on new fetched attendances
    */
   useEffect(() => {
     if (jsonAttendancesLoaded) {
       const newOccurrenceMap = new Map<number, { date: string; attendances: Attendance[] }>();
+      const newCalendarTextMap = new Map<string, string>();
       for (const occurrence of jsonAttendances) {
         const attendances: Attendance[] = occurrence.attendances
           .map(({ id, presence, date, studentId, studentName, studentEmail, wordOfTheDayDeadline }) => ({
@@ -97,6 +104,10 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
           }))
           .sort((att1, att2) => att1.student.name.toLowerCase().localeCompare(att2.student.name.toLowerCase()));
         newOccurrenceMap.set(occurrence.id, { date: occurrence.date, attendances });
+
+        const numAttendances = attendances.length;
+        const numPresent = attendances.filter(att => att.presence == AttendancePresence.PR).length;
+        newCalendarTextMap.set(occurrence.date, `${numPresent}/${numAttendances}`);
       }
 
       const newSortedOccurrences = Array.from(newOccurrenceMap.entries())
@@ -106,12 +117,18 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
         .map(([occurrenceId, { date: occurrenceDate }]) => ({ id: occurrenceId, date: occurrenceDate }));
 
       setOccurrenceMap(newOccurrenceMap);
+      setCalendarTextMap(newCalendarTextMap);
       setSortedOccurrences(newSortedOccurrences);
 
       let newAttendances = null;
       if (selectedOccurrence === null) {
         // only update selected occurrence if it has not been set before
-        setSelectedOcurrence(newSortedOccurrences[0]);
+
+        // filter for future occurrences
+        const now = DateTime.now().startOf("day");
+        const futureOccurrences = newSortedOccurrences.filter(occurrence => DateTime.fromISO(occurrence.date) >= now);
+        // set to the most recent future occurrence
+        setSelectedOcurrence(futureOccurrences[futureOccurrences.length - 1]);
         newAttendances = newOccurrenceMap.get(newSortedOccurrences[0]?.id)?.attendances;
       } else {
         // otherwise use existing selectedOccurrence
@@ -140,6 +157,18 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
   }, [selectedOccurrence, wotd]);
 
   /**
+   * Whenever the user changes tab, make sure it is in view.
+   */
+  useEffect(() => {
+    if (selectedOccurrence != null) {
+      const tab = document.getElementById(`date-tab-${selectedOccurrence.id}`);
+      if (tab != null) {
+        tab.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      }
+    }
+  }, [selectedOccurrence]);
+
+  /**
    * Select a new tab, updating the various states
    *
    * Here, occurrenceMap will never be null, as the corresponding parent element
@@ -149,6 +178,10 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
     setSelectedOcurrence(occurrence);
     setStagedAttendances(occurrenceMap!.get(occurrence.id)!.attendances);
     setResponseText(null);
+  }
+
+  function handleToggleCalendar() {
+    setCalendarVisible(visible => !visible);
   }
 
   /**
@@ -161,7 +194,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
     const newStagedAttendances = stagedAttendances || occurrenceMap!.get(sortedOccurrences[0].id);
     setStagedAttendances(
       newStagedAttendances?.map(attendance =>
-        attendance.id == Number(id) ? { ...attendance, presence: value } : attendance
+        attendance.id == Number(id) ? { ...attendance, presence: value as AttendancePresence } : attendance
       )
     );
   }
@@ -203,7 +236,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
       setSelectedOcurrence(newSelectedOccurrence);
       setStagedAttendances(newStagedAttendances);
     }
-    setStagedAttendances(stagedAttendances.map(attendance => ({ ...attendance, presence: "PR" })));
+    setStagedAttendances(stagedAttendances.map(attendance => ({ ...attendance, presence: AttendancePresence.PR })));
   }
 
   /**
@@ -253,112 +286,141 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
         {jsonAttendancesLoaded && occurrenceMap !== null ? (
           <React.Fragment>
             <div id="mentor-attendance">
-              <div id="attendance-date-tabs-container">
-                {sortedOccurrences.map(({ id, date }) => (
-                  <div
-                    key={id}
-                    className={id === selectedOccurrence!.id ? "active" : ""}
-                    onClick={() => handleSelectOccurrence({ id, date })}
-                  >
-                    {formatDateLocaleShort(date)}
-                  </div>
-                ))}
-              </div>
-              <table className="csm-table" id="mentor-attendance-table">
-                <tbody>
-                  {selectedOccurrence &&
-                    stagedAttendances.map(({ id, student, presence }) => {
-                      const cssSuffix = ATTENDANCE_LABELS[presence][1].toLowerCase();
-                      const attendanceColor = scssColors[`attendance-${cssSuffix}`];
-                      const attendanceFgColor = scssColors[`attendance-${cssSuffix}-fg`];
-                      return (
-                        <tr key={id} className="csm-table-row">
-                          <td className="csm-table-item">{student.name}</td>
-                          <td className="csm-table-item">
-                            <select
-                              value={presence}
-                              name={String(id)}
-                              className="form-select mentor-attendance-input"
-                              style={{ backgroundColor: attendanceColor, color: attendanceFgColor }}
-                              onChange={handleAttendanceChange}
-                            >
-                              {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
-                                <option key={value} value={value} disabled={!value}>
-                                  {label}
-                                </option>
-                              ))}
-                            </select>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                </tbody>
-              </table>
-              <div id="mentor-attendance-controls">
-                {showSaveSpinner && <LoadingSpinner />}
-                {showAttendanceSaveSuccess && <CheckCircle height="2em" width="2em" />}
-                <button className="primary-link-btn" onClick={handleMarkAllPresent}>
-                  Mark All As Present
-                </button>
-                <button className="primary-btn" onClick={handleSaveAttendance}>
-                  Save
-                </button>
-              </div>
-              <div id="word-of-the-day-container">
-                <h4 className="word-of-the-day-title">
-                  Word of the Day ({selectedOccurrence ? formatDateLocaleShort(selectedOccurrence.date) : "unselected"})
-                </h4>
-                {wotdLoaded ? (
-                  <React.Fragment>
-                    <p className="word-of-the-day-text">
-                      Status:{" "}
-                      {initialWordOfTheDay ? (
-                        <span className="word-of-the-day-status selected">Selected</span>
-                      ) : (
-                        <span className="word-of-the-day-status unselected">Unselected</span>
-                      )}
-                    </p>
-                    <div className="word-of-the-day-action-container">
-                      <div className="word-of-the-day-input-container">
-                        <input
-                          className="form-input"
-                          name="word-of-the-day"
-                          type="text"
-                          placeholder="Word of the Day"
-                          value={wordOfTheDay}
-                          onChange={e => {
-                            setWordOfTheDay(e.target.value);
-                          }}
-                        />
-                        <button className="primary-link-btn" onClick={handlePickRandomWord}>
-                          Random
-                        </button>
-                      </div>
-                      <div className="word-of-the-day-submit-container">
-                        {responseStatus === ResponseStatus.LOADING ? (
-                          <LoadingSpinner />
-                        ) : responseStatus === ResponseStatus.OK ? (
-                          <CheckCircle className="word-of-the-day-icon" />
-                        ) : null}
-                        <button
-                          className="primary-btn"
-                          onClick={handleSubmitWord}
-                          disabled={!wordOfTheDay || initialWordOfTheDay == wordOfTheDay}
-                        >
-                          {initialWordOfTheDay ? "Update" : "Submit"}
-                        </button>
-                      </div>
+              <div id="attendance-side-bar">
+                <div
+                  id="attendance-calendar-toggle"
+                  className={calendarVisible ? "active" : ""}
+                  onClick={handleToggleCalendar}
+                >
+                  <CalendarIcon className="icon" />
+                </div>
+                <div id="attendance-date-tabs-container">
+                  {sortedOccurrences.map(({ id, date }) => (
+                    <div
+                      key={id}
+                      id={`date-tab-${id}`}
+                      className={id === selectedOccurrence!.id ? "active" : ""}
+                      onClick={() => handleSelectOccurrence({ id, date })}
+                    >
+                      {formatDateLocaleShort(date)}
                     </div>
-                    <div className="word-of-the-day-status-bar">{responseText}</div>
-                  </React.Fragment>
-                ) : wotdError ? (
-                  <h3>Error loading word of the day</h3>
-                ) : (
-                  <LoadingSpinner />
-                )}
+                  ))}
+                </div>
               </div>
-              {!jsonAttendancesLoaded && <LoadingSpinner />}
+              <div id="mentor-attendance-content">
+                <table className="csm-table" id="mentor-attendance-table">
+                  <tbody>
+                    {selectedOccurrence &&
+                      stagedAttendances.map(({ id, student, presence }) => {
+                        const cssSuffix = ATTENDANCE_LABELS[presence][1].toLowerCase();
+                        const attendanceColor = scssColors[`attendance-${cssSuffix}`];
+                        const attendanceFgColor = scssColors[`attendance-${cssSuffix}-fg`];
+                        return (
+                          <tr key={id} className="csm-table-row">
+                            <td className="csm-table-item">{student.name}</td>
+                            <td className="csm-table-item">
+                              <select
+                                value={presence}
+                                name={String(id)}
+                                className="form-select mentor-attendance-input"
+                                style={{ backgroundColor: attendanceColor, color: attendanceFgColor }}
+                                onChange={handleAttendanceChange}
+                              >
+                                {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
+                                  <option key={value} value={value} disabled={!value}>
+                                    {label}
+                                  </option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                  </tbody>
+                </table>
+                <div id="mentor-attendance-controls">
+                  {showSaveSpinner && <LoadingSpinner />}
+                  {showAttendanceSaveSuccess && <CheckCircle height="2em" width="2em" />}
+                  <button className="primary-link-btn" onClick={handleMarkAllPresent}>
+                    Mark All As Present
+                  </button>
+                  <button className="primary-btn" onClick={handleSaveAttendance}>
+                    Save
+                  </button>
+                </div>
+                <div id="word-of-the-day-container">
+                  <h4 className="word-of-the-day-title">
+                    Word of the Day (
+                    {selectedOccurrence ? formatDateLocaleShort(selectedOccurrence.date) : "unselected"})
+                  </h4>
+                  {wotdLoaded ? (
+                    <React.Fragment>
+                      <p className="word-of-the-day-text">
+                        Status:{" "}
+                        {initialWordOfTheDay ? (
+                          <span className="word-of-the-day-status selected">Selected</span>
+                        ) : (
+                          <span className="word-of-the-day-status unselected">Unselected</span>
+                        )}
+                      </p>
+                      <div className="word-of-the-day-action-container">
+                        <div className="word-of-the-day-input-container">
+                          <input
+                            className="form-input"
+                            name="word-of-the-day"
+                            type="text"
+                            placeholder="Word of the Day"
+                            value={wordOfTheDay}
+                            onChange={e => {
+                              setWordOfTheDay(e.target.value);
+                            }}
+                          />
+                          <button className="primary-link-btn" onClick={handlePickRandomWord}>
+                            Random
+                          </button>
+                        </div>
+                        <div className="word-of-the-day-submit-container">
+                          {responseStatus === ResponseStatus.LOADING ? (
+                            <LoadingSpinner />
+                          ) : responseStatus === ResponseStatus.OK ? (
+                            <CheckCircle className="word-of-the-day-icon" />
+                          ) : null}
+                          <button
+                            className="primary-btn"
+                            onClick={handleSubmitWord}
+                            disabled={!wordOfTheDay || initialWordOfTheDay == wordOfTheDay}
+                          >
+                            {initialWordOfTheDay ? "Update" : "Submit"}
+                          </button>
+                        </div>
+                      </div>
+                      <div className="word-of-the-day-status-bar">{responseText}</div>
+                    </React.Fragment>
+                  ) : wotdError ? (
+                    <h3>Error loading word of the day</h3>
+                  ) : (
+                    <LoadingSpinner />
+                  )}
+                </div>
+                {!jsonAttendancesLoaded && <LoadingSpinner />}
+              </div>
             </div>
+            {calendarVisible && (
+              <div id="mentor-attendance-calendar">
+                <CalendarMonth
+                  occurrenceDates={sortedOccurrences.map(occurrence => occurrence.date)}
+                  occurrenceTextMap={calendarTextMap}
+                  selectedOccurrence={selectedOccurrence?.date}
+                  onClickDate={date => {
+                    // find the section occurrence with the given date
+                    const clickedOccurrence = sortedOccurrences.find(occurrence => occurrence.date === date);
+                    if (clickedOccurrence) {
+                      handleSelectOccurrence(clickedOccurrence);
+                    }
+                  }}
+                />
+              </div>
+            )}
           </React.Fragment>
         ) : (
           <LoadingSpinner />
