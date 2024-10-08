@@ -23,6 +23,7 @@ from .models import (
     Spacetime,
     Student,
     User,
+    WaitlistedStudent,
     day_to_number,
     week_bounds,
 )
@@ -142,6 +143,14 @@ class UserFactory(factory.django.DjangoModelFactory):
         lambda o, n: f"{o.first_name}_{o.last_name}{n}"
     )
     email = factory.LazyAttribute(lambda o: f"{o.username}@berkeley.edu")
+
+
+class WaitlistedStudentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = WaitlistedStudent
+    
+    user = factory.SubFactory(UserFactory)
+    section = factory.SubFactory(SectionFactory)
 
 
 class StudentFactory(factory.django.DjangoModelFactory):
