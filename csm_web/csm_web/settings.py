@@ -11,11 +11,13 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+from datetime import datetime
 
 import sentry_sdk
 from factory.django import DjangoModelFactory
 from rest_framework.serializers import ModelSerializer, Serializer
 from sentry_sdk.integrations.django import DjangoIntegration
+from storages.backends.s3boto3 import S3Boto3Storage
 
 # Analogous to RAILS_ENV, is one of {prod, staging, dev}. Defaults to dev. This default can
 # be dangerous, but is worth it to avoid the hassle for developers setting the local ENV var
@@ -67,6 +69,7 @@ INSTALLED_APPS = [
     "frontend",
     "django_extensions",
     "django.contrib.postgres",
+    "storages",
 ]
 
 SHELL_PLUS_SUBCLASSES_IMPORT = [ModelSerializer, Serializer, DjangoModelFactory]
@@ -174,11 +177,33 @@ AWS_DEFAULT_ACL = None
 AWS_S3_VERIFY = True
 AWS_QUERYSTRING_AUTH = False  # public bucket
 DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+PROFILE_IMAGE_STORAGE = "csm_web.settings.ProfileImageStorage"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = "/static/"
+# Do I need this?
+# MEDIA_URL = "/media/"
+
+
+# xTODO: make sure this actually works
+class ProfileImageStorage(S3Boto3Storage):
+    bucket_name = "csm-web-profile-pictures"
+    file_overwrite = False
+
+    def get_accessed_time(self, name):
+        # Implement logic to get the last accessed time
+        return datetime.now()
+
+    def get_created_time(self, name):
+        # Implement logic to get the creation time
+        return datetime.now()
+
+    def path(self, name):
+        # S3 does not support file paths
+        raise NotImplementedError("This backend does not support absolute paths.")
+
 
 if DJANGO_ENV in (PRODUCTION, STAGING):
     # Enables compression and caching

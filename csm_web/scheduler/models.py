@@ -11,6 +11,8 @@ from django.dispatch import receiver
 from django.utils import functional, timezone
 from rest_framework.serializers import ValidationError
 
+from csm_web.settings import ProfileImageStorage
+
 logger = logging.getLogger(__name__)
 
 logger.info = logger.warning
@@ -53,9 +55,8 @@ class User(AbstractUser):
 
     pronouns = models.CharField(max_length=20, default="", blank=True)
     pronunciation = models.CharField(max_length=50, default="", blank=True)
-    profile_image = models.ImageField(
-        upload_to="csm-profile-images/", null=True, blank=True
-    )
+    # the upload_to field specifies subdivisions within S3 bucket
+    profile_image = models.ImageField(storage=ProfileImageStorage())
     bio = models.CharField(max_length=500, default="", blank=True)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
