@@ -225,12 +225,25 @@ class WaitlistedStudent(Profile):
     """
 
     section = models.ForeignKey(
-        "Section", on_delete=models.CASCADE, related_name="waitlistedstudents"
+        "Section", on_delete=models.CASCADE, related_name="waitlist"
     )
     active = models.BooleanField(
         default=True, help_text="An inactive student is a dropped student."
     )
     timestamp = models.DateTimeField(auto_now_add=True)
+
+    def add_from_waitlist(self, section_to_enroll):
+        """
+        Removes this student from all waitlists and adds them as a student in the given section.
+        """
+        WaitlistedStudent.objects.filter(user=self.user, active=True, course=self.section.mentor.course).update(active=False)
+
+        student = Student.objects.create(
+            user=self.user,
+            section=section_to_enroll
+        )
+        if student:
+            logger.info("Student created successfully")
 
 
 class Student(Profile):
@@ -369,7 +382,7 @@ class Section(ValidatingModel):
         return self.students.filter(active=True).count()
 
     @functional.cached_property
-    def current_waitlistedstudent_count(self):
+    def current_waitlist_count(self):
         """Query the number of waitlisted students currently enrolled in this section."""
         return self.waitlistedstudents.filter(active=True).count()
 
