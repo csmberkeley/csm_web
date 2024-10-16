@@ -139,3 +139,28 @@ def user_info(request):
     """
     serializer = UserSerializer(request.user)
     return Response(serializer.data, status=status.HTTP_200_OK)
+
+
+@api_view(["POST"])
+def upload_image(request, pk):
+    """
+    Uploads an image to the aws s3 bucket
+    """
+
+    if "file" not in request.FILES:
+        return Response(
+            {"error": "No file was uploaded"}, status=status.HTTP_400_BAD_REQUEST
+        )
+    image = request.FILES["file"]
+
+    # use pk to get a User
+    try:
+        user = User.objects.get(pk=pk)
+    except User.DoesNotExist:
+        return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+
+    user.profile_image.save(image.name, image)
+
+    return Response(
+        {"message": "File uploaded successfully"}, status=status.HTTP_200_OK
+    )

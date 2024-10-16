@@ -55,8 +55,7 @@ class User(AbstractUser):
 
     pronouns = models.CharField(max_length=20, default="", blank=True)
     pronunciation = models.CharField(max_length=50, default="", blank=True)
-    # the upload_to field specifies subdivisions within S3 bucket
-    profile_image = models.ImageField(storage=ProfileImageStorage())
+    profile_image = models.ImageField(storage=ProfileImageStorage(), blank=True)
     bio = models.CharField(max_length=500, default="", blank=True)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
