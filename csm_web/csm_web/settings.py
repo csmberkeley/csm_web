@@ -183,14 +183,11 @@ STORAGES = {
         "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
     },
 }
-PROFILE_IMAGE_STORAGE = "csm_web.settings.ProfileImageStorage"
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = "/static/"
-# Do I need this?
-# MEDIA_URL = "/media/"
 
 
 # xTODO: make sure this actually works
