@@ -715,7 +715,9 @@ class CourseAdmin(BasePermissionModelAdmin):
     @admin.display(description="Section count")
     def get_section_count(self, obj: Course):
         """Retrieve the number of sections associated with this course."""
-        return obj.mentor_set.count()  # one-to-one between mentor objects and sections
+        # only count mentors that have a section associated with it;
+        # at most one section can be associated with a given mentor object
+        return obj.mentor_set.filter(~Q(section=None)).count()
 
     @admin.display(description="Student count")
     def get_student_count(self, obj: Course):

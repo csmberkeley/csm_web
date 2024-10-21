@@ -365,18 +365,20 @@ def prepare_course_data(
         export_headers.append("Course title")
     if "num_sections" in fields:
         course_queryset = course_queryset.annotate(
-            num_sections=Count("mentor__section")
+            num_sections=Count("mentor__section", distinct=True)
         )
         export_fields.append("num_sections")
         export_headers.append("Number of sections")
     if "num_students" in fields:
         course_queryset = course_queryset.annotate(
-            num_students=Count("mentor__section__students")
+            num_students=Count("mentor__section__students", distinct=True)
         )
         export_fields.append("num_students")
         export_headers.append("Number of students")
     if "num_mentors" in fields:
-        course_queryset = course_queryset.annotate(num_mentors=Count("mentor"))
+        course_queryset = course_queryset.annotate(
+            num_mentors=Count("mentor", distinct=True)
+        )
         export_fields.append("num_mentors")
         export_headers.append("Number of mentors")
 
