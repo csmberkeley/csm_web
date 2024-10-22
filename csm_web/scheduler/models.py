@@ -170,7 +170,7 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
-    #max_waitlist = models.SmallIntegerField(default=3)
+    # max_waitlist = models.SmallIntegerField(default=3)
     # time limit for wotd submission;
     # section occurrence date + day limit, rounded to EOD
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
@@ -347,9 +347,6 @@ class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
     waitlist_capacity = models.PositiveSmallIntegerField(default=3)
-    waitlist_queue = models.ManyToManyField(
-        "WaitlistedStudent", related_name="waitlisted_sections", blank=True
-    )
     mentor = OneToOneOrNoneField(
         Mentor, on_delete=models.CASCADE, blank=True, null=True
     )
