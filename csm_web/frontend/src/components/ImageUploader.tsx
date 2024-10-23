@@ -1,3 +1,4 @@
+import Cookies from "js-cookie";
 import React, { useState } from "react";
 
 const ImageUploader = () => {
@@ -19,8 +20,12 @@ const ImageUploader = () => {
       const formData = new FormData();
       formData.append("file", file);
 
-      const response = await fetch("/upload_image/", {
+      const response = await fetch(`/profile/user/upload_image/`, {
         method: "POST",
+        credentials: "same-origin",
+        headers: {
+          "X-CSRFToken": Cookies.get("csrftoken") ?? ""
+        },
         body: formData
       });
 
