@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import { PermissionError } from "../utils/queries/helpers";
 import { useUserInfo, useUserInfoUpdateMutation } from "../utils/queries/profiles";
+import ImageUploader from "./ImageUploader";
 import LoadingSpinner from "./LoadingSpinner";
 
 import "../css/base/form.scss";
@@ -116,6 +117,8 @@ const UserProfile: React.FC = () => {
   return (
     <div id="user-profile-form">
       <h2 className="form-title">User Profile</h2>
+
+      <ImageUploader />
       <div className="csm-form">
         <div className="form-item">
           <label htmlFor="firstName" className="form-label">

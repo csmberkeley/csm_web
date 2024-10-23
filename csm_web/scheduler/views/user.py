@@ -142,7 +142,7 @@ def user_info(request):
 
 
 @api_view(["POST"])
-def upload_image(request, pk):
+def upload_image(request):
     """
     Uploads an image to the aws s3 bucket
     """
@@ -153,11 +153,7 @@ def upload_image(request, pk):
         )
     image = request.FILES["file"]
 
-    # use pk to get a User
-    try:
-        user = User.objects.get(pk=pk)
-    except User.DoesNotExist:
-        return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
+    user = request.user
 
     user.profile_image.save(image.name, image)
 
