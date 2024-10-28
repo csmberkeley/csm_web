@@ -6,7 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from ..models import Student
+from ..models import Student, WaitlistedStudent
 from ..serializers import AttendanceSerializer, StudentSerializer
 from .section import add_from_waitlist
 from .utils import get_object_or_error, log_str, logger
