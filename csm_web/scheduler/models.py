@@ -15,6 +15,7 @@ logger = logging.getLogger(__name__)
 
 logger.info = logger.warning
 
+DEFAULT_WAITLIST_CAP = 3
 
 class DayOfWeekField(models.Field):
     DAYS = (
@@ -72,6 +73,19 @@ class User(AbstractUser):
         else:
             is_valid_enrollment_time = course.is_open()
         return is_valid_enrollment_time and not is_associated
+
+    def can_enroll_in_waitlist(self, course, section):
+        waitlist_queryset_all = self.waitlistedstudent_set.filter(
+        active=True, course=course)
+
+        if waitlist_queryset_all.count() >= course.waitlist_capacity:
+            return False
+        
+        waitlist_queryset_section = waitlist_queryset_all.filter(section=section.id)
+        
+        if waitlist_queryset_section.count() == 1:
+            return False
+        return True
 
     def is_whitelisted_for(self, course: "Course"):
         """Determine whether this user is whitelisted for the given course."""
@@ -171,10 +185,10 @@ class Course(ValidatingModel):
     # time limit for wotd submission;
     # section occurrence date + day limit, rounded to EOD
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
-
+    waitlist_capacity = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
     is_restricted = models.BooleanField(default=False)
     whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
-
+    
     def __str__(self):
         return self.name
 
@@ -198,6 +212,14 @@ class Course(ValidatingModel):
         """Determine whether the course is open for enrollment."""
         now = timezone.now().astimezone(timezone.get_default_timezone())
         return self.enrollment_start < now < self.enrollment_end
+    
+    @property
+    def waitlist_capacity(self):
+        return self.waitlist_capacity
+    
+    def is_coordinator(self, user):
+        return self.coordinator_set.filter(user=user).exists()
+
 
 
 class Profile(ValidatingModel):
@@ -232,19 +254,36 @@ class WaitlistedStudent(Profile):
     )
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def add_from_waitlist(self, section_to_enroll):
+    @classmethod
+    def add_student_from_waitlist(self, section):
         """
-        Removes this student from all waitlists and adds them as a student in the given section.
+        Adds a waitlisted student into the section and removes the waitlisted student from all waitlists for the course.
+        Only does the above is capacity is not reached (e.g. an exception was made to add an additional student to section)
         """
-        WaitlistedStudent.objects.filter(user=self.user, active=True, course=self.section.mentor.course).update(active=False)
+        if section.open_capacity: 
 
-        student = Student.objects.create(
-            user=self.user,
-            section=section_to_enroll
-        )
-        if student:
-            logger.info("Student created successfully")
+            course_queryset = WaitlistedStudent.objects.filter(active=True, course=section.course)
+            section_waitlist = course_queryset.filter(section=section.id).order_by() # position?
+            
+            if section_waitlist.exists():
+                waitlisted_student = section_waitlist.first()
+                
+                student = Student.objects.create(
+                    user=waitlisted_student.user,
+                    section=section,
+                    course=section.course,
+                )
+                if student:
+                    logger.info("Student added from waitlist successfully")
+                
+                waitlisted_student.active = False  # Mark the waitlisted student as inactive similar to drop student
+                student.save()
+                # TODO: update positions of all other waitlisted students
 
+            # TODO: confusion around whether we set active = False or delete
+            student_waitlist = course_queryset.filter(user=student.user)
+            for waitlist in student_waitlist:
+                waitlist.delete()
 
 class Student(Profile):
     """
@@ -356,7 +395,7 @@ class Coordinator(Profile):
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
-    waitlist_capacity = models.PositiveSmallIntegerField(default=3)
+    waitlist_capacity = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
     mentor = OneToOneOrNoneField(
         Mentor, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -383,6 +422,21 @@ class Section(ValidatingModel):
         """Query the number of waitlisted students currently enrolled in this section."""
         return self.waitlistedstudents.filter(active=True).count()
 
+    @property
+    def open_waitlist(self):
+        """Returns whether waitlist is open"""
+        return self.current_waitlist_count < self.waitlist_capacity
+    
+    @property
+    def open_capacity(self):
+        """Returns whether section capacity is open"""
+        return self.current_student_count < self.capacity
+    
+    @property
+    def course(self):
+        """Returns section's course"""
+        return self.mentor.course
+    
     def delete(self, *args, **kwargs):
         if self.current_student_count and not kwargs.get("force"):
             raise models.ProtectedError(
@@ -411,7 +465,6 @@ class Section(ValidatingModel):
             f"{course_name} section ({enrolled_count}/{capacity}, {mentor_name},"
             f" {spacetimes})"
         )
-
 
 def worksheet_path(instance, filename):
     """Compute the full worksheet path for a worksheet file."""

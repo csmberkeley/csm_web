@@ -6,9 +6,8 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-from ..models import Student
+from ..models import Student, WaitlistedStudent
 from ..serializers import AttendanceSerializer, StudentSerializer
-from .section import SectionViewSet
 from .utils import get_object_or_error, log_str, logger
 
 
@@ -65,8 +64,8 @@ class StudentViewSet(viewsets.GenericViewSet):
             f" {log_str(student.user)} in Section {log_str(student.section)} after"
             f" {now.date()}"
         )
-        sectionview = SectionViewSet()
-        sectionview.add_from_waitlist(request=request, pk=student.section.id)
+        
+        WaitlistedStudent.add_student_from_waitlist(student.section)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["get", "put"])
