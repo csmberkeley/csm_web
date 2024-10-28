@@ -15,7 +15,12 @@ DEFAULT_CAPACITY = 3
 @api_view(["POST"])
 def add(request, pk=None):
     """
-    Add a new waitlist student. Similar to add student in Section
+    Endpoint: /api/waitlistedstudent/add
+
+    POST: Add a new waitlist student. Similar to add student in Section
+    - if waitlist is full, deny permission
+    - if user cannot enroll in section, deny permission
+    - if section is not full, enroll instead.
     """
     section = get_object_or_error(Section.objects, pk=pk)
     if not request.user.can_enroll_in_course(section.mentor.course):
@@ -55,7 +60,6 @@ def add(request, pk=None):
         )
         raise PermissionDenied(
             "You are already waitlisted in this section", status.HTTP_423_LOCKED
-        )
 
     if waitlisted_student_queryset_all.count() >= section.mentor.course.max_waitlist:
         logger.warning(
@@ -80,16 +84,21 @@ def add(request, pk=None):
 @api_view(["PATCH"])
 def drop(request, pk=None):
     """
-    Drop a student off the waitlist
+    Endpoint: /api/waitlistedstudent/<pk>/add_from_waitlist
+
+    PATCH: Drop a student off the waitlist
+    - sets to inactive
+
     """
+    waitlisted_student = WaitlistedStudent.objects.get(pk=pk)
 
-    waitlisted_student = get_object_or_error(WaitlistedStudent.objects, pk=pk)
-
-    is_coordinator = waitlisted_student.section.mentor.course.coordinator_set.filter(
+    is_coordinator = waitlisted_student.course.coordinator_set.filter(
         user=request.user
     ).exists()
     if waitlisted_student.user != request.user and not is_coordinator:
-        raise PermissionDenied("You do not have permission to drop this student")
+        # Students can drop themselves, and Coordinators can drop students from their course
+        # Mentors CANNOT drop their own students, or anyone else for that matter
+        raise PermissionDenied("You do not have permission to add this student")
 
     waitlisted_student.active = False
 
