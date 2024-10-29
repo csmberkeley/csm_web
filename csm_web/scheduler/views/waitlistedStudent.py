@@ -2,15 +2,12 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from ..models import (
-    Section, 
-    WaitlistedStudent
-)
 
-from ..serializers import WaitlistedStudentSerializer
+from ..models import Section, WaitlistedStudent
 from .utils import get_object_or_error, logger
 
 DEFAULT_CAPACITY = 3
+
 
 @api_view(["POST"])
 def add(request, pk=None):
@@ -25,20 +22,23 @@ def add(request, pk=None):
     section = get_object_or_error(Section.objects, pk=pk)
     if not request.user.can_enroll_in_course(section.mentor.course):
         logger.info(
-            "<Enrollment:Failure> User %s was unable to enroll in Waitlist for \
-                Section %s because they are already involved in this course",
-            request.user, section
-            )
+            "<Enrollment:Failure> User %s was unable to enroll in Waitlist for         "
+            "        Section %s because they are already involved in this course",
+            request.user,
+            section,
+        )
         raise PermissionDenied(
-            "You are already either mentoring for this course or enrolled in a \
-                section, or the course is closed for enrollment",
+            "You are already either mentoring for this course or enrolled in a         "
+            "        section, or the course is closed for enrollment",
             status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
     if section.current_waitlist_count >= section.waitlist_capacity:
         logger.warning(
-            "<Enrollment:Failure> User %s was unable to enroll in Waitlist for \
-                Section %s because it was full", request.user, section,
+            "<Enrollment:Failure> User %s was unable to enroll in Waitlist for         "
+            "        Section %s because it was full",
+            request.user,
+            section,
         )
         raise PermissionDenied(
             "There is no space available in this section", status.HTTP_423_LOCKED
@@ -54,18 +54,24 @@ def add(request, pk=None):
 
     if waitlisted_student_queryset.count() == 1:
         logger.warning(
-            "<Enrollment:Failure> User %s was unable to enroll in Waitlist for \
-                Section %s because user is already enrolled in the waitlist for this"
-            " section", request.user, section,
+            "<Enrollment:Failure> User %s was unable to enroll in Waitlist for         "
+            "        Section %s because user is already enrolled in the waitlist for"
+            " this section",
+            request.user,
+            section,
         )
         raise PermissionDenied(
             "You are already waitlisted in this section", status.HTTP_423_LOCKED
+        )
 
     if waitlisted_student_queryset_all.count() >= section.mentor.course.max_waitlist:
         logger.warning(
-            "<Enrollment:Failure> User %s was unable to enroll in Waitlist for \
-                Section %s because user is already enrolled in more than %s waitlist \
-                sections", request.user, section, section.mentor.course.max_waitlist
+            "<Enrollment:Failure> User %s was unable to enroll in Waitlist for         "
+            "        Section %s because user is already enrolled in more than %s"
+            " waitlist                 sections",
+            request.user,
+            section,
+            section.mentor.course.max_waitlist,
         )
         raise PermissionDenied(
             "You are waitlisted in too many sections", status.HTTP_423_LOCKED
@@ -75,11 +81,15 @@ def add(request, pk=None):
         user=request.user, section=section, course=section.mentor.course
     )
 
+    waitlisted_student.save()
+
     logger.info(
         "<Enrollment:Success> User %s enrolled into Waitlist for Section %s",
-        request.user, section
+        request.user,
+        section,
     )
     return Response(status=status.HTTP_201_CREATED)
+
 
 @api_view(["PATCH"])
 def drop(request, pk=None):
@@ -103,5 +113,9 @@ def drop(request, pk=None):
     waitlisted_student.active = False
 
     waitlisted_student.save()
-    logger.info("<Drop> User %s dropped from Waitlist for Section %s", request.user, waitlisted_student.section)
+    logger.info(
+        "<Drop> User %s dropped from Waitlist for Section %s",
+        request.user,
+        waitlisted_student.section,
+    )
     return Response(status=status.HTTP_204_NO_CONTENT)

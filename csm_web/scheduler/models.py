@@ -232,19 +232,6 @@ class WaitlistedStudent(Profile):
     )
     timestamp = models.DateTimeField(auto_now_add=True)
 
-    def add_from_waitlist(self, section_to_enroll):
-        """
-        Removes this student from all waitlists and adds them as a student in the given section.
-        """
-        WaitlistedStudent.objects.filter(user=self.user, active=True, course=self.section.mentor.course).update(active=False)
-
-        student = Student.objects.create(
-            user=self.user,
-            section=section_to_enroll
-        )
-        if student:
-            logger.info("Student created successfully")
-
 
 class Student(Profile):
     """
