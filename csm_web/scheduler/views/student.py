@@ -49,11 +49,10 @@ class StudentViewSet(viewsets.GenericViewSet):
                 student.course.whitelist.remove(student.user)
         student.save()
         logger.info(
-            "<Drop> User %s dropped Section %s"
-            "for Student user %s",
+            "<Drop> User %s dropped Section %sfor Student user %s",
             request.user,
             student.section,
-            student.user
+            student.user,
         )
         # filter attendances and delete future attendances
         now = timezone.now().astimezone(timezone.get_default_timezone())
