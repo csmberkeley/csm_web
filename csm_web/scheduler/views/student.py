@@ -8,7 +8,7 @@ from rest_framework.response import Response
 
 from ..models import Student
 from ..serializers import AttendanceSerializer, StudentSerializer
-from .section import SectionViewSet
+from .section import add_from_waitlist
 from .utils import get_object_or_error, log_str, logger
 
 
@@ -49,8 +49,11 @@ class StudentViewSet(viewsets.GenericViewSet):
                 student.course.whitelist.remove(student.user)
         student.save()
         logger.info(
-            f"<Drop> User {log_str(request.user)} dropped Section"
-            f" {log_str(student.section)} for Student user {log_str(student.user)}"
+            "<Drop> User %s dropped Section %s"
+            "for Student user %s",
+            request.user,
+            student.section,
+            student.user
         )
         # filter attendances and delete future attendances
         now = timezone.now().astimezone(timezone.get_default_timezone())
@@ -65,8 +68,7 @@ class StudentViewSet(viewsets.GenericViewSet):
             f" {log_str(student.user)} in Section {log_str(student.section)} after"
             f" {now.date()}"
         )
-        sectionview = SectionViewSet()
-        sectionview.add_from_waitlist(request=request, pk=student.section.id)
+        add_from_waitlist(pk=student.section.id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["get", "put"])
