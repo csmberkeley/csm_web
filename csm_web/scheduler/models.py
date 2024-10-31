@@ -15,6 +15,8 @@ logger = logging.getLogger(__name__)
 
 logger.info = logger.warning
 
+DEFAULT_WAITLIST_CAP = 3
+
 
 class DayOfWeekField(models.Field):
     DAYS = (
@@ -171,7 +173,7 @@ class Course(ValidatingModel):
     # time limit for wotd submission;
     # section occurrence date + day limit, rounded to EOD
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
-
+    waitlist_capacity = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
     is_restricted = models.BooleanField(default=False)
     whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
 
@@ -198,6 +200,14 @@ class Course(ValidatingModel):
         """Determine whether the course is open for enrollment."""
         now = timezone.now().astimezone(timezone.get_default_timezone())
         return self.enrollment_start < now < self.enrollment_end
+
+    def is_coordinator(self, user):
+        """
+        Returns boolean
+        - True if is coord
+        - False if is not coord
+        """
+        return self.coordinator_set.filter(user=user).exists()
 
 
 class Profile(ValidatingModel):
@@ -343,7 +353,7 @@ class Coordinator(Profile):
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
-    waitlist_capacity = models.PositiveSmallIntegerField(default=3)
+    waitlist_capacity = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
     mentor = OneToOneOrNoneField(
         Mentor, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -369,6 +379,16 @@ class Section(ValidatingModel):
     def current_waitlist_count(self):
         """Query the number of waitlisted students currently enrolled in this section."""
         return self.waitlistedstudents.filter(active=True).count()
+
+    @property
+    def is_waitlist_full(self):
+        """Returns whether waitlist is open"""
+        return self.current_waitlist_count >= self.waitlist_capacity
+
+    @property
+    def is_section_full(self):
+        """Returns whether section capacity is open"""
+        return self.current_student_count >= self.capacity
 
     def delete(self, *args, **kwargs):
         if self.current_student_count and not kwargs.get("force"):
