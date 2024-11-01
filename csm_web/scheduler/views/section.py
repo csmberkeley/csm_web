@@ -39,8 +39,9 @@ def add_student(section, user):
     """
     Helper Function:
 
-    Adds a student to a section (initiated by a waitlist API)
+    Adds a student to a section (initiated by an API call)
     """
+    # Checks that user is able to enroll in the course
     if not user.can_enroll_in_course(section.mentor.course):
         logger.warning(
             "<Enrollment:Failure> User %s was unable to enroll in Section %s"
@@ -54,6 +55,7 @@ def add_student(section, user):
             status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
+    # Check that the section is not full
     if section.current_student_count >= section.capacity:
         logger.warning(
             "<Enrollment:Failure> User %s was unable to enroll in Section %s"
@@ -65,6 +67,7 @@ def add_student(section, user):
             "There is no space available in this section", status.HTTP_423_LOCKED
         )
 
+    # Check that the student exists only once
     student_queryset = user.student_set.filter(
         active=False, course=section.mentor.course
     )
@@ -124,7 +127,7 @@ def add_student(section, user):
 
 def add_from_waitlist(pk):
     """
-    Endpoint: /api/section/<pk>/add_from_waitlist
+    Helper function for adding from waitlist. Called by drop user api
 
     Checks to see if it is possible to add a student to a section off the waitlist.
     Will remove added student from all other waitlists as well
@@ -133,7 +136,7 @@ def add_from_waitlist(pk):
     - Changes nothing if fails to add class
 
     """
-    # FInds section and waitlist student
+    # Finds section and waitlist student
     section = Section.objects.get(pk=pk)
     waitlisted_student = WaitlistedStudent.objects.filter(
         active=True, section=section
@@ -147,10 +150,6 @@ def add_from_waitlist(pk):
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
     waitlisted_student = waitlisted_student[0]
-
-    # Checks capacity
-    if section.capacity <= section.current_student_count:
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
     # Adds the student
     add_student(waitlisted_student.section, waitlisted_student.user)

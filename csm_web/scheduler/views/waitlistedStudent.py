@@ -4,74 +4,70 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
 from ..models import Section, WaitlistedStudent
-from .utils import get_object_or_error, logger
-
-DEFAULT_CAPACITY = 3
-
-
-def can_enroll_in_waitlist(course, section):
-    """
-    Checks if student is able to enroll in waitlist
-    - Takes a course and section object
-    """
-    waitlist_queryset_all = WaitlistedStudent.objects.filter(active=True, course=course)
-
-    if waitlist_queryset_all.count() >= course.waitlist_capacity:
-        return False
-
-    waitlist_queryset_section = waitlist_queryset_all.filter(section=section.id)
-
-    if waitlist_queryset_section.count() == 1:
-        return False
-    return True
+from .section import add_student
+from .utils import logger
 
 
 @api_view(["POST"])
 def add(request, pk=None):
     """
-    Endpoint: /api/waitlistedstudent/add
+    Endpoint: /api/waitlist/<pk>/add
 
-    POST: Add a new waitlist student to section.
+    POST: Add a new waitlist student to section. Pass in section id. Called by user
     - if user cannot enroll in section, deny permission
+    - if user is already on waitlist for this section, deny
     - if waitlist is full, deny permission
     - if section is not full, enroll instead.
     """
-    section = get_object_or_error(Section.objects, pk=pk)
-    course = section.course
+    section = Section.objects.get(pk=pk)
+    course = section.mentor.course
     user = request.user
 
+    # Checks that student is able to enroll in the course
     if not user.can_enroll_in_course(course):
         log_enroll_result(
-            False, user, section, reason="User already involved in this course"
+            False,
+            user,
+            section,
+            reason=(
+                "User already involved in this course or course is closed for"
+                " enrollment"
+            ),
         )
         raise PermissionDenied(
-            "You are either mentoring for this course, already enrolled in a section,  "
-            "               or the course is closed for enrollment.",
+            "You are either mentoring for this course, already enrolled in a section, "
+            "or the course is closed for enrollment.",
             code=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
+    # If there is space in the section, attempt to enroll the student directly
+    if not section.is_section_full:
+        return add_student(section, user)
+
+    # If the waitlist is full, throw an error
     if section.is_waitlist_full:
         log_enroll_result(False, user, section, reason="Waitlist is full")
         raise PermissionDenied(
             "There is no space available in this section.", code=status.HTTP_423_LOCKED
         )
 
-    if not can_enroll_in_waitlist(course, section):
+    # Check if the student is already enrolled in the waitlist for this section
+    waitlist_queryset = WaitlistedStudent.objects.filter(
+        active=True, section=section, user=user
+    )
+    if waitlist_queryset.count() != 0:
         log_enroll_result(
             False,
             user,
             section,
-            reason=(
-                "User is either already waitlisted in this section,                   "
-                " or is at capacity for waitlisting for sections in this course."
-            ),
+            reason="User is already waitlisted in this section",
         )
         raise PermissionDenied(
-            "You are either already waitlisted in this section,                    or"
-            " are at capacity for waitlisting for sections in this course.",
+            "You are either already waitlisted in this section.",
             code=status.HTTP_423_LOCKED,
         )
 
+    # Create the new waitlist student and save
     waitlisted_student = WaitlistedStudent.objects.create(
         user=user, section=section, course=course
     )
@@ -86,23 +82,29 @@ def drop(request, pk=None):
     """
     Endpoint: /api/waitlistedstudent/<pk>/drop
 
-    PATCH: Drop a student off the waitlist
+    PATCH: Drop a student off the waitlist. Pass in section ID
     - sets to inactive
 
     """
-    waitlisted_student = WaitlistedStudent.objects.get(pk=pk)
-    course = waitlisted_student.course
     user = request.user
+    section = Section.objects.get(pk=pk)
+    waitlisted_student = WaitlistedStudent.objects.filter(
+        user=user, section=section
+    ).first()
+    course = waitlisted_student.course
 
+    # Check that the user has permissions to drop this student
     is_coordinator = course.is_coordinator(user)
     if waitlisted_student.user != user and not is_coordinator:
         raise PermissionDenied(
             "You do not have permission to drop this student from the waitlist"
         )
 
+    # Remove the waitlisted student
     waitlisted_student.active = False
-
+    # waitlisted_student.delete()
     waitlisted_student.save()
+
     logger.info(
         "<Drop> User %s dropped from Waitlist for Section %s",
         user,
