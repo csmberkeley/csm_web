@@ -8,7 +8,7 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 from django.dispatch import receiver
-from django.utils import functional, timezone
+from django.utils import timezone
 from rest_framework.serializers import ValidationError
 
 logger = logging.getLogger(__name__)
@@ -188,7 +188,6 @@ class Course(ValidatingModel):
     # time limit for wotd submission;
     # section occurrence date + day limit, rounded to EOD
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
-    waitlist_capacity = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
     is_restricted = models.BooleanField(default=False)
     whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
     
@@ -381,19 +380,15 @@ class Section(ValidatingModel):
         ),
     )
 
-    # @functional.cached_property
-    # def course(self):
-    #     return self.mentor.course
-
-    @functional.cached_property
+    @property
     def current_student_count(self):
         """Query the number of students currently enrolled in this section."""
         return self.students.filter(active=True).count()
 
-    @functional.cached_property
+    @property
     def current_waitlist_count(self):
         """Query the number of waitlisted students currently enrolled in this section."""
-        return self.waitlistedstudents.filter(active=True).count()
+        return WaitlistedStudent.objects.filter(active=True, section=self).count()
 
     @property
     def open_waitlist(self):
