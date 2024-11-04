@@ -71,9 +71,16 @@ def add(request, pk=None):
             code=status.HTTP_423_LOCKED,
         )
 
+    # Check if the waitlist student has a position (only occurs when manually inserting a student)
+    specified_position = request.data.get('position')  # Assuming position can be passed in the request
+    if specified_position is not None:
+        position = int(specified_position)
+    else:
+        position = None
+
     # Create the new waitlist student and save
     waitlisted_student = WaitlistedStudent.objects.create(
-        user=user, section=section, course=course
+        user=user, section=section, course=course, position=position
     )
     waitlisted_student.save()
 

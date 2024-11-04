@@ -136,11 +136,11 @@ def add_from_waitlist(pk):
     - Changes nothing if fails to add class
 
     """
-    # Finds section and waitlist student
+    # Finds section and waitlist student, searches for position (manually inserted student) then timestamp
     section = Section.objects.get(pk=pk)
     waitlisted_student = WaitlistedStudent.objects.filter(
         active=True, section=section
-    ).order_by("timestamp")
+    ).order_by("position", "timestamp").first()
 
     # Check if there are waitlisted students
     if len(waitlisted_student) == 0:

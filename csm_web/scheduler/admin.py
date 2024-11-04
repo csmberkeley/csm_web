@@ -252,6 +252,7 @@ class WaitlistedStudentAdmin(BasePermissionModelAdmin):
         "user",
         "section",
         "course",
+        "position"
     )
 
 
