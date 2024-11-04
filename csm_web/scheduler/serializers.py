@@ -255,7 +255,7 @@ class WaitlistedStudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = WaitlistedStudent
-        fields = ("id", "name", "email", "section")
+        fields = ("id", "name", "email", "section", "position")
 
 
 class SectionSerializer(serializers.ModelSerializer):

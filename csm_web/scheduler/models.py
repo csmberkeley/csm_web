@@ -240,7 +240,28 @@ class WaitlistedStudent(Profile):
         default=True, help_text="An inactive student is a dropped student."
     )
     timestamp = models.DateTimeField(auto_now_add=True)
+    position = models.PositiveIntegerField(
+        null=True, blank=True, help_text="Manual position on the waitlist. Lower numbers have higher priority."
+    )
 
+    # If we do not set a position, the ordering will be by timestamp. Otherwise, we order by position.
+    class Meta:
+        ordering = ['position', 'timestamp']
+
+    def save(self, *args, **kwargs):
+        if self.position is not None:
+            # Find students with conflicting or higher positions and shift them up
+            conflicting_students = WaitlistedStudent.objects.filter(
+                section=self.section,
+                position__gte=self.position
+            ).exclude(pk=self.pk).order_by('position')
+
+            # Increment position of conflicting students
+            for student in conflicting_students:
+                student.position += 1
+                student.save()
+
+        super().save(*args, **kwargs)
 
 class Student(Profile):
     """
