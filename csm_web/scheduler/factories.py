@@ -145,14 +145,6 @@ class UserFactory(factory.django.DjangoModelFactory):
     email = factory.LazyAttribute(lambda o: f"{o.username}@berkeley.edu")
 
 
-class WaitlistedStudentFactory(factory.django.DjangoModelFactory):
-    class Meta:
-        model = WaitlistedStudent
-    
-    user = factory.SubFactory(UserFactory)
-    section = factory.SubFactory(SectionFactory)
-
-
 class StudentFactory(factory.django.DjangoModelFactory):
     class Meta:
         model = Student
@@ -262,6 +254,14 @@ class OverrideFactory(factory.django.DjangoModelFactory):
         )
 
     spacetime = factory.SubFactory(SpacetimeFactory)
+
+
+class WaitlistedStudentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = WaitlistedStudent
+
+    user = factory.SubFactory(UserFactory)
+    section = factory.SubFactory(SectionFactory)
 
 
 class ResourceFactory(factory.django.DjangoModelFactory):
