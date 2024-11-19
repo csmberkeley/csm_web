@@ -247,13 +247,7 @@ class WaitlistedStudentAdmin(BasePermissionModelAdmin):
         "section",
         "course",
     )
-    list_display = (
-        "id",
-        "user",
-        "section",
-        "course",
-    )
-
+    list_display = ("id", "user", "section", "course", "position")
 
 @admin.register(Student)
 class StudentAdmin(BasePermissionModelAdmin):

@@ -136,14 +136,17 @@ def add_from_waitlist(pk):
     - Changes nothing if fails to add class
 
     """
-    # Finds section and waitlist student
+    # Finds section and waitlist student, searches for position
+    # (manually inserted student) then timestamp
     section = Section.objects.get(pk=pk)
-    waitlisted_student = WaitlistedStudent.objects.filter(
-        active=True, section=section
-    ).order_by("timestamp")
+    waitlisted_student = (
+        WaitlistedStudent.objects.filter(active=True, section=section)
+        .order_by("position", "timestamp")
+        .first()
+    )
 
     # Check if there are waitlisted students
-    if len(waitlisted_student) == 0:
+    if not waitlisted_student or waitlisted_student.count() == 0:
         logger.info(
             "<Waitlist:Skipped> No waitlist users for section %s",
             log_str(section),
@@ -741,7 +744,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
         Adds a student to a section (initiated by a student)
         """
-        return self.add_student(section, request.user)
+        return add_student(section, request.user)
 
     @action(detail=True, methods=["get", "put"])
     def wotd(self, request, pk=None):

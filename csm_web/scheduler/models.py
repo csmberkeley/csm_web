@@ -169,12 +169,12 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
-    # max_waitlist = models.SmallIntegerField(default=3)
-    # time limit for wotd submission;
+    # time limit fdocor wotd submission;
     # section occurrence date + day limit, rounded to EOD
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
     is_restricted = models.BooleanField(default=False)
     whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
+    max_waitlist = models.SmallIntegerField(default=3)
 
     def __str__(self):
         return self.name
@@ -234,13 +234,49 @@ class WaitlistedStudent(Profile):
     """
 
     section = models.ForeignKey(
-        "Section", on_delete=models.CASCADE, related_name="waitlist"
-    )
+        "Section", on_delete=models.CASCADE, related_name="waitlist_set"
+
     active = models.BooleanField(
         default=True, help_text="An inactive student is a dropped student."
     )
     timestamp = models.DateTimeField(auto_now_add=True)
+    position = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Manual position on the waitlist. Lower numbers have higher priority."
+        ),
+    )
 
+    class Meta:
+        ordering = ["position", "timestamp"]
+
+    def save(self, *args, **kwargs):
+        # manually assigning a position to a student
+        if self.position is not None:
+            conflicting_students = (
+                WaitlistedStudent.objects.filter(
+                    section=self.section, position__gte=self.position
+                )
+                .exclude(pk=self.pk)
+                .order_by("position")
+            )
+            # shifting over other student's positions
+            for student in conflicting_students:
+                student.position += 1
+                student.save()
+
+        super().save(*args, **kwargs)
+
+        # If position is not set, assign it based on timestamp
+        if self.position is None:
+            waitlisted_students = WaitlistedStudent.objects.filter(section=self.section)
+            # assigning a position based on timestamp
+            if waitlisted_students.count() == 1:
+                self.position = 1
+            else:
+                self.position = waitlisted_students.count()
+            WaitlistedStudent.objects.filter(pk=self.pk).update(position=self.position)
 
 class Student(Profile):
     """

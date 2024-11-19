@@ -23,6 +23,7 @@ from .models import (
     Spacetime,
     Student,
     User,
+    WaitlistedStudent,
     day_to_number,
     week_bounds,
 )
@@ -105,6 +106,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
         )
     )
     permitted_absences = factory.LazyFunction(lambda: random.randint(1, 4))
+    max_waitlist = 3
 
     @factory.lazy_attribute
     def title(self):
@@ -197,6 +199,7 @@ class SectionFactory(factory.django.DjangoModelFactory):
         model = Section
 
     capacity = factory.LazyFunction(lambda: random.randint(3, 6))
+    waitlist_capacity = 3
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
@@ -253,6 +256,14 @@ class OverrideFactory(factory.django.DjangoModelFactory):
         )
 
     spacetime = factory.SubFactory(SpacetimeFactory)
+
+
+class WaitlistedStudentFactory(factory.django.DjangoModelFactory):
+    class Meta:
+        model = WaitlistedStudent
+
+    user = factory.SubFactory(UserFactory)
+    section = factory.SubFactory(SectionFactory)
 
 
 class ResourceFactory(factory.django.DjangoModelFactory):
