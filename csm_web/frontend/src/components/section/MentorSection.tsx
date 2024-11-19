@@ -17,6 +17,7 @@ interface MentorSectionProps {
   capacity: number;
   description: string;
   courseRestricted: boolean;
+  waitlistCapacity: number;
 }
 
 export default function MentorSection({
@@ -28,7 +29,8 @@ export default function MentorSection({
   capacity,
   description,
   userRole,
-  mentor
+  mentor,
+  waitlistCapacity
 }: MentorSectionProps) {
   return (
     <SectionDetail
@@ -55,6 +57,7 @@ export default function MentorSection({
               description={description}
               id={id}
               courseRestricted={courseRestricted}
+              waitlistCapacity={waitlistCapacity}
             />
           }
         />

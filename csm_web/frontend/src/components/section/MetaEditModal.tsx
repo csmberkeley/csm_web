@@ -10,16 +10,22 @@ interface MetaEditModalProps {
   closeModal: () => void;
   capacity: number;
   description: string;
+  waitlistCapacity: number; //updated for waitlist
 }
 
 export default function MetaEditModal({
   closeModal,
   sectionId,
   capacity,
-  description
+  description,
+  waitlistCapacity //updated for waitlist
 }: MetaEditModalProps): React.ReactElement {
   // use existing capacity and description as initial values
-  const [formState, setFormState] = useState({ capacity: capacity, description: description });
+  const [formState, setFormState] = useState({
+    capacity: capacity,
+    description: description,
+    waitlistCapacity: waitlistCapacity
+  });
   const [validationText, setValidationText] = useState("");
 
   const sectionUpdateMutation = useSectionUpdateMutation(sectionId);
@@ -31,7 +37,7 @@ export default function MetaEditModal({
   });
 
   const handleChange = ({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) => {
-    if (name === "capacity") {
+    if (name === "capacity" || name == "waitlistCapacity") {
       setFormState(prevFormState => ({ ...prevFormState, [name]: parseInt(value) }));
     } else {
       setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
@@ -39,7 +45,12 @@ export default function MetaEditModal({
   };
 
   const validateForm = () => {
-    if (isNaN(formState.capacity) || formState.capacity < 0) {
+    if (
+      isNaN(formState.capacity) ||
+      formState.capacity < 0 ||
+      isNaN(formState.waitlistCapacity) ||
+      formState.waitlistCapacity < 0
+    ) {
       setValidationText("Capacity must be non-negative");
       return false;
     }
@@ -91,6 +102,21 @@ export default function MetaEditModal({
             type="text"
             value={formState.description}
             onChange={handleChange}
+          />
+        </label>
+        <label className="form-label">
+          Waitlist Capacity
+          <input
+            className="form-input"
+            required
+            name="waitlistCapacity"
+            type="number"
+            min="0"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={isNaN(formState.waitlistCapacity) ? "" : formState.waitlistCapacity.toString()}
+            onChange={handleChange}
+            autoFocus
           />
         </label>
         <div className="form-actions">

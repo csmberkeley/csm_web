@@ -50,6 +50,7 @@ export interface Section {
   spacetimes: Spacetime[];
   mentor: Mentor;
   capacity: number;
+  waitlistCapacity: number;
   associatedProfileId: number;
   numStudentsEnrolled: number;
   description: string;

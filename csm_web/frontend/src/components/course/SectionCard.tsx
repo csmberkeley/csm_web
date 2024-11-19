@@ -22,6 +22,7 @@ interface SectionCardProps {
   description: string;
   userIsCoordinator: boolean;
   courseOpen: boolean;
+  waitlistCapacity: number;
 }
 
 export const SectionCard = ({
