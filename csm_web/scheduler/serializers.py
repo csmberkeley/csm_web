@@ -256,11 +256,15 @@ class WaitlistedStudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = WaitlistedStudent
 <<<<<<< HEAD
+<<<<<<< HEAD
         fields = ("id", "name", "email", "section", "position")
 =======
         fields = ("id", "name", "email", "section")
 >>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
 
+=======
+        fields = ("id", "name", "email", "section", "position")
+>>>>>>> ea494c5 (fixes bugs detected by pytest (#510))
 
 class SectionSerializer(serializers.ModelSerializer):
     spacetimes = SpacetimeSerializer(many=True)

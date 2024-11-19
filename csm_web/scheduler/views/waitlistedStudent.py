@@ -112,10 +112,21 @@ def add(request, pk=None):
         user=user, section=section, course=course, position=position
 =======
 
+    # Check if the waitlist student has a position (only occurs when manually inserting a student)
+    specified_position = request.data.get('position')  # Assuming position can be passed in the request
+    if specified_position is not None:
+        position = int(specified_position)
+    else:
+        position = None
+
     # Create the new waitlist student and save
     waitlisted_student = WaitlistedStudent.objects.create(
+<<<<<<< HEAD
         user=user, section=section, course=course
 >>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
+=======
+        user=user, section=section, course=course, position=position
+>>>>>>> ea494c5 (fixes bugs detected by pytest (#510))
     )
     waitlisted_student.save()
 

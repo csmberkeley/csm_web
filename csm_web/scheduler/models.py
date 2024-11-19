@@ -185,16 +185,24 @@ class Course(ValidatingModel):
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
 <<<<<<< HEAD
+<<<<<<< HEAD
     # time limit fdocor wotd submission;
 =======
     # max_waitlist = models.SmallIntegerField(default=3)
     # time limit for wotd submission;
 >>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
+=======
+    # time limit fdocor wotd submission;
+>>>>>>> ea494c5 (fixes bugs detected by pytest (#510))
     # section occurrence date + day limit, rounded to EOD
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
     is_restricted = models.BooleanField(default=False)
     whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
+<<<<<<< HEAD
     waitlist_capacity = models.SmallIntegerField(default=DEFAULT_WAITLIST_CAP)
+=======
+    max_waitlist = models.SmallIntegerField(default=3)
+>>>>>>> ea494c5 (fixes bugs detected by pytest (#510))
 
     def __str__(self):
         return self.name
@@ -263,16 +271,24 @@ class WaitlistedStudent(Profile):
 
     section = models.ForeignKey(
 <<<<<<< HEAD
+<<<<<<< HEAD
         "Section", on_delete=models.CASCADE, related_name="waitlist_set"
 =======
         "Section", on_delete=models.CASCADE, related_name="waitlist"
 >>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
     )
+=======
+        "Section", on_delete=models.CASCADE, related_name="waitlist_set"
+
+>>>>>>> ea494c5 (fixes bugs detected by pytest (#510))
     active = models.BooleanField(
         default=True, help_text="An inactive student is a dropped student."
     )
     timestamp = models.DateTimeField(auto_now_add=True)
 <<<<<<< HEAD
+<<<<<<< HEAD
+=======
+>>>>>>> ea494c5 (fixes bugs detected by pytest (#510))
     position = models.PositiveIntegerField(
         null=True,
         blank=True,
@@ -280,6 +296,7 @@ class WaitlistedStudent(Profile):
             "Manual position on the waitlist. Lower numbers have higher priority."
         ),
     )
+<<<<<<< HEAD
 
     class Meta:
         ordering = ["position", "timestamp"]
@@ -312,7 +329,38 @@ class WaitlistedStudent(Profile):
             WaitlistedStudent.objects.filter(pk=self.pk).update(position=self.position)
 =======
 >>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
+=======
+>>>>>>> ea494c5 (fixes bugs detected by pytest (#510))
 
+    class Meta:
+        ordering = ["position", "timestamp"]
+
+    def save(self, *args, **kwargs):
+        # manually assigning a position to a student
+        if self.position is not None:
+            conflicting_students = (
+                WaitlistedStudent.objects.filter(
+                    section=self.section, position__gte=self.position
+                )
+                .exclude(pk=self.pk)
+                .order_by("position")
+            )
+            # shifting over other student's positions
+            for student in conflicting_students:
+                student.position += 1
+                student.save()
+
+        super().save(*args, **kwargs)
+
+        # If position is not set, assign it based on timestamp
+        if self.position is None:
+            waitlisted_students = WaitlistedStudent.objects.filter(section=self.section)
+            # assigning a position based on timestamp
+            if waitlisted_students.count() == 1:
+                self.position = 1
+            else:
+                self.position = waitlisted_students.count()
+            WaitlistedStudent.objects.filter(pk=self.pk).update(position=self.position)
 
 class Student(Profile):
     """
