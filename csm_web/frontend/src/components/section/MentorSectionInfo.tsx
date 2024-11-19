@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 
 import { useSectionStudents } from "../../utils/queries/sections";
+//import { useSectionStudents } from "../../utils/queries/sections"; WARNING: WAIT FOR BACKEND TEAM
 import { Mentor, Spacetime, Student } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
@@ -19,7 +20,8 @@ enum ModalStates {
   NONE = "NONE",
   SPACETIME_EDIT = "SPACETIME_EDIT",
   META_EDIT = "META_EDIT",
-  SPACETIME_DELETE = "SPACETIME_DELETE"
+  SPACETIME_DELETE = "SPACETIME_DELETE",
+  WAITLIST_EDIT = "WAITLIST_EDIT"
 }
 
 interface MentorSectionInfoProps {
@@ -44,6 +46,7 @@ export default function MentorSectionInfo({
   waitlistCapacity
 }: MentorSectionInfoProps) {
   const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(sectionId);
+  //const { data: waitlistedStudents, isSuccess: waitlistLoaded, isError: waitlistLoadError } = useWaitlistedStudents(sectionId);
 
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
@@ -62,66 +65,129 @@ export default function MentorSectionInfo({
         isCoordinator ? `${mentor.name || mentor.email}'s` : "My"
       } Section`}</h3>
       <div className="section-info-cards-container">
-        <InfoCard
-          title="Students"
-          extraPadding={
-            // add extra padding if loading, otherwise remove padding
-            !studentsLoaded
-          }
-        >
-          {studentsLoaded ? (
-            // done loading
-            <React.Fragment>
-              <table id="students-table" className="csm-table">
-                <thead className="csm-table-head">
-                  <tr className="csm-table-head-row">
-                    <th className="csm-table-item">Name</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(students.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students).map(
-                    ({ name, email, id: studentId }: Student) => (
-                      <tr key={studentId} className="csm-table-row">
-                        <td className="csm-table-item">
-                          {isCoordinator && studentId !== -1 && (
-                            <StudentDropper
-                              name={name ? name : email}
-                              id={studentId}
-                              sectionId={sectionId}
-                              courseRestricted={courseRestricted}
-                            />
-                          )}
-                          <span className="student-info">{name || email}</span>
-                        </td>
-                      </tr>
-                    )
-                  )}
-                  {isCoordinator && (
-                    <React.Fragment>
-                      <tr className="csm-table-row">
-                        <td className="csm-table-item">
-                          <button className="secondary-btn" onClick={() => setIsAddingStudent(true)}>
-                            Add students
-                          </button>
-                        </td>
-                      </tr>
-                    </React.Fragment>
-                  )}
-                </tbody>
-              </table>
-              {isCoordinator && isAddingStudent && (
-                <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} />
-              )}
-            </React.Fragment>
-          ) : studentsLoadError ? (
-            // error loading
-            <h3>Students could not be loaded</h3>
-          ) : (
-            // not done loading
-            <LoadingSpinner className="spinner-centered" />
-          )}
-        </InfoCard>
-        <div className="section-info-cards-right">
+        <div className="section-info-cards-container-left">
+          <InfoCard
+            title="Students"
+            extraPadding={
+              // add extra padding if loading, otherwise remove padding
+              !studentsLoaded
+            }
+          >
+            {studentsLoaded ? (
+              // done loading
+              <React.Fragment>
+                <table id="students-table" className="csm-table">
+                  <thead className="csm-table-head">
+                    <tr className="csm-table-head-row">
+                      <th className="csm-table-item">Name</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(students.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students).map(
+                      ({ name, email, id: studentId }: Student) => (
+                        <tr key={studentId} className="csm-table-row">
+                          <td className="csm-table-item">
+                            {isCoordinator && studentId !== -1 && (
+                              <StudentDropper
+                                name={name ? name : email}
+                                id={studentId}
+                                sectionId={sectionId}
+                                courseRestricted={courseRestricted}
+                              />
+                            )}
+                            <span className="student-info">{name || email}</span>
+                          </td>
+                        </tr>
+                      )
+                    )}
+                    {isCoordinator && (
+                      <React.Fragment>
+                        <tr className="csm-table-row">
+                          <td className="csm-table-item">
+                            <button className="secondary-btn" onClick={() => setIsAddingStudent(true)}>
+                              Add students
+                            </button>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    )}
+                  </tbody>
+                </table>
+                {isCoordinator && isAddingStudent && (
+                  <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} />
+                )}
+              </React.Fragment>
+            ) : studentsLoadError ? (
+              // error loading
+              <h3>Students could not be loaded</h3>
+            ) : (
+              // not done loading
+              <LoadingSpinner className="spinner-centered" />
+            )}
+          </InfoCard>
+          <InfoCard
+            title="Waitlisted Students"
+            extraPadding={
+              // add extra padding if loading, otherwise remove padding
+              !studentsLoaded
+              // !waitlistLoaded
+            }
+          >
+            {studentsLoaded ? (
+              // waitlistLoaded ? (
+              // done loading
+              <React.Fragment>
+                <table id="students-table" className="csm-table">
+                  <thead className="csm-table-head">
+                    <tr className="csm-table-head-row">
+                      <th className="csm-table-item">Name</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(students.length === 0 ? [{ name: "No students waitlisted", email: "", id: -1 }] : students).map(
+                      ({ name, email, id: studentId }: Student) => (
+                        <tr key={studentId} className="csm-table-row">
+                          <td className="csm-table-item">
+                            {isCoordinator && studentId !== -1 && (
+                              <StudentDropper
+                                name={name ? name : email}
+                                id={studentId}
+                                sectionId={sectionId}
+                                courseRestricted={courseRestricted}
+                              />
+                            )}
+                            <span className="student-info">{name || email}</span>
+                          </td>
+                        </tr>
+                      )
+                    )}
+                    {isCoordinator && (
+                      <React.Fragment>
+                        <tr className="csm-table-row">
+                          <td className="csm-table-item">
+                            <button className="secondary-btn" onClick={() => setIsAddingStudent(true)}>
+                              Add waitlisted students
+                            </button>
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    )}
+                  </tbody>
+                </table>
+                {isCoordinator && isAddingStudent && (
+                  <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} />
+                )}
+              </React.Fragment>
+            ) : studentsLoadError ? ( // ) : waitlistLoadError ? ()
+              // error loading
+              <h3>Waitlisted students could not be loaded</h3>
+            ) : (
+              // not done loading
+              <LoadingSpinner className="spinner-centered" />
+            )}
+          </InfoCard>
+        </div>
+        <div className="section-info-cards-middle">
           {spacetimes.map(({ override, ...spacetime }, index) => (
             <SectionSpacetime
               manySpacetimes={spacetimes.length > 1}
@@ -201,7 +267,8 @@ export default function MentorSectionInfo({
               )}
             </SectionSpacetime>
           ))}
-
+        </div>
+        <div className="section-info-cards-right">
           <InfoCard title="Meta">
             {isCoordinator && (
               <React.Fragment>

@@ -65,6 +65,39 @@ export const useSectionStudents = (id: number): UseQueryResult<Student[], Server
   return queryResult;
 };
 
+/** WARNING: WAIT FOR BACKEND TEAM
+ * Hook to get the wailisted students enrolled in a section.
+ *
+ * List of students is sorted by name.
+ */
+/*
+export const useSectionWaitlisted = (id: number): UseQueryResult<Student[], ServerError> => {
+  const queryResult = useQuery<Student[], Error>(
+    ["sections", id, "students"],
+    async () => {
+      if (isNaN(id)) {
+        throw new PermissionError("Invalid section id");
+      }
+      const response = await fetchNormalized(`/sections/${id}/waitlisted`);
+      if (response.ok) {
+        const students = await response.json();
+        // sort students by name before returning
+        return students.sort((stu1: Student, stu2: Student) =>
+          stu1.name.toLowerCase().localeCompare(stu2.name.toLowerCase())
+        );
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to fetch section ${id} students`);
+      }
+    },
+    { retry: handleRetry }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+*/
+
 /**
  * Hook to get the attendances for a section.
  */
@@ -400,7 +433,7 @@ interface EnrollStudentMutationResponse {
     progress?: Array<{
       email: string;
       status: string;
-      detail?: any;
+      detail?: unknown;
     }>;
   };
 }

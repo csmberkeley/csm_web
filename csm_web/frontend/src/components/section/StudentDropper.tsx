@@ -30,6 +30,12 @@ export default function StudentDropper({ id, sectionId, name, courseRestricted }
     setShowDropPrompt(false);
   }
 
+  /*
+Warning: Dropping a student automatically processes the waitlist.
+Do you want to drop and add a student
+Add student, decrease capacity, drop student
+  */
+
   const dropDiv = (
     <div>
       <h2 className="student-dropper-head-item">DROP Student</h2>
