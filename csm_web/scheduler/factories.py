@@ -198,6 +198,7 @@ class SectionFactory(factory.django.DjangoModelFactory):
         model = Section
 
     capacity = factory.LazyFunction(lambda: random.randint(3, 6))
+    waitlist_capacity = 3
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
