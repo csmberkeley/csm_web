@@ -56,7 +56,7 @@ def add_student(section, user):
         )
 
     # Check that the section is not full
-    if section.is_section_full:
+    if section.current_student_count >= section.capacity:
         logger.warning(
             "<Enrollment:Failure> User %s was unable to enroll in Section %s"
             " because it was full",
@@ -113,20 +113,10 @@ def add_student(section, user):
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
 
+    # student_queryset.count() == 0
     student = Student.objects.create(
         user=user, section=section, course=section.mentor.course
     )
-
-    # Removes all waitlists the student that added was a part of
-    waitlist_set = WaitlistedStudent.objects.filter(
-        user=user, active=True, course=student.course
-    )
-
-    for waitlist in waitlist_set:
-        waitlist.active = False
-        # waitlist.delete()
-        waitlist.save()
-
     logger.info(
         "<Enrollment:Success> User %s enrolled in Section %s",
         log_str(student.user),
@@ -146,31 +136,37 @@ def add_from_waitlist(pk):
     - Changes nothing if fails to add class
 
     """
-    # Finds section and waitlist student, searches for position
-    # (manually inserted student) then timestamp
+    # Finds section and waitlist student
     section = Section.objects.get(pk=pk)
-    waitlisted_student = (
-        WaitlistedStudent.objects.filter(active=True, section=section)
-        .order_by("position", "timestamp")
-        .first()
-    )
+    waitlisted_student = WaitlistedStudent.objects.filter(
+        active=True, section=section
+    ).order_by("timestamp")
 
     # Check if there are waitlisted students
-    if not waitlisted_student:
+    if len(waitlisted_student) == 0:
         logger.info(
             "<Waitlist:Skipped> No waitlist users for section %s",
             log_str(section),
         )
         return Response(status=status.HTTP_204_NO_CONTENT)
+    waitlisted_student = waitlisted_student[0]
 
     # Adds the student
     add_student(waitlisted_student.section, waitlisted_student.user)
+
+    # Removes all waitlists the student that added was a part of
+    waitlist_set = WaitlistedStudent.objects.filter(
+        user=waitlisted_student.user, active=True, course=waitlisted_student.course
+    )
+    for waitlist in waitlist_set:
+        # waitlist.active = False
+        waitlist.delete()
+
     logger.info(
         "<Enrollment:Success> User %s removed from all Waitlists for Course %s",
         log_str(waitlisted_student.user),
         log_str(waitlisted_student.course),
     )
-
     return Response(status=status.HTTP_201_CREATED)
 
 
@@ -745,7 +741,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         """
         Adds a student to a section (initiated by a student)
         """
-        return add_student(section, request.user)
+        return self.add_student(section, request.user)
 
     @action(detail=True, methods=["get", "put"])
     def wotd(self, request, pk=None):

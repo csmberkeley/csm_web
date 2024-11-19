@@ -6,7 +6,11 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
+<<<<<<< HEAD
 from ..models import Student, WaitlistedStudent
+=======
+from ..models import Student
+>>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
 from ..serializers import AttendanceSerializer, StudentSerializer
 from .section import add_from_waitlist
 from .utils import get_object_or_error, log_str, logger

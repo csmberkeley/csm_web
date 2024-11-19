@@ -36,7 +36,12 @@ def add(request, pk=None):
         )
         raise PermissionDenied(
             "You are either mentoring for this course, already enrolled in a section, "
+<<<<<<< HEAD
             "or the course is closed for enrollment."
+=======
+            "or the course is closed for enrollment.",
+            code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+>>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
         )
 
     # If there is space in the section, attempt to enroll the student directly
@@ -46,6 +51,7 @@ def add(request, pk=None):
     # If the waitlist is full, throw an error
     if section.is_waitlist_full:
         log_enroll_result(False, user, section, reason="Waitlist is full")
+<<<<<<< HEAD
         raise PermissionDenied("There is no space available in this section.")
 
     # If user has waitlisted in the max number of waitlists allowed for the course
@@ -58,6 +64,10 @@ def add(request, pk=None):
         )
         raise PermissionDenied(
             "You are waitlisted in the max amount of waitlists for this course."
+=======
+        raise PermissionDenied(
+            "There is no space available in this section.", code=status.HTTP_423_LOCKED
+>>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
         )
 
     # Check if the student is already enrolled in the waitlist for this section
@@ -72,14 +82,18 @@ def add(request, pk=None):
             reason="User is already waitlisted in this section",
         )
 <<<<<<< HEAD
+<<<<<<< HEAD
     
     if not user.can_enroll_in_waitlist(course, section):
         log_enroll_result(False, user, section, reason="User is either already waitlisted in this section, \
                    or is at capacity for waitlisting for sections in this course.")
+=======
+>>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
         raise PermissionDenied(
             "You are either already waitlisted in this section.",
             code=status.HTTP_423_LOCKED,
         )
+<<<<<<< HEAD
 =======
         raise PermissionDenied("You are already waitlisted in this section.")
 >>>>>>> 1fa5c9b (adds tests)
@@ -96,6 +110,12 @@ def add(request, pk=None):
     # Create the new waitlist student and save
     waitlisted_student = WaitlistedStudent.objects.create(
         user=user, section=section, course=course, position=position
+=======
+
+    # Create the new waitlist student and save
+    waitlisted_student = WaitlistedStudent.objects.create(
+        user=user, section=section, course=course
+>>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
     )
     waitlisted_student.save()
 
@@ -106,7 +126,11 @@ def add(request, pk=None):
 @api_view(["PATCH"])
 def drop(request, pk=None):
     """
+<<<<<<< HEAD
     Endpoint: /api/waitlist/<pk>/drop
+=======
+    Endpoint: /api/waitlistedstudent/<pk>/drop
+>>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
 
     PATCH: Drop a student off the waitlist. Pass in section ID
     - sets to inactive
@@ -114,6 +138,7 @@ def drop(request, pk=None):
     """
     user = request.user
     section = Section.objects.get(pk=pk)
+<<<<<<< HEAD
     course = section.mentor.course
     waitlisted_student = WaitlistedStudent.objects.filter(
         user=user, section=section
@@ -130,11 +155,28 @@ def drop(request, pk=None):
             "You do not have permission to drop this student from the waitlist"
         )
 >>>>>>> e980d2e (tests drops from waitlist)
+=======
+    waitlisted_student = WaitlistedStudent.objects.filter(
+        user=user, section=section
+    ).first()
+    course = waitlisted_student.course
+
+    # Check that the user has permissions to drop this student
+    is_coordinator = course.is_coordinator(user)
+    if waitlisted_student.user != user and not is_coordinator:
+        raise PermissionDenied(
+            "You do not have permission to drop this student from the waitlist"
+        )
+>>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
 
     # Remove the waitlisted student
     waitlisted_student.active = False
     # waitlisted_student.delete()
     waitlisted_student.save()
+<<<<<<< HEAD
+=======
+
+>>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
     logger.info(
         "<Drop> User %s dropped from Waitlist for Section %s",
         user,
@@ -142,9 +184,28 @@ def drop(request, pk=None):
     )
     return Response(status=status.HTTP_204_NO_CONTENT)
 
+<<<<<<< HEAD
 def log_enroll_result(success, user, section, reason=None):
     """Logs waitlist success or failure for a user in a section."""
     if success:
         logger.info("<Waitlist:Success> User %s enrolled into Waitlist for Section %s", user, section)
     else:
         logger.warning("<Waitlist:Failure> User %s not enroll in Waitlist for Section %s: %s", user, section, reason)
+=======
+
+def log_enroll_result(success, user, section, reason=None):
+    """Logs waitlist success or failure for a user in a section."""
+    if success:
+        logger.info(
+            "<Waitlist:Success> User %s enrolled into Waitlist for Section %s",
+            user,
+            section,
+        )
+    else:
+        logger.warning(
+            "<Waitlist:Failure> User %s not enroll in Waitlist for Section %s: %s",
+            user,
+            section,
+            reason,
+        )
+>>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
