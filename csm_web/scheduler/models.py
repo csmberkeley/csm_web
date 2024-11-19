@@ -169,12 +169,12 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
-    # max_waitlist = models.SmallIntegerField(default=3)
     # time limit fdocor wotd submission;
     # section occurrence date + day limit, rounded to EOD
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
     is_restricted = models.BooleanField(default=False)
     whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
+    max_waitlist = models.SmallIntegerField(default=3)
 
     def __str__(self):
         return self.name
@@ -234,7 +234,7 @@ class WaitlistedStudent(Profile):
     """
 
     section = models.ForeignKey(
-        "Section", on_delete=models.CASCADE, related_name="waitlist"
+        "Section", on_delete=models.CASCADE, related_name="waitlist_set"
     )
     active = models.BooleanField(
         default=True, help_text="An inactive student is a dropped student."
