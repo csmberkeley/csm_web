@@ -1,4 +1,4 @@
-from . import matcher
+from . import matcher, waitlistedStudent
 from .course import CourseViewSet
 from .export import export_data
 from .profile import ProfileViewSet
