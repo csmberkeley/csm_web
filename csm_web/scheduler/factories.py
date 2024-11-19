@@ -106,6 +106,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
         )
     )
     permitted_absences = factory.LazyFunction(lambda: random.randint(1, 4))
+    max_waitlist = 3
 
     @factory.lazy_attribute
     def title(self):
