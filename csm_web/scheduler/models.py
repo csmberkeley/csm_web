@@ -235,7 +235,7 @@ class WaitlistedStudent(Profile):
 
     section = models.ForeignKey(
         "Section", on_delete=models.CASCADE, related_name="waitlist_set"
-    )
+
     active = models.BooleanField(
         default=True, help_text="An inactive student is a dropped student."
     )
@@ -277,7 +277,6 @@ class WaitlistedStudent(Profile):
             else:
                 self.position = waitlisted_students.count()
             WaitlistedStudent.objects.filter(pk=self.pk).update(position=self.position)
-
 
 class Student(Profile):
     """

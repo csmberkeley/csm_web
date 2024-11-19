@@ -257,7 +257,6 @@ class WaitlistedStudentSerializer(serializers.ModelSerializer):
         model = WaitlistedStudent
         fields = ("id", "name", "email", "section", "position")
 
-
 class SectionSerializer(serializers.ModelSerializer):
     spacetimes = SpacetimeSerializer(many=True)
     num_students_enrolled = serializers.SerializerMethodField()
