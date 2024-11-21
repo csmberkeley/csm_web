@@ -1,3 +1,4 @@
+from PIL import Image, UnidentifiedImageError
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
@@ -151,12 +152,56 @@ def upload_image(request):
         return Response(
             {"error": "No file was uploaded"}, status=status.HTTP_400_BAD_REQUEST
         )
-    image = request.FILES["file"]
+    image_file = request.FILES["file"]  # InMemoryUploadedFile
+    allowed_types = ["JPEG", "PNG"]  # Define allowed image types
+    max_width = 150
+    max_height = 150
 
-    user = request.user
+    try:
+        # Open and validate the image
+        with Image.open(image_file) as img:
+            img.verify()  # Check for corrupt files
+            img = Image.open(image_file)  # Reopen for further use
 
-    user.profile_image.save(image.name, image)
+            # Validate type and size
+            validate_image_type(img, allowed_types)
+            validate_image_size(img, max_width, max_height)
 
-    return Response(
-        {"message": "File uploaded successfully"}, status=status.HTTP_200_OK
-    )
+        # Save the image to the user's profile
+        user = request.user
+        user.profile_image.save(image_file.name, image_file)
+
+        return Response(
+            {"message": "File uploaded successfully"}, status=status.HTTP_200_OK
+        )
+
+    except UnidentifiedImageError:
+        return Response(
+            {"error": "Uploaded file is not a valid image."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
+    except ValueError as e:
+        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Validation Helper Functions
+def validate_image_type(image, allowed_types):
+    """
+    Validates the image type
+    """
+    if image.format not in allowed_types:
+        raise ValueError(
+            f"Invalid image type: {image.format}. Allowed types are: {allowed_types}."
+        )
+
+
+def validate_image_size(image, max_width, max_height):
+    """
+    Validates the image size
+    """
+    width, height = image.size
+    if width > max_width or height > max_height:
+        raise ValueError(
+            f"Image size {width}x{height} exceeds maximum allowed size of"
+            f" {max_width}x{max_height}."
+        )
