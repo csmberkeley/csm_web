@@ -69,6 +69,8 @@ export function fetchWithMethod(
   const normalizedEndpoint = endpointWithQueryParams(normalizeEndpoint(endpoint), queryParams);
 
   if (isFormData) {
+    console.log("test");
+    // print("test")
     return fetch(normalizedEndpoint, {
       method: method,
       credentials: "same-origin",
