@@ -36,8 +36,7 @@ def add(request, pk=None):
         )
         raise PermissionDenied(
             "You are either mentoring for this course, already enrolled in a section, "
-            "or the course is closed for enrollment.",
-            code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            "or the course is closed for enrollment."
         )
 
     # If there is space in the section, attempt to enroll the student directly
@@ -47,8 +46,18 @@ def add(request, pk=None):
     # If the waitlist is full, throw an error
     if section.is_waitlist_full:
         log_enroll_result(False, user, section, reason="Waitlist is full")
+        raise PermissionDenied("There is no space available in this section.")
+
+    # If user has waitlisted in the max number of waitlists allowed for the course
+    if not user.can_enroll_in_waitlist(course):
+        log_enroll_result(
+            False,
+            user,
+            section,
+            reason="User has waitlisted in max amount of waitlists for the course",
+        )
         raise PermissionDenied(
-            "There is no space available in this section.", code=status.HTTP_423_LOCKED
+            "You are waitlisted in the max amount of waitlists for this course."
         )
 
     # Check if the student is already enrolled in the waitlist for this section
@@ -62,6 +71,7 @@ def add(request, pk=None):
             section,
             reason="User is already waitlisted in this section",
         )
+<<<<<<< HEAD
     
     if not user.can_enroll_in_waitlist(course, section):
         log_enroll_result(False, user, section, reason="User is either already waitlisted in this section, \
@@ -70,9 +80,14 @@ def add(request, pk=None):
             "You are either already waitlisted in this section.",
             code=status.HTTP_423_LOCKED,
         )
+=======
+        raise PermissionDenied("You are already waitlisted in this section.")
+>>>>>>> 1fa5c9b (adds tests)
 
     # Check if the waitlist student has a position (only occurs when manually inserting a student)
-    specified_position = request.data.get('position')  # Assuming position can be passed in the request
+    specified_position = request.data.get(
+        "position"
+    )  # Assuming position can be passed in the request
     if specified_position is not None:
         position = int(specified_position)
     else:
