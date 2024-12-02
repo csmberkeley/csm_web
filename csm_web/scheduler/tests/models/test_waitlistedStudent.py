@@ -186,3 +186,4 @@ def test_user_exceeds_max_waitlists_for_course(setup_waitlist, client):
     client.force_login(waitlisted_student_user)
     response = client.post(f"/api/waitlist/{section_test.pk}/add/")
     assert WaitlistedStudent.objects.filter(active=True).count() == 0
+    # Verify student is inactive on waitlists after adding to a section.
