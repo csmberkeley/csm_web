@@ -1,5 +1,6 @@
 import pytest
 from scheduler.factories import (
+    CoordinatorFactory,
     CourseFactory,
     MentorFactory,
     SectionFactory,
@@ -107,7 +108,9 @@ def test_user_can_waitlist_only_once(setup_waitlist, client):
         response = client.post(f"/api/waitlist/{section.pk}/add/")
 
     client.force_login(waitlisted_student_user)
-    response = client.post(f"/api/waitlist/{section.pk}/add/")
+    response = client.post(
+        f"/api/waitlist/{section.pk}/add/", content_type="application/json"
+    )
 
     assert response.status_code == 201
     assert WaitlistedStudent.objects.count() == 1
@@ -132,7 +135,9 @@ def test_waitlist_is_full(setup_waitlist, client):
     while not section.is_waitlist_full:
         new_student = UserFactory.create_batch(1)[0]
         client.force_login(new_student)
-        response = client.post(f"/api/waitlist/{section.pk}/add/")
+        response = client.post(
+            f"/api/waitlist/{section.pk}/add/", content_type="application/json"
+        )
 
     client.force_login(waitlisted_student_user)
     response = client.post(f"/api/waitlist/{section.pk}/add/")
@@ -163,18 +168,24 @@ def test_user_exceeds_max_waitlists_for_course(setup_waitlist, client):
             response = client.post(f"/api/waitlist/{section_test.pk}/add/")
 
         client.force_login(waitlisted_student_user)
-        response = client.post(f"/api/waitlist/{section_test.pk}/add/")
+        response = client.post(
+            f"/api/waitlist/{section_test.pk}/add/", content_type="application/json"
+        )
     # Verify max waitlists achieved
     assert WaitlistedStudent.objects.count() == course.waitlist_capacity
 
     while not section.is_section_full:
         new_student = UserFactory.create_batch(1)[0]
         client.force_login(new_student)
-        response = client.post(f"/api/waitlist/{section.pk}/add/")
+        response = client.post(
+            f"/api/waitlist/{section.pk}/add/", content_type="application/json"
+        )
 
     # Verify errors when attempting to add another waitlist
     client.force_login(waitlisted_student_user)
-    response = client.post(f"/api/waitlist/{section.pk}/add/")
+    response = client.post(
+        f"/api/waitlist/{section.pk}/add/", content_type="application/json"
+    )
     assert response.status_code == 403
     assert WaitlistedStudent.objects.count() == course.waitlist_capacity
 
@@ -184,7 +195,9 @@ def test_user_exceeds_max_waitlists_for_course(setup_waitlist, client):
     section_test = SectionFactory.create(mentor=mentor)
 
     client.force_login(waitlisted_student_user)
-    response = client.post(f"/api/waitlist/{section_test.pk}/add/")
+    response = client.post(
+        f"/api/waitlist/{section_test.pk}/add/", content_type="application/json"
+    )
     assert (
         WaitlistedStudent.objects.filter(
             user=waitlisted_student_user, active=True
@@ -220,8 +233,12 @@ def test_user_enrolled_from_waitlist_and_dropped_from_others(setup_waitlist, cli
         _ = client.post(f"/api/waitlist/{section2.pk}/add/")
 
     client.force_login(waitlisted_student_user)
-    _ = client.post(f"/api/waitlist/{section1.pk}/add/")
-    _ = client.post(f"/api/waitlist/{section2.pk}/add/")
+    _ = client.post(
+        f"/api/waitlist/{section1.pk}/add/", content_type="application/json"
+    )
+    _ = client.post(
+        f"/api/waitlist/{section2.pk}/add/", content_type="application/json"
+    )
     assert (
         WaitlistedStudent.objects.filter(
             user=waitlisted_student_user, active=True
@@ -256,7 +273,7 @@ def test_user_drops_themselves_successfully(setup_waitlist, client):
     )
 
     client.force_login(waitlisted_student_user)
-    response = client.patch(f"/api/waitlist/{section.pk}/drop/")
+    response = client.patch(f"/api/waitlist/{waitlisted_student.pk}/drop/")
 
     assert response.status_code == 204  # Unsure why 200 is returned
     waitlisted_student.refresh_from_db()
@@ -264,7 +281,6 @@ def test_user_drops_themselves_successfully(setup_waitlist, client):
 
 
 @pytest.mark.django_db
-@pytest.mark.skip
 def test_coordinator_drops_student_successfully(setup_waitlist, client):
     """
     Given a coordinator for the course associated with a section,
@@ -278,11 +294,13 @@ def test_coordinator_drops_student_successfully(setup_waitlist, client):
         user=waitlisted_student_user, course=course, section=section
     )
 
-    coordinator = _
-    client.force_login(coordinator)
-    response = client.patch(f"/api/waitlist/{section.pk}/drop/")
+    coordinator_user = UserFactory.create_batch(1)[0]
+    _ = CoordinatorFactory.create(user=coordinator_user, course=course)
 
-    assert response.status_code == 404
+    client.force_login(coordinator_user)
+    response = client.patch(f"/api/waitlist/{waitlisted_student.pk}/drop/")
+
+    assert response.status_code == 204
     waitlisted_student.refresh_from_db()
     assert waitlisted_student.active is False
 
@@ -303,7 +321,7 @@ def test_user_drops_without_permission(setup_waitlist, client):
 
     unauthorized_user = UserFactory.create_batch(1)[0]
     client.force_login(unauthorized_user)
-    response = client.patch(f"/api/waitlist/{section.pk}/drop/")
+    response = client.patch(f"/api/waitlist/{waitlisted_student.pk}/drop/")
 
     assert response.status_code == 403
     assert (
@@ -315,16 +333,17 @@ def test_user_drops_without_permission(setup_waitlist, client):
 
 
 @pytest.mark.django_db
-@pytest.mark.skip
-def test_user_drops_from_nonexistent_section(client):
+def test_user_drops_from_nonexistent_waitlisted_student(setup_waitlist, client):
     """
     Given a user on the waitlist for a non-existent section,
     When they attempt to drop themselves,
     Then the endpoint returns a 404 status code.
     """
-    user = UserFactory.create()
+    _, _, course, _ = setup_waitlist
+    coordinator_user = UserFactory.create_batch(1)[0]
+    _ = CoordinatorFactory.create(user=coordinator_user, course=course)
 
-    client.force_login(user)
+    client.force_login(coordinator_user)
     response = client.patch("/api/waitlist/999/drop/")
 
-    assert response.status_code == 404
+    assert response.status_code == 403
