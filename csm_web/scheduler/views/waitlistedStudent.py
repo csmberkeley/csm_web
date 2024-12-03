@@ -106,7 +106,7 @@ def add(request, pk=None):
 @api_view(["PATCH"])
 def drop(request, pk=None):
     """
-    Endpoint: /api/waitlistedstudent/<pk>/drop
+    Endpoint: /api/waitlist/<pk>/drop
 
     PATCH: Drop a student off the waitlist. Pass in section ID
     - sets to inactive
@@ -114,21 +114,27 @@ def drop(request, pk=None):
     """
     user = request.user
     section = Section.objects.get(pk=pk)
+    course = section.mentor.course
     waitlisted_student = WaitlistedStudent.objects.filter(
         user=user, section=section
     ).first()
-    course = waitlisted_student.course
 
     # Check that the user has permissions to drop this student
     is_coordinator = course.is_coordinator(user)
+<<<<<<< HEAD
     if waitlisted_student.user != user and not is_coordinator:
         raise PermissionDenied("You do not have permission to drop this student from the waitlist")
+=======
+    if not waitlisted_student or waitlisted_student.user != user and not is_coordinator:
+        raise PermissionDenied(
+            "You do not have permission to drop this student from the waitlist"
+        )
+>>>>>>> e980d2e (tests drops from waitlist)
 
     # Remove the waitlisted student
     waitlisted_student.active = False
     # waitlisted_student.delete()
     waitlisted_student.save()
-
     logger.info(
         "<Drop> User %s dropped from Waitlist for Section %s",
         user,
