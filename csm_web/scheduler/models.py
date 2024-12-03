@@ -75,6 +75,15 @@ class User(AbstractUser):
             is_valid_enrollment_time = course.is_open()
         return is_valid_enrollment_time and not is_associated
 
+    def can_enroll_in_waitlist(self, course):
+        """Determine whether this user is allowed to waitlist in the given course."""
+        return (
+            self.waitlistedstudent_set.filter(
+                active=True, section__mentor__course=course
+            ).count()
+            < course.waitlist_capacity
+        )
+
     def is_whitelisted_for(self, course: "Course"):
         """Determine whether this user is whitelisted for the given course."""
         return not course.is_restricted or self.whitelist.filter(pk=course.pk).exists()
@@ -174,7 +183,7 @@ class Course(ValidatingModel):
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
     is_restricted = models.BooleanField(default=False)
     whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
-    max_waitlist = models.SmallIntegerField(default=3)
+    waitlist_capacity = models.SmallIntegerField(default=DEFAULT_WAITLIST_CAP)
 
     def __str__(self):
         return self.name
@@ -235,7 +244,7 @@ class WaitlistedStudent(Profile):
 
     section = models.ForeignKey(
         "Section", on_delete=models.CASCADE, related_name="waitlist_set"
-
+    )
     active = models.BooleanField(
         default=True, help_text="An inactive student is a dropped student."
     )
@@ -277,6 +286,7 @@ class WaitlistedStudent(Profile):
             else:
                 self.position = waitlisted_students.count()
             WaitlistedStudent.objects.filter(pk=self.pk).update(position=self.position)
+
 
 class Student(Profile):
     """
@@ -370,7 +380,7 @@ class Mentor(Profile):
 
 class Coordinator(Profile):
     """
-    This profile is used to allow coordinators to acess the admin page.
+    This profile is used to allow coordinators to access the admin page.
     """
 
     def save(self, *args, **kwargs):
