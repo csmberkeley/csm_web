@@ -19,7 +19,7 @@ export default function StudentDropper({ id, sectionId, name, courseRestricted }
   const [drop, setDrop] = useState(false);
   const [ban, setBan] = useState(false);
   const [blacklist, setBlacklist] = useState(false);
-
+  
   /**
    * Mutation to drop a student from the section.
    */
@@ -90,6 +90,7 @@ Add student, decrease capacity, drop student
       />
       {showDropPrompt && (
         <Modal className="student-dropper-modal" closeModal={() => setShowDropPrompt(false)}>
+          <h2 className="student-dropper-head-item">WARNING: Dropping a student automatically processes the waitlist.</h2>
           {dropDiv}
           {courseRestricted ? blacklistDiv : banDiv}
           <div className="student-dropper-submit-wrapper">

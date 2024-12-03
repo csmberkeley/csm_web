@@ -187,7 +187,7 @@ export default function MentorSectionInfo({
             )}
           </InfoCard>
         </div>
-        <div className="section-info-cards-middle">
+        <div className="section-info-cards-right">
           {spacetimes.map(({ override, ...spacetime }, index) => (
             <SectionSpacetime
               manySpacetimes={spacetimes.length > 1}
@@ -267,8 +267,6 @@ export default function MentorSectionInfo({
               )}
             </SectionSpacetime>
           ))}
-        </div>
-        <div className="section-info-cards-right">
           <InfoCard title="Meta">
             {isCoordinator && (
               <React.Fragment>

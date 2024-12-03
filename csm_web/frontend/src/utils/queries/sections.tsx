@@ -433,7 +433,7 @@ interface EnrollStudentMutationResponse {
     progress?: Array<{
       email: string;
       status: string;
-      detail?: unknown;
+      detail?: any;
     }>;
   };
 }
