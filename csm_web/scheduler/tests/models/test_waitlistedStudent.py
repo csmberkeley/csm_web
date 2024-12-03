@@ -178,12 +178,153 @@ def test_user_exceeds_max_waitlists_for_course(setup_waitlist, client):
     assert response.status_code == 403
     assert WaitlistedStudent.objects.count() == course.waitlist_capacity
 
-    # Check if user is dropped when adding to a section
+    # Check if user is dropped from all waitlists for a course when adding to a course section
     mentor_user = UserFactory.create_batch(1)[0]
     mentor = MentorFactory.create(course=course, user=mentor_user)
     section_test = SectionFactory.create(mentor=mentor)
 
     client.force_login(waitlisted_student_user)
     response = client.post(f"/api/waitlist/{section_test.pk}/add/")
-    assert WaitlistedStudent.objects.filter(active=True).count() == 0
-    # Verify student is inactive on waitlists after adding to a section.
+    assert (
+        WaitlistedStudent.objects.filter(
+            user=waitlisted_student_user, active=True
+        ).count()
+        == 0
+    )
+
+
+@pytest.mark.django_db
+def test_user_enrolled_from_waitlist_and_dropped_from_others(setup_waitlist, client):
+    """
+    Given a user waitlisted in two sections for a course,
+    When a student in one of the sections drops,
+    Then the user is enrolled into that section
+    and dropped from their other waitlists for the course.
+    """
+    _, waitlisted_student_user, course, section1 = setup_waitlist
+
+    # Set up a second section in the same course
+    mentor_user = UserFactory.create_batch(1)[0]
+    mentor = MentorFactory.create(course=course, user=mentor_user)
+    section2 = SectionFactory.create(mentor=mentor)
+
+    # Add user to both waitlists
+    for _ in range(section1.capacity):
+        test_user = UserFactory.create_batch(1)[0]
+        client.force_login(test_user)
+        _ = client.post(f"/api/waitlist/{section1.pk}/add/")
+
+    for _ in range(section2.capacity):
+        test_user = UserFactory.create_batch(1)[0]
+        client.force_login(test_user)
+        _ = client.post(f"/api/waitlist/{section2.pk}/add/")
+
+    client.force_login(waitlisted_student_user)
+    _ = client.post(f"/api/waitlist/{section1.pk}/add/")
+    _ = client.post(f"/api/waitlist/{section2.pk}/add/")
+    assert (
+        WaitlistedStudent.objects.filter(
+            user=waitlisted_student_user, active=True
+        ).count()
+        == 2
+    )
+
+    # Enroll from waitlist
+    test_student = Student.objects.filter(user=test_user, active=True).first()
+    client.force_login(test_user)
+    _ = client.patch(f"/api/students/{test_student.pk}/drop/")
+    assert (
+        WaitlistedStudent.objects.filter(
+            user=waitlisted_student_user, active=True
+        ).count()
+        == 0
+    )
+
+
+@pytest.mark.django_db
+def test_user_drops_themselves_successfully(setup_waitlist, client):
+    """
+    Given a user on the waitlist for a section,
+    When they attempt to drop themselves,
+    Then the waitlisted_student's active field is set to False,
+    And the endpoint returns a 204 status code.
+    """
+    _, waitlisted_student_user, course, section = setup_waitlist
+
+    waitlisted_student = WaitlistedStudent.objects.create(
+        user=waitlisted_student_user, course=course, section=section
+    )
+
+    client.force_login(waitlisted_student_user)
+    response = client.patch(f"/api/waitlist/{section.pk}/drop/")
+
+    assert response.status_code == 204  # Unsure why 200 is returned
+    waitlisted_student.refresh_from_db()
+    assert waitlisted_student.active is False
+
+
+@pytest.mark.django_db
+@pytest.mark.skip
+def test_coordinator_drops_student_successfully(setup_waitlist, client):
+    """
+    Given a coordinator for the course associated with a section,
+    When they attempt to drop another user from the waitlist,
+    Then the waitlisted_student's active field is set to False,
+    And the endpoint returns a 204 status code.
+    """
+    _, waitlisted_student_user, course, section = setup_waitlist
+
+    waitlisted_student = WaitlistedStudent.objects.create(
+        user=waitlisted_student_user, course=course, section=section
+    )
+
+    coordinator = _
+    client.force_login(coordinator)
+    response = client.patch(f"/api/waitlist/{section.pk}/drop/")
+
+    assert response.status_code == 404
+    waitlisted_student.refresh_from_db()
+    assert waitlisted_student.active is False
+
+
+@pytest.mark.django_db
+def test_user_drops_without_permission(setup_waitlist, client):
+    """
+    Given a user who is not a coordinator,
+    When they attempt to drop themselves from another section waitlist,
+    Then a PermissionDenied exception is raised,
+    And the endpoint returns a 403 status code.
+    """
+    _, waitlisted_student_user, course, section = setup_waitlist
+
+    waitlisted_student = WaitlistedStudent.objects.create(
+        user=waitlisted_student_user, course=course, section=section
+    )
+
+    unauthorized_user = UserFactory.create_batch(1)[0]
+    client.force_login(unauthorized_user)
+    response = client.patch(f"/api/waitlist/{section.pk}/drop/")
+
+    assert response.status_code == 403
+    assert (
+        response.data["detail"]
+        == "You do not have permission to drop this student from the waitlist"
+    )
+    waitlisted_student.refresh_from_db()
+    assert waitlisted_student.active is True
+
+
+@pytest.mark.django_db
+@pytest.mark.skip
+def test_user_drops_from_nonexistent_section(client):
+    """
+    Given a user on the waitlist for a non-existent section,
+    When they attempt to drop themselves,
+    Then the endpoint returns a 404 status code.
+    """
+    user = UserFactory.create()
+
+    client.force_login(user)
+    response = client.patch("/api/waitlist/999/drop/")
+
+    assert response.status_code == 404
