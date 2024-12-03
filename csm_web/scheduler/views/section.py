@@ -170,7 +170,6 @@ def add_from_waitlist(pk):
         log_str(waitlisted_student.user),
         log_str(waitlisted_student.course),
     )
-
     return Response(status=status.HTTP_201_CREATED)
 
 
