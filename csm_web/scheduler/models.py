@@ -454,7 +454,7 @@ class Mentor(Profile):
 
 class Coordinator(Profile):
     """
-    This profile is used to allow coordinators to acess the admin page.
+    This profile is used to allow coordinators to access the admin page.
     """
 
     def save(self, *args, **kwargs):

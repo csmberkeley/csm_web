@@ -738,6 +738,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
             section.save()
 
+        # expand waitlist capacity
         return Response(status=status.HTTP_200_OK)
 
     def _student_add(self, request, section):

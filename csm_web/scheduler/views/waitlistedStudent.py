@@ -99,16 +99,11 @@ def add(request, pk=None):
 >>>>>>> 1fa5c9b (adds tests)
 
     # Check if the waitlist student has a position (only occurs when manually inserting a student)
-    specified_position = request.data.get(
-        "position"
-    )  # Assuming position can be passed in the request
-    if specified_position is not None:
-        position = int(specified_position)
-    else:
-        position = None
+    specified_position = request.data.get("position", None)
 
     # Create the new waitlist student and save
     waitlisted_student = WaitlistedStudent.objects.create(
+<<<<<<< HEAD
         user=user, section=section, course=course, position=position
 =======
 
@@ -127,6 +122,9 @@ def add(request, pk=None):
 =======
         user=user, section=section, course=course, position=position
 >>>>>>> ea494c5 (fixes bugs detected by pytest (#510))
+=======
+        user=user, section=section, course=course, position=specified_position
+>>>>>>> 6b53989 (fixes tests and adds coordinator drop)
     )
     waitlisted_student.save()
 
@@ -143,19 +141,25 @@ def drop(request, pk=None):
     Endpoint: /api/waitlistedstudent/<pk>/drop
 >>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
 
-    PATCH: Drop a student off the waitlist. Pass in section ID
-    - sets to inactive
+    PATCH: Drop a student off the waitlist. Pass in waitlisted student ID
+    - sets to inactive. Called by user or coordinator.
 
     """
     user = request.user
+<<<<<<< HEAD
     section = Section.objects.get(pk=pk)
 <<<<<<< HEAD
+=======
+    waitlisted_student = WaitlistedStudent.objects.filter(pk=pk).first()
+    if waitlisted_student is None:
+        raise PermissionDenied("This student does not exist")
+    section = waitlisted_student.section
+>>>>>>> 6b53989 (fixes tests and adds coordinator drop)
     course = section.mentor.course
-    waitlisted_student = WaitlistedStudent.objects.filter(
-        user=user, section=section
-    ).first()
+    is_coordinator = course.coordinator_set.filter(user=user).exists()
 
     # Check that the user has permissions to drop this student
+<<<<<<< HEAD
     is_coordinator = course.is_coordinator(user)
 <<<<<<< HEAD
     if waitlisted_student.user != user and not is_coordinator:
@@ -180,6 +184,12 @@ def drop(request, pk=None):
         )
 >>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
 
+=======
+    if waitlisted_student.user != user and not is_coordinator:
+        raise PermissionDenied(
+            "You do not have permission to drop this student from the waitlist"
+        )
+>>>>>>> 6b53989 (fixes tests and adds coordinator drop)
     # Remove the waitlisted student
     waitlisted_student.active = False
     # waitlisted_student.delete()
