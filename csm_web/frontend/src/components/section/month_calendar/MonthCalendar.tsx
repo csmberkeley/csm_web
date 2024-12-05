@@ -1,6 +1,8 @@
 import { DateTime, Info } from "luxon";
 import React, { useEffect, useState } from "react";
 
+import { DEFAULT_TIMEZONE } from "../../../utils/datetime";
+
 import LeftArrow from "../../../../static/frontend/img/angle-left-solid.svg";
 import RightArrow from "../../../../static/frontend/img/angle-right-solid.svg";
 
@@ -35,7 +37,7 @@ export const CalendarMonth = ({
   useEffect(() => {
     if (selectedOccurrence != null) {
       // upon change of the selected occurence, make sure the calendar also matches
-      const selectedDateTime = DateTime.fromISO(selectedOccurrence);
+      const selectedDateTime = DateTime.fromISO(selectedOccurrence, { zone: DEFAULT_TIMEZONE });
       if (curMonth !== selectedDateTime.month) {
         setCurMonth(selectedDateTime.month);
       }
