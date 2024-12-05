@@ -204,6 +204,8 @@ class UserAdmin(BasePermissionModelAdmin):
         "first_name",
         "last_name",
         "priority_enrollment",
+        "bio",
+        "profile_image",
     )
 
     list_display = (
@@ -211,6 +213,8 @@ class UserAdmin(BasePermissionModelAdmin):
         "name",
         "email",
         "priority_enrollment",
+        "bio",
+        "profile_image",
     )
     list_display_links = ("name",)
     list_filter = ("is_active",)

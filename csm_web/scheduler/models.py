@@ -11,7 +11,7 @@ from django.dispatch import receiver
 from django.utils import functional, timezone
 from rest_framework.serializers import ValidationError
 
-from csm_web.settings import ProfileImageStorage
+from .storage import ProfileImageStorage
 
 logger = logging.getLogger(__name__)
 
@@ -50,12 +50,22 @@ def week_bounds(date):
     return week_start, week_end
 
 
+def image_path(instance, filename):
+    """Compute the full path for a profile image."""
+    # file will be uploaded to images/<user_id>/<file_name>
+    extension = filename.rsplit(".", 1)[-1]
+    return f"images/{instance.id}.{extension}"
+
+
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
     pronouns = models.CharField(max_length=20, default="", blank=True)
     pronunciation = models.CharField(max_length=50, default="", blank=True)
-    profile_image = models.ImageField(storage=ProfileImageStorage(), blank=True)
+    # uploaded_at = models.DateTimeField(auto_now_add=True)
+    profile_image = models.ImageField(
+        storage=ProfileImageStorage(), upload_to=image_path, blank=True
+    )
     bio = models.CharField(max_length=500, default="", blank=True)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):

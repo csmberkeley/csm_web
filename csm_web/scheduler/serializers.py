@@ -176,6 +176,7 @@ class UserSerializer(serializers.ModelSerializer):
             "bio",
             "pronunciation",
             "pronouns",
+            "profile_image",
         )
 
 

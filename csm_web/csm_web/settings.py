@@ -11,7 +11,6 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
-from datetime import datetime
 
 import sentry_sdk
 from factory.django import DjangoModelFactory
@@ -190,18 +189,17 @@ STORAGES = {
 STATIC_URL = "/static/"
 
 
-# xTODO: make sure this actually works
 class ProfileImageStorage(S3Boto3Storage):
     bucket_name = "csm-web-profile-pictures"
-    file_overwrite = False
+    file_overwrite = True  # should be true so that we replace one profile for user
 
     def get_accessed_time(self, name):
         # Implement logic to get the last accessed time
-        return datetime.now()
+        raise NotImplementedError("This backend does not support this method.")
 
     def get_created_time(self, name):
         # Implement logic to get the creation time
-        return datetime.now()
+        raise NotImplementedError("This backend does not support this method.")
 
     def path(self, name):
         # S3 does not support file paths
@@ -261,6 +259,8 @@ REST_FRAMEWORK = {
     "DEFAULT_PERMISSION_CLASSES": ["rest_framework.permissions.IsAuthenticated"],
     "DEFAULT_PARSER_CLASSES": [
         "djangorestframework_camel_case.parser.CamelCaseJSONParser",
+        "rest_framework.parsers.FormParser",
+        "rest_framework.parsers.MultiPartParser",
     ],
 }
 

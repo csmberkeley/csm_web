@@ -8,6 +8,15 @@ import LoadingSpinner from "./LoadingSpinner";
 import "../css/base/form.scss";
 import "../css/base/table.scss";
 
+interface UserInfo {
+  firstName: string;
+  lastName: string;
+  bio: string;
+  pronouns: string;
+  pronunciation: string;
+  profileImage: string;
+}
+
 const UserProfile: React.FC = () => {
   const { id } = useParams();
   let userId = Number(id);
@@ -16,12 +25,13 @@ const UserProfile: React.FC = () => {
   const updateMutation = useUserInfoUpdateMutation(userId);
   const [isEditing, setIsEditing] = useState(false);
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<UserInfo>({
     firstName: "",
     lastName: "",
     bio: "",
     pronouns: "",
-    pronunciation: ""
+    pronunciation: "",
+    profileImage: ""
   });
 
   const [showSaveSpinner, setShowSaveSpinner] = useState(false);
@@ -30,12 +40,14 @@ const UserProfile: React.FC = () => {
   // Populate form data with fetched user data
   useEffect(() => {
     if (requestedData) {
+      console.log(requestedData);
       setFormData({
         firstName: requestedData.firstName || "",
         lastName: requestedData.lastName || "",
         bio: requestedData.bio || "",
         pronouns: requestedData.pronouns || "",
-        pronunciation: requestedData.pronunciation || ""
+        pronunciation: requestedData.pronunciation || "",
+        profileImage: requestedData.profileImage || ""
       });
     }
   }, [requestedData]);
@@ -59,6 +71,7 @@ const UserProfile: React.FC = () => {
   // Handle input changes
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
+    console.log("Changes");
     setFormData(prev => ({
       ...prev,
       [name]: value
@@ -117,9 +130,18 @@ const UserProfile: React.FC = () => {
   return (
     <div id="user-profile-form">
       <h2 className="form-title">User Profile</h2>
-
-      <ImageUploader />
       <div className="csm-form">
+        <div className="form-item">
+          <label htmlFor="profile" className="form-label">
+            Profile Image
+          </label>
+          {isEditing ? (
+            <ImageUploader />
+          ) : (
+            // <p>{formData.profileImage}</p>
+            <img src={formData.profileImage} />
+          )}
+        </div>
         <div className="form-item">
           <label htmlFor="firstName" className="form-label">
             First Name:
