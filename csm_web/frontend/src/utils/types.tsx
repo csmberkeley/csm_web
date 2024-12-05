@@ -40,6 +40,7 @@ export interface UserInfo {
   pronouns: string;
   pronunciation: string;
   isEditable: boolean;
+  profileImage?: string;
 }
 
 /**

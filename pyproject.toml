@@ -26,6 +26,7 @@ drf-nested-forms = "^1.1.7"
 factory-boy = "^3.2.1"
 # misc
 networkx = "^2.8.8"
+pillow = "^11.0.0"
 
 # packages for testing
 pytest = "^7.2.0"

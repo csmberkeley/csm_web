@@ -1,7 +1,12 @@
+import os
+from io import BytesIO
+
+from django.core.files.base import ContentFile
 from PIL import Image, UnidentifiedImageError
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, parser_classes
 from rest_framework.exceptions import PermissionDenied
+from rest_framework.parsers import FormParser, MultiPartParser
 from rest_framework.response import Response
 from scheduler.serializers import UserSerializer
 
@@ -143,6 +148,7 @@ def user_info(request):
 
 
 @api_view(["POST"])
+@parser_classes([MultiPartParser, FormParser])
 def upload_image(request):
     """
     Uploads an image to the aws s3 bucket
@@ -152,24 +158,75 @@ def upload_image(request):
         return Response(
             {"error": "No file was uploaded"}, status=status.HTTP_400_BAD_REQUEST
         )
-    image_file = request.FILES["file"]  # InMemoryUploadedFile
-    allowed_types = ["JPEG", "PNG"]  # Define allowed image types
-    max_width = 150
-    max_height = 150
+
+    image_file = request.FILES["file"]
+    ALLOWED_TYPES = ["JPEG", "PNG", "JPG"]
+
+    MAX_FILE_SIZE_MB = 5  # file limit
+    MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+    TARGET_FILE_SIZE_MB = 2
+    TARGET_FILE_SIZE_BYTES = TARGET_FILE_SIZE_MB * 1024 * 1024
+    PROFILE_IMAGE_SIZE = (400, 400)  # Fixed width and height for profile images
+
+    # Check file size
+    image_file.seek(0, os.SEEK_END)
+    file_size = image_file.tell()
+    # reset file pointer
+    image_file.seek(0)
+
+    if file_size > MAX_FILE_SIZE_BYTES:
+        return Response(
+            {"error": "Image size exceeds maximum allowed size of 5MB."},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     try:
-        # Open and validate the image
-        with Image.open(image_file) as img:
-            img.verify()  # Check for corrupt files
-            img = Image.open(image_file)  # Reopen for further use
+        # Validate extension before opening
+        extension = image_file.name.rsplit(".", 1)[-1].upper()
+        if extension not in ALLOWED_TYPES:
+            return Response(
+                {
+                    "error": (
+                        f"Invalid image type: {extension}. Allowed types are:"
+                        f" {ALLOWED_TYPES}."
+                    )
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
 
-            # Validate type and size
-            validate_image_type(img, allowed_types)
-            validate_image_size(img, max_width, max_height)
+        # Open and validate the image
+        image = Image.open(image_file)
+        image.verify()  # Check for corrupt files
+        image = Image.open(image_file)  # reopen since verify closes
+
+        # Validate type
+        validate_image_type(image, ALLOWED_TYPES)
+
+        img_format = image.format
+        if not img_format:
+            return Response(
+                {"error": "Uploaded file is not a valid image."},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # resize to less than specified width and height while preserving ratio
+        # different from image = image.size(PROFILE_IMAGE_SIZE, Image.LANCZOS)
+        image.thumbnail(PROFILE_IMAGE_SIZE, Image.LANCZOS)
+
+        if file_size > TARGET_FILE_SIZE_BYTES:
+            file = compress_image(image, TARGET_FILE_SIZE_BYTES, img_format)
+        else:
+            buffer = BytesIO()
+            if img_format == "JPEG" or img_format == "JPG":
+                image.save(buffer, format=img_format)
+            else:
+                image.save(buffer, format="PNG", optimze=True)
+            buffer.seek(0)
+            file = ContentFile(buffer.read(), name=image_file.name)
 
         # Save the image to the user's profile
         user = request.user
-        user.profile_image.save(image_file.name, image_file)
+        user.profile_image.save(file.name, file)
 
         return Response(
             {"message": "File uploaded successfully"}, status=status.HTTP_200_OK
@@ -195,13 +252,19 @@ def validate_image_type(image, allowed_types):
         )
 
 
-def validate_image_size(image, max_width, max_height):
-    """
-    Validates the image size
-    """
-    width, height = image.size
-    if width > max_width or height > max_height:
-        raise ValueError(
-            f"Image size {width}x{height} exceeds maximum allowed size of"
-            f" {max_width}x{max_height}."
-        )
+# not very efficient but way to compress image until it meets the file target size.
+def compress_image(image, target_size_bytes, img_format):
+    """Compress the image until it's smaller than target_size_bytes."""
+    buffer = BytesIO()
+    quality = 95  # start with high quality
+    while True:
+        buffer.seek(0)
+        if img_format == "JPEG" or img_format == "JPG":
+            image.save(buffer, format=img_format, quality=quality)
+        else:
+            image.save(buffer, format="PNG", optimze=True)
+        if buffer.tell() <= target_size_bytes or quality <= 50:
+            break
+        quality -= 5  # decrease quality to reduce file size
+    buffer.seek(0)
+    return buffer
