@@ -2,6 +2,7 @@ import { DateTime } from "luxon";
 import randomWords from "random-words";
 import React, { useState, useEffect } from "react";
 
+import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 import {
   useSectionAttendances,
   useUpdateStudentAttendancesMutation,
@@ -124,9 +125,15 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
       if (selectedOccurrence === null) {
         // only update selected occurrence if it has not been set before
 
+        // compute the start of the current day; the DB works in the timezone specified by DEFAULT_TIMEZONE,
+        // so we must convert to the DB timezone before setting the start of the day.
+        // there's no need to convert back here, since we only use this DateTime for comparison
+        const curDayStart = DateTime.now().setZone(DEFAULT_TIMEZONE).startOf("day");
+
         // filter for future occurrences
-        const now = DateTime.now().startOf("day");
-        const futureOccurrences = newSortedOccurrences.filter(occurrence => DateTime.fromISO(occurrence.date) >= now);
+        const futureOccurrences = newSortedOccurrences.filter(
+          occurrence => DateTime.fromISO(occurrence.date, { zone: DEFAULT_TIMEZONE }) >= curDayStart
+        );
         // set to the most recent future occurrence
         setSelectedOcurrence(futureOccurrences[futureOccurrences.length - 1]);
         newAttendances = newOccurrenceMap.get(newSortedOccurrences[0]?.id)?.attendances;
