@@ -10,6 +10,7 @@ const Policies = () => {
   const htsu = SECTIONS.howToSignUp;
   const guides = SECTIONS.guidelines;
   const comms = SECTIONS.communications;
+  const attendance = SECTIONS.attendance;
   const aff = SECTIONS.affinitySections;
   const forUnit = SECTIONS.csmForUnit;
   const faq = SECTIONS.faq;
@@ -63,6 +64,12 @@ const Policies = () => {
             </li>
             <li>{guides.body.i5}</li>
           </ol>
+        </div>
+        <div className="divider"></div>
+        <div>
+          <h1> {attendance.title}</h1>
+          <p> {attendance.body.p1_1}</p>
+          <p> {attendance.body.p2_1}</p>
         </div>
 
         <div className="divider"></div>

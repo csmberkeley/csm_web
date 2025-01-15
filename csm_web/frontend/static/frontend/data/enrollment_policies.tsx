@@ -58,9 +58,9 @@ export const SECTIONS = {
         "You should sign up for a section if you’d like to work with others and receive extra practice and " +
         "guidance with the course material for the entire semester.",
       p2:
-        "If you are interested in enrolling in a CSM section, you are responsible " +
-        "for reading this document in full before you enroll, as it contains " +
-        "important information and guidelines that all students should be aware of."
+        "If you are interested in enrolling in a CSM section, " +
+        "please read this document in full before you enroll, " +
+        "as it contains important information and guidelines that all students should be aware of."
     }
   },
   howToSignUp: {
@@ -109,7 +109,7 @@ export const SECTIONS = {
         "and fulfill a few other requirements.",
       i4_b: "Sign up for a section you are confident that you can make " + "it for the entire semester. ",
       i4_2: "You can have two unexcused absences over the course of the semester. ",
-      i4_b2: "Department policy limits you to one units, no matter how many CSM sections you " + "may be enrolled in.",
+      i4_b2: "Department policy limits you to one unit, no matter how many CSM sections you " + "may be enrolled in.",
       i5:
         "We will release two surveys (one midway through the semester and one at the end of " +
         "the semester) to collect feedback on your mentor and your experience with CSM. We " +
@@ -117,6 +117,16 @@ export const SECTIONS = {
         "will greatly appreciate your feedback. These surveys are mandatory if you are enrolled " +
         "in a CSM section (see below for more details), but we promise they will not take long " +
         "to fill out."
+    }
+  },
+  attendance: {
+    title: "Attendance Expectations",
+    body: {
+      p1_1:
+        "You are expected to attend CSM sections you sign up for." +
+        " Failing to attend section consistently will result in you being dropped from your section(s). " +
+        "In particular, students who have any excused absences during the first three weeks of section will be dropped from section.",
+      p2_1: "If you take CSM for the unit, your attendance is a part of your grade. See below for details."
     }
   },
   affinitySections: {
@@ -188,8 +198,8 @@ export const SECTIONS = {
         "to enroll in the unit, you should first enroll in a section on " +
         "Scheduler, then fill out this form to receive a permission code & units: ",
       p2_a: {
-        link: "https://tinyurl.com/csm-unit-fa24",
-        text: "https://tinyurl.com/csm-unit-fa24"
+        link: "https://tinyurl.com/csm-unit-sp25",
+        text: "https://tinyurl.com/csm-unit-sp25"
       },
       p3_1:
         "Enrolling in the unit on CalCentral does not guarantee enrollment " +
@@ -232,7 +242,7 @@ export const SECTIONS = {
         "Lecture attendance is not recorded and has no bearing on your grade.",
       p8_1: "A syllabus for CS 198-142 is available ",
       p8_a: {
-        link: "https://docs.google.com/document/d/1mXSfXSOg5u4ZVs9Ff5BPVpllh4fplVtK15er0SVCqT0/edit?usp=sharing",
+        link: "https://docs.google.com/document/d/188O6eaMmiTgQBIyta2wzaXE59gRseAH77VSkj3oNrEU/edit?tab=t.0",
         text: "here"
       },
       p8_2: "."
