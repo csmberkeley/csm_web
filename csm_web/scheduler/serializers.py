@@ -386,7 +386,7 @@ class MatcherSerializer(serializers.ModelSerializer):
 class MatcherSlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = MatcherSlot
-        fields = ["id", "matcher", "times"]
+        fields = ["id", "matcher", "times", "description"]
 
 
 class MatcherPreferenceSerializer(serializers.ModelSerializer):
