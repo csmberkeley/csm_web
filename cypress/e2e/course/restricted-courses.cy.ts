@@ -72,7 +72,7 @@ describe("whitelisted courses", () => {
     cy.login();
 
     cy.intercept("/api/courses").as("get-courses");
-    cy.intercept("/api/userinfo").as("get-userinfo");
+    cy.intercept("/api/user").as("get-user");
 
     cy.visit("/");
     cy.wait("@get-courses");
@@ -82,7 +82,7 @@ describe("whitelisted courses", () => {
 
     // view courses
     cy.contains(".primary-btn", /add course/i).click();
-    cy.wait("@get-userinfo");
+    cy.wait("@get-user");
     cy.contains(".page-title", /which course/i).should("be.visible");
 
     // should have two buttons at the top
@@ -126,7 +126,7 @@ describe("whitelisted courses", () => {
     cy.login();
 
     cy.intercept("/api/courses").as("get-courses");
-    cy.intercept("/api/userinfo").as("get-userinfo");
+    cy.intercept("/api/user").as("get-user");
 
     cy.visit("/");
     cy.wait("@get-courses");
@@ -136,7 +136,7 @@ describe("whitelisted courses", () => {
 
     // view courses
     cy.contains(".primary-btn", /add course/i).click();
-    cy.wait("@get-userinfo");
+    cy.wait("@get-user");
     cy.contains(".page-title", /which course/i).should("be.visible");
 
     // should have two buttons at the top

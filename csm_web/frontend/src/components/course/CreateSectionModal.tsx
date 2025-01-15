@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 
 import { DAYS_OF_WEEK } from "../../utils/datetime";
-import { useUserEmails } from "../../utils/queries/base";
+import { useUserEmails } from "../../utils/queries/profiles";
 import { useSectionCreateMutation } from "../../utils/queries/sections";
 import { Spacetime } from "../../utils/types";
 import Modal from "../Modal";
