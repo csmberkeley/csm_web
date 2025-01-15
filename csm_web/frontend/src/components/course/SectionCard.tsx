@@ -90,13 +90,17 @@ export const SectionCard = ({
     const iconWidth = "8em";
     const iconHeight = "8em";
     if (enrollmentSuccessful) {
+      const inlineIconWidth = "1.3em";
+      const inlineIconHeight = "1.3em";
       return (
         <div className="enroll-confirm-modal-contents">
           <CheckCircle height={iconHeight} width={iconWidth} />
           <h3>Successfully enrolled</h3>
-          <ModalCloser>
-            <button className="primary-btn">OK</button>
-          </ModalCloser>
+          <h4>To view and update your profile, click the button below</h4>
+          <Link className="primary-btn" to="/profile">
+            <UserIcon width={inlineIconWidth} height={inlineIconHeight} />
+            Profile
+          </Link>
         </div>
       );
     }
@@ -168,7 +172,7 @@ export const SectionCard = ({
             )}
           </p>
           <p title="Mentor">
-            <UserIcon width={iconWidth} height={iconHeight} /> {mentor.name}
+            <UserIcon width={iconWidth} height={iconHeight} /> <Link to={`/profile/${mentor.id}`}>{mentor.name}</Link>
           </p>
           <p title="Current enrollment">
             <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}
