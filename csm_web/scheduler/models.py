@@ -48,8 +48,21 @@ def week_bounds(date):
     return week_start, week_end
 
 
+class LowercaseEmailField(models.EmailField):
+    """
+    Override EmailField to convert emails to lowercase before saving.
+    """
+
+    def to_python(self, value):
+        value = super(LowercaseEmailField, self).to_python(value)
+        if isinstance(value, str):
+            return value.lower()
+        return value
+
+
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
+    email = LowercaseEmailField(unique=True)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         """Determine whether this user is allowed to enroll in the given course."""
