@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { fetchWithMethod, HTTP_METHODS } from "../utils/api";
 
 // file size limits
@@ -8,11 +8,6 @@ const MAX_FILE_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 const ImageUploader = () => {
   const [file, setFile] = useState<File | null>(null);
   const [status, setStatus] = useState<string>("");
-
-  // useEffect(() => {
-  //   if (file) {
-  //   }
-  // }, [file]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -56,7 +51,6 @@ const ImageUploader = () => {
 
   return (
     <div>
-      <h1>Image Upload Tester</h1>
       <input type="file" onChange={handleFileChange} />
       <button onClick={handleUpload}>Upload</button>
       {status && <p>{status}</p>}

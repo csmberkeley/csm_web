@@ -1,0 +1,53 @@
+@use "base/variables" as *;
+
+.user-profile-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-profile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  align-items: center;
+  justify-content: center;
+  width: 500px;
+  padding: 48px;
+  border: 2px solid $csm-green;
+  border-radius: 25px;
+}
+
+.user-profile-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-profile-wrapper {
+  display: flex;
+  gap: 2rem;
+}
+
+.user-profile-form {
+  display: flex;
+  gap: 2rem;
+}
+
+.user-profile-item {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.user-profile-item img {
+  display: block;
+  margin: 0 auto;
+}
+
+.user-profile-edit {
+  display: flex;
+  gap: 2rem;
+}

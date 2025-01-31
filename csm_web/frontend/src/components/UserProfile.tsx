@@ -4,9 +4,11 @@ import { PermissionError } from "../utils/queries/helpers";
 import { useUserInfo, useUserInfoUpdateMutation } from "../utils/queries/profiles";
 import ImageUploader from "./ImageUploader";
 import LoadingSpinner from "./LoadingSpinner";
+import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 
 import "../css/base/form.scss";
 import "../css/base/table.scss";
+import "../css/profile.scss";
 
 interface UserInfo {
   firstName: string;
@@ -40,7 +42,6 @@ const UserProfile: React.FC = () => {
   // Populate form data with fetched user data
   useEffect(() => {
     if (requestedData) {
-      console.log(requestedData);
       setFormData({
         firstName: requestedData.firstName || "",
         lastName: requestedData.lastName || "",
@@ -127,123 +128,179 @@ const UserProfile: React.FC = () => {
     setIsEditing(true);
   };
 
+  const handleCancelToggle = () => {
+    setIsEditing(false);
+  };
+
   return (
-    <div id="user-profile-form">
-      <h2 className="form-title">User Profile</h2>
-      <div className="csm-form">
-        <div className="form-item">
-          <label htmlFor="profile" className="form-label">
-            Profile Image
-          </label>
-          {isEditing ? (
-            <ImageUploader />
-          ) : (
-            // <p>{formData.profileImage}</p>
-            <img src={formData.profileImage} />
-          )}
+    <div className="user-profile-page">
+      <div className="user-profile-main">
+        <div className="user-profile-item">
+          {formData.profileImage?.trim() ? <img src={formData.profileImage} /> : <LogoNoText id="logo" />}
+          {isEditing && <ImageUploader />}
         </div>
-        <div className="form-item">
-          <label htmlFor="firstName" className="form-label">
-            First Name:
-          </label>
-          {isEditing ? (
-            <input
-              type="text"
-              id="firstName"
-              name="firstName"
-              className="form-input"
-              value={formData.firstName}
-              onChange={handleInputChange}
-              required
-            />
-          ) : (
-            <p className="form-static">{formData.firstName}</p>
-          )}
-        </div>
-        <div className="form-item">
-          <label htmlFor="lastName" className="form-label">
-            Last Name:
-          </label>
-          {isEditing ? (
-            <input
-              type="text"
-              id="lastName"
-              name="lastName"
-              className="form-input"
-              value={formData.lastName}
-              onChange={handleInputChange}
-              required
-            />
-          ) : (
-            <p className="form-static">{formData.lastName}</p>
-          )}
-        </div>
-        <div className="form-item">
-          <label htmlFor="pronunciation" className="form-label">
-            Pronunciation:
-          </label>
-          {isEditing ? (
-            <input
-              type="text"
-              id="pronunciation"
-              name="pronunciation"
-              className="form-input"
-              value={formData.pronunciation}
-              onChange={handleInputChange}
-            />
-          ) : (
-            <p className="form-static">{formData.pronunciation}</p>
-          )}
-        </div>
-        <div className="form-item">
-          <label htmlFor="pronouns" className="form-label">
-            Pronouns:
-          </label>
-          {isEditing ? (
-            <input
-              type="text"
-              id="pronouns"
-              name="pronouns"
-              className="form-input"
-              value={formData.pronouns}
-              onChange={handleInputChange}
-            />
-          ) : (
-            <p className="form-static">{formData.pronouns}</p>
-          )}
-        </div>
-        <div className="form-item">
-          <label htmlFor="email" className="form-label">
-            Email:
-          </label>
-          <p className="form-static">{requestedData?.email}</p>
-        </div>
-        <div className="form-item">
-          <label htmlFor="bio" className="form-label">
-            Bio:
-          </label>
-          {isEditing ? (
-            <textarea id="bio" name="bio" className="form-input" value={formData.bio} onChange={handleInputChange} />
-          ) : (
-            <p className="form-static">{formData.bio}</p>
-          )}
-        </div>
-        <div className="form-actions">
-          {validationText && (
-            <div className="form-validation-container">
-              <span className="form-validation-text">{validationText}</span>
+
+        <div className="user-profile-fields">
+          <div className="user-profile-wrapper">
+            <div className="user-profile-form">
+              <div className="user-profile-item">
+                <label htmlFor="firstName" className="form-label">
+                  First Name:
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    id="firstName"
+                    name="firstName"
+                    className="form-input"
+                    value={formData.firstName}
+                    onChange={handleInputChange}
+                    required
+                  />
+                ) : (
+                  <p className="form-static">{formData.firstName}</p>
+                )}
+              </div>
+              <div className="user-profile-item">
+                <label htmlFor="lastName" className="form-label">
+                  Last Name:
+                </label>
+                {isEditing ? (
+                  <input
+                    type="text"
+                    id="lastName"
+                    name="lastName"
+                    className="form-input"
+                    value={formData.lastName}
+                    onChange={handleInputChange}
+                    required
+                  />
+                ) : (
+                  <p className="form-static">{formData.lastName}</p>
+                )}
+              </div>
             </div>
-          )}
-          {isCurrUser &&
-            (isEditing ? (
-              <button className="primary-btn" onClick={handleFormSubmit} disabled={showSaveSpinner}>
-                {showSaveSpinner ? <LoadingSpinner /> : "Save"}
-              </button>
-            ) : (
-              <button className="primary-btn" onClick={handleEditToggle}>
-                Edit
-              </button>
-            ))}
+          </div>
+          <div className="user-profile-wrapper">
+            <div className="user-profile-form">
+              <div className="user-profile-item">
+                {formData.pronunciation?.trim() && (
+                  <>
+                    <label htmlFor="pronunciation" className="form-label">
+                      Pronunciation:
+                    </label>
+                    <p className="form-static">{formData.pronunciation}</p>
+                  </>
+                )}
+                {isEditing && (
+                  <>
+                    <label htmlFor="pronunciation" className="form-label">
+                      Pronunciation:
+                    </label>
+                    <input
+                      type="text"
+                      id="pronunciation"
+                      name="pronunciation"
+                      className="form-input"
+                      value={formData.pronunciation}
+                      onChange={handleInputChange}
+                    />
+                  </>
+                )}
+              </div>
+
+              <div className="user-profile-item">
+                {formData.pronouns?.trim() && (
+                  <>
+                    <label htmlFor="pronouns" className="form-label">
+                      Pronouns:
+                    </label>
+                    <p className="form-static">{formData.pronouns}</p>
+                  </>
+                )}
+                {isEditing && (
+                  <>
+                    <label htmlFor="pronouns" className="form-label">
+                      Pronouns:
+                    </label>
+                    <input
+                      type="text"
+                      id="pronouns"
+                      name="pronouns"
+                      className="form-input"
+                      value={formData.pronouns}
+                      onChange={handleInputChange}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="user-profile-wrapper">
+            <div className="user-profile-form">
+              <div className="user-profile-item">
+                <label htmlFor="email" className="form-label">
+                  Email:
+                </label>
+                <p className="form-static">{requestedData?.email}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="user-profile-wrapper">
+            <div className="user-profile-form">
+              <div className="user-profile-item">
+                {formData.bio?.trim() && (
+                  <>
+                    <label htmlFor="bio" className="form-label">
+                      Bio:
+                    </label>
+                    <p className="form-static">{formData.bio}</p>
+                  </>
+                )}
+                {isEditing && (
+                  <>
+                    <label htmlFor="bio" className="form-label">
+                      Bio:
+                    </label>
+                    <textarea
+                      id="bio"
+                      name="bio"
+                      className="form-input"
+                      value={formData.bio}
+                      onChange={handleInputChange}
+                    />
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
+
+          <div className="user-profile-wrapper">
+            <div className="form-actions">
+              {validationText && (
+                <div className="form-validation-container">
+                  <span className="form-validation-text">{validationText}</span>
+                </div>
+              )}
+              {isCurrUser &&
+                (isEditing ? (
+                  <div className="user-profile-edit">
+                    <button className="primary-btn" onClick={handleCancelToggle}>
+                      Cancel
+                    </button>
+                    <button className="primary-btn" onClick={handleFormSubmit} disabled={showSaveSpinner}>
+                      {showSaveSpinner ? <LoadingSpinner /> : "Save"}
+                    </button>
+                  </div>
+                ) : (
+                  <button className="primary-btn" onClick={handleEditToggle}>
+                    Edit
+                  </button>
+                ))}
+            </div>
+          </div>
         </div>
       </div>
     </div>

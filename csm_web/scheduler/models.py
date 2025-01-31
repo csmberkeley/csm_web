@@ -52,7 +52,7 @@ def week_bounds(date):
 
 def image_path(instance, filename):
     """Compute the full path for a profile image."""
-    # file will be uploaded to images/<user_id>/<file_name>
+    # file will be uploaded to images/<user_id>
     extension = filename.rsplit(".", 1)[-1]
     return f"images/{instance.id}.{extension}"
 
