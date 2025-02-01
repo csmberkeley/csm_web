@@ -203,6 +203,7 @@ class UserAdmin(BasePermissionModelAdmin):
         "email",
         "first_name",
         "last_name",
+        "preferred_name",
         "priority_enrollment",
         "bio",
         "profile_image",
@@ -211,6 +212,7 @@ class UserAdmin(BasePermissionModelAdmin):
     list_display = (
         "id",
         "name",
+        "preferred_name",
         "email",
         "priority_enrollment",
         "bio",
@@ -222,6 +224,7 @@ class UserAdmin(BasePermissionModelAdmin):
         "id",
         "first_name",
         "last_name",
+        "preferred_name",
         "email",
     )
 

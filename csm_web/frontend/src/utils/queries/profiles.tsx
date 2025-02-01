@@ -31,7 +31,7 @@ export const useUserEmails = (): UseQueryResult<string[], Error> => {
  * otherwise, fetches current user's info.
  */
 export const useUserInfo = (userId?: number): UseQueryResult<RawUserInfo, Error> => {
-  const queryKey = userId ? ["userDetails", userId] : ["user"];
+  const queryKey = userId ? ["user", userId] : ["user"];
 
   const queryResult = useQuery<RawUserInfo, Error>(
     queryKey,
@@ -57,24 +57,26 @@ export const useUserInfo = (userId?: number): UseQueryResult<RawUserInfo, Error>
 /**
  * Hook to update a user's profile information.
  */
-export const useUserInfoUpdateMutation = (
-  userId: number
-): UseMutationResult<void, ServerError, Partial<RawUserInfo>> => {
+export const useUserInfoUpdateMutation = (): UseMutationResult<
+  void,
+  ServerError,
+  Partial<RawUserInfo> & { id: number }
+> => {
   const queryClient = useQueryClient();
-  const mutationResult = useMutation<void, Error, Partial<RawUserInfo>>(
-    async (body: Partial<RawUserInfo>) => {
-      const response = await fetchWithMethod(`/user/${userId}/update`, HTTP_METHODS.PUT, body);
+  const mutationResult = useMutation<void, Error, Partial<RawUserInfo> & { id: number }>(
+    async (body: Partial<RawUserInfo> & { id: number }) => {
+      const response = await fetchWithMethod(`/user/${body.id}/update`, HTTP_METHODS.PUT, body);
       if (response.ok) {
         return;
       } else {
         handlePermissionsError(response.status);
-        throw new ServerError(`Failed to update user profile with ID ${userId}`);
+        throw new ServerError(`Failed to update user profile with ID ${body.id}`);
       }
     },
     {
       onSuccess: () => {
         // Invalidate queries related to the user's profile to ensure fresh data
-        queryClient.invalidateQueries(["userProfile", userId]);
+        queryClient.invalidateQueries(["user"]);
       },
       retry: handleRetry
     }

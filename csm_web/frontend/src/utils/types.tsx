@@ -34,6 +34,7 @@ export interface UserInfo {
   id: number;
   firstName: string;
   lastName: string;
+  preferredName: string;
   email: string;
   priorityEnrollment?: DateTime;
   bio: string;

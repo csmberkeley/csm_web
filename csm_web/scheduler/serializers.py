@@ -172,6 +172,7 @@ class UserSerializer(serializers.ModelSerializer):
             "email",
             "first_name",
             "last_name",
+            "preferred_name",
             "priority_enrollment",
             "bio",
             "pronunciation",

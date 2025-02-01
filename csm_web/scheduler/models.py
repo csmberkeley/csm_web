@@ -60,13 +60,26 @@ def image_path(instance, filename):
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
+    preferred_name = models.TextField(default="", blank=True)
     pronouns = models.CharField(max_length=20, default="", blank=True)
     pronunciation = models.CharField(max_length=50, default="", blank=True)
     # uploaded_at = models.DateTimeField(auto_now_add=True)
     profile_image = models.ImageField(
         storage=ProfileImageStorage(), upload_to=image_path, blank=True
     )
-    bio = models.CharField(max_length=500, default="", blank=True)
+    bio = models.TextField(default="", blank=True)
+
+    def __init__(self, *args, **kwargs):
+        """Overrides default init method to initialize preferred name."""
+        super().__init__(*args, **kwargs)
+        if self.first_name and self.last_name:
+            self.preferred_name = self.get_full_name()
+
+    def save(self, *args, **kwargs):
+        """Overrides default save method to initialize preferred name."""
+        if not self.preferred_name:
+            self.preferred_name = self.get_full_name()
+        super().save(*args, **kwargs)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         """Determine whether this user is allowed to enroll in the given course."""
