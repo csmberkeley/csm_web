@@ -44,7 +44,7 @@ describe("word of the day", () => {
     cy.contains(".primary-btn", /update/i).should("be.disabled"); // disabled because unchanged
 
     // logout
-    cy.visit("/logout/");
+    cy.logout();
 
     // log in as student next
     cy.login({ username: "demo_student", password: "pass" });
@@ -89,7 +89,7 @@ describe("word of the day", () => {
     });
 
     // logout
-    cy.visit("/logout/");
+    cy.logout();
 
     // log in as mentor again
     cy.login({ username: "demo_mentor", password: "pass" });
