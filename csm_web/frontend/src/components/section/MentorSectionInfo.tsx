@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 import { useSectionStudents } from "../../utils/queries/sections";
 import { Mentor, Spacetime, Student } from "../../utils/types";
@@ -56,9 +57,16 @@ export default function MentorSectionInfo({
 
   return (
     <React.Fragment>
-      <h3 className="section-detail-page-title">{`${
-        isCoordinator ? `${mentor.name || mentor.email}'s` : "My"
-      } Section`}</h3>
+      <h3 className="section-detail-page-title">
+        {isCoordinator ? (
+          <>
+            <Link to={`/profile/${mentor.user.id}`}>{`${mentor.name || mentor.email}`}</Link>&apos;s
+          </>
+        ) : (
+          "My"
+        )}
+        &nbsp;Section
+      </h3>
       <div className="section-info-cards-container">
         <InfoCard
           title="Students"
@@ -77,11 +85,17 @@ export default function MentorSectionInfo({
                   </tr>
                 </thead>
                 <tbody>
-                  {(students.length === 0 ? [{ name: "No students enrolled", email: "", id: -1 }] : students).map(
-                    ({ name, email, id: studentId }: Student) => (
+                  {students.length === 0 ? (
+                    <tr key={-1} className="csm-table-row">
+                      <td className="csm-table-item">
+                        <span className="student-info">No students enrolled</span>
+                      </td>
+                    </tr>
+                  ) : (
+                    students.map(({ name, email, id: studentId, user: studentUser }: Student) => (
                       <tr key={studentId} className="csm-table-row">
                         <td className="csm-table-item">
-                          {isCoordinator && studentId !== -1 && (
+                          {isCoordinator && (
                             <StudentDropper
                               name={name ? name : email}
                               id={studentId}
@@ -89,10 +103,12 @@ export default function MentorSectionInfo({
                               courseRestricted={courseRestricted}
                             />
                           )}
-                          <span className="student-info">{name || email}</span>
+                          <Link to={`/profile/${studentUser.id}`}>
+                            <span className="student-info">{name || email}</span>
+                          </Link>
                         </td>
                       </tr>
-                    )
+                    ))
                   )}
                   {isCoordinator && (
                     <React.Fragment>

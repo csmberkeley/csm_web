@@ -2,6 +2,7 @@ import os
 from io import BytesIO
 
 from django.core.files.base import ContentFile
+from django.db import transaction
 from PIL import Image, UnidentifiedImageError
 from rest_framework import status
 from rest_framework.decorators import api_view, parser_classes
@@ -117,25 +118,44 @@ def user_retrieve(request, pk):
 
 
 @api_view(["PUT"])
+@parser_classes([MultiPartParser, FormParser])
 def user_update(request, pk):
     """
     Update user profile. Only accessible by Coordinators and the user themselves.
     """
+    # Get user
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
         return Response({"detail": "Not found."}, status=status.HTTP_404_NOT_FOUND)
 
+    # Check permissions
     if request.user == user:
         pass
     elif not user_editable(request.user):
         raise PermissionDenied("You do not have permission to edit this profile")
 
+    # Check image file
+    if "file" in request.FILES:
+        file, err_msg = validate_image(request.FILES["file"])
+        if not file:
+            return Response(
+                {"error": err_msg},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+    # Check fields
     serializer = UserSerializer(user, data=request.data, partial=True)
-    if serializer.is_valid():
+    if not serializer.is_valid():
+        print(serializer.errors)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    with transaction.atomic():
+        if "file" in request.FILES:
+            user.profile_image.save(file.name, file)
         serializer.save()
-        return Response(serializer.data, status=status.HTTP_200_OK)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+    # print({**serializer.data, "profileImage": user.profile_image})
+    return Response(serializer.data, status=status.HTTP_200_OK)
 
 
 @api_view(["GET"])
@@ -147,26 +167,16 @@ def user_info(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(["POST"])
-@parser_classes([MultiPartParser, FormParser])
-def upload_image(request):
-    """
-    Uploads an image to the aws s3 bucket
-    """
+ALLOWED_TYPES = ["JPEG", "PNG", "JPG"]
+MAX_FILE_SIZE_MB = 5  # File limit
+MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
+TARGET_FILE_SIZE_MB = 2
+TARGET_FILE_SIZE_BYTES = TARGET_FILE_SIZE_MB * 1024 * 1024
+PROFILE_IMAGE_SIZE = (400, 400)  # Fixed width and height for profile images
 
-    if "file" not in request.FILES:
-        return Response(
-            {"error": "No file was uploaded"}, status=status.HTTP_400_BAD_REQUEST
-        )
 
-    image_file = request.FILES["file"]
-    ALLOWED_TYPES = ["JPEG", "PNG", "JPG"]
-
-    MAX_FILE_SIZE_MB = 5  # file limit
-    MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MB * 1024 * 1024
-    TARGET_FILE_SIZE_MB = 2
-    TARGET_FILE_SIZE_BYTES = TARGET_FILE_SIZE_MB * 1024 * 1024
-    PROFILE_IMAGE_SIZE = (400, 400)  # Fixed width and height for profile images
+def validate_image(image_file):
+    """Validates a given image file and returns the processed file and an error message"""
 
     # Check file size
     image_file.seek(0, os.SEEK_END)
@@ -175,23 +185,15 @@ def upload_image(request):
     image_file.seek(0)
 
     if file_size > MAX_FILE_SIZE_BYTES:
-        return Response(
-            {"error": "Image size exceeds maximum allowed size of 5MB."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return None, "Image size exceeds maximum allowed size of 5MB."
 
     try:
         # Validate extension before opening
         extension = image_file.name.rsplit(".", 1)[-1].upper()
         if extension not in ALLOWED_TYPES:
-            return Response(
-                {
-                    "error": (
-                        f"Invalid image type: {extension}. Allowed types are:"
-                        f" {ALLOWED_TYPES}."
-                    )
-                },
-                status=status.HTTP_400_BAD_REQUEST,
+            return (
+                None,
+                f"Invalid image type: {extension}. Allowed types are: {ALLOWED_TYPES}.",
             )
 
         # Open and validate the image
@@ -204,41 +206,29 @@ def upload_image(request):
 
         img_format = image.format
         if not img_format:
-            return Response(
-                {"error": "Uploaded file is not a valid image."},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
+            return None, "Uploaded file is not a valid image."
 
         # resize to less than specified width and height while preserving ratio
         # different from image = image.size(PROFILE_IMAGE_SIZE, Image.LANCZOS)
-        image.thumbnail(PROFILE_IMAGE_SIZE, Image.LANCZOS)
+        image.thumbnail(PROFILE_IMAGE_SIZE, Image.LANCZOS)  # pylint: disable=no-member
 
         if file_size > TARGET_FILE_SIZE_BYTES:
             file = compress_image(image, TARGET_FILE_SIZE_BYTES, img_format)
         else:
             buffer = BytesIO()
-            if img_format == "JPEG" or img_format == "JPG":
+            if img_format in ["JPEG", "JPG"]:
                 image.save(buffer, format=img_format)
             else:
                 image.save(buffer, format="PNG", optimze=True)
             buffer.seek(0)
             file = ContentFile(buffer.read(), name=image_file.name)
 
-        # Save the image to the user's profile
-        user = request.user
-        user.profile_image.save(file.name, file)
-
-        return Response(
-            {"message": "File uploaded successfully"}, status=status.HTTP_200_OK
-        )
+        return file, None
 
     except UnidentifiedImageError:
-        return Response(
-            {"error": "Uploaded file is not a valid image."},
-            status=status.HTTP_400_BAD_REQUEST,
-        )
+        return None, "Uploaded file is not a valid image."
     except ValueError as e:
-        return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+        return None, str(e)
 
 
 # Validation Helper Functions
@@ -259,7 +249,7 @@ def compress_image(image, target_size_bytes, img_format):
     quality = 95  # start with high quality
     while True:
         buffer.seek(0)
-        if img_format == "JPEG" or img_format == "JPG":
+        if img_format in ["JPEG", "JPG"]:
             image.save(buffer, format=img_format, quality=quality)
         else:
             image.save(buffer, format="PNG", optimze=True)

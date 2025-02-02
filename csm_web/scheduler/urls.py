@@ -18,7 +18,7 @@ urlpatterns += [
     path("user/", views.user_info, name="user"),
     path("user/<int:pk>/", views.user_retrieve, name="user_retrieve"),
     path("user/<int:pk>/update/", views.user_update, name="user_update"),
-    path("user/upload_image/", views.upload_image, name="upload_image"),
+    # path("user/upload_image/", views.upload_image, name="upload_image"),
     path("matcher/active/", views.matcher.active),
     path("matcher/<int:pk>/slots/", views.matcher.slots),
     path("matcher/<int:pk>/preferences/", views.matcher.preferences),

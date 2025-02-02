@@ -8,4 +8,4 @@ from .spacetime import SpacetimeViewSet
 from .student import StudentViewSet
 
 # from .test import upload_image
-from .user import UserViewSet, upload_image, user_info, user_retrieve, user_update
+from .user import UserViewSet, user_info, user_retrieve, user_update

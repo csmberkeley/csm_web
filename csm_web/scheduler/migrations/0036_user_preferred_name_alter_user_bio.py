@@ -5,7 +5,7 @@ from django.db import migrations, models
 
 def forward_preferred_name(apps, _):
     """Creates default preferred name by saving objects (save function is overriden in model)"""
-    User = apps.get_model("scheduler", "User")
+    User = apps.get_model("scheduler", "User")  # pylint: disable=invalid-name
 
     for user in User.objects.all():
         if not user.preferred_name:

@@ -208,13 +208,14 @@ class ProfileSerializer(serializers.Serializer):  # pylint: disable=abstract-met
 
 
 class MentorSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
     email = make_omittable(
         serializers.EmailField, "omit_mentor_emails", source="user.email"
     )
 
     class Meta:
         model = Mentor
-        fields = ("id", "name", "email", "section")
+        fields = ("id", "name", "email", "section", "user")
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
@@ -252,12 +253,13 @@ class AttendanceSerializer(serializers.ModelSerializer):
 
 
 class StudentSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
     email = serializers.EmailField(source="user.email")
     attendances = AttendanceSerializer(source="attendance_set", many=True)
 
     class Meta:
         model = Student
-        fields = ("id", "name", "email", "attendances", "section")
+        fields = ("id", "name", "email", "attendances", "section", "user")
 
 
 class SectionSerializer(serializers.ModelSerializer):

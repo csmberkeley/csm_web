@@ -57,20 +57,21 @@ export const useUserInfo = (userId?: number): UseQueryResult<RawUserInfo, Error>
 /**
  * Hook to update a user's profile information.
  */
-export const useUserInfoUpdateMutation = (): UseMutationResult<
-  void,
-  ServerError,
-  Partial<RawUserInfo> & { id: number }
-> => {
+export const useUserInfoUpdateMutation = (): UseMutationResult<RawUserInfo, ServerError, FormData> => {
   const queryClient = useQueryClient();
-  const mutationResult = useMutation<void, Error, Partial<RawUserInfo> & { id: number }>(
-    async (body: Partial<RawUserInfo> & { id: number }) => {
-      const response = await fetchWithMethod(`/user/${body.id}/update`, HTTP_METHODS.PUT, body);
+  const mutationResult = useMutation<RawUserInfo, Error, FormData>(
+    async (body: FormData) => {
+      const response = await fetchWithMethod(
+        `/user/${body.get("id")!.toString()}/update`,
+        HTTP_METHODS.PUT,
+        body,
+        true
+      );
       if (response.ok) {
-        return;
+        return await response.json();
       } else {
         handlePermissionsError(response.status);
-        throw new ServerError(`Failed to update user profile with ID ${body.id}`);
+        throw new ServerError(`Failed to update user profile with ID ${body.get("id")}`);
       }
     },
     {
