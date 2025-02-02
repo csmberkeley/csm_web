@@ -1,8 +1,7 @@
 import { DateTime } from "luxon";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
-
-import { useUserEmails } from "../../utils/queries/base";
+import { useUserEmails } from "../../utils/queries/profiles";
 import { useEnrollStudentMutation } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";

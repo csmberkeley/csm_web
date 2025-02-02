@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import React, { useEffect, useState } from "react";
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Link, Navigate, Route, Routes } from "react-router-dom";
 
 import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 import {
@@ -85,7 +85,9 @@ function StudentSectionInfo({ mentor, spacetimes, associatedProfileId }: Student
       <div className="section-info-cards-container">
         {mentor && (
           <InfoCard title="Mentor">
-            <h5>{mentor.name}</h5>
+            <h5>
+              <Link to={`/profile/${mentor.user.id}`}>{mentor.name}</Link>
+            </h5>
             <a href={`mailto:${mentor.email}`}>{mentor.email}</a>
           </InfoCard>
         )}

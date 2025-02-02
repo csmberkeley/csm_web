@@ -13,7 +13,6 @@ import "../../css/section.scss";
 
 export default function Section(): React.ReactElement | null {
   const { id } = useParams();
-
   const { data: section, isSuccess: sectionLoaded, isError: sectionLoadError } = useSection(Number(id));
 
   if (!sectionLoaded) {

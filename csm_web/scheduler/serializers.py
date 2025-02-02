@@ -167,7 +167,18 @@ class CourseSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("id", "email", "first_name", "last_name", "priority_enrollment")
+        fields = (
+            "id",
+            "email",
+            "first_name",
+            "last_name",
+            "preferred_name",
+            "priority_enrollment",
+            "bio",
+            "pronunciation",
+            "pronouns",
+            "profile_image",
+        )
 
 
 class ProfileSerializer(serializers.Serializer):  # pylint: disable=abstract-method
@@ -197,13 +208,14 @@ class ProfileSerializer(serializers.Serializer):  # pylint: disable=abstract-met
 
 
 class MentorSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
     email = make_omittable(
         serializers.EmailField, "omit_mentor_emails", source="user.email"
     )
 
     class Meta:
         model = Mentor
-        fields = ("id", "name", "email", "section")
+        fields = ("id", "name", "email", "section", "user")
 
 
 class AttendanceSerializer(serializers.ModelSerializer):
@@ -241,12 +253,13 @@ class AttendanceSerializer(serializers.ModelSerializer):
 
 
 class StudentSerializer(serializers.ModelSerializer):
+    user = UserSerializer()
     email = serializers.EmailField(source="user.email")
     attendances = AttendanceSerializer(source="attendance_set", many=True)
 
     class Meta:
         model = Student
-        fields = ("id", "name", "email", "attendances", "section")
+        fields = ("id", "name", "email", "attendances", "section", "user")
 
 
 class SectionSerializer(serializers.ModelSerializer):

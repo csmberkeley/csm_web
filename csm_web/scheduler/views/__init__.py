@@ -6,4 +6,6 @@ from .resource import ResourceViewSet
 from .section import SectionViewSet
 from .spacetime import SpacetimeViewSet
 from .student import StudentViewSet
-from .user import UserViewSet, userinfo
+
+# from .test import upload_image
+from .user import UserViewSet, user_info, user_retrieve, user_update
