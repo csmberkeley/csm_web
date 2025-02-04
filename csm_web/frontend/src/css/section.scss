@@ -270,13 +270,12 @@
   display: flex;
   flex: 1;
 }
+
 .section-info-cards-right {
   display: flex;
   flex: 1;
-  flex-direction: row;
-  flex-wrap: wrap;
-  justify-content: flex-start;
-  align-content: flex-start;
+  flex-flow: row wrap;
+  place-content: flex-start flex-start;
 }
 
 .section-detail-info-card {

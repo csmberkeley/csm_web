@@ -27,6 +27,11 @@
   text-align: center;
 }
 
+.warning {
+  font-weight: bold;
+  color: $csm-danger;
+}
+
 .student-dropper-checkbox-container {
   display: flex;
   flex-direction: row;

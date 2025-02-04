@@ -22,6 +22,8 @@ interface SectionCardProps {
   description: string;
   userIsCoordinator: boolean;
   courseOpen: boolean;
+  waitlistOpen: boolean;
+  numStudentsWaitlisted: number;
   waitlistCapacity: number;
 }
 
@@ -33,7 +35,10 @@ export const SectionCard = ({
   capacity,
   description,
   userIsCoordinator,
-  courseOpen
+  courseOpen,
+  waitlistOpen,
+  numStudentsWaitlisted,
+  waitlistCapacity
 }: SectionCardProps): React.ReactElement => {
   /**
    * Mutation to enroll a student in the section.
@@ -77,6 +82,10 @@ export const SectionCard = ({
     });
   };
 
+  const waitlist = () => {
+    console.log("WAITLISTED");
+  };
+
   /**
    * Handle closeing of the modal.
    */
@@ -116,6 +125,7 @@ export const SectionCard = ({
   const iconWidth = "1.3em";
   const iconHeight = "1.3em";
   const isFull = numStudentsEnrolled >= capacity;
+  const isWaitlistFull = numStudentsWaitlisted >= waitlistCapacity;
   if (!showModal && enrollmentSuccessful) {
     // redirect to the section page if the user was successfully enrolled in the section
     return <Navigate to="/" />;
@@ -180,13 +190,25 @@ export const SectionCard = ({
             MANAGE
           </Link>
         ) : (
-          <button
-            className={`primary-btn section-card-footer`}
-            disabled={!courseOpen || isFull}
-            onClick={isFull ? undefined : enroll}
-          >
-            ENROLL
-          </button>
+          <>
+            {isWaitlistFull ? (
+              <button
+                className="primary-btn section-card-footer-waitlist"
+                disabled={!waitlistOpen || isWaitlistFull}
+                onClick={waitlist}
+              >
+                WAITLIST
+              </button>
+            ) : (
+              <button
+                className="primary-btn section-card-footer"
+                disabled={!courseOpen || isFull}
+                onClick={isFull ? undefined : enroll}
+              >
+                ENROLL
+              </button>
+            )}
+          </>
         )}
       </section>
     </React.Fragment>

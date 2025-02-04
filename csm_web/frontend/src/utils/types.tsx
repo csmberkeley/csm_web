@@ -51,6 +51,7 @@ export interface Section {
   mentor: Mentor;
   capacity: number;
   waitlistCapacity: number;
+  numStudentsWaitlisted: number;
   associatedProfileId: number;
   numStudentsEnrolled: number;
   description: string;
