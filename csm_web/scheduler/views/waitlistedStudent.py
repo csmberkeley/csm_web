@@ -2,10 +2,30 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from scheduler.serializers import WaitlistedStudentSerializer
 
 from ..models import Section, WaitlistedStudent
 from .section import add_student
 from .utils import logger
+
+
+@api_view(["GET"])
+def view(request, pk=None):
+    """
+    Endpoint: /api/waitlist/<pk>
+
+    GET: View all students on the waitlist for a section
+    """
+    section = Section.objects.get(pk=pk)
+    is_mentor = request.user == section.mentor.user
+    is_coord = bool(
+        section.mentor.course.coordinator_set.filter(user=request.user).count()
+    )
+    if not is_mentor and not is_coord:
+        raise PermissionDenied("You do not have permission to view this waitlist")
+
+    waitlist_queryset = WaitlistedStudent.objects.filter(active=True, section=section)
+    return Response(WaitlistedStudentSerializer(waitlist_queryset, many=True).data)
 
 
 @api_view(["POST"])
