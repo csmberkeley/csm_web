@@ -263,13 +263,19 @@
 
 .section-info-cards-container {
   display: flex;
-  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.section-info-cards-left {
+  display: flex;
+  flex: 1;
 }
 
 .section-info-cards-right {
   display: flex;
   flex: 1;
-  flex-wrap: wrap;
+  flex-flow: row wrap;
+  place-content: flex-start flex-start;
 }
 
 .section-detail-info-card {

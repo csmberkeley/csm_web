@@ -30,6 +30,12 @@ export default function StudentDropper({ id, sectionId, name, courseRestricted }
     setShowDropPrompt(false);
   }
 
+  /*
+Warning: Dropping a student automatically processes the waitlist.
+Do you want to drop and add a student
+Add student, decrease capacity, drop student
+  */
+
   const dropDiv = (
     <div>
       <h2 className="student-dropper-head-item">DROP Student</h2>
@@ -86,6 +92,9 @@ export default function StudentDropper({ id, sectionId, name, courseRestricted }
         <Modal className="student-dropper-modal" closeModal={() => setShowDropPrompt(false)}>
           {dropDiv}
           {courseRestricted ? blacklistDiv : banDiv}
+          <p>
+            <span className="warning">WARNING: </span>Dropping a student automatically processes the waitlist.
+          </p>
           <div className="student-dropper-submit-wrapper">
             <button className="danger-btn" onClick={handleClickDrop} disabled={!drop}>
               Submit
