@@ -1,2 +1,2 @@
-web: cd csm_web; gunicorn csm_web.wsgi
+web: cd csm_web; bash ../web.sh
 release: bash ./release.sh

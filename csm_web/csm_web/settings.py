@@ -296,7 +296,7 @@ LOGGING = {
 Q_CLUSTER = {
     "name": "csm_web",
     "workers": 1,
-    "orm": "default" if DEBUG else "pg",
+    "orm": "default",
     "timeout": 60,
     "retry": 90,
 }
