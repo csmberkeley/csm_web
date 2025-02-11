@@ -191,6 +191,14 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     STORAGES["staticfiles"] = {
         "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
     }
+
+    # set the static root path
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+    # add whitenoise to the middleware
+    # this should be added after the security middleware, so that security redirects still occur
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+
     WHITENOISE_MAX_AGE = 31536000  # one year
 
 AUTHENTICATION_BACKENDS = (
@@ -311,4 +319,4 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     # Heroku setup
     import django_heroku
 
-    django_heroku.settings(locals())
+    django_heroku.settings(locals(), staticfiles=False)
