@@ -38,7 +38,10 @@ export const SectionCard = ({
    * Mutation to enroll a student in the section.
    */
   const enrollStudentMutation = useEnrollUserMutation(id);
-
+  /**
+   * Whether to show the affinity modal (after an attempt to enroll in an affinity section).
+   */
+  const [showAffinityModal, setShowAffinityModal] = useState<boolean>(false);
   /**
    * Whether to show the modal (after an attempt to enroll).
    */
@@ -51,10 +54,6 @@ export const SectionCard = ({
    * The error message if the enrollment failed.
    */
   const [errorMessage, setErrorMessage] = useState<string>("");
-  /**
-   * The error message if the enrollment failed.
-   */
-  const [showAffinityModal, setShowAffinityModal] = useState<boolean>(false);
 
   /**
    * Handle enrollment in the section.
@@ -67,6 +66,17 @@ export const SectionCard = ({
       return;
     }
 
+    if (description !== null) {
+      // If it's an affinity section, show the affinity modal first
+      setShowAffinityModal(true);
+      return;
+    }
+
+    // Proceed with normal enrollment
+    processEnrollment();
+  };
+
+  const processEnrollment = () => {
     enrollStudentMutation.mutate(undefined, {
       onSuccess: () => {
         setEnrollmentSuccessful(true);
@@ -78,6 +88,13 @@ export const SectionCard = ({
         setShowModal(true);
       }
     });
+  };
+
+  /**
+   * Handle closing of the affinity modal.
+   */
+  const closeAffinityModal = () => {
+    setShowAffinityModal(false);
   };
 
   /**
@@ -102,7 +119,8 @@ export const SectionCard = ({
           type="button"
           className="primary-btn"
           onClick={() => {
-            console.log("proceeding with enrollment");
+            closeAffinityModal();
+            processEnrollment();
           }}
         >
           Confirm
@@ -117,10 +135,7 @@ export const SectionCard = ({
   const modalContents = () => {
     const iconWidth = "8em";
     const iconHeight = "8em";
-    if (description !== null) {
-      // console.log("modal will pop up here");
-      return affinityModalContents();
-    }
+
     if (enrollmentSuccessful) {
       return (
         <div className="enroll-confirm-modal-contents">
@@ -162,6 +177,7 @@ export const SectionCard = ({
 
   return (
     <React.Fragment>
+      {showAffinityModal && <Modal closeModal={closeAffinityModal}>{affinityModalContents()}</Modal>}
       {showModal && <Modal closeModal={closeModal}>{modalContents()}</Modal>}
       <section className={`section-card ${isFull ? "full" : ""}`}>
         <div className="section-card-contents">
@@ -212,6 +228,7 @@ export const SectionCard = ({
           </Link>
         ) : (
           <button
+            type="button"
             className={`primary-btn section-card-footer`}
             disabled={!courseOpen || isFull}
             onClick={isFull ? undefined : enroll}
