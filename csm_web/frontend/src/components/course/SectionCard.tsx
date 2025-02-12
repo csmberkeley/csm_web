@@ -51,6 +51,10 @@ export const SectionCard = ({
    * The error message if the enrollment failed.
    */
   const [errorMessage, setErrorMessage] = useState<string>("");
+  /**
+   * The error message if the enrollment failed.
+   */
+  const [showAffinityModal, setShowAffinityModal] = useState<boolean>(false);
 
   /**
    * Handle enrollment in the section.
@@ -77,10 +81,34 @@ export const SectionCard = ({
   };
 
   /**
-   * Handle closeing of the modal.
+   * Handle closing of the modal.
    */
   const closeModal = () => {
     setShowModal(false);
+  };
+
+  /**
+   * Render modal contents for the affinity section confirmation.
+   */
+  const affinityModalContents = () => {
+    return (
+      <div className="enroll-confirm-modal-contents">
+        <h3>Affinity Section Enrollment</h3>
+        <p>
+          This is an affinity section, meaning it is designed for students who share a particular identity or interest.
+          [Add more explanation here as needed.]
+        </p>
+        <button
+          type="button"
+          className="primary-btn"
+          onClick={() => {
+            console.log("proceeding with enrollment");
+          }}
+        >
+          Confirm
+        </button>
+      </div>
+    );
   };
 
   /**
@@ -89,6 +117,10 @@ export const SectionCard = ({
   const modalContents = () => {
     const iconWidth = "8em";
     const iconHeight = "8em";
+    if (description !== null) {
+      // console.log("modal will pop up here");
+      return affinityModalContents();
+    }
     if (enrollmentSuccessful) {
       return (
         <div className="enroll-confirm-modal-contents">
