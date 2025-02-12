@@ -11,6 +11,8 @@ from django.dispatch import receiver
 from django.utils import functional, timezone
 from rest_framework.serializers import ValidationError
 
+from .storage import ProfileImageStorage
+
 logger = logging.getLogger(__name__)
 
 logger.info = logger.warning
@@ -48,8 +50,36 @@ def week_bounds(date):
     return week_start, week_end
 
 
+def image_path(instance, filename):
+    """Compute the full path for a profile image."""
+    # file will be uploaded to images/<user_id>
+    extension = filename.rsplit(".", 1)[-1]
+    return f"images/{instance.id}.{extension}"
+
+
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
+
+    preferred_name = models.TextField(default="", blank=True)
+    pronouns = models.CharField(max_length=20, default="", blank=True)
+    pronunciation = models.CharField(max_length=50, default="", blank=True)
+    # uploaded_at = models.DateTimeField(auto_now_add=True)
+    profile_image = models.ImageField(
+        storage=ProfileImageStorage(), upload_to=image_path, blank=True
+    )
+    bio = models.TextField(default="", blank=True)
+
+    def __init__(self, *args, **kwargs):
+        """Overrides default init method to initialize preferred name."""
+        super().__init__(*args, **kwargs)
+        if self.first_name and self.last_name:
+            self.preferred_name = self.get_full_name()
+
+    def save(self, *args, **kwargs):
+        """Overrides default save method to initialize preferred name."""
+        if not self.preferred_name:
+            self.preferred_name = self.get_full_name()
+        super().save(*args, **kwargs)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         """Determine whether this user is allowed to enroll in the given course."""
@@ -260,19 +290,15 @@ class Student(Profile):
             ):
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
                     logger.info(
-                        (
-                            "<SectionOccurrence> SO automatically created for student"
-                            " %s in course %s for date %s"
-                        ),
+                        "<SectionOccurrence> SO automatically created for student"
+                        " %s in course %s for date %s",
                         self.user.email,
                         course.name,
                         now.date(),
                     )
                     logger.info(
-                        (
-                            "<Attendance> Attendance automatically created for student"
-                            " %s in course %s for date %s"
-                        ),
+                        "<Attendance> Attendance automatically created for student"
+                        " %s in course %s for date %s",
                         self.user.email,
                         course.name,
                         now.date(),
@@ -313,7 +339,7 @@ class Mentor(Profile):
 
 class Coordinator(Profile):
     """
-    This profile is used to allow coordinators to acess the admin page.
+    This profile is used to allow coordinators to access the admin page.
     """
 
     def save(self, *args, **kwargs):

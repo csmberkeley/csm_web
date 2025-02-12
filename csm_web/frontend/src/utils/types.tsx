@@ -30,12 +30,21 @@ export interface Profile {
   sectionSpacetimes: Array<Spacetime>;
 }
 
-export interface UserInfo {
+export interface ChangeableUserInfo {
+  preferredName: string;
+  bio: string;
+  pronouns: string;
+  pronunciation: string;
+}
+
+export interface UserInfo extends ChangeableUserInfo {
   id: number;
   firstName: string;
   lastName: string;
   email: string;
   priorityEnrollment?: DateTime;
+  isEditable: boolean;
+  profileImage?: string;
 }
 
 /**
@@ -64,6 +73,7 @@ export interface Mentor {
   name: string;
   email: string;
   section: number;
+  user: RawUserInfo;
 }
 
 export interface Course {
@@ -80,6 +90,7 @@ export interface Student {
   id: number;
   name: string;
   email: string;
+  user: RawUserInfo;
 }
 
 export interface Attendance {

@@ -1,0 +1,167 @@
+@use "base/variables" as *;
+
+.user-profile-page {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-profile-main {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  align-items: center;
+  justify-content: center;
+  width: 500px;
+  padding: 48px;
+  border: 2px solid $csm-green;
+  border-radius: 25px;
+}
+
+.user-profile-viewing-header {
+  display: flex;
+  flex-direction: row;
+  gap: 1rem;
+  width: 100%;
+}
+
+.user-profile-image-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 8em;
+  height: 8em;
+  overflow: hidden;
+}
+
+.user-profile-border {
+  border: 2px dashed #ccc;
+  border-radius: 12px;
+}
+
+.user-profile-image {
+  width: 100%;
+}
+
+.user-profile-placeholder {
+  width: 80%;
+}
+
+.user-profile-fields {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.user-profile-item {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.user-profile-text {
+  margin: 0;
+}
+
+.user-profile-name {
+  font-size: 1.5rem;
+  color: $csm-green-darkened;
+}
+
+.user-profile-pronunciation {
+  font-style: italic;
+  color: $csm-neutral-darkened;
+}
+
+.user-profile-email {
+  color: $csm-neutral-darkened;
+}
+
+.user-profile-bio {
+  display: flex;
+  gap: 1rem;
+  justify-content: left;
+  width: 100%;
+}
+
+.user-profile-input {
+  display: flex;
+  flex-direction: row;
+  gap: 0.5rem;
+  align-items: center;
+  width: 100%;
+}
+
+.user-profile-image-upload-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-profile-image-upload {
+  display: none;
+}
+
+.user-profile-image-upload-label {
+  position: relative;
+  cursor: pointer;
+}
+
+.user-profile-image-upload-icon {
+  position: absolute;
+  inset: 0;
+  width: 75%;
+  margin: auto;
+  opacity: 0.25;
+}
+
+.user-profile-image-upload-label:hover .user-profile-image-upload-icon {
+  opacity: 0.3;
+}
+
+.user-profile-name-label {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  gap: 0.2rem;
+  align-items: center;
+}
+
+.user-profile-tooltip {
+  flex: 0;
+}
+
+.user-profile-input-field {
+  width: 100%;
+}
+
+.user-profile-inline {
+  display: inline;
+}
+
+input[disabled] {
+  color: $csm-neutral-darkened;
+}
+
+.user-profile-bio-container {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.user-profile-bio-input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100px;
+  word-wrap: break-word;
+  resize: vertical;
+}
+
+.user-profile-buttons {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+}

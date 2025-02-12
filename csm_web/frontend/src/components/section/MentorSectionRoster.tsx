@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { Link } from "react-router-dom";
 
 import { useSectionStudents } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
@@ -37,9 +38,11 @@ export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
             </tr>
           </thead>
           <tbody>
-            {students.map(({ name, email, id }) => (
+            {students.map(({ name, email, id, user: studentUser }) => (
               <tr key={id} className="csm-table-row">
-                <td className="csm-table-item">{name}</td>
+                <td className="csm-table-item">
+                  <Link to={`/profile/${studentUser.id}`}>{name}</Link>
+                </td>
                 <td className="csm-table-item">{email}</td>
               </tr>
             ))}
