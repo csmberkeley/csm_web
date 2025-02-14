@@ -134,3 +134,18 @@ export function dayOfWeekToEnglishString(dayOfWeek: number): string {
  * Map from weekday string to the ISO value for the weekday.
  */
 export const DAYS_OF_WEEK = new Map(Info.weekdaysFormat("long").map((weekday, index) => [weekday, index + 1]));
+
+/**
+ * Convert an ISO datetime string into a string for use in a `datetime-local` input field.
+ *
+ * If an invalid date is passed in, the date will be returned unchanged.
+ */
+export function formatForDatetimeInput(datetimeStr: string): string {
+  return (
+    DateTime.fromISO(datetimeStr).toISO({
+      includeOffset: false,
+      suppressSeconds: true,
+      suppressMilliseconds: true
+    }) ?? datetimeStr // if invalid, return it unchanged
+  );
+}

@@ -1,3 +1,6 @@
+import { DateTime } from "luxon";
+import { DEFAULT_TIMEZONE } from "../../utils/datetime";
+
 export interface Resource {
   id?: number;
   weekNum: number;
@@ -13,7 +16,29 @@ export interface Worksheet {
   name: string;
   worksheetFile: string | File;
   solutionFile: string | File;
+  // there are three states for a schedule:
+  // - fully specified string in ISO format
+  // - empty string, i.e. schedule is enabled, but the user hasn't input anything yet
+  // - null, i.e. no schedule is set
+  worksheetSchedule: string | null;
+  solutionSchedule: string | null;
+  // subset of ['worksheet', 'worksheetFile', 'solutionFile'],
+  // indicating what part of the worksheet is marked for deletion.
   deleted?: string[];
+}
+
+// There's no easy way of type hinting the keys of an interfaace,
+// and passing around plain strings is error-prone;
+// this enum helps ensure that keys are valid when editing/accessing worksheet objects.
+export enum WorksheetKeys {
+  id = "id",
+  resource = "resource",
+  name = "name",
+  worksheetFile = "worksheetFile",
+  worksheetSchedule = "worksheetSchedule",
+  solutionFile = "solutionFile",
+  solutionSchedule = "solutionSchedule",
+  deleted = "deleted"
 }
 
 export interface Link {
@@ -71,7 +96,9 @@ export function emptyWorksheet(): Worksheet {
     resource: null as unknown as number,
     name: "",
     worksheetFile: "",
-    solutionFile: ""
+    worksheetSchedule: null,
+    solutionFile: "",
+    solutionSchedule: null
   };
 }
 
@@ -97,7 +124,9 @@ export function copyWorksheet(worksheet: Worksheet): Worksheet {
     resource: worksheet.resource,
     name: worksheet.name,
     worksheetFile: worksheet.worksheetFile,
-    solutionFile: worksheet.solutionFile
+    worksheetSchedule: worksheet.worksheetSchedule,
+    solutionFile: worksheet.solutionFile,
+    solutionSchedule: worksheet.solutionSchedule
   };
 }
 /**
@@ -114,6 +143,33 @@ export function copyLink(link: Link): Link {
     url: link.url,
     deleted: false
   };
+}
+
+/**
+ * Normalizes the worksheet data to prepare for serialization.
+ * Assumes that the data has been validated.
+ *
+ * In particular, updates the following:
+ * - `worksheetSchedule` and `solutionSchedule` to be of correct ISO format;
+ *   in particular, according to the JS specification, the time strings given
+ *   will never have a timezone specified; we set the default timezone (PST) here.
+ */
+export function normalizeWorksheet(worksheet: Worksheet): Worksheet {
+  let updatedWorksheetSchedule = worksheet.worksheetSchedule;
+  if (worksheet.worksheetSchedule != null) {
+    updatedWorksheetSchedule = DateTime.fromISO(worksheet.worksheetSchedule, {
+      zone: DEFAULT_TIMEZONE
+    }).toISO();
+  }
+
+  let updatedSolutionSchedule = worksheet.solutionSchedule;
+  if (worksheet.solutionSchedule != null) {
+    updatedSolutionSchedule = DateTime.fromISO(worksheet.solutionSchedule, {
+      zone: DEFAULT_TIMEZONE
+    }).toISO();
+  }
+
+  return { ...worksheet, worksheetSchedule: updatedWorksheetSchedule, solutionSchedule: updatedSolutionSchedule };
 }
 
 /**

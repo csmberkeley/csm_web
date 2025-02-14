@@ -27,11 +27,13 @@ class Command(BaseCommand):
         schedule_qs = Schedule.objects.filter(name="create_attendances")
         if schedule_qs.exists():
             existing_schedule = schedule_qs.first()
-            raise RuntimeError(
-                "Another schedule for attendance creation already exists!"
-                f" (id {existing_schedule.id})"
+            logger.warning(
+                "<schedule_attendances> Another schedule for attendance creation already exists"
+                " (id %d); not scheduling attendance creation.",
+                existing_schedule.id,
             )
 
+        # schedule attendance creation
         schedule(
             func="scheduler.tasks.create_attendances.create_attendances",
             name="create_attendances",
@@ -41,5 +43,6 @@ class Command(BaseCommand):
         )
 
         logger.info(
-            "Successfully scheduled attendance creation, starting at %s", run_time
+            "<schedule_attendances> Successfully scheduled attendance creation, starting at %s",
+            run_time,
         )

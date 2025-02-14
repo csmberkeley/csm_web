@@ -313,9 +313,66 @@ class SectionSerializer(serializers.ModelSerializer):
 
 
 class WorksheetSerializer(serializers.ModelSerializer):
+    worksheet_file = serializers.SerializerMethodField()
+    solution_file = serializers.SerializerMethodField()
+
+    def get_worksheet_file(self, obj):
+        """
+        Get the worksheet file associated with the worksheet model.
+
+        If the worksheet had been scheduled, the worksheet file is not included.
+        The worksheet file can be overridden to always be included through the context
+        variable `show_all_scheduled`.
+        """
+        show_all_scheduled = self.context.get("show_all_scheduled", False)
+        print("worksheet file:", show_all_scheduled, str(obj))
+        if (
+            # either overridden, or no schedule
+            show_all_scheduled
+            or obj.worksheet_schedule is None
+        ) and (
+            # worksheet must actually exist (boolean casting checks existence)
+            obj.worksheet_file
+        ):
+            return obj.worksheet_file.url
+
+        # no file, or no override with uploaded file
+        return None
+
+    def get_solution_file(self, obj):
+        """
+        Get the solution file associated with the worksheet model.
+
+        If the solution had been scheduled, the solution file is not included.
+        The solution file can be overridden to always be included through the context
+        variable `show_all_scheduled`.
+        """
+        show_all_scheduled = self.context.get("show_all_scheduled", False)
+        print("solution file:", show_all_scheduled, str(obj))
+        if (
+            # either overridden, or no schedule
+            show_all_scheduled
+            or obj.solution_schedule is None
+        ) and (
+            # worksheet must actually exist (boolean casting checks existence)
+            obj.solution_file
+        ):
+            return obj.solution_file.url
+
+        # no file, or no override with uploaded file
+        return None
+
     class Meta:
         model = Worksheet
-        fields = ["id", "name", "resource", "worksheet_file", "solution_file"]
+        fields = [
+            "id",
+            "name",
+            "resource",
+            "worksheet_file",
+            "solution_file",
+            "worksheet_schedule",
+            "solution_schedule",
+        ]
 
 
 class LinkSerializer(serializers.ModelSerializer):

@@ -12,7 +12,7 @@ import { Role } from "../../utils/types";
 import { Roles } from "../../utils/user";
 import LoadingSpinner from "../LoadingSpinner";
 import { ResourceRow } from "./ResourceRow";
-import { emptyResource, Link, Resource, Worksheet } from "./ResourceTypes";
+import { emptyResource, Link, normalizeWorksheet, Resource, Worksheet } from "./ResourceTypes";
 
 import PlusIcon from "../../../static/frontend/img/plus.svg";
 
@@ -82,7 +82,8 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
       }
     }
     let idx = 0; // cumulative index in worksheet array
-    for (const worksheet of fileFormDataMap.values()) {
+    for (const unnormalizedWorksheet of fileFormDataMap.values()) {
+      const worksheet = normalizeWorksheet(unnormalizedWorksheet);
       for (const [key, value] of Object.entries(worksheet)) {
         if (value instanceof Array) {
           // add each nested array item
@@ -96,7 +97,8 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
       }
       idx++;
     }
-    for (const worksheet of newWorksheets) {
+    for (const unnormalizedWorksheet of newWorksheets) {
+      const worksheet = normalizeWorksheet(unnormalizedWorksheet);
       for (const [key, value] of Object.entries(worksheet)) {
         let updatedValue = value;
 

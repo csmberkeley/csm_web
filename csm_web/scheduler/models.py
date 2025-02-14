@@ -108,6 +108,7 @@ class OneToOneOrNoneField(models.OneToOneField):
     A OneToOneField that returns None if the related object does not exist
     """
 
+    # pylint: disable=W0223
     related_accessor_class = ReverseOneToOneOrNoneDescriptor
 
 
@@ -415,8 +416,13 @@ class Link(ValidatingModel):
 class Worksheet(ValidatingModel):
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
     name = models.CharField(max_length=100)
+
     worksheet_file = models.FileField(blank=True, upload_to=worksheet_path)
     solution_file = models.FileField(blank=True, upload_to=worksheet_path)
+
+    # null schedule means that it's released
+    worksheet_schedule = models.DateTimeField(blank=True, null=True)
+    solution_schedule = models.DateTimeField(blank=True, null=True)
 
 
 @receiver(models.signals.post_delete, sender=Worksheet)

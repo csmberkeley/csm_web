@@ -6,6 +6,9 @@ python3 csm_web/manage.py migrate
 # create the cache table for scheduling
 python3 csm_web/manage.py createcachetable
 
+# initialize all repeated schedules
+python3 csm_web/manage.py initialize_schedules
+
 function run_server() {
     python3 csm_web/manage.py runserver 0.0.0.0:8000
 }

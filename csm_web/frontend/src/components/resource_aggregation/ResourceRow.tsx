@@ -15,8 +15,8 @@ interface ResourceRowProps {
   ) => void;
   canEdit: boolean;
   onDeleteResource: (resourceId: number) => void;
-  addingResource: boolean;
-  cancelOverride: () => void;
+  addingResource?: boolean;
+  cancelOverride?: () => void;
 }
 
 /**
@@ -27,8 +27,8 @@ export const ResourceRow = ({
   onUpdateResource,
   onDeleteResource,
   canEdit,
-  addingResource,
-  cancelOverride
+  addingResource = false,
+  cancelOverride = undefined
 }: ResourceRowProps): React.ReactElement => {
   const [edit, setEdit] = useState<boolean>(false);
   const [resource, setResource] = useState<Resource>({} as Resource);
@@ -109,11 +109,6 @@ export const ResourceRow = ({
       )}
     </div>
   );
-};
-
-ResourceRow.defaultProps = {
-  addingResource: false,
-  cancelOverride: null
 };
 
 export default ResourceRow;

@@ -1,5 +1,5 @@
 import _ from "lodash";
-import React, { ChangeEvent, MouseEvent, useState, useEffect } from "react";
+import React, { ChangeEvent, MouseEvent, useState, useEffect, useReducer } from "react";
 
 import Modal from "../Modal";
 import { Tooltip } from "../Tooltip";
@@ -7,7 +7,6 @@ import ResourceLinkEdit from "./ResourceLinkEdit";
 import {
   copyWorksheet,
   copyLink,
-  emptyWorksheet,
   emptyLink,
   Worksheet,
   Link,
@@ -19,6 +18,7 @@ import {
   Resource
 } from "./ResourceTypes";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
+import { ResourceWorksheetActionType, ResourceWorksheetKind, resourceWorksheetReducer } from "./utils";
 
 import CheckCircle from "../../../static/frontend/img/check-circle-solid.svg";
 import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
@@ -46,13 +46,13 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    * When clicking the add worksheet button, a new empty FormData object should be added,
    * and on upload/edit of worksheet fields, the FormData object should be updated to reflect changes.
    */
-  const [newWorksheets, setNewWorksheets] = useState<Array<Worksheet>>([]);
+  // const [newWorksheets, setNewWorksheets] = useState<Array<Worksheet>>([]);
   const [newLinks, setNewLinks] = useState<Array<Link>>([]);
   const [formErrors, setFormErrors] = useState<FormErrors>(emptyFormErrors());
   const [touched, setTouched] = useState<Touched>(emptyTouched());
   const [isEditingLinks, setIsEditingLinks] = useState<boolean>(false);
 
-  const resourceWorksheetMap = new Map();
+  const resourceWorksheetMap: Map<number, Worksheet> = new Map();
   const resourceLinkMap = new Map();
 
   if (resource) {
@@ -66,10 +66,15 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     }
   }
 
+  const [{ existingWorksheets, newWorksheets }, worksheetDispatch] = useReducer(resourceWorksheetReducer, {
+    existingWorksheets: resourceWorksheetMap,
+    newWorksheets: []
+  });
+
   /**
    * Mapping from worksheet id to FormData holding updated attributes
    */
-  const [existingWorksheetMap, setExistingWorksheetMap] = useState<Map<number, Worksheet>>(resourceWorksheetMap);
+  // const [existingWorksheetMap, setExistingWorksheetMap] = useState<Map<number, Worksheet>>(resourceWorksheetMap);
   const [existingLinkMap, setExistingLinkMap] = useState<Map<number, Link>>(resourceLinkMap);
 
   /**
@@ -117,8 +122,8 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
         allTouchedIndices.add(index);
       }
     }
-    for (const worksheetId of existingWorksheetMap.keys()) {
-      const worksheet = existingWorksheetMap.get(worksheetId)!;
+    for (const worksheetId of existingWorksheets.keys()) {
+      const worksheet = existingWorksheets.get(worksheetId)!;
       if (validateAll || touched.existingWorksheets.has(worksheetId)) {
         if (worksheet.deleted && worksheet.deleted.includes("worksheet")) {
           newFormErrors["existingWorksheets"].delete(worksheetId);
@@ -281,28 +286,8 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
 
     // validate all fields
     if (validate(true)) {
-      onSubmit(e, existingWorksheetMap, existingLinkMap, newWorksheets, newLinks);
+      onSubmit(e, existingWorksheets, existingLinkMap, newWorksheets, newLinks);
     }
-  }
-
-  /**
-   * Retrieves a worksheet from the worksheet map,
-   * and calls the callback function on the worksheet.
-   *
-   * @param worksheetId Id of worksheet to retrieve
-   * @param callback function to call on retrieved worksheet
-   */
-  function retrieveAndExecuteWorksheet(worksheetId: number, callback: (worksheet: Worksheet) => void) {
-    let worksheet: Worksheet;
-    if (existingWorksheetMap.has(worksheetId)) {
-      worksheet = existingWorksheetMap.get(worksheetId)!;
-    } else {
-      console.error(`Worksheet not found: id ${worksheetId}`);
-      return;
-    }
-    callback(worksheet);
-    // update state and render
-    setExistingWorksheetMap(new Map(existingWorksheetMap));
   }
 
   /**
@@ -323,45 +308,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     callback(link);
     // update state and render
     setExistingLinkMap(new Map(existingLinkMap));
-  }
-
-  /**
-   * Modifies a specified file field of the current resource.
-   *
-   * @param e - onChange event
-   * @param worksheetId - id of worksheet that was changed
-   * @param field - resource field to change
-   * @param getFile - whether file should be retrieved
-   */
-  function handleExistingWorksheetChange(
-    e: ChangeEvent<HTMLInputElement>,
-    worksheetId: number,
-    field: "worksheetFile" | "solutionFile" | "name",
-    getFile?: boolean
-  ): void {
-    // make sure the field is expected
-    console.assert(
-      field === "worksheetFile" || field === "solutionFile" || field === "name",
-      `handleExistingWorksheetChange() field must be "worksheetFile" or "solutionFile" or "name"; got ${field}`
-    );
-    // retrieve worksheet FormData object
-    retrieveAndExecuteWorksheet(worksheetId, worksheet => {
-      // update field in worksheet FormData
-      if (getFile) {
-        console.assert(
-          field === "worksheetFile" || field === "solutionFile",
-          `handleExistingWorksheetChange() field must be "worksheetFile" or "solutionFile" if getFile is set; got ${field}`
-        );
-        const filefield = field as "worksheetFile" | "solutionFile"; // type coersion to avoid type error
-        worksheet[filefield] = e.target.files![0]; // e.target.files should not be null
-      } else {
-        worksheet[field] = e.target.value;
-      }
-      // remove marker for deletion upon upload
-      if (worksheet.deleted && worksheet.deleted.includes(field)) {
-        worksheet.deleted.splice(worksheet.deleted.indexOf(field), 1);
-      }
-    });
   }
 
   /**
@@ -401,13 +347,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     updatedFormErrors.existingWorksheets.delete(worksheetId);
     setFormErrors(updatedFormErrors);
 
-    retrieveAndExecuteWorksheet(worksheetId, worksheet => {
-      if (worksheet.deleted == undefined || !(worksheet.deleted instanceof Array)) {
-        worksheet.deleted = [];
-      }
-      if (!worksheet.deleted.includes("worksheet")) {
-        worksheet.deleted.push("worksheet");
-      }
+    worksheetDispatch({
+      type: ResourceWorksheetActionType.DeleteWorksheet,
+      worksheetId: worksheetId,
+      kind: ResourceWorksheetKind.EXISTING
     });
   }
 
@@ -425,61 +368,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     retrieveAndExecuteLink(linkId, link => {
       link.deleted = true;
     });
-  }
-
-  /**
-   * Marks a worksheet file for deletion.
-   *
-   * @param worksheetId worksheet id
-   * @param field field of file to delete
-   */
-  function handleExistingWorksheetDeleteFile(worksheetId: number, field: "worksheetFile" | "solutionFile"): void {
-    console.assert(
-      field === "worksheetFile" || field === "solutionFile",
-      `Expected "workheetFile" or "solutionFile"; got ${field}`
-    );
-    retrieveAndExecuteWorksheet(worksheetId, worksheet => {
-      if (worksheet.deleted == undefined || !(worksheet.deleted instanceof Array)) {
-        worksheet.deleted = [];
-      }
-      if (!worksheet.deleted.includes(field)) {
-        worksheet.deleted.push(field);
-      }
-    });
-  }
-
-  /**
-   * Handles updating newly created worksheets.
-   *
-   * @param e event object
-   * @param index new worksheet index in array
-   * @param field changed field in worksheet
-   * @param getFile whether the user uploaded a new file
-   */
-  function handleNewWorksheetChange(
-    e: ChangeEvent<HTMLInputElement>,
-    index: number,
-    field: "worksheetFile" | "solutionFile" | "name",
-    getFile?: boolean
-  ): void {
-    // make sure the field is expected
-    console.assert(
-      field === "worksheetFile" || field === "solutionFile" || field === "name",
-      `handleNewWorksheetChange() field must be "worksheetFile" or "solutionFile" or "name"; got ${field}`
-    );
-    const worksheet = newWorksheets[index];
-    if (getFile) {
-      console.assert(
-        field === "worksheetFile" || field === "solutionFile",
-        `handleNewWorksheetChange() field must be "worksheetFile" or "solutionFile" or "name"; got ${field}`
-      );
-      const fileField = field as "worksheetFile" | "solutionFile"; // type coersion to avoid type error
-      worksheet[fileField] = e.target.files![0]; // e.target.files should not be null
-    } else {
-      worksheet[field] = e.target.value;
-    }
-    // update state and render
-    setNewWorksheets([...newWorksheets]);
   }
 
   /**
@@ -501,9 +389,14 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
    * @param index index in newWorksheets
    */
   function handleNewWorksheetDelete(index: number): void {
-    const updated = [...newWorksheets];
-    updated.splice(index, 1);
-    setNewWorksheets([...updated]);
+    // const updated = [...newWorksheets];
+    // updated.splice(index, 1);
+    // setNewWorksheets([...updated]);
+    worksheetDispatch({
+      type: ResourceWorksheetActionType.DeleteWorksheet,
+      kind: ResourceWorksheetKind.NEW,
+      worksheetId: index
+    });
 
     // update touched and formErrors
     const updatedTouched = { ...touched };
@@ -558,31 +451,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   }
 
   /**
-   * Deletes a worksheet file from the array of new worksheets.
-   *
-   * @param index worksheet index to delete from
-   * @param field field of worksheet to delete
-   */
-  function handleNewWorksheetDeleteFile(index: number, field: "worksheetFile" | "solutionFile"): void {
-    console.assert(
-      field === "worksheetFile" || field === "solutionFile",
-      `Expected "workheetFile" or "solutionFile"; got ${field}`
-    );
-    // delete field of worksheet reference in map
-    const worksheet = newWorksheets[index];
-    worksheet[field] = "";
-    // update and render
-    setNewWorksheets([...newWorksheets]);
-  }
-
-  /**
-   * Add a new empty worksheet with null id to the local state.
-   */
-  function handleAddWorksheet(): void {
-    setNewWorksheets([...newWorksheets, emptyWorksheet()]);
-  }
-
-  /**
    * Add a new empty link with null id to the local state.
    */
   function handleAddLink(): void {
@@ -590,15 +458,15 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   }
 
   const existingWorksheetDisplay =
-    existingWorksheetMap &&
-    [...existingWorksheetMap.values()].map(worksheet =>
+    existingWorksheets &&
+    [...existingWorksheets.values()].map(worksheet =>
       worksheet.deleted && worksheet.deleted.includes("worksheet") ? undefined : (
         <ResourceWorksheetEdit
           key={worksheet.id}
           worksheet={worksheet}
-          onChange={handleExistingWorksheetChange}
+          worksheetKind={ResourceWorksheetKind.EXISTING}
+          worksheetDispatch={worksheetDispatch}
           onDelete={handleExistingWorksheetDelete}
-          onDeleteFile={handleExistingWorksheetDeleteFile}
           onBlur={() => handleBlurExistingWorksheet(worksheet.id)}
           formErrorsMap={formErrors.existingWorksheets}
         ></ResourceWorksheetEdit>
@@ -627,10 +495,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       <ResourceWorksheetEdit
         key={index}
         worksheet={worksheet}
-        onChange={handleNewWorksheetChange}
+        worksheetKind={ResourceWorksheetKind.NEW}
+        worksheetDispatch={worksheetDispatch}
         index={index}
         onDelete={handleNewWorksheetDelete}
-        onDeleteFile={handleNewWorksheetDeleteFile}
         onBlur={() => handleBlurNewWorksheet(index)}
         formErrorsMap={formErrors.newWorksheets}
       ></ResourceWorksheetEdit>
@@ -650,8 +518,6 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
       ></ResourceLinkEdit>
     ));
 
-  const hasWorksheets =
-    existingWorksheetMap && newWorksheets && (existingWorksheetDisplay.length > 0 || newWorksheetDisplay.length > 0);
   const hasLinks = existingLinkMap && newLinks && (existingLinkDisplay.length > 0 || newLinkDisplay.length > 0);
 
   const tabErrorDisplay = (
@@ -746,17 +612,13 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
           <div className="resource-edit-content">
             {!isEditingLinks && (
               <div className="resource-worksheet-container">
-                {hasWorksheets && (
-                  <div className="resource-worksheet-head">
-                    <div className="resource-worksheet-head-item">Name</div>
-                    <div className="resource-worksheet-head-item">Worksheet File</div>
-                    <div className="resource-worksheet-head-item">Solution File</div>
-                  </div>
-                )}
                 {existingWorksheetDisplay}
                 {newWorksheetDisplay}
                 <div className="resource-worksheet-actions-container">
-                  <button onClick={handleAddWorksheet} className="secondary-btn">
+                  <button
+                    onClick={() => worksheetDispatch({ type: ResourceWorksheetActionType.AddWorksheet })}
+                    className="secondary-btn"
+                  >
                     <PlusIcon className="icon" />
                     Add Worksheet
                   </button>

@@ -83,3 +83,7 @@ disable = "design,similarities,C0114,C0115"
 
 [tool.pylint.PYLINT_DJANGO]
 django-settings-module = "csm_web.settings"
+
+[tool.pylint.REFACTORING]
+# increase the maximum number of nested blocks
+max-nested-blocks = 8

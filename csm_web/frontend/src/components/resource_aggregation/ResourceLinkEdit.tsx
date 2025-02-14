@@ -11,7 +11,7 @@ interface ResourceLinkEditProps {
   onBlur: () => void;
   onDelete: (id: number) => void;
   formErrorsMap: Map<number, string>;
-  index: number;
+  index?: number;
 }
 
 const ResourceLinkEdit = ({
@@ -20,7 +20,7 @@ const ResourceLinkEdit = ({
   onBlur,
   onDelete,
   formErrorsMap,
-  index
+  index = undefined
 }: ResourceLinkEditProps): React.ReactElement => {
   const currentId = index == undefined ? link.id : index;
   return (
@@ -53,10 +53,6 @@ const ResourceLinkEdit = ({
       </div>
     </React.Fragment>
   );
-};
-
-ResourceLinkEdit.defaultProps = {
-  index: undefined
 };
 
 export default ResourceLinkEdit;

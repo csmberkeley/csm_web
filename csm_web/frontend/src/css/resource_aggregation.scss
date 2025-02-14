@@ -2,6 +2,7 @@
 
 $modal-width: 80vw;
 $modal-height: 75vh;
+$worksheet-edit-border-radius: 8px;
 
 .resource-wrapper-container {
   max-width: 1064px;
@@ -91,9 +92,8 @@ $modal-height: 75vh;
   display: grid;
   grid-auto-columns: 2fr 1.5fr;
   row-gap: 10px;
-  align-content: center;
+  place-content: center center;
   align-items: center;
-  justify-content: center;
 }
 
 .resource-solution a,
@@ -184,8 +184,9 @@ $modal-height: 75vh;
 }
 
 .resource-worksheet-container {
-  display: grid;
-  gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
   width: 70%;
   margin: 20px auto;
 }
@@ -215,9 +216,20 @@ $modal-height: 75vh;
 }
 
 .resource-worksheet {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr) 20px;
+  display: flex;
+  flex-direction: row;
   column-gap: 10px;
+  align-items: center;
+  justify-content: center;
+}
+
+.resource-worksheet-edit {
+  display: flex;
+  gap: 10px;
+  align-content: flex-start;
+  align-items: stretch;
+  border: 2px $csm-neutral solid;
+  border-radius: $worksheet-edit-border-radius;
 }
 
 .resource-link,
@@ -227,7 +239,7 @@ $modal-height: 75vh;
 }
 
 .resource-link-edit {
-  grid-template-columns: 1fr 1fr 20px;
+  grid-template-columns: 20px 1fr 1fr;
 }
 
 .resource-links-container {
@@ -236,79 +248,125 @@ $modal-height: 75vh;
   align-content: center;
 }
 
+.resource-worksheet-edit-file-container {
+  display: flex;
+  flex: 2;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px 0;
+}
+
 .resource-worksheet-edit-file {
   display: flex;
+  gap: 10px;
   margin: auto 0;
+
+  .resource-worksheet-edit-file-upload,
+  .resource-worksheet-edit-file-schedule {
+    flex: 1;
+  }
+
+  .resource-worksheet-edit-file-schedule {
+    display: flex;
+    flex-direction: row;
+    gap: 4px;
+    align-items: flex-start;
+
+    .file-schedule-toggle {
+      height: 100%;
+    }
+
+    .disabled {
+      color: $csm-neutral;
+    }
+  }
 }
 
 .resource-worksheet-edit-item {
-  margin: auto;
-}
-
-.file-upload input[type="file"] {
-  display: none;
+  flex: 1;
+  padding: 10px 0;
 }
 
 .file-upload {
+  box-sizing: border-box;
   display: flex;
-  flex: 100%;
+  flex: 1;
   flex-direction: row;
-  padding: 8px 12px;
+
+  width: 100%;
+
   font-size: 90%;
+  font-weight: normal; // override label font
+
   cursor: pointer;
   background-color: white;
   border: 2px solid #ccc;
-  border-right-width: 1px;
 
-  /* take up as much space as possible */
+  .file-upload-text {
+    flex: 1;
+    padding: 8px 12px;
+
+    &:hover {
+      color: $csm-green-darkened;
+      border-color: $csm-neutral-darkened;
+    }
+  }
+
+  input[type="file"] {
+    display: none;
+  }
+
+  .file-upload-filename {
+    flex: 100%;
+    width: 100px;
+    overflow-x: hidden;
+    text-align: left;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  button.clear-file {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 10px;
+    background-color: #f8f8f8;
+    border: none;
+    border-left: 2px solid #ccc;
+
+    &:hover {
+      color: red;
+      background-color: #eee;
+    }
+  }
 }
 
-.file-upload .file-upload-label {
-  flex: 100%;
-  width: 100px;
-  overflow-x: hidden;
-  text-align: left;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
+.file-schedule {
+  display: flex;
+  flex-direction: row;
+  width: 100%;
 
-.file-upload:hover {
-  color: $csm-green-darkened;
-  border-color: $csm-neutral-darkened;
-}
-
-.file-upload:only-child {
-  border-right-width: 2px;
-}
-
-button.clear-file {
-  display: inline-block;
-  padding: 0 10px;
-  background-color: #f8f8f8;
-  border: none;
-  border: 2px solid #ccc;
-  border-left: none;
-}
-
-button.clear-file:hover {
-  color: red;
-  background-color: #eee;
+  .file-schedule-input {
+    flex: 1;
+  }
 }
 
 .delete-worksheet {
+  width: 20px;
   padding: 0;
   font-size: 18px;
   color: $csm-neutral-darkened;
-  background-color: transparent;
+  background-color: #eee;
   border: none;
-}
+  border-radius: $worksheet-edit-border-radius 0 0 $worksheet-edit-border-radius;
 
-.delete-worksheet:hover {
-  color: red;
+  &:hover {
+    color: red;
+    background-color: #ddd;
+  }
 }
 
 .upload-icon {
-  width: 1em;
   margin-right: 5px !important;
 }
 
