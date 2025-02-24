@@ -125,17 +125,28 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
       if (selectedOccurrence === null) {
         // only update selected occurrence if it has not been set before
 
-        // compute the start of the current day; the DB works in the timezone specified by DEFAULT_TIMEZONE,
-        // so we must convert to the DB timezone before setting the start of the day.
+        // compute the end of the current day; the DB works in the timezone specified by DEFAULT_TIMEZONE,
+        // so we must convert to the DB timezone before setting the end of the day.
         // there's no need to convert back here, since we only use this DateTime for comparison
-        const curDayStart = DateTime.now().setZone(DEFAULT_TIMEZONE).startOf("day");
+        const curDayEnd = DateTime.now().setZone(DEFAULT_TIMEZONE).endOf("day");
 
-        // filter for future occurrences
-        const futureOccurrences = newSortedOccurrences.filter(
-          occurrence => DateTime.fromISO(occurrence.date, { zone: DEFAULT_TIMEZONE }) >= curDayStart
+        // filter for past and future occurrences
+        const pastOccurrences = newSortedOccurrences.filter(
+          occurrence => DateTime.fromISO(occurrence.date, { zone: DEFAULT_TIMEZONE }) <= curDayEnd
         );
-        // set to the most recent future occurrence
-        setSelectedOcurrence(futureOccurrences[futureOccurrences.length - 1]);
+        const futureOccurrences = newSortedOccurrences.filter(
+          occurrence => DateTime.fromISO(occurrence.date, { zone: DEFAULT_TIMEZONE }) > curDayEnd
+        );
+        if (pastOccurrences.length > 0) {
+          // set to the most recent past occurrence
+          setSelectedOcurrence(pastOccurrences[0]);
+        } else if (futureOccurrences.length > 0) {
+          // no past occurrences, so set to the most recent future occurrence
+          setSelectedOcurrence(futureOccurrences[futureOccurrences.length - 1]);
+        } else {
+          // no occurrences; set to null
+          setSelectedOcurrence(null);
+        }
         newAttendances = newOccurrenceMap.get(newSortedOccurrences[0]?.id)?.attendances;
       } else {
         // otherwise use existing selectedOccurrence
@@ -306,7 +317,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                     <div
                       key={id}
                       id={`date-tab-${id}`}
-                      className={id === selectedOccurrence!.id ? "active" : ""}
+                      className={id === selectedOccurrence?.id ? "active" : ""}
                       onClick={() => handleSelectOccurrence({ id, date })}
                     >
                       {formatDateLocaleShort(date)}
