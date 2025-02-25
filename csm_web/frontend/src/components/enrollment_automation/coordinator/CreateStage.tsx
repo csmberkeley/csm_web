@@ -441,8 +441,12 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     return (
       <React.Fragment>
         <span className="calendar-event-detail-time">{formatInterval(event.time.interval)}</span>
-        {/* <br />
-        <span className="matcher-detail">Num. Mentors: {event.num_mentors}</span> */}
+        {event.description && (
+          <React.Fragment>
+            {" "}
+            <span className="calendar-event-detail-description">({event.description})</span>
+          </React.Fragment>
+        )}
       </React.Fragment>
     );
   };
