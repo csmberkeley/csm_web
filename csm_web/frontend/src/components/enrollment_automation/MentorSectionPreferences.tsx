@@ -67,7 +67,8 @@ export function MentorSectionPreferences({
         id: slot.id,
         // replace single quotes for JSON
         times: times,
-        preference: 0
+        preference: 0,
+        description: slot.description
       };
       newSlots.push(parsed_slot);
     }
@@ -156,6 +157,12 @@ export function MentorSectionPreferences({
     return (
       <React.Fragment>
         <span className="calendar-event-detail-time">{formatInterval(event.time.interval)}</span>
+        {event.description && (
+          <React.Fragment>
+            {" "}
+            <span className="calendar-event-detail-description">({event.description})</span>
+          </React.Fragment>
+        )}
         {detail}
       </React.Fragment>
     );
@@ -169,7 +176,7 @@ export function MentorSectionPreferences({
     const event = selectedEvents[0];
     sidebarContents = (
       <div className="matcher-sidebar-selected">
-        <div className="mathcer-sidebar-selected-top">
+        <div className="matcher-sidebar-selected-top">
           {selectedEvents.length === 1 ? (
             // exactly one selected event
             <React.Fragment>
@@ -188,6 +195,14 @@ export function MentorSectionPreferences({
             // multiple selected events
             <div className="matcher-sidebar-header">Multiple selected events</div>
           )}
+          <div className="matcher-sidebar-metadata-container">
+            {event.description !== "" && (
+              <>
+                <div className="matcher-sidebar-subheader">Description:</div>
+                <div className="matcher-description-text">{event.description}</div>
+              </>
+            )}
+          </div>
           <label className="matcher-pref-input-label">
             Preference:
             <input
