@@ -157,6 +157,12 @@ export function MentorSectionPreferences({
     return (
       <React.Fragment>
         <span className="calendar-event-detail-time">{formatInterval(event.time.interval)}</span>
+        {event.description && (
+          <React.Fragment>
+            {" "}
+            <span className="calendar-event-detail-description">({event.description})</span>
+          </React.Fragment>
+        )}
         {detail}
       </React.Fragment>
     );
