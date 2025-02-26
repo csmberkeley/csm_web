@@ -92,44 +92,58 @@
   user-select: none;
 
   border: 2px solid transparent;
-}
 
-.calendar-month-day:not(.transparent) {
-  background-color: $calendar-day-bg;
-}
+  &:not(.transparent) {
+    background-color: $calendar-day-bg;
+  }
 
-.calendar-month-day.with-occurrence {
-  background-color: $calendar-day-occurrence;
-}
+  &.with-occurrence {
+    background-color: $calendar-day-occurrence;
+  }
 
-.calendar-month-day.with-occurrence:hover {
-  cursor: pointer;
-  background-color: $calendar-day-occurrence-hover;
-}
+  &.with-occurrence:hover {
+    cursor: pointer;
+    background-color: $calendar-day-occurrence-hover;
+  }
 
-.calendar-month-day.selected {
-  background-color: $calendar-day-selected;
-}
+  &.selected {
+    background-color: $calendar-day-selected;
+  }
 
-.calendar-month-day.today {
-  border-color: $calendar-day-today;
-}
+  &.today {
+    border-color: $calendar-day-today;
+  }
 
-.calendar-month-day.past {
-  filter: brightness(0.95);
-}
+  &.past {
+    filter: brightness(0.95);
+  }
 
-.calendar-month-day-number {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-}
+  &:hover {
+    // on hover, increase the z-index so that any mouseover elements
+    // will be on top of other calendar components
+    z-index: 1;
+  }
 
-.calendar-month-day-text {
-  position: absolute;
-  right: 3px;
-  bottom: 3px;
+  // calendar day content
 
-  font-style: italic;
-  color: #555;
+  .calendar-month-day-number {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+  }
+
+  .calendar-month-day-text {
+    position: absolute;
+    right: 3px;
+    bottom: 3px;
+
+    font-style: italic;
+    color: #555;
+  }
+
+  .calendar-month-day-icon {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+  }
 }

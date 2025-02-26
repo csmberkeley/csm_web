@@ -85,7 +85,8 @@ export interface Student {
 export enum AttendancePresence {
   EX = "EX",
   PR = "PR",
-  UN = "UN"
+  UN = "UN",
+  EMPTY = ""
 }
 
 export interface Attendance {

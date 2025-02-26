@@ -14,6 +14,11 @@ interface CalendarMonthProps {
   // Mapping between occurrence dates and text to display for that occurrence.
   // Keys should match items in `occurrenceDates` exactly; some elements can be omitted.
   occurrenceTextMap: Map<string, string>;
+  // Mapping between occurrence dates and a react component (usually an icon) to display
+  // in the top-right corner of the container for that occurrence.
+  // Keys should match items in `occurrenceDates` exactly; some elements can be omitted.
+  occurrenceIconMap: Map<string, React.ReactNode>;
+  // currently selected occurrence in the calendar
   selectedOccurrence?: string;
   // click handler; the date in ISO format is passed in as an argument
   onClickDate: (day: string) => void;
@@ -22,6 +27,7 @@ interface CalendarMonthProps {
 export const CalendarMonth = ({
   occurrenceDates,
   occurrenceTextMap,
+  occurrenceIconMap,
   selectedOccurrence,
   onClickDate
 }: CalendarMonthProps) => {
@@ -98,7 +104,8 @@ export const CalendarMonth = ({
         day={date.day}
         isoDate={date.toISODate() ?? ""}
         hasOccurrence={occurrenceDates.includes(date.toISODate()!)}
-        text={occurrenceTextMap.get(date.toISODate())}
+        text={occurrenceTextMap.get(date.toISODate()!)}
+        icon={occurrenceIconMap.get(date.toISODate()!)}
         selected={date.toISODate() === selectedOccurrence}
         onClickDate={onClickDate}
       />
@@ -152,6 +159,8 @@ interface CalendarMonthDayProps {
   isoDate: string;
   // Text to be displayed in the calendar day
   text?: string;
+  // Icon to be displayed in the calendar day
+  icon?: React.ReactNode;
   hasOccurrence: boolean;
   selected: boolean;
   onClickDate?: (date: string) => void;
@@ -168,6 +177,7 @@ export const CalendarMonthDay = ({
   day,
   isoDate,
   text,
+  icon,
   hasOccurrence,
   selected,
   onClickDate
@@ -204,6 +214,7 @@ export const CalendarMonthDay = ({
       ) : (
         <>
           <span className="calendar-month-day-number">{day}</span>
+          <span className="calendar-month-day-icon">{icon}</span>
           <span className="calendar-month-day-text">{text}</span>
         </>
       )}

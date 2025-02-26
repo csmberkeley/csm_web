@@ -11,12 +11,14 @@ import {
 } from "../../utils/queries/sections";
 import { Attendance, AttendancePresence } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
+import { Tooltip } from "../Tooltip";
 import { ATTENDANCE_LABELS } from "./Section";
 import { CalendarMonth } from "./month_calendar/MonthCalendar";
 import { dateSortISO, formatDateLocaleShort } from "./utils";
 
 import CalendarIcon from "../../../static/frontend/img/calendar.svg";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
+import WarningIcon from "../../../static/frontend/img/triangle-exclamation-solid.svg";
 
 import scssColors from "../../css/base/colors-export.module.scss";
 import "../../css/word-of-the-day.scss";
@@ -58,6 +60,11 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
   const [selectedOccurrence, setSelectedOcurrence] = useState<SectionOccurrence | null>(null);
 
   /**
+   * Attendances as reflected in the last request from the database.
+   * Used to compare against `stagedAttendances`.
+   */
+  const [savedAttendances, setSavedAttendances] = useState<Attendance[]>([]);
+  /**
    * Staged attendances for the current date
    */
   const [stagedAttendances, setStagedAttendances] = useState<Attendance[]>([]);
@@ -85,14 +92,22 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
 
   const [calendarVisible, setCalendarVisible] = useState<boolean>(true);
   const [calendarTextMap, setCalendarTextMap] = useState<Map<string, string>>(new Map());
+  const [calendarIconMap, setCalendarIconMap] = useState<Map<string, React.ReactNode>>(new Map());
 
   /**
    * Update state based on new fetched attendances
    */
   useEffect(() => {
     if (jsonAttendancesLoaded) {
+      // the DB works in the timezone specified by DEFAULT_TIMEZONE,
+      // so we must convert to the DB timezone before comparing to the current time.
+      // there's no need to convert back to the local timezone here, since we only use this DateTime for comparison
+      const now = DateTime.now().setZone(DEFAULT_TIMEZONE);
+
       const newOccurrenceMap = new Map<number, { date: string; attendances: Attendance[] }>();
       const newCalendarTextMap = new Map<string, string>();
+      const newCalendarIconMap = new Map<string, React.ReactNode>();
+
       for (const occurrence of jsonAttendances) {
         const attendances: Attendance[] = occurrence.attendances
           .map(({ id, presence, date, studentId, studentName, studentEmail, wordOfTheDayDeadline }) => ({
@@ -107,8 +122,24 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
         newOccurrenceMap.set(occurrence.id, { date: occurrence.date, attendances });
 
         const numAttendances = attendances.length;
-        const numPresent = attendances.filter(att => att.presence == AttendancePresence.PR).length;
+        const numPresent = attendances.filter(att => att.presence === AttendancePresence.PR).length;
+        const numEmpty = attendances.filter(att => att.presence === AttendancePresence.EMPTY).length;
         newCalendarTextMap.set(occurrence.date, `${numPresent}/${numAttendances}`);
+
+        const occurrenceDatetime = DateTime.fromISO(occurrence.date, { zone: DEFAULT_TIMEZONE });
+        if (occurrenceDatetime < now.startOf("day") && numEmpty > 0) {
+          // date is (strictly) in the past, and there are some unspecified attendances
+          newCalendarIconMap.set(
+            occurrence.date,
+            <Tooltip
+              bodyClassName="calendar-warning-icon-tooltip"
+              source={<WarningIcon className="icon calendar-warning-icon" />}
+              placement="top"
+            >
+              Attendance(s) missing!
+            </Tooltip>
+          );
+        }
       }
 
       const newSortedOccurrences = Array.from(newOccurrenceMap.entries())
@@ -120,15 +151,13 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
       setOccurrenceMap(newOccurrenceMap);
       setCalendarTextMap(newCalendarTextMap);
       setSortedOccurrences(newSortedOccurrences);
+      setCalendarIconMap(newCalendarIconMap);
 
       let newAttendances = null;
       if (selectedOccurrence === null) {
         // only update selected occurrence if it has not been set before
 
-        // compute the end of the current day; the DB works in the timezone specified by DEFAULT_TIMEZONE,
-        // so we must convert to the DB timezone before setting the end of the day.
-        // there's no need to convert back here, since we only use this DateTime for comparison
-        const curDayEnd = DateTime.now().setZone(DEFAULT_TIMEZONE).endOf("day");
+        const curDayEnd = now.endOf("day");
 
         // filter for past and future occurrences
         const pastOccurrences = newSortedOccurrences.filter(
@@ -137,23 +166,26 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
         const futureOccurrences = newSortedOccurrences.filter(
           occurrence => DateTime.fromISO(occurrence.date, { zone: DEFAULT_TIMEZONE }) > curDayEnd
         );
+        let newSelectedOccurrence = null;
         if (pastOccurrences.length > 0) {
           // set to the most recent past occurrence
-          setSelectedOcurrence(pastOccurrences[0]);
+          newSelectedOccurrence = pastOccurrences[0];
         } else if (futureOccurrences.length > 0) {
           // no past occurrences, so set to the most recent future occurrence
-          setSelectedOcurrence(futureOccurrences[futureOccurrences.length - 1]);
-        } else {
-          // no occurrences; set to null
-          setSelectedOcurrence(null);
+          newSelectedOccurrence = futureOccurrences[futureOccurrences.length - 1];
         }
-        newAttendances = newOccurrenceMap.get(newSortedOccurrences[0]?.id)?.attendances;
+        setSelectedOcurrence(newSelectedOccurrence);
+        if (newSelectedOccurrence !== null) {
+          // if we chose a new selected occurrence, update the staged attendances as well
+          newAttendances = newOccurrenceMap.get(newSelectedOccurrence?.id)?.attendances;
+        }
       } else {
         // otherwise use existing selectedOccurrence
         newAttendances = newOccurrenceMap.get(selectedOccurrence.id)!.attendances;
       }
       if (newAttendances) {
         setStagedAttendances(newAttendances);
+        setSavedAttendances(newAttendances);
       }
     }
   }, [jsonAttendances]);
@@ -195,6 +227,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
   function handleSelectOccurrence(occurrence: SectionOccurrence) {
     setSelectedOcurrence(occurrence);
     setStagedAttendances(occurrenceMap!.get(occurrence.id)!.attendances);
+    setSavedAttendances(occurrenceMap!.get(occurrence.id)!.attendances);
     setResponseText(null);
   }
 
@@ -297,6 +330,15 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
     setWordOfTheDay(randomWords(1)[0]);
   }
 
+  // determine whether attendances have changed from what is saved
+  const attendancesHaveChanged = stagedAttendances.reduce(
+    (hasChanged, attendance, index) =>
+      // either has changed already, or lengths don't match (shouldn't happen), or presences have changed
+      hasChanged || index >= savedAttendances.length || attendance.presence !== savedAttendances[index].presence,
+    // initial value is false
+    false
+  );
+
   return (
     <React.Fragment>
       <h3 className="section-detail-page-title">Attendance</h3>
@@ -345,7 +387,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                                 onChange={handleAttendanceChange}
                               >
                                 {Object.entries(ATTENDANCE_LABELS).map(([value, [label]]) => (
-                                  <option key={value} value={value} disabled={!value}>
+                                  <option key={value} value={value}>
                                     {label}
                                   </option>
                                 ))}
@@ -362,7 +404,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                   <button className="primary-link-btn" onClick={handleMarkAllPresent}>
                     Mark All As Present
                   </button>
-                  <button className="primary-btn" onClick={handleSaveAttendance}>
+                  <button className="primary-btn" onClick={handleSaveAttendance} disabled={!attendancesHaveChanged}>
                     Save
                   </button>
                 </div>
@@ -428,6 +470,7 @@ const MentorSectionAttendance = ({ sectionId }: MentorSectionAttendanceProps): R
                 <CalendarMonth
                   occurrenceDates={sortedOccurrences.map(occurrence => occurrence.date)}
                   occurrenceTextMap={calendarTextMap}
+                  occurrenceIconMap={calendarIconMap}
                   selectedOccurrence={selectedOccurrence?.date}
                   onClickDate={date => {
                     // find the section occurrence with the given date

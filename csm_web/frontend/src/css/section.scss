@@ -444,7 +444,6 @@ $attendance-tab-radius: 10px;
 
 #attendance-date-tabs-container > div.active {
   background-color: white;
-  border-bottom-color: white;
 }
 
 #mentor-attendance-table {
@@ -471,4 +470,13 @@ $attendance-tab-radius: 10px;
   color: white;
   text-align: center;
   border-radius: 6px;
+}
+
+/// attendance calendar content
+.calendar-warning-icon {
+  color: $csm-danger;
+}
+
+.calendar-warning-icon-tooltip {
+  z-index: 5;
 }
