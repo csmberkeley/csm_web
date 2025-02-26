@@ -25,7 +25,7 @@ describe("word of the day", () => {
     cy.visit("/sections/1/attendance");
     cy.wait("@get-mentor-attendances");
 
-    // create new word of the day
+    // create new word of the day: this is for the first date in the past
     cy.get("#word-of-the-day-container").within(() => {
       cy.contains(".word-of-the-day-title", /word of the day/i).should("be.visible");
       cy.contains(".word-of-the-day-status", /unselected/i).should("be.visible");
@@ -78,13 +78,13 @@ describe("word of the day", () => {
     cy.get("#attendance-table tbody tr").each(($row, idx) => {
       if (idx === 0) {
         // future
+        cy.wrap($row).find(".attendance-status").invoke("text").should("be.empty");
+      } else if (idx === 1) {
+        // past
         cy.wrap($row)
           .find(".attendance-status")
           .invoke("text")
           .should("match", /present/i);
-      } else if (idx === 1) {
-        // past
-        cy.wrap($row).find(".attendance-status").invoke("text").should("be.empty");
       }
     });
 
