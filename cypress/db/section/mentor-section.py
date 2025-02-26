@@ -94,16 +94,16 @@ def setup_mentor_section():
     SectionOccurrence.objects.filter(section=section).delete()
 
     # replace with fixed section occurrences and attendances
-    so_now = SectionOccurrence.objects.create(section=section, date=NOW.date())
-    so_tomorrow = SectionOccurrence.objects.create(
-        section=section, date=now_plus(1).date()
+    so_yesterday = SectionOccurrence.objects.create(
+        section=section, date=now_minus(1).date()
     )
+    so_now = SectionOccurrence.objects.create(section=section, date=NOW.date())
 
     # create attendances for each student
     for student in students:
-        # everybody present for today
+        # everybody present for yesterday
         Attendance.objects.create(
-            presence="PR", student=student, sectionOccurrence=so_now
+            presence="PR", student=student, sectionOccurrence=so_yesterday
         )
-        # blank for tomorrow
-        Attendance.objects.create(student=student, sectionOccurrence=so_tomorrow)
+        # blank for today
+        Attendance.objects.create(student=student, sectionOccurrence=so_now)
