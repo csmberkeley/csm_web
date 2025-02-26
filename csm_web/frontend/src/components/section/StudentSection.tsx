@@ -8,7 +8,7 @@ import {
   useStudentAttendances,
   useStudentSubmitWordOfTheDayMutation
 } from "../../utils/queries/sections";
-import { Mentor, Override, Role, Spacetime } from "../../utils/types";
+import { AttendancePresence, Mentor, Override, Role, Spacetime } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 import { ATTENDANCE_LABELS, InfoCard, SectionDetail, SectionSpacetime } from "./Section";
@@ -184,12 +184,32 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
 
   useEffect(() => {
     if (attendancesLoaded) {
-      const firstAttendance = [...attendances]
-        // only allow choosing from dates with blank attendances
-        .filter(attendance => attendance.presence === "")
-        // sort and get the first attendance
-        .sort((a, b) => dateSortISO(a.date, b.date))[0];
-      setSelectedAttendanceId(firstAttendance?.id ?? -1);
+      const now = DateTime.now().setZone(DEFAULT_TIMEZONE);
+      const sortedAttendances = attendances
+        // only consider dates that have no attendance yet
+        .filter(attendance => attendance.presence === AttendancePresence.EMPTY)
+        .sort((a, b) => dateSortISO(a.date, b.date));
+
+      const pastAttendances = sortedAttendances.filter(
+        attendance => DateTime.fromISO(attendance.date, { zone: DEFAULT_TIMEZONE }) <= now.endOf("day")
+      );
+      const futureAttendances = sortedAttendances.filter(
+        attendance => DateTime.fromISO(attendance.date, { zone: DEFAULT_TIMEZONE }) > now.endOf("day")
+      );
+
+      const mostRecentPastAttendanceId = pastAttendances[0]?.id ?? null;
+      const mostRecentFutureAttendanceId = futureAttendances[futureAttendances.length - 1]?.id ?? null;
+
+      if (mostRecentPastAttendanceId !== null) {
+        // reassign to the most recent attendance in the past
+        setSelectedAttendanceId(mostRecentPastAttendanceId);
+      } else if (mostRecentFutureAttendanceId !== null) {
+        // if no empty attendances in the past, reassign to the most recent attendance in the future
+        setSelectedAttendanceId(mostRecentFutureAttendanceId);
+      } else {
+        // worst-case, we assigng to -1 to indicate that there is no possible attendance left to choose from
+        setSelectedAttendanceId(-1);
+      }
     }
   }, [attendancesLoaded]);
 
@@ -258,7 +278,7 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
         <div className="word-of-the-day-action-container">
           <div className="word-of-the-day-input-container">
             <select
-              value={selectedAttendanceId}
+              value={selectedAttendanceId === -1 ? undefined : selectedAttendanceId.toString()}
               className="form-select"
               name="word-of-the-day-date"
               onChange={handleSelectedAttendanceIdChange}
@@ -274,6 +294,10 @@ function StudentSectionAttendance({ associatedProfileId, id }: StudentSectionAtt
                     {formatDateLocaleShort(occurrence.date)}
                   </option>
                 ))}
+              {selectedAttendanceId === -1 && (
+                // if no current attendance, add an empty option to make this visible in the UI
+                <option value="" disabled></option>
+              )}
             </select>
             <input
               className="form-input"
