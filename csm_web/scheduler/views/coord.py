@@ -1,9 +1,8 @@
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-from scheduler.views.utils import get_object_or_error
 from scheduler.serializers import CoordMentorSerializer, CoordStudentSerializer
-from django.core.exceptions import ObjectDoesNotExist
+from scheduler.views.utils import get_object_or_error
 
 from ..models import Course, Mentor, Section, Student
 
@@ -18,7 +17,9 @@ def view_students(request, pk=None):
     """
 
     is_coord = bool(
-        get_object_or_error(Course.objects, pk=pk).coordinator_set.filter(user=request.user).count()
+        get_object_or_error(Course.objects, pk=pk)
+        .coordinator_set.filter(user=request.user)
+        .count()
     )
     if not is_coord:
         raise PermissionDenied(
@@ -42,7 +43,9 @@ def view_mentors(request, pk=None):
     """
 
     is_coord = bool(
-        get_object_or_error(Course.objects, pk=pk).coordinator_set.filter(user=request.user).count()
+        get_object_or_error(Course.objects, pk=pk)
+        .coordinator_set.filter(user=request.user)
+        .count()
     )
     if not is_coord:
         raise PermissionDenied(
@@ -51,6 +54,7 @@ def view_mentors(request, pk=None):
 
     mentors = Mentor.objects.filter(course=pk).order_by("user__first_name")
     return Response(CoordMentorSerializer(mentors, many=True).data)
+
 
 @api_view(["DELETE"])
 def delete_section(request, pk):
@@ -62,13 +66,13 @@ def delete_section(request, pk):
     """
     section = get_object_or_error(Section.objects, pk=pk)
     is_coord = bool(
-        get_object_or_error(Course.objects, pk=section.mentor.course.id).coordinator_set.filter(user=request.user).count()
+        section.mentor.course.coordinator_set.filter(user=request.user).count()
     )
     if not is_coord:
         raise PermissionDenied(
             "You do not have permission to view the coordinator view."
         )
-    
+
     # Delete the section itself, will cascade and delete everything else
     section.delete()
     return Response(status=204)
