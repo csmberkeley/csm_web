@@ -23,5 +23,7 @@ urlpatterns += [
     path("matcher/<int:pk>/mentors/", views.matcher.mentors),
     path("matcher/<int:pk>/configure/", views.matcher.configure),
     path("matcher/<int:pk>/create/", views.matcher.create),
+    path("coord/<int:pk>/student/", views.coord.view_students),
+    path("coord/<int:pk>/create/", views.coord.view_mentors),
     path("export/", views.export_data),
 ]

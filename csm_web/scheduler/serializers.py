@@ -219,7 +219,7 @@ class AttendanceSerializer(serializers.ModelSerializer):
         if limit is None:
             return None
         return obj.sectionOccurrence.date + limit
-
+    
     class Meta:
         model = Attendance
         fields = (
@@ -247,6 +247,20 @@ class StudentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Student
         fields = ("id", "name", "email", "attendances", "section")
+
+class CoordStudentSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email")
+    
+    num_unexcused = serializers.SerializerMethodField()
+
+    def get_num_unexcused(self, obj):
+        # Get the `attendance_set` related to the object and filter based on status
+        attendances = obj.attendance_set.all()
+        return sum(1 for attendance in attendances if attendance.presence == "PR")
+
+    class Meta:
+        model = Student
+        fields = ("id", "name", "email", "num_unexcused", "section")
 
 
 class SectionSerializer(serializers.ModelSerializer):
