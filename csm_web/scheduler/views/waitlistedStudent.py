@@ -1,8 +1,10 @@
+from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from scheduler.serializers import WaitlistedStudentSerializer
+from scheduler.views.utils import get_object_or_error
 
 from ..models import Section, WaitlistedStudent
 from .section import add_student
@@ -13,14 +15,16 @@ from .utils import logger
 def view(request, pk=None):
     """
     Endpoint: /api/waitlist/<pk>
+    pk = section id
 
     GET: View all students on the waitlist for a section
     """
-    section = Section.objects.get(pk=pk)
+    section = get_object_or_error(Section.objects, pk=pk)
     is_mentor = request.user == section.mentor.user
     is_coord = bool(
         section.mentor.course.coordinator_set.filter(user=request.user).count()
     )
+
     if not is_mentor and not is_coord:
         raise PermissionDenied("You do not have permission to view this waitlist")
 
@@ -32,6 +36,7 @@ def view(request, pk=None):
 def add(request, pk=None):
     """
     Endpoint: /api/waitlist/<pk>/add
+    pk= section id
 
     POST: Add a new waitlist student to section. Pass in section id. Called by user
     - if user cannot enroll in section, deny permission
@@ -39,7 +44,7 @@ def add(request, pk=None):
     - if waitlist is full, deny permission
     - if section is not full, enroll instead.
     """
-    section = Section.objects.get(pk=pk)
+    section = get_object_or_error(Section.objects, pk=pk)
     course = section.mentor.course
     user = request.user
 
@@ -101,16 +106,19 @@ def add(request, pk=None):
 def drop(request, pk=None):
     """
     Endpoint: /api/waitlistedstudent/<pk>/drop
+    pk= section id
 
     PATCH: Drop a student off the waitlist. Pass in section ID
     - sets to inactive
 
     """
     user = request.user
-    section = Section.objects.get(pk=pk)
+    section = get_object_or_error(Section.objects, pk=pk)
     waitlisted_student = WaitlistedStudent.objects.filter(
         user=user, section=section
     ).first()
+    if waitlisted_student is None:
+        raise ObjectDoesNotExist("You are not on the waitlist for this section")
     course = waitlisted_student.course
 
     # Check that the user has permissions to drop this student
