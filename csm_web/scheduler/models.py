@@ -310,6 +310,8 @@ class Mentor(Profile):
     have a new Mentor profile.
     """
 
+    family = models.CharField(max_length=100, blank=True)
+
 
 class Coordinator(Profile):
     """
