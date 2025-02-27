@@ -277,23 +277,13 @@ class CoordStudentSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source="user.email")
     mentor_name = serializers.CharField(source="section.mentor.name")
     num_unexcused = serializers.SerializerMethodField()
-    day_time = serializers.SerializerMethodField()
+    day_time = serializers.CharField(source="section.day_time")
 
     def get_num_unexcused(self, obj):
         """
         Count the number of unexcused absences for the student
         """
-        attendances = obj.attendance_set.all()
-        return sum(1 for attendance in attendances if attendance.presence == "PR")
-
-    def get_day_time(self, obj):
-        """
-        Get the section time
-        """
-        section_time = obj.section.spacetimes.first()
-        if section_time:
-            return f"{section_time.day_of_week[:3]} {section_time.start_time.strftime('%I:%M%p')}"
-        return None
+        return obj.attendance_set.filter(presence="PR").count()
 
     class Meta:
         model = Student
@@ -315,7 +305,7 @@ class CoordMentorSerializer(serializers.ModelSerializer):
 
     email = serializers.EmailField(source="user.email")
     num_students = serializers.SerializerMethodField()
-    day_time = serializers.SerializerMethodField()
+    day_time = serializers.CharField(source="section.day_time")
 
     def get_num_students(self, obj):
         """
@@ -323,15 +313,6 @@ class CoordMentorSerializer(serializers.ModelSerializer):
         """
         students = obj.section.students.all()
         return students.count()
-
-    def get_day_time(self, obj):
-        """
-        Get the section time
-        """
-        section_time = obj.section.spacetimes.first()
-        if section_time:
-            return f"{section_time.day_of_week[:3]} {section_time.start_time.strftime('%I:%M%p')}"
-        return None
 
     class Meta:
         model = Mentor

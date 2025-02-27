@@ -345,6 +345,13 @@ class Section(ValidatingModel):
         ),
     )
 
+    @property
+    def day_time(self):
+        day_time = self.spacetimes.first()
+        if day_time:
+            return f"{day_time.day_of_week[:3]} {day_time.start_time.strftime('%I:%M%p')}"
+        return None
+
     # @functional.cached_property
     # def course(self):
     #     return self.mentor.course
