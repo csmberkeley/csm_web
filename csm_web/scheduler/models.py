@@ -310,6 +310,8 @@ class Mentor(Profile):
     have a new Mentor profile.
     """
 
+    family = models.CharField(max_length=100, blank=True)
+
 
 class Coordinator(Profile):
     """
@@ -342,6 +344,13 @@ class Section(ValidatingModel):
             ' or "early start".'
         ),
     )
+
+    @property
+    def day_time(self):
+        day_time = self.spacetimes.first()
+        if day_time:
+            return f"{day_time.day_of_week[:3]} {day_time.start_time.strftime('%I:%M%p')}"
+        return None
 
     # @functional.cached_property
     # def course(self):
