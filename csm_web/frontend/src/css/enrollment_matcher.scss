@@ -204,6 +204,11 @@
   text-align: center;
 }
 
+.matcher-confirm-modal-content {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
 .matcher-confirm-modal-list {
   column-count: 2;
 }
