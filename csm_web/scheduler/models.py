@@ -108,6 +108,9 @@ class OneToOneOrNoneField(models.OneToOneField):
     A OneToOneField that returns None if the related object does not exist
     """
 
+    # pylint warns about an abstract method that is not implemented; this is a false warning here.
+    # pylint: disable=abstract-method
+
     related_accessor_class = ReverseOneToOneOrNoneDescriptor
 
 
