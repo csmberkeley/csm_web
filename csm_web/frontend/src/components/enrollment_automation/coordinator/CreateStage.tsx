@@ -67,6 +67,8 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     length: Duration.fromObject({ hours: 1 })
   });
 
+  const [curSlotDescription, setCurSlotDescription] = useState<string>("");
+
   /**
    * Whether or not anything has been edited
    */
@@ -275,6 +277,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     } else {
       setCurCreatedTimes([]);
     }
+    setCurSlotDescription("");
     setCreatingTiledEvents(checked);
   };
 
@@ -325,7 +328,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     const newSlots = [];
     for (let t = tileDetails.start; t <= tileDetails.end.minus(tileDetails.length); t = t.plus(tileDetails.length)) {
       if (tileDetails.daysLinked) {
-        const newEvent: CalendarEvent = { times: [] };
+        const newEvent: CalendarEvent = { times: [], description: curSlotDescription };
         for (const day of tileDetails.days) {
           newEvent.times.push({
             day: day,
@@ -337,7 +340,14 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
       } else {
         for (const day of tileDetails.days) {
           newSlots.push({
-            times: [{ day: day, interval: Interval.fromDateTimes(t, t.plus(tileDetails.length)), isLinked: false }]
+            times: [
+              {
+                day: day,
+                interval: Interval.fromDateTimes(t, t.plus(tileDetails.length)),
+                isLinked: false
+              }
+            ],
+            description: curSlotDescription
           });
         }
       }
@@ -352,8 +362,9 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
    * Save the newly created event and times
    */
   const saveEvent = () => {
-    const newEvent = { times: curCreatedTimes };
+    const newEvent = { times: curCreatedTimes, description: curSlotDescription };
     setSlots([...slots, newEvent]);
+    setCurSlotDescription("");
     setCurCreatedTimes([]);
     setSavedExistingEvent(null);
     setSelectedEvents([]);
@@ -379,6 +390,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     setCurCreatedTimes([]);
     setSelectedEvents([]);
     setSelectedEventIndices([]);
+    setCurSlotDescription("");
   };
 
   /**
@@ -389,6 +401,7 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
       const event = selectedEvents[0];
       // copy event
       setCurCreatedTimes(_.cloneDeep(event.times));
+      setCurSlotDescription(event.description);
       setSavedExistingEvent(_.cloneDeep(event)); // duplicate event
       // delete event
       deleteSelectedEvent();
@@ -428,8 +441,12 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
     return (
       <React.Fragment>
         <span className="calendar-event-detail-time">{formatInterval(event.time.interval)}</span>
-        {/* <br />
-        <span className="matcher-detail">Num. Mentors: {event.num_mentors}</span> */}
+        {event.description && (
+          <React.Fragment>
+            {" "}
+            <span className="calendar-event-detail-description">({event.description})</span>
+          </React.Fragment>
+        )}
       </React.Fragment>
     );
   };
@@ -492,20 +509,22 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
           <h2 className="matcher-confirm-modal-header">
             Submit {slots.length} slot{slots.length > 1 && "s"}?
           </h2>
-          <h3>Linked Slots</h3>
-          {linkedSlots.length > 0 ? (
-            <ul className="matcher-confirm-modal-list">{formattedLinkedSlots}</ul>
-          ) : (
-            <p className="matcher-confirm-modal-empty-list-text">No linked slots.</p>
-          )}
-          <h3>Individual Slots</h3>
-          {unlinkedSlots.length > 0 ? (
-            <React.Fragment>
-              <ul className="matcher-confirm-modal-list">{formattedUnlinkedSlots}</ul>
-            </React.Fragment>
-          ) : (
-            <p className="matcher-confirm-modal-empty-list-text">No individual slots.</p>
-          )}
+          <div className="matcher-confirm-modal-content">
+            <h3>Linked Slots</h3>
+            {linkedSlots.length > 0 ? (
+              <ul className="matcher-confirm-modal-list">{formattedLinkedSlots}</ul>
+            ) : (
+              <p className="matcher-confirm-modal-empty-list-text">No linked slots.</p>
+            )}
+            <h3>Individual Slots</h3>
+            {unlinkedSlots.length > 0 ? (
+              <React.Fragment>
+                <ul className="matcher-confirm-modal-list">{formattedUnlinkedSlots}</ul>
+              </React.Fragment>
+            ) : (
+              <p className="matcher-confirm-modal-empty-list-text">No individual slots.</p>
+            )}
+          </div>
           <div className="matcher-confirm-modal-buttons">
             <button className="secondary-btn" onClick={() => setShowConfirmModal(false)}>
               Cancel
@@ -619,6 +638,17 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                 mins
               </div>
             </div>
+            <div className="matcher-tiling-metadata-container">
+              <div className="matcher-tiling-subheader">Description:</div>
+              <div className="matcher-tiling-description-input-container">
+                <input
+                  className="matcher-tiling-description-input form-input light"
+                  type="text"
+                  value={curSlotDescription}
+                  onChange={e => setCurSlotDescription(e.target.value)}
+                />
+              </div>
+            </div>
           </div>
         </div>
         <div className="matcher-sidebar-tiling-bottom">
@@ -677,6 +707,17 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
             ))}
           </div>
         </div>
+        <div className="matcher-sidebar-metadata-container">
+          <div className="matcher-sidebar-subheader">Description:</div>
+          <div className="matcher-sidebar-description-input-container">
+            <input
+              className="matcher-sidebar-description-input form-input light"
+              type="text"
+              value={curSlotDescription}
+              onChange={e => setCurSlotDescription(e.target.value)}
+            />
+          </div>
+        </div>
         <div className="matcher-sidebar-create-bottom">
           <div className="matcher-sidebar-create-bottom-row">
             <button className="secondary-btn" onClick={cancelEvent}>
@@ -713,6 +754,14 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
                   </li>
                 ))}
               </ul>
+              <div className="matcher-sidebar-metadata-container">
+                {selectedEvents[0].description !== "" && (
+                  <>
+                    <div className="matcher-sidebar-subheader">Description:</div>
+                    <div className="matcher-sidebar-description-text">{selectedEvents[0].description}</div>
+                  </>
+                )}
+              </div>
             </React.Fragment>
           ) : (
             // multiple selected events
