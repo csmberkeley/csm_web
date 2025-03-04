@@ -509,20 +509,22 @@ export function CreateStage({ profile, initialSlots, nextStage }: CreateStagePro
           <h2 className="matcher-confirm-modal-header">
             Submit {slots.length} slot{slots.length > 1 && "s"}?
           </h2>
-          <h3>Linked Slots</h3>
-          {linkedSlots.length > 0 ? (
-            <ul className="matcher-confirm-modal-list">{formattedLinkedSlots}</ul>
-          ) : (
-            <p className="matcher-confirm-modal-empty-list-text">No linked slots.</p>
-          )}
-          <h3>Individual Slots</h3>
-          {unlinkedSlots.length > 0 ? (
-            <React.Fragment>
-              <ul className="matcher-confirm-modal-list">{formattedUnlinkedSlots}</ul>
-            </React.Fragment>
-          ) : (
-            <p className="matcher-confirm-modal-empty-list-text">No individual slots.</p>
-          )}
+          <div className="matcher-confirm-modal-content">
+            <h3>Linked Slots</h3>
+            {linkedSlots.length > 0 ? (
+              <ul className="matcher-confirm-modal-list">{formattedLinkedSlots}</ul>
+            ) : (
+              <p className="matcher-confirm-modal-empty-list-text">No linked slots.</p>
+            )}
+            <h3>Individual Slots</h3>
+            {unlinkedSlots.length > 0 ? (
+              <React.Fragment>
+                <ul className="matcher-confirm-modal-list">{formattedUnlinkedSlots}</ul>
+              </React.Fragment>
+            ) : (
+              <p className="matcher-confirm-modal-empty-list-text">No individual slots.</p>
+            )}
+          </div>
           <div className="matcher-confirm-modal-buttons">
             <button className="secondary-btn" onClick={() => setShowConfirmModal(false)}>
               Cancel
