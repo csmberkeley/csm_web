@@ -1,7 +1,155 @@
-.table {
+table {
   width: 100%;
-  margin-bottom: 1rem;
-  color: #212529;
-  border-spacing: 0;
+  padding: 10%;
   border-collapse: collapse;
+}
+
+td {
+  padding: 15px 0;
+  font-size: 14px;
+
+  // font: "Google Sans" 500 .875rem / 1.25rem
+  // font-family: Arial, sans-serif;
+}
+
+th {
+  padding: 10px 0;
+  font-size: 18px;
+  text-align: left;
+}
+
+tr {
+  cursor: pointer;
+  border-bottom: 1px solid #ccc;
+}
+
+.data-row:hover {
+  background-color: #f5f5f5;
+}
+
+main {
+  padding: 2% 4%;
+  overflow: auto;
+}
+
+.checkbox-wrapper {
+  padding: 0%;
+}
+
+.checkbox-wrapper-4 * {
+  box-sizing: border-box;
+}
+
+.checkbox-wrapper-4 .cbx {
+  display: inline-block;
+  padding: 6px 8px;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-wrapper-4 .cbx:not(:last-child) {
+  margin-right: 6px;
+}
+
+.checkbox-wrapper-4 .cbx:hover {
+  background: rgb(0 119 255 / 6%);
+}
+
+.checkbox-wrapper-4 .cbx span {
+  float: left;
+  vertical-align: middle;
+  transform: translate3d(0, 0, 0);
+}
+
+.checkbox-wrapper-4 .cbx span:first-child {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #cccfdb;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgb(0 16 75 / 5%);
+  transition: all 0.2s ease;
+  transform: scale(1);
+}
+
+.checkbox-wrapper-4 .cbx span:first-child svg {
+  position: absolute;
+  top: 3px;
+  left: 2px;
+  fill: none;
+  stroke: #fff;
+  stroke-dasharray: 16px;
+  stroke-dashoffset: 16px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  transition: all 0.3s ease;
+  transition-delay: 0.1s;
+  transform: translate3d(0, 0, 0);
+}
+
+.checkbox-wrapper-4 .cbx span:last-child {
+  padding-left: 8px;
+  line-height: 18px;
+}
+
+.checkbox-wrapper-4 .cbx:hover span:first-child {
+  border-color: #07f;
+}
+
+.checkbox-wrapper-4 .inp-cbx {
+  position: absolute;
+  visibility: hidden;
+}
+
+.checkbox-wrapper-4 .inp-cbx:checked + .cbx span:first-child {
+  background: #07f;
+  border-color: #07f;
+  animation: wave-4 0.4s ease;
+}
+
+.checkbox-wrapper-4 .inp-cbx:checked + .cbx span:first-child svg {
+  stroke-dashoffset: 0;
+}
+
+.checkbox-wrapper-4 .inline-svg {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media screen and (width <= 640px) {
+  .checkbox-wrapper-4 .cbx {
+    display: inline-block;
+    width: 100%;
+  }
+}
+
+@keyframes wave-4 {
+  50% {
+    transform: scale(0.9);
+  }
+}
+
+@keyframes wave-4 {
+  50% {
+    transform: scale(0.9);
+  }
+}
+
+@keyframes wave-4 {
+  50% {
+    transform: scale(0.9);
+  }
+}
+
+@keyframes wave-4 {
+  50% {
+    transform: scale(0.9);
+  }
 }
