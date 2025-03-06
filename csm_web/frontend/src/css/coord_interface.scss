@@ -7,9 +7,6 @@ table {
 td {
   padding: 15px 0;
   font-size: 14px;
-
-  // font: "Google Sans" 500 .875rem / 1.25rem
-  // font-family: Arial, sans-serif;
 }
 
 th {
@@ -32,15 +29,16 @@ main {
   overflow: auto;
 }
 
-.checkbox-wrapper {
+/* Checkbox */
+.checkbox {
   padding: 0%;
 }
 
-.checkbox-wrapper-4 * {
+.checkbox-wrapper * {
   box-sizing: border-box;
 }
 
-.checkbox-wrapper-4 .cbx {
+.checkbox-wrapper .cbx {
   display: inline-block;
   padding: 6px 8px;
   overflow: hidden;
@@ -50,21 +48,21 @@ main {
   transition: all 0.2s ease;
 }
 
-.checkbox-wrapper-4 .cbx:not(:last-child) {
+.checkbox-wrapper .cbx:not(:last-child) {
   margin-right: 6px;
 }
 
-.checkbox-wrapper-4 .cbx:hover {
+.checkbox-wrapper .cbx:hover {
   background: rgb(0 119 255 / 6%);
 }
 
-.checkbox-wrapper-4 .cbx span {
+.checkbox-wrapper .cbx span {
   float: left;
   vertical-align: middle;
   transform: translate3d(0, 0, 0);
 }
 
-.checkbox-wrapper-4 .cbx span:first-child {
+.checkbox-wrapper .cbx span:first-child {
   position: relative;
   width: 18px;
   height: 18px;
@@ -75,7 +73,7 @@ main {
   transform: scale(1);
 }
 
-.checkbox-wrapper-4 .cbx span:first-child svg {
+.checkbox-wrapper .cbx span:first-child svg {
   position: absolute;
   top: 3px;
   left: 2px;
@@ -91,31 +89,31 @@ main {
   transform: translate3d(0, 0, 0);
 }
 
-.checkbox-wrapper-4 .cbx span:last-child {
+.checkbox-wrapper .cbx span:last-child {
   padding-left: 8px;
   line-height: 18px;
 }
 
-.checkbox-wrapper-4 .cbx:hover span:first-child {
+.checkbox-wrapper .cbx:hover span:first-child {
   border-color: #07f;
 }
 
-.checkbox-wrapper-4 .inp-cbx {
+.checkbox-wrapper .inp-cbx {
   position: absolute;
   visibility: hidden;
 }
 
-.checkbox-wrapper-4 .inp-cbx:checked + .cbx span:first-child {
+.checkbox-wrapper .inp-cbx:checked + .cbx span:first-child {
   background: #07f;
   border-color: #07f;
-  animation: wave-4 0.4s ease;
+  animation: wave 0.4s ease;
 }
 
-.checkbox-wrapper-4 .inp-cbx:checked + .cbx span:first-child svg {
+.checkbox-wrapper .inp-cbx:checked + .cbx span:first-child svg {
   stroke-dashoffset: 0;
 }
 
-.checkbox-wrapper-4 .inline-svg {
+.checkbox-wrapper .inline-svg {
   position: absolute;
   width: 0;
   height: 0;
@@ -124,31 +122,31 @@ main {
 }
 
 @media screen and (width <= 640px) {
-  .checkbox-wrapper-4 .cbx {
+  .checkbox-wrapper .cbx {
     display: inline-block;
     width: 100%;
   }
 }
 
-@keyframes wave-4 {
+@keyframes wave {
   50% {
     transform: scale(0.9);
   }
 }
 
-@keyframes wave-4 {
+@keyframes wave {
   50% {
     transform: scale(0.9);
   }
 }
 
-@keyframes wave-4 {
+@keyframes wave {
   50% {
     transform: scale(0.9);
   }
 }
 
-@keyframes wave-4 {
+@keyframes wave {
   50% {
     transform: scale(0.9);
   }
