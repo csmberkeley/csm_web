@@ -4,7 +4,7 @@ import styles from "../../css/coord_interface.scss";
 export default function SearchBar(change: (event: React.ChangeEvent<HTMLInputElement>) => void) {
   return (
     <div className={styles}>
-      <div className="search-bar">
+      <div className="search-filter">
         <input type="text" placeholder="Search" onChange={change} />
       </div>
     </div>

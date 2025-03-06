@@ -10,11 +10,11 @@ export default function CoordTable() {
   const [tableData, setTableData] = useState<Mentor[] | Student[]>([]);
   const [searchData, setSearch] = useState<Mentor[] | Student[]>([]);
   const [selectedData, setSelected] = useState<Mentor[] | Student[]>([]);
+  const [allSelected, setAllSelected] = useState(false);
   const params = useParams();
   const courseId = Number(params.id);
   const { pathname } = useLocation();
   const isStudents = pathname.includes("students");
-  let selected = false;
 
   useEffect(() => {
     const fetchData = async () => {
@@ -40,13 +40,12 @@ export default function CoordTable() {
     }
   }
   function toggleAllCheckboxes() {
-    if (selected) {
+    if (allSelected) {
       deselectAllCheckboxes();
-      selected = false;
     } else {
       selectAllCheckboxes();
-      selected = true;
     }
+    setAllSelected(!allSelected);
   }
   function selectAllCheckboxes() {
     const checkboxes = document.querySelectorAll("input[type=checkbox]");
@@ -87,8 +86,12 @@ export default function CoordTable() {
 
   return (
     <div className={styles}>
-      <SearchBar onChange={filterSearch} />
+      <div className="search-container">
+        <SearchBar onChange={filterSearch} className="search-filter" />
+      </div>
       <div id="table-buttons">
+        <button onClick={getSelectedData}>Select All</button>
+        <button onClick={getSelectedData}>Select All</button>
         <button onClick={getSelectedData}>Select All</button>
         {/* <DropBox click={getSelectedData}/>
         <DropBox />
