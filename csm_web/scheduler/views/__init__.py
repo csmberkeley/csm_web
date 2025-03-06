@@ -1,4 +1,5 @@
 from . import matcher
+from .coord import view_mentors, view_students, delete_section
 from .course import CourseViewSet
 from .export import export_data
 from .profile import ProfileViewSet
