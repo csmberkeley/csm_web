@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { Mentor, Student, getCoordData } from "../../utils/queries/coord";
+import { SearchBar } from "../SearchBar";
+import { CheckBox } from "./CheckBox";
 import styles from "../../css/coord_interface.scss";
 
 export default function CoordTable() {
   const [tableData, setTableData] = useState<Mentor[] | Student[]>([]);
+  const [searchData, setSearch] = useState<Mentor[] | Student[]>([]);
+  const [selectedData, setSelected] = useState<Mentor[] | Student[]>([]);
   const params = useParams();
   const courseId = Number(params.id);
   const { pathname } = useLocation();
@@ -13,7 +17,9 @@ export default function CoordTable() {
 
   useEffect(() => {
     const fetchData = async () => {
-      setTableData(await getCoordData(courseId, isStudents));
+      const data = await getCoordData(courseId, isStudents);
+      setTableData(data);
+      setSearch(data);
     };
     fetchData();
   }, []);
@@ -23,9 +29,19 @@ export default function CoordTable() {
   function selectCheckbox(id: number) {
     const checkbox = document.getElementById(id + "check") as HTMLInputElement;
     checkbox.checked = !checkbox.checked;
+    if (checkbox.checked) {
+      console.log("adding");
+      const selectedRow = searchData.find(row => row.id === id);
+      console.log([...selectedData, selectedRow] as Mentor[] | Student[]);
+      if (selectedRow) {
+        setSelected([...selectedData, selectedRow] as Mentor[] | Student[]);
+      }
+    } else {
+      console.log("removing");
+      setSelected(selectedData.filter(row => row.id !== id) as Mentor[] | Student[]);
+    }
   }
   function toggleAllCheckboxes() {
-    console.log(selected);
     if (selected) {
       deselectAllCheckboxes();
       selected = false;
@@ -39,38 +55,65 @@ export default function CoordTable() {
     checkboxes.forEach(checkbox => {
       (checkbox as HTMLInputElement).checked = true;
     });
+    setSelected(searchData);
   }
   function deselectAllCheckboxes() {
     const checkboxes = document.querySelectorAll("input[type=checkbox]");
     checkboxes.forEach(checkbox => {
       (checkbox as HTMLInputElement).checked = false;
     });
+    setSelected([]);
+  }
+
+  function filterSearch(event: React.ChangeEvent<HTMLInputElement>) {
+    const search = event.target.value.toLowerCase();
+    if (search.length === 0) {
+      console.log("search is empty");
+      setSearch(tableData);
+      return;
+    }
+    const filteredData = tableData.filter(row => {
+      return row.name.toLowerCase().includes(search) || row.email.toLowerCase().includes(search);
+    });
+    const filteredSelectData = selectedData.filter(row => {
+      return row.name.toLowerCase().includes(search) || row.email.toLowerCase().includes(search);
+    });
+    console.log(filteredData);
+    setSearch(filteredData as Mentor[] | Student[]);
+    setSelected(filteredSelectData as Mentor[] | Student[]);
+  }
+
+  function getSelectedData() {
+    return selectedData;
   }
 
   return (
     <div className={styles}>
+      <SearchBar onChange={filterSearch} />
+      <button onClick={() => console.log(getSelectedData())}>Get Selected Data</button>
       <table>
-        {isStudents ? (
+        <thead>
           <tr>
             <CheckBox id="check" onClick={toggleAllCheckboxes} />
             <th>Name</th>
             <th>Email</th>
-            <th>Mentor Name</th>
-            <th>Time</th>
-            <th>Unexcused Absenses</th>
+            {isStudents ? (
+              <>
+                <th>Mentor Name</th>
+                <th>Time</th>
+                <th>Unexcused Absenses</th>
+              </>
+            ) : (
+              <>
+                <th>Family</th>
+                <th>Time</th>
+                <th>Section Size</th>
+              </>
+            )}
           </tr>
-        ) : (
-          <tr>
-            <CheckBox id="check" onClick={toggleAllCheckboxes} />
-            <th>Name</th>
-            <th>Email</th>
-            <th>Family</th>
-            <th>Time</th>
-            <th>Section Size</th>
-          </tr>
-        )}
-        {tableData.map(row =>
-          isStudents ? (
+        </thead>
+        <tbody>
+          {searchData.map(row => (
             <tr
               key={row.id}
               className="data-row"
@@ -78,57 +121,19 @@ export default function CoordTable() {
               onClick={() => selectCheckbox(row.id)}
             >
               <CheckBox id={row.id.toString()} />
-
-              <td>{row.name}</td>
+              isStudents ? (<td>{row.name}</td>
               <td>{row.email}</td>
               <td>{(row as Student).mentorName}</td>
               <td>{row.dayTime}</td>
-              <td>{(row as Student).numUnexcused}</td>
-            </tr>
-          ) : (
-            <tr
-              key={row.id}
-              className="dataRow"
-              onDoubleClick={() => navigate(`/sections/${row.section}`)}
-              onClick={() => selectCheckbox(row.id)}
-            >
-              <CheckBox id={row.id.toString()} />
-              <td>{row.name}</td>
+              <td>{(row as Student).numUnexcused}</td>) : (<td>{row.name}</td>
               <td>{row.email}</td>
               <td>{(row as Mentor).family}</td>
               <td>{row.dayTime}</td>
-              <td>{(row as Mentor).numStudents}</td>
+              <td>{(row as Mentor).numStudents}</td>)
             </tr>
-          )
-        )}
+          ))}
+        </tbody>
       </table>
     </div>
-  );
-}
-
-interface CheckBoxProps {
-  id: string;
-  onClick?: () => void;
-}
-
-function CheckBox({ id, onClick: onClick }: CheckBoxProps) {
-  return (
-    <td className="checkbox">
-      <div className="checkbox-wrapper">
-        <input className="inp-cbx" id={id + "check"} type="checkbox" onClick={onClick} />
-        <label className="cbx" htmlFor={id + "check"}>
-          <span>
-            <svg width="12px" height="10px">
-              <use xlinkHref="#check"></use>
-            </svg>
-          </span>
-        </label>
-        <svg className="inline-svg">
-          <symbol id="check" viewBox="0 0 12 10">
-            <polyline points="1.5 6 4.5 9 10.5 1"></polyline>
-          </symbol>
-        </svg>
-      </div>
-    </td>
   );
 }
