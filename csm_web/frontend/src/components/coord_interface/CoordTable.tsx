@@ -4,6 +4,7 @@ import { Mentor, Student, getCoordData } from "../../utils/queries/coord";
 import { SearchBar } from "../SearchBar";
 import { CheckBox } from "./CheckBox";
 import styles from "../../css/coord_interface.scss";
+// import DropBox from "./DropBox";
 
 export default function CoordTable() {
   const [tableData, setTableData] = useState<Mentor[] | Student[]>([]);
@@ -30,14 +31,11 @@ export default function CoordTable() {
     const checkbox = document.getElementById(id + "check") as HTMLInputElement;
     checkbox.checked = !checkbox.checked;
     if (checkbox.checked) {
-      console.log("adding");
       const selectedRow = searchData.find(row => row.id === id);
-      console.log([...selectedData, selectedRow] as Mentor[] | Student[]);
       if (selectedRow) {
         setSelected([...selectedData, selectedRow] as Mentor[] | Student[]);
       }
     } else {
-      console.log("removing");
       setSelected(selectedData.filter(row => row.id !== id) as Mentor[] | Student[]);
     }
   }
@@ -68,7 +66,6 @@ export default function CoordTable() {
   function filterSearch(event: React.ChangeEvent<HTMLInputElement>) {
     const search = event.target.value.toLowerCase();
     if (search.length === 0) {
-      console.log("search is empty");
       setSearch(tableData);
       return;
     }
@@ -78,19 +75,25 @@ export default function CoordTable() {
     const filteredSelectData = selectedData.filter(row => {
       return row.name.toLowerCase().includes(search) || row.email.toLowerCase().includes(search);
     });
-    console.log(filteredData);
+
     setSearch(filteredData as Mentor[] | Student[]);
     setSelected(filteredSelectData as Mentor[] | Student[]);
   }
 
   function getSelectedData() {
+    console.log(selectedData);
     return selectedData;
   }
 
   return (
     <div className={styles}>
       <SearchBar onChange={filterSearch} />
-      <button onClick={() => console.log(getSelectedData())}>Get Selected Data</button>
+      <div id="table-buttons">
+        <button onClick={getSelectedData}>Select All</button>
+        {/* <DropBox click={getSelectedData}/>
+        <DropBox />
+        <DropBox /> */}
+      </div>
       <table>
         <thead>
           <tr>
@@ -121,15 +124,23 @@ export default function CoordTable() {
               onClick={() => selectCheckbox(row.id)}
             >
               <CheckBox id={row.id.toString()} />
-              isStudents ? (<td>{row.name}</td>
-              <td>{row.email}</td>
-              <td>{(row as Student).mentorName}</td>
-              <td>{row.dayTime}</td>
-              <td>{(row as Student).numUnexcused}</td>) : (<td>{row.name}</td>
-              <td>{row.email}</td>
-              <td>{(row as Mentor).family}</td>
-              <td>{row.dayTime}</td>
-              <td>{(row as Mentor).numStudents}</td>)
+              {isStudents ? (
+                <>
+                  <td>{row.name}</td>
+                  <td>{row.email}</td>
+                  <td>{(row as Student).mentorName}</td>
+                  <td>{row.dayTime}</td>
+                  <td>{(row as Student).numUnexcused}</td>
+                </>
+              ) : (
+                <>
+                  <td>{row.name}</td>
+                  <td>{row.email}</td>
+                  <td>{(row as Mentor).family}</td>
+                  <td>{row.dayTime}</td>
+                  <td>{(row as Mentor).numStudents}</td>
+                </>
+              )}
             </tr>
           ))}
         </tbody>
