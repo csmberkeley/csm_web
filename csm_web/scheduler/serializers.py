@@ -283,7 +283,7 @@ class CoordStudentSerializer(serializers.ModelSerializer):
         """
         Count the number of unexcused absences for the student
         """
-        return obj.attendance_set.filter(presence="PR").count()
+        return obj.attendance_set.filter(presence="UN").count()
 
     class Meta:
         model = Student
@@ -311,7 +311,7 @@ class CoordMentorSerializer(serializers.ModelSerializer):
         """
         Get the number of students in the section
         """
-        students = obj.section.students.all()
+        students = obj.section.students.filter(active=True)
         return students.count()
 
     class Meta:

@@ -1,27 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { useLocation, useParams, Link } from "react-router-dom";
-import { fetchJSON } from "../../utils/api";
+import { useLocation, useParams, useNavigate } from "react-router-dom";
+import { Mentor, Student, getCoordData } from "../../utils/queries/coord";
 import "../../css/coord_interface.scss";
-
-interface Student {
-  id: number;
-  name: string;
-  email: string;
-  numUnexcused: number;
-  section: number;
-  mentorName: string;
-  dayTime: string;
-}
-
-interface Mentor {
-  id: number;
-  name: string;
-  email: string;
-  numStudents: number;
-  section: number;
-  family: string;
-  dayTime: string;
-}
 
 export default function CoordTable() {
   const [tableData, setTableData] = useState<Mentor[] | Student[]>([]);
@@ -32,51 +12,49 @@ export default function CoordTable() {
 
   useEffect(() => {
     const fetchData = async () => {
-      const { tempTableData } = await fetchJSON(`/api/coord/${courseId}/${isStudents ? "students" : "mentors"} `);
-      setTableData(tempTableData);
+      setTableData(await getCoordData(courseId, isStudents));
     };
     fetchData();
   }, []);
 
+  const navigate = useNavigate();
+
   return (
     <table>
-      isStudents ? (
-      <thead>
-        <td>Name</td>
-        <td>Email</td>
-        <td>Absenses</td>
-        <td>Mentor Name</td>
-        <td>Time</td>
-      </thead>
+      {isStudents ? (
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Mentor Name</th>
+          <th>Time</th>
+          <th>Unexcused Absenses</th>
+        </tr>
       ) : (
-      <thead>
-        <td>Name</td>
-        <td>Email</td>
-        <td>Family</td>
-        <td>Section Size</td>
-      </thead>
-      )
+        <tr>
+          <th>Name</th>
+          <th>Email</th>
+          <th>Family</th>
+          <th>Time</th>
+          <th>Section Size</th>
+        </tr>
+      )}
       {tableData.map(row =>
         isStudents ? (
-          <Link to={`/sections/${row.section}`} key={row.id}>
-            <tr>
-              <td>{row.name}</td>
-              <td>{row.email}</td>
-              <td>{(row as Student).mentorName}</td>
-              <td>{row.dayTime}</td>
-              <td>{(row as Student).numUnexcused}</td>
-            </tr>
-          </Link>
+          <tr key={row.id} onClick={() => navigate(`/sections/${row.section}`)}>
+            <td>{row.name}</td>
+            <td>{row.email}</td>
+            <td>{(row as Student).mentorName}</td>
+            <td>{row.dayTime}</td>
+            <td>{(row as Student).numUnexcused}</td>
+          </tr>
         ) : (
-          <Link to={`/sections/${row.section}`} key={row.id}>
-            <tr>
-              <td>{row.name}</td>
-              <td>{row.email}</td>
-              <td>{(row as Mentor).family}</td>
-              <td>{row.dayTime}</td>
-              <td>{(row as Mentor).numStudents}</td>
-            </tr>
-          </Link>
+          <tr key={row.id} onClick={() => navigate(`/sections/${row.section}`)}>
+            <td>{row.name}</td>
+            <td>{row.email}</td>
+            <td>{(row as Mentor).family}</td>
+            <td>{row.dayTime}</td>
+            <td>{(row as Mentor).numStudents}</td>
+          </tr>
         )
       )}
     </table>
