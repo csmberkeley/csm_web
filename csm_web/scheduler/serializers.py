@@ -276,17 +276,17 @@ class CoordStudentSerializer(serializers.ModelSerializer):
     def get_num_unexcused(self, obj):
         # Get the `attendance_set` related to the object and filter based on status
         attendances = obj.attendance_set.all()
-        return sum(1 for attendance in attendances if attendance.presence == "PR")
+        return sum(1 for attendance in attendances if attendance.presence == "UN")
 
     class Meta:
         model = Student
         fields = ("id", "name", "email", "num_unexcused", "section")
 
-
+"""
 class CoordStudentSerializer(serializers.ModelSerializer):
-    """
+    
     Serializer for the coordinator view of students
-    """
+    
 
     email = serializers.EmailField(source="user.email")
     mentor_name = serializers.CharField(source="section.mentor.name")
@@ -294,9 +294,9 @@ class CoordStudentSerializer(serializers.ModelSerializer):
     day_time = serializers.CharField(source="section.day_time")
 
     def get_num_unexcused(self, obj):
-        """
+    
         Count the number of unexcused absences for the student
-        """
+        
         return obj.attendance_set.filter(presence="PR").count()
 
     class Meta:
@@ -310,7 +310,7 @@ class CoordStudentSerializer(serializers.ModelSerializer):
             "mentor_name",
             "day_time",
         )
-
+"""
 
 class CoordMentorSerializer(serializers.ModelSerializer):
     """
@@ -325,7 +325,7 @@ class CoordMentorSerializer(serializers.ModelSerializer):
         """
         Get the number of students in the section
         """
-        students = obj.section.students.all()
+        students = obj.section.students.filter(active = True)
         return students.count()
 
     class Meta:
