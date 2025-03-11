@@ -90,9 +90,15 @@ export default function CoordTable() {
         <SearchBar onChange={filterSearch} className="search-filter" />
       </div>
       <div id="table-buttons">
-        <button onClick={getSelectedData}>Select All</button>
-        <button onClick={getSelectedData}>Select All</button>
-        <button onClick={getSelectedData}>Select All</button>
+        <button onClick={getSelectedData}>
+          Select All<div></div>
+        </button>
+        <button onClick={getSelectedData}>
+          Select All<div></div>
+        </button>
+        <button onClick={getSelectedData}>
+          Select All<div></div>
+        </button>
         {/* <DropBox click={getSelectedData}/>
         <DropBox />
         <DropBox /> */}

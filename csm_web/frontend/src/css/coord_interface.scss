@@ -28,7 +28,7 @@ tr {
   width: 100%;
   padding: 20px 45px;
   background-color: rgb(241 245 250);
-  border-color: rgb(216 222 242);
+  border-color: rgb(226 230 240);
   border-radius: 30px;
 }
 
@@ -59,6 +59,8 @@ tr {
 }
 
 #table-buttons button {
+  display: flex;
+  place-items: center right;
   padding: 10px 25px;
   margin: 0 10px;
   font:
@@ -68,9 +70,9 @@ tr {
   color: rgb(5 5 5);
   cursor: pointer;
   background-color: rgb(241 245 250);
-  border: none;
-  border-color: rgb(216 222 242);
-  border-width: 2px;
+  border-color: rgb(226 230 240);
+  border-style: solid;
+  border-width: 1px;
   border-radius: 30px;
 }
 
@@ -78,8 +80,17 @@ tr {
   background-color: rgb(227 232 238);
 }
 
+#table-buttons button div {
+  width: 0;
+  height: 0;
+  margin-left: 10px;
+  border-top: 5px solid rgb(0 0 0);
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+}
+
 main {
-  padding: 2% 4%;
+  padding: max(2%, 30px) 4%;
   overflow: auto;
 }
 
