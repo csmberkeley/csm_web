@@ -9,6 +9,7 @@ export interface Time {
 export interface Slot {
   id?: number;
   times: Time[];
+  description?: string;
   [key: string]: any;
 }
 
