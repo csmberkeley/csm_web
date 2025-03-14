@@ -35,6 +35,7 @@ interface MatcherSlotsResponse {
   slots: Array<{
     id: number;
     times: MatcherSlotsResponseTime[];
+    description: string;
   }>;
 }
 
