@@ -253,6 +253,7 @@ class SectionSerializer(serializers.ModelSerializer):
     spacetimes = SpacetimeSerializer(many=True)
     num_students_enrolled = serializers.SerializerMethodField()
     mentor = MentorSerializer()
+    # tag = AffinityTagSerializer()
     course = serializers.CharField(source="mentor.course.name")
     course_title = serializers.CharField(source="mentor.course.title")
     user_role = serializers.SerializerMethodField()

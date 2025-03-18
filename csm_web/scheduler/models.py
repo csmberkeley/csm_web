@@ -143,6 +143,20 @@ class Attendance(ValidatingModel):
         # indexes = (models.Index(fields=("date",)),)
 
 
+class AffinitySectionTag(ValidatingModel):
+    """
+    AffinitySectionTag represents an affinity group, mapping a affinity flag
+    to its description.
+    """
+
+    name = models.CharField(
+        max_length=50, unique=True, help_text="Affinity tag for the section."
+    )
+    description = models.TextField(
+        max_length=200, help_text="Description of what this affinity group represents."
+    )
+
+
 class SectionOccurrence(ValidatingModel):
     """
     SectionOccurrence represents an occurrence of a section and acts as an
@@ -337,13 +351,20 @@ class Section(ValidatingModel):
     mentor = OneToOneOrNoneField(
         Mentor, on_delete=models.CASCADE, blank=True, null=True
     )
-    description = models.CharField(
-        max_length=100,
+
+    # description = models.CharField(
+    #     max_length=100,
+    #     blank=True,
+    #     help_text=(
+    #         'A brief note to add some extra information about the section, e.g. "EOP"'
+    #         ' or "early start".'
+    #     ),
+    # )
+    tags = models.ManyToManyField(
+        AffinitySectionTag,
         blank=True,
-        help_text=(
-            'A brief note to add some extra information about the section, e.g. "EOP"'
-            ' or "early start".'
-        ),
+        null=True,
+        help_text="Affinity tags for the section.",
     )
 
     # @functional.cached_property

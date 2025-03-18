@@ -19,7 +19,7 @@ interface SectionCardProps {
   mentor: Mentor;
   numStudentsEnrolled: number;
   capacity: number;
-  description: string;
+  description: string; // AffinityTag
   userIsCoordinator: boolean;
   courseOpen: boolean;
 }
@@ -109,6 +109,7 @@ export const SectionCard = ({
    */
   const affinityModalContents = () => {
     return (
+      // set max width
       <div className="enroll-confirm-modal-contents">
         <h3>Affinity Section Enrollment</h3>
         <p>
