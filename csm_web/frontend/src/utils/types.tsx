@@ -52,11 +52,17 @@ export interface Section {
   capacity: number;
   associatedProfileId: number;
   numStudentsEnrolled: number;
-  description: string;
+  tag: AffinitySectionTag;
   course: string;
   userRole: Role;
   courseTitle: string;
   courseRestricted: boolean;
+}
+
+export interface AffinitySectionTag {
+  id: number;
+  description: string;
+  name: string;
 }
 
 export interface Mentor {

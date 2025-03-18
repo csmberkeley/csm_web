@@ -3,7 +3,7 @@ import { Link, Navigate } from "react-router-dom";
 
 import { formatSpacetimeInterval } from "../../utils/datetime";
 import { EnrollUserMutationResponse, useEnrollUserMutation } from "../../utils/queries/sections";
-import { Mentor, Spacetime } from "../../utils/types";
+import { Mentor, Spacetime, AffinitySectionTag } from "../../utils/types";
 import Modal, { ModalCloser } from "../Modal";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
@@ -19,7 +19,8 @@ interface SectionCardProps {
   mentor: Mentor;
   numStudentsEnrolled: number;
   capacity: number;
-  description: string; // AffinityTag
+  tag: AffinitySectionTag;
+  // description: string; // AffinityTag
   userIsCoordinator: boolean;
   courseOpen: boolean;
 }
@@ -30,7 +31,7 @@ export const SectionCard = ({
   mentor,
   numStudentsEnrolled,
   capacity,
-  description,
+  tag,
   userIsCoordinator,
   courseOpen
 }: SectionCardProps): React.ReactElement => {
@@ -66,7 +67,7 @@ export const SectionCard = ({
       return;
     }
 
-    if (description !== null) {
+    if (tag !== null) {
       // If it's an affinity section, show the affinity modal first
       setShowAffinityModal(true);
       return;
@@ -182,7 +183,7 @@ export const SectionCard = ({
       {showModal && <Modal closeModal={closeModal}>{modalContents()}</Modal>}
       <section className={`section-card ${isFull ? "full" : ""}`}>
         <div className="section-card-contents">
-          {description && <span className="section-card-description">{description}</span>}
+          {tag && <span className="section-card-description">{tag.description}</span>}
           <p title="Location">
             <LocationIcon width={iconWidth} height={iconHeight} />{" "}
             {spacetimes[0].location === null ? "Online" : spacetimes[0].location}

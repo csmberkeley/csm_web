@@ -351,15 +351,6 @@ class Section(ValidatingModel):
     mentor = OneToOneOrNoneField(
         Mentor, on_delete=models.CASCADE, blank=True, null=True
     )
-
-    # description = models.CharField(
-    #     max_length=100,
-    #     blank=True,
-    #     help_text=(
-    #         'A brief note to add some extra information about the section, e.g. "EOP"'
-    #         ' or "early start".'
-    #     ),
-    # )
     tags = models.ManyToManyField(
         AffinitySectionTag,
         blank=True,
