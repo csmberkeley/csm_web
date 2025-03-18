@@ -1,4 +1,4 @@
-from . import matcher
+from . import affinity_tags, matcher
 from .course import CourseViewSet
 from .export import export_data
 from .profile import ProfileViewSet

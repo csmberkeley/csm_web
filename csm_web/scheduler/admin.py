@@ -560,7 +560,6 @@ class SectionAdmin(BasePermissionModelAdmin):
         "get_mentor",
         "get_course",
         "get_spacetimes",
-        # "description",
         "get_capacity",
     )
     search_fields = (
@@ -570,7 +569,7 @@ class SectionAdmin(BasePermissionModelAdmin):
         "mentor__course__name",
         "mentor__user__first_name",
         "mentor__user__last_name",
-        "description",
+        "tags",
     )
 
     inlines = (
