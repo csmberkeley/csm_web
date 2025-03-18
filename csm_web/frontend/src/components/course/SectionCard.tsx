@@ -19,8 +19,7 @@ interface SectionCardProps {
   mentor: Mentor;
   numStudentsEnrolled: number;
   capacity: number;
-  tag: AffinitySectionTag;
-  // description: string; // AffinityTag
+  tags: AffinitySectionTag[];
   userIsCoordinator: boolean;
   courseOpen: boolean;
 }
@@ -31,7 +30,7 @@ export const SectionCard = ({
   mentor,
   numStudentsEnrolled,
   capacity,
-  tag,
+  tags,
   userIsCoordinator,
   courseOpen
 }: SectionCardProps): React.ReactElement => {
@@ -67,7 +66,7 @@ export const SectionCard = ({
       return;
     }
 
-    if (tag !== null) {
+    if (tags !== null) {
       // If it's an affinity section, show the affinity modal first
       setShowAffinityModal(true);
       return;
@@ -183,7 +182,8 @@ export const SectionCard = ({
       {showModal && <Modal closeModal={closeModal}>{modalContents()}</Modal>}
       <section className={`section-card ${isFull ? "full" : ""}`}>
         <div className="section-card-contents">
-          {tag && <span className="section-card-description">{tag.description}</span>}
+          {/* TODO: iterate through the list of tags to display their descriptions. */}
+          {tags && <span className="section-card-description">{"list of descriptions here"}</span>}
           <p title="Location">
             <LocationIcon width={iconWidth} height={iconHeight} />{" "}
             {spacetimes[0].location === null ? "Online" : spacetimes[0].location}

@@ -4,6 +4,7 @@ from django.utils import timezone
 from rest_framework import serializers
 
 from .models import (
+    AffinitySectionTag,
     Attendance,
     Coordinator,
     Course,
@@ -249,11 +250,17 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "email", "attendances", "section")
 
 
+class AffinityTagSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = AffinitySectionTag
+        fields = ("id", "name", "description")
+
+
 class SectionSerializer(serializers.ModelSerializer):
     spacetimes = SpacetimeSerializer(many=True)
     num_students_enrolled = serializers.SerializerMethodField()
     mentor = MentorSerializer()
-    # tag = AffinityTagSerializer()
+    tags = AffinityTagSerializer(many=True)
     course = serializers.CharField(source="mentor.course.name")
     course_title = serializers.CharField(source="mentor.course.title")
     user_role = serializers.SerializerMethodField()
@@ -304,7 +311,7 @@ class SectionSerializer(serializers.ModelSerializer):
             "capacity",
             "associated_profile_id",
             "num_students_enrolled",
-            "description",
+            "tags",
             "mentor",
             "course",
             "user_role",
