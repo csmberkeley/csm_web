@@ -65,20 +65,14 @@ export const useSectionStudents = (id: number): UseQueryResult<Student[], Server
   return queryResult;
 };
 
-/** WARNING: WAIT FOR BACKEND TEAM
- * Hook to get the wailisted students enrolled in a section.
- *
- * List of students is sorted by name.
- */
-/*
 export const useSectionWaitlisted = (id: number): UseQueryResult<Student[], ServerError> => {
   const queryResult = useQuery<Student[], Error>(
-    ["sections", id, "students"],
+    ["sections", id, "waitlistedStudents"],
     async () => {
       if (isNaN(id)) {
         throw new PermissionError("Invalid section id");
       }
-      const response = await fetchNormalized(`/sections/${id}/waitlisted`);
+      const response = await fetchNormalized(`/waitlist/${id}`);
       if (response.ok) {
         const students = await response.json();
         // sort students by name before returning
@@ -96,7 +90,6 @@ export const useSectionWaitlisted = (id: number): UseQueryResult<Student[], Serv
   handleError(queryResult);
   return queryResult;
 };
-*/
 
 /**
  * Hook to get the attendances for a section.
@@ -333,6 +326,42 @@ export const useDropStudentMutation = (
       } else {
         handlePermissionsError(response.status);
         throw new ServerError(`Failed to drop student ${studentId} from section ${sectionId}`);
+      }
+    },
+    {
+      onSuccess: () => {
+        // invalidate all queries for the section
+        queryClient.invalidateQueries(["sections", sectionId]);
+      },
+      retry: handleRetry
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
+
+/**
+ * Hook to drop a student from their section.
+ *
+ * Invalidates all queries associated with the section.
+ */
+export const useDropWaitlistMutation = (
+  studentId: number,
+  sectionId: number
+): UseMutationResult<void, ServerError, StudentDropMutationBody> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, Error, StudentDropMutationBody>(
+    async (body: StudentDropMutationBody) => {
+      if (isNaN(studentId) || isNaN(sectionId)) {
+        throw new PermissionError("Invalid section id");
+      }
+      const response = await fetchWithMethod(`waitlist/${studentId}/drop`, HTTP_METHODS.PATCH, body);
+      if (response.ok) {
+        return;
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to drop waitlisted student ${studentId} from section ${sectionId}`);
       }
     },
     {

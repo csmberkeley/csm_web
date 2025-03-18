@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 
-import { useSectionStudents } from "../../utils/queries/sections";
-//import { useSectionStudents } from "../../utils/queries/sections"; WARNING: WAIT FOR BACKEND TEAM
+import { useSectionStudents, useSectionWaitlisted } from "../../utils/queries/sections";
 import { Mentor, Spacetime, Student } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
@@ -46,8 +45,11 @@ export default function MentorSectionInfo({
   waitlistCapacity
 }: MentorSectionInfoProps) {
   const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(sectionId);
-  //const { data: waitlistedStudents, isSuccess: waitlistLoaded, isError: waitlistLoadError } = useWaitlistedStudents(sectionId);
-
+  const {
+    data: waitlistedStudents,
+    isSuccess: waitlistLoaded,
+    isError: waitlistLoadError
+  } = useSectionWaitlisted(sectionId);
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
   const [isAddingStudent, setIsAddingStudent] = useState<boolean>(false);
@@ -93,6 +95,7 @@ export default function MentorSectionInfo({
                                 id={studentId}
                                 sectionId={sectionId}
                                 courseRestricted={courseRestricted}
+                                isWaitlist={false}
                               />
                             )}
                             <span className="student-info">{name || email}</span>
@@ -125,27 +128,27 @@ export default function MentorSectionInfo({
               <LoadingSpinner className="spinner-centered" />
             )}
           </InfoCard>
-          <InfoCard
-            title="Waitlisted Students"
-            extraPadding={
-              // add extra padding if loading, otherwise remove padding
-              !studentsLoaded
-              // !waitlistLoaded
-            }
-          >
-            {studentsLoaded ? (
-              // waitlistLoaded ? (
-              // done loading
-              <React.Fragment>
-                <table id="students-table" className="csm-table">
-                  <thead className="csm-table-head">
-                    <tr className="csm-table-head-row">
-                      <th className="csm-table-item">Name</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {(students.length === 0 ? [{ name: "No students waitlisted", email: "", id: -1 }] : students).map(
-                      ({ name, email, id: studentId }: Student) => (
+          {students && students.length >= capacity && (
+            <InfoCard
+              title="Waitlisted Students"
+              extraPadding={
+                // add extra padding if loading, otherwise remove padding
+                !waitlistLoaded
+              }
+            >
+              {waitlistLoaded ? (
+                <React.Fragment>
+                  <table id="students-table" className="csm-table">
+                    <thead className="csm-table-head">
+                      <tr className="csm-table-head-row">
+                        <th className="csm-table-item">Name</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {(waitlistedStudents.length === 0
+                        ? [{ name: "No students waitlisted", email: "", id: -1 }]
+                        : waitlistedStudents
+                      ).map(({ name, email, id: studentId }: Student) => (
                         <tr key={studentId} className="csm-table-row">
                           <td className="csm-table-item">
                             {isCoordinator && studentId !== -1 && (
@@ -154,38 +157,39 @@ export default function MentorSectionInfo({
                                 id={studentId}
                                 sectionId={sectionId}
                                 courseRestricted={courseRestricted}
+                                isWaitlist={true}
                               />
                             )}
                             <span className="student-info">{name || email}</span>
                           </td>
                         </tr>
-                      )
-                    )}
-                    {isCoordinator && (
-                      <React.Fragment>
-                        <tr className="csm-table-row">
-                          <td className="csm-table-item">
-                            <button className="secondary-btn" onClick={() => setIsAddingStudent(true)}>
-                              Add waitlisted students
-                            </button>
-                          </td>
-                        </tr>
-                      </React.Fragment>
-                    )}
-                  </tbody>
-                </table>
-                {isCoordinator && isAddingStudent && (
-                  <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} />
-                )}
-              </React.Fragment>
-            ) : studentsLoadError ? ( // ) : waitlistLoadError ? ()
-              // error loading
-              <h3>Waitlisted students could not be loaded</h3>
-            ) : (
-              // not done loading
-              <LoadingSpinner className="spinner-centered" />
-            )}
-          </InfoCard>
+                      ))}
+                      {isCoordinator && (
+                        <React.Fragment>
+                          <tr className="csm-table-row">
+                            <td className="csm-table-item">
+                              <button className="secondary-btn" onClick={() => setIsAddingStudent(true)}>
+                                Add waitlisted students
+                              </button>
+                            </td>
+                          </tr>
+                        </React.Fragment>
+                      )}
+                    </tbody>
+                  </table>
+                  {isCoordinator && isAddingStudent && (
+                    <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} />
+                  )}
+                </React.Fragment>
+              ) : waitlistLoadError ? (
+                // error loading
+                <h3>Waitlisted students could not be loaded</h3>
+              ) : (
+                // not done loading
+                <LoadingSpinner className="spinner-centered" />
+              )}
+            </InfoCard>
+          )}
         </div>
         <div className="section-info-cards-right">
           {spacetimes.map(({ override, ...spacetime }, index) => (

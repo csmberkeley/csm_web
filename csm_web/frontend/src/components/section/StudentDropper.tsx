@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-import { useDropStudentMutation } from "../../utils/queries/sections";
+import { useDropStudentMutation, useDropWaitlistMutation } from "../../utils/queries/sections";
 import Modal from "../Modal";
 
 import XIcon from "../../../static/frontend/img/x.svg";
@@ -12,11 +12,13 @@ interface StudentDropperProps {
   sectionId: number;
   name: string;
   courseRestricted: boolean;
+  isWaitlist: boolean;
 }
 
-export default function StudentDropper({ id, sectionId, name, courseRestricted }: StudentDropperProps) {
+export default function StudentDropper({ id, sectionId, name, courseRestricted, isWaitlist }: StudentDropperProps) {
   const [showDropPrompt, setShowDropPrompt] = useState(false);
   const [drop, setDrop] = useState(false);
+  const [waitlistDrop, setWaitlistDrop] = useState(false);
   const [ban, setBan] = useState(false);
   const [blacklist, setBlacklist] = useState(false);
 
@@ -24,9 +26,14 @@ export default function StudentDropper({ id, sectionId, name, courseRestricted }
    * Mutation to drop a student from the section.
    */
   const studentDropMutation = useDropStudentMutation(id, sectionId);
+  const waitlistDropMutation = useDropWaitlistMutation(id, sectionId);
 
   function handleClickDrop() {
-    studentDropMutation.mutate({ banned: ban, blacklisted: blacklist });
+    if (waitlistDrop) {
+      waitlistDropMutation.mutate({ banned: ban, blacklisted: blacklist });
+    } else {
+      studentDropMutation.mutate({ banned: ban, blacklisted: blacklist });
+    }
     setShowDropPrompt(false);
   }
 
@@ -43,6 +50,19 @@ Add student, decrease capacity, drop student
         <input type="checkbox" id="drop" name="drop" onChange={e => setDrop(e.target.checked)} />
         <label className="student-dropper-checkbox-label" htmlFor="drop">
           I would like to DROP {name} from this section.
+        </label>
+        <br></br>
+      </div>
+    </div>
+  );
+
+  const waitlistDropDiv = (
+    <div>
+      <h2 className="student-dropper-head-item">DROP Waitlisted Student</h2>
+      <div className="student-dropper-checkbox-container">
+        <input type="checkbox" id="drop" name="drop" onChange={e => setWaitlistDrop(e.target.checked)} />
+        <label className="student-dropper-checkbox-label" htmlFor="drop">
+          I would like to DROP {name} from this waitlist section.
         </label>
         <br></br>
       </div>
@@ -90,7 +110,7 @@ Add student, decrease capacity, drop student
       />
       {showDropPrompt && (
         <Modal className="student-dropper-modal" closeModal={() => setShowDropPrompt(false)}>
-          {dropDiv}
+          {isWaitlist ? waitlistDropDiv : dropDiv}
           {courseRestricted ? blacklistDiv : banDiv}
           <p>
             <span className="warning">WARNING: </span>Dropping a student automatically processes the waitlist.
