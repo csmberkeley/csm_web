@@ -3,8 +3,8 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { Mentor, Student, getCoordData } from "../../utils/queries/coord";
 import { SearchBar } from "../SearchBar";
 import { CheckBox } from "./CheckBox";
+import DropBox from "./DropBox";
 import styles from "../../css/coord_interface.scss";
-// import DropBox from "./DropBox";
 
 export default function CoordTable() {
   const [tableData, setTableData] = useState<Mentor[] | Student[]>([]);
@@ -16,6 +16,7 @@ export default function CoordTable() {
   const { pathname } = useLocation();
   const isStudents = pathname.includes("students");
 
+  // On load
   useEffect(() => {
     const fetchData = async () => {
       const data = await getCoordData(courseId, isStudents);
@@ -24,9 +25,9 @@ export default function CoordTable() {
     };
     fetchData();
   }, []);
-
   const navigate = useNavigate();
 
+  // Select specific checkbox
   function selectCheckbox(id: number) {
     const checkbox = document.getElementById(id + "check") as HTMLInputElement;
     checkbox.checked = !checkbox.checked;
@@ -39,6 +40,8 @@ export default function CoordTable() {
       setSelected(selectedData.filter(row => row.id !== id) as Mentor[] | Student[]);
     }
   }
+
+  // Toggle for checkboxes
   function toggleAllCheckboxes() {
     if (allSelected) {
       deselectAllCheckboxes();
@@ -47,6 +50,8 @@ export default function CoordTable() {
     }
     setAllSelected(!allSelected);
   }
+
+  // Helper for toggle
   function selectAllCheckboxes() {
     const checkboxes = document.querySelectorAll("input[type=checkbox]");
     checkboxes.forEach(checkbox => {
@@ -54,6 +59,7 @@ export default function CoordTable() {
     });
     setSelected(searchData);
   }
+  // Helper for toggle
   function deselectAllCheckboxes() {
     const checkboxes = document.querySelectorAll("input[type=checkbox]");
     checkboxes.forEach(checkbox => {
@@ -62,6 +68,7 @@ export default function CoordTable() {
     setSelected([]);
   }
 
+  // Filter search for table
   function filterSearch(event: React.ChangeEvent<HTMLInputElement>) {
     const search = event.target.value.toLowerCase();
     if (search.length === 0) {
@@ -79,6 +86,64 @@ export default function CoordTable() {
     setSelected(filteredSelectData as Mentor[] | Student[]);
   }
 
+  // Filter string
+  function filterString(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    console.log("HELLO");
+    console.log(event);
+    const filter = (event.target as HTMLButtonElement).innerText;
+    let filteredData: Student[] = [];
+    let filteredSelectedData: Student[] = [];
+    filteredData = (tableData as Student[]).filter(row => {
+      return row.dayTime.includes(filter);
+    });
+    filteredSelectedData = (tableData as Student[]).filter(row => {
+      return row.dayTime.includes(filter);
+    });
+    setSearch(filteredData);
+    setSelected(filteredSelectedData);
+  }
+
+  // FILTER FUNCTIONS -- Student
+
+  // Filter absences
+  function filterAbsences(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+    const filter = (event.target as HTMLButtonElement).innerText;
+    let filteredData: Student[] = [];
+    let filteredSelectedData: Student[] = [];
+    if (filter.includes("0")) {
+      filteredData = (tableData as Student[]).filter(row => {
+        return row.numUnexcused == 0;
+      });
+      filteredSelectedData = (tableData as Student[]).filter(row => {
+        return row.numUnexcused == 0;
+      });
+    } else if (filter.includes("1")) {
+      filteredData = (tableData as Student[]).filter(row => {
+        return row.numUnexcused == 1;
+      });
+      filteredSelectedData = (tableData as Student[]).filter(row => {
+        return row.numUnexcused == 1;
+      });
+    } else if (filter.includes("2")) {
+      filteredData = (tableData as Student[]).filter(row => {
+        return row.numUnexcused == 2;
+      });
+      filteredSelectedData = (tableData as Student[]).filter(row => {
+        return row.numUnexcused == 2;
+      });
+    } else if (filter.includes("3")) {
+      filteredData = (tableData as Student[]).filter(row => {
+        return row.numUnexcused >= 3;
+      });
+      filteredSelectedData = (tableData as Student[]).filter(row => {
+        return row.numUnexcused >= 3;
+      });
+    }
+    setSearch(filteredData);
+    setSelected(filteredSelectedData);
+  }
+
+  // Debugging Function for seeing selected data
   function getSelectedData() {
     console.log(selectedData);
     return selectedData;
@@ -90,18 +155,17 @@ export default function CoordTable() {
         <SearchBar onChange={filterSearch} className="search-filter" />
       </div>
       <div id="table-buttons">
-        <button onClick={getSelectedData}>
-          Select All<div></div>
-        </button>
-        <button onClick={getSelectedData}>
-          Select All<div></div>
-        </button>
-        <button onClick={getSelectedData}>
-          Select All<div></div>
-        </button>
-        {/* <DropBox click={getSelectedData}/>
-        <DropBox />
-        <DropBox /> */}
+        <DropBox items={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]} name={"Day"} func={filterString}></DropBox>
+        {isStudents ? (
+          <DropBox items={["0", "1", "2", "3+"]} name={"Absences"} func={filterAbsences}></DropBox>
+        ) : (
+          <>
+            <DropBox items={["Family 1", "Family 2", ""]} name={"Family"} func={filterString}></DropBox>
+            <button onClick={getSelectedData}>
+              Section Size<div></div>
+            </button>
+          </>
+        )}
       </div>
       <table>
         <thead>
