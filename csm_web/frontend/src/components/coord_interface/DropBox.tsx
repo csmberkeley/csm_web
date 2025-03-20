@@ -4,12 +4,13 @@ interface DropBoxProps {
   items: Array<string>;
   name: string;
   func: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+  reset: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
 }
 
-export default function DropBox({ name, items, func }: DropBoxProps) {
+export default function DropBox({ name, items, func, reset }: DropBoxProps) {
   return (
     <div className="dropdown">
-      <button className="dropbtn">
+      <button className="dropbtn" onClick={event => reset(event)}>
         {name}
         <div></div>
       </button>

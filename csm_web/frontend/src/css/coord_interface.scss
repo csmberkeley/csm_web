@@ -5,7 +5,7 @@ table {
 }
 
 td {
-  padding: 7px 0;
+  padding: 7px 10px 7px 0;
   font-size: 14px;
 }
 
@@ -27,7 +27,7 @@ tr {
 .search-filter input {
   width: 100%;
   padding: 20px 45px;
-  background-color: rgb(241 245 250);
+  background-color: rgb(243 247 251);
   border-color: rgb(226 230 240);
   border-radius: 30px;
 }
@@ -58,7 +58,40 @@ tr {
   padding: 20px 15%;
 }
 
-#table-buttons button {
+#table-buttons .dropbtn div {
+  width: 0;
+  height: 0;
+  margin-left: 10px;
+  pointer-events: none;
+  border-top: 5px solid rgb(0 0 0);
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+}
+
+main {
+  min-height: 70vh;
+  padding: max(2%, 30px) 4%;
+  overflow: auto;
+}
+
+.no-data {
+  padding: 20px;
+  font:
+    14px Montserrat,
+    sans-serif;
+}
+
+/* Dropdown */
+
+.dropbtn {
+  padding: 16px;
+  font-size: 16px;
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+
+#table-buttons .dropbtn {
   display: flex;
   place-items: center right;
   padding: 10px 25px;
@@ -69,40 +102,15 @@ tr {
   font-weight: 500;
   color: rgb(5 5 5);
   cursor: pointer;
-  background-color: rgb(241 245 250);
-  border-color: rgb(226 230 240);
+  background-color: rgb(255 255 255);
+  border-color: rgb(191 193 197);
   border-style: solid;
   border-width: 1px;
-  border-radius: 30px;
+  border-radius: 10px;
 }
 
-#table-buttons button:hover {
-  background-color: rgb(227 232 238);
-}
-
-#table-buttons button div {
-  width: 0;
-  height: 0;
-  margin-left: 10px;
-  border-top: 5px solid rgb(0 0 0);
-  border-right: 5px solid transparent;
-  border-left: 5px solid transparent;
-}
-
-main {
-  padding: max(2%, 30px) 4%;
-  overflow: auto;
-}
-
-/* Dropdown */
-
-.dropbtn {
-  padding: 16px;
-  font-size: 16px;
-  color: white;
-  cursor: pointer;
-  background-color: #4caf50;
-  border: none;
+#table-buttons .dropbtn:hover {
+  background-color: rgb(241 245 250);
 }
 
 /* The container <div> - needed to position the dropdown content */
@@ -114,9 +122,18 @@ main {
 /* Links inside the dropdown */
 .dropdown-content button {
   display: block;
+  width: 100%;
   padding: 12px 16px;
+  margin: 0;
+  font:
+    14px Montserrat,
+    sans-serif;
   color: black;
+  text-align: left;
   text-decoration: none;
+  background-color: #f9f9f9;
+  border: none;
+  border-radius: 0;
 }
 
 /* Change color of dropdown links on hover */
@@ -139,15 +156,47 @@ main {
   display: block;
 }
 
-/* Change the background color of the dropdown button when the dropdown content is shown */
-.dropdown:hover .dropbtn {
-  background-color: #3e8e41;
+#table-buttons .dropbtn.using-filter {
+  background-color: #c2e7ff;
+}
+
+#table-buttons .dropbtn.using-filter:hover {
+  background-color: #addeff;
+}
+
+#table-buttons .dropbtn.using-filter div {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  margin-left: 10px;
+  border: none;
+}
+
+#table-buttons .dropbtn.using-filter div::before,
+#table-buttons .dropbtn.using-filter div::after {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 10px;
+  height: 2px;
+  margin-top: -1px;
+  content: "";
+  background-color: rgb(0 0 0);
+}
+
+#table-buttons .dropbtn.using-filter div::before {
+  transform: rotate(45deg);
+}
+
+#table-buttons .dropbtn.using-filter div::after {
+  transform: rotate(-45deg);
 }
 
 /* Checkbox */
 
 .checkbox-wrapper * {
   box-sizing: border-box;
+  margin-top: 1px;
 }
 
 .checkbox-wrapper .cbx {
