@@ -2,7 +2,7 @@ import React, { useState, useEffect, ChangeEvent, MouseEvent } from "react";
 
 import { ResourceEdit } from "./ResourceEdit";
 import ResourceRowRender from "./ResourceRowRender";
-import { Link, Resource, Worksheet } from "./ResourceTypes";
+import { Link, Resource, ResourceKeys, Worksheet } from "./ResourceTypes";
 
 interface ResourceRowProps {
   initialResource: Resource;
@@ -49,9 +49,22 @@ export const ResourceRow = ({
    * @param e - onChange event
    * @param field - resource field to change
    */
-  function handleChange(e: ChangeEvent<HTMLInputElement>, field: string): void {
-    resource[field] = e.target.value;
-    setResource(resource);
+  function handleChange(
+    e: ChangeEvent<HTMLInputElement>,
+    field: ResourceKeys.weekNum | ResourceKeys.date | ResourceKeys.topics
+  ): void {
+    const updatedResource: Resource = { ...resource };
+    switch (field) {
+      case ResourceKeys.weekNum: {
+        updatedResource[field] = parseInt(e.target.value);
+        break;
+      }
+      default: {
+        updatedResource[field] = e.target.value;
+        break;
+      }
+    }
+    setResource(updatedResource);
   }
 
   /**
@@ -90,6 +103,8 @@ export const ResourceRow = ({
     if (cancelOverride) {
       cancelOverride();
     } else {
+      // reset resource to the original
+      setResource(initialResource);
       setEdit(false);
     }
   }

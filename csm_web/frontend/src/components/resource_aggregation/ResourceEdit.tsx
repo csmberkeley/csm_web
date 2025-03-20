@@ -1,4 +1,3 @@
-import _ from "lodash";
 import React, { ChangeEvent, MouseEvent, useState, useEffect, useReducer } from "react";
 
 import Modal from "../Modal";
@@ -7,18 +6,28 @@ import ResourceLinkEdit from "./ResourceLinkEdit";
 import {
   copyWorksheet,
   copyLink,
-  emptyLink,
   Worksheet,
   Link,
-  FormErrors,
-  Touched,
-  emptyFormErrors,
-  emptyTouched,
-  allTouched,
-  Resource
+  Resource,
+  ResourceValidationField,
+  ResourceKeys
 } from "./ResourceTypes";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
-import { ResourceWorksheetActionType, ResourceWorksheetKind, resourceWorksheetReducer } from "./utils";
+
+import {
+  resourceFormErrorReducer,
+  hasAnyErrors,
+  emptyFormErrors,
+  ResourceFormErrorActionType
+} from "./reducers/resourceFormErrorReducer";
+import { ResourceLinkActionType, ResourceLinkKind, resourceLinkReducer } from "./reducers/resourceLinkReducer";
+import { resourceTouchedReducer, emptyTouched, ResourceTouchedActionType } from "./reducers/resourceTouchedReducer";
+import {
+  ResourceWorksheetActionType,
+  ResourceWorksheetKind,
+  resourceWorksheetReducer
+} from "./reducers/resourceWorksheetReducer";
+import { validateResources } from "./utils/validation";
 
 import CheckCircle from "../../../static/frontend/img/check-circle-solid.svg";
 import ExclamationCircle from "../../../static/frontend/img/exclamation-circle.svg";
@@ -26,7 +35,10 @@ import PlusIcon from "../../../static/frontend/img/plus.svg";
 
 interface ResourceEditProps {
   resource: Resource;
-  onChange: (e: ChangeEvent<HTMLInputElement>, field: string) => void;
+  onChange: (
+    e: ChangeEvent<HTMLInputElement>,
+    field: ResourceKeys.weekNum | ResourceKeys.date | ResourceKeys.topics
+  ) => void;
   onSubmit: (
     e: MouseEvent<HTMLButtonElement>,
     fileFormDataMap: Map<number, Worksheet>,
@@ -41,15 +53,16 @@ interface ResourceEditProps {
  * React component to handle editing of resources.
  */
 export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: ResourceEditProps): React.ReactElement => {
-  /**
-   * List of FormData objects representing the current (local) newly added worksheets.
-   * When clicking the add worksheet button, a new empty FormData object should be added,
-   * and on upload/edit of worksheet fields, the FormData object should be updated to reflect changes.
-   */
-  // const [newWorksheets, setNewWorksheets] = useState<Array<Worksheet>>([]);
-  const [newLinks, setNewLinks] = useState<Array<Link>>([]);
-  const [formErrors, setFormErrors] = useState<FormErrors>(emptyFormErrors());
-  const [touched, setTouched] = useState<Touched>(emptyTouched());
+  // status of whether each input element has been touched by the user
+  const [{ touched }, touchDispatch] = useReducer(resourceTouchedReducer, {
+    touched: emptyTouched()
+  });
+
+  // data structure containing all validation errors present
+  const [{ formErrors }, formErrorDispatch] = useReducer(resourceFormErrorReducer, {
+    formErrors: emptyFormErrors()
+  });
+
   const [isEditingLinks, setIsEditingLinks] = useState<boolean>(false);
 
   const resourceWorksheetMap: Map<number, Worksheet> = new Map();
@@ -66,395 +79,112 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     }
   }
 
+  // all worksheets, grouped by whether the worksheet was existing or if it's new
   const [{ existingWorksheets, newWorksheets }, worksheetDispatch] = useReducer(resourceWorksheetReducer, {
     existingWorksheets: resourceWorksheetMap,
     newWorksheets: []
   });
 
-  /**
-   * Mapping from worksheet id to FormData holding updated attributes
-   */
-  // const [existingWorksheetMap, setExistingWorksheetMap] = useState<Map<number, Worksheet>>(resourceWorksheetMap);
-  const [existingLinkMap, setExistingLinkMap] = useState<Map<number, Link>>(resourceLinkMap);
+  // all links, grouped by whether the worksheet was existing or if it's new
+  const [{ existingLinks, newLinks }, linkDispatch] = useReducer(resourceLinkReducer, {
+    existingLinks: resourceLinkMap,
+    newLinks: []
+  });
 
   /**
-   * Validates form inputs, updating error strings and returning whether or not the fields are valid
-   *
-   * The `validateAll` parameter is needed because of the asynchronous state updates.
-   *
-   * @param validateAll whether all fields should be validated
+   * If any input element was touched, re-validate.
    */
-  function validate(validateAll = false) {
-    const { weekNum, date, topics } = resource;
-    const newFormErrors = { ...formErrors };
-    newFormErrors["newWorksheets"] = new Map(newFormErrors["newWorksheets"]);
-    newFormErrors["existingWorksheets"] = new Map(newFormErrors["existingWorksheets"]);
-    newFormErrors["newLinks"] = new Map(newFormErrors["newLinks"]);
-    newFormErrors["existingLinks"] = new Map(newFormErrors["existingLinks"]);
-    if (validateAll || touched.weekNum) {
-      let weekNumError = "";
-      if (!weekNum) {
-        weekNumError = "Week Number is required";
-      } else if (isNaN(weekNum)) {
-        weekNumError = "Week Number must be a number";
-      }
-      newFormErrors["weekNum"] = weekNumError;
-    }
-    if (validateAll || touched.date) {
-      newFormErrors["date"] = date ? "" : "Date is required";
-    }
-    if (validateAll || touched.topics) {
-      newFormErrors["topics"] = topics ? "" : "Topics is required";
-    }
-
-    // handle worksheet validation
-    let anyWorksheetsOrLinksInvalid = false;
-    const allTouchedIndices = new Set();
-    const allTouchedIds = new Set();
-    for (const [index, worksheet] of newWorksheets.entries()) {
-      if (validateAll || touched.newWorksheets.has(index)) {
-        if (!worksheet.name) {
-          newFormErrors["newWorksheets"].set(index, "Worksheet name is required");
-          anyWorksheetsOrLinksInvalid = true;
-        } else {
-          newFormErrors["newWorksheets"].delete(index);
-        }
-        allTouchedIndices.add(index);
-      }
-    }
-    for (const worksheetId of existingWorksheets.keys()) {
-      const worksheet = existingWorksheets.get(worksheetId)!;
-      if (validateAll || touched.existingWorksheets.has(worksheetId)) {
-        if (worksheet.deleted && worksheet.deleted.includes("worksheet")) {
-          newFormErrors["existingWorksheets"].delete(worksheetId);
-          continue;
-        }
-        if (!worksheet.name) {
-          newFormErrors["existingWorksheets"].set(worksheetId, "Worksheet name is required");
-          anyWorksheetsOrLinksInvalid = true;
-        } else {
-          newFormErrors["existingWorksheets"].delete(worksheetId);
-        }
-        allTouchedIds.add(worksheetId);
-      }
-    }
-
-    // Link validation: returns 0 if not valid, 1 if valid, 2 if valid when https:// appended
-    const isValidURL = (url: string) => {
-      let urlTest;
-      try {
-        urlTest = new URL(url);
-      } catch {
-        try {
-          urlTest = new URL("https://" + url);
-          return urlTest.protocol === "http:" || urlTest.protocol === "https:" ? 2 : 0;
-        } catch {
-          return 0;
-        }
-      }
-      return urlTest.protocol === "http:" || urlTest.protocol === "https:" ? 1 : 0;
-    };
-
-    for (const [index, link] of newLinks.entries()) {
-      if (validateAll || touched.newLinks.has(index)) {
-        if (!link.name) {
-          newFormErrors["newLinks"].set(index, "link name is required");
-          anyWorksheetsOrLinksInvalid = true;
-        } else if (!isValidURL(link.url)) {
-          newFormErrors["newLinks"].set(index, "link URL is invalid");
-        } else {
-          newFormErrors["newLinks"].delete(index);
-        }
-        allTouchedIndices.add(index);
-      }
-    }
-    for (const linkId of existingLinkMap.keys()) {
-      const link = existingLinkMap.get(linkId);
-      if (link && (validateAll || touched.existingLinks.has(linkId))) {
-        if (link.deleted) {
-          newFormErrors["existingLinks"].delete(linkId);
-          continue;
-        }
-        if (!link.name || !link.url) {
-          newFormErrors["existingLinks"].set(linkId, "Link name is required");
-          anyWorksheetsOrLinksInvalid = true;
-        } else if (!isValidURL(link.url)) {
-          newFormErrors["existingLinks"].set(linkId, "Link URL is invalid");
-          anyWorksheetsOrLinksInvalid = true;
-        } else {
-          newFormErrors["existingLinks"].delete(linkId);
-        }
-        allTouchedIds.add(linkId);
-      }
-    }
-    setFormErrors({ ...newFormErrors });
-    setTouched(_.merge(touched, { newWorksheets: allTouchedIndices, existingWorksheets: allTouchedIds }));
-    return !newFormErrors.weekNum && !newFormErrors.date && !newFormErrors.topics && !anyWorksheetsOrLinksInvalid;
-  }
-
-  /**
-   * Checks formErrors to see if there are any error messages
-   *
-   * @returns whether or not the fields are valid
-   */
-  function checkValid(): boolean {
-    // resource fields invalid
-    if (formErrors.weekNum || formErrors.date || formErrors.topics) {
-      return false;
-    }
-    // worksheet fields
-    for (const errorMsg of formErrors.newWorksheets) {
-      if (errorMsg) return false;
-    }
-    for (const errorMsg of formErrors.existingWorksheets) {
-      if (errorMsg) return false;
-    }
-    for (const errorMsg of formErrors.newLinks) {
-      if (errorMsg) return false;
-    }
-    for (const errorMsg of formErrors.existingLinks) {
-      if (errorMsg) return false;
-    }
-    return true;
-  }
-
-  /**
-   * Updates the touched fields when the user unfocuses from the field
-   *
-   * @param field string containing type of input field
-   */
-  function handleBlur(field: string) {
-    setTouched({ ...touched, [field]: true });
-  }
-
-  /**
-   * Runs when existing worksheet input field is blurred (clicked away from).
-   *
-   * @param worksheetId numerical ID of worksheet
-   */
-  function handleBlurExistingWorksheet(worksheetId: number) {
-    const updatedExistingWorksheets = new Set(touched.existingWorksheets);
-    updatedExistingWorksheets.add(worksheetId);
-    setTouched({ ..._.merge(touched, { existingWorksheets: updatedExistingWorksheets }) });
-  }
-
-  /**
-   * Runs when new worksheet input field is blurred (clicked away from).
-   *
-   * @param index position of worksheet in resource's worksheet array
-   */
-  function handleBlurNewWorksheet(index: number) {
-    const updatedNewWorksheets = new Set(touched.newWorksheets);
-    updatedNewWorksheets.add(index);
-    setTouched({ ..._.merge(touched, { newWorksheets: updatedNewWorksheets }) });
-  }
-
-  /**
-   * Runs when existing link input field is blurred (clicked away from).
-   *
-   * @param linkId ID of link in existingLinkMap
-   */
-  function handleBlurExistingLink(linkId: number) {
-    const updatedExistingLinks = new Set(touched.existingLinks);
-    updatedExistingLinks.add(linkId);
-    setTouched({ ..._.merge(touched, { existingLinks: updatedExistingLinks }) });
-  }
-
-  /**
-   * Runs when new link input field is blurred (clicked away from).
-   *
-   * @param index position of worksheet in resource's newLinks array
-   */
-  function handleBlurNewLink(index: number) {
-    const updatedNewLinks = new Set(touched.newLinks);
-    updatedNewLinks.add(index);
-    setTouched({ ..._.merge(touched, { newLinks: updatedNewLinks }) });
-  }
-
   useEffect(() => {
-    validate();
+    validateResources({
+      resource,
+      newWorksheets,
+      existingWorksheets,
+      newLinks,
+      existingLinks,
+      touched,
+      formErrorDispatch
+    });
   }, [touched]);
 
   /**
    * Wrapper for the onSubmit function, validating all fields before submission.
    *
-   * @param e onSubmit event
+   * @param e - onSubmit event
    */
   function handleSubmit(e: MouseEvent<HTMLButtonElement>) {
-    // set all fields as touched for future validates
-    setTouched(allTouched());
-
     // validate all fields
-    if (validate(true)) {
-      onSubmit(e, existingWorksheets, existingLinkMap, newWorksheets, newLinks);
-    }
-  }
-
-  /**
-   * Retrieves a link from the link map,
-   * and calls the callback function on the link.
-   *
-   * @param linkId Id of link to retrieve
-   * @param callback function to call on retrieved link
-   */
-  function retrieveAndExecuteLink(linkId: number, callback: (link: Link) => void) {
-    let link: Link;
-    if (existingLinkMap.has(linkId)) {
-      link = existingLinkMap.get(linkId)!;
-    } else {
-      console.error(`Link not found: id ${linkId}`);
-      return;
-    }
-    callback(link);
-    // update state and render
-    setExistingLinkMap(new Map(existingLinkMap));
-  }
-
-  /**
-   * Modifies a specified link field of the current resource.
-   *
-   * @param e - onChange event
-   * @param linkId - id of link that was changed
-   * @param field - resource field to change
-   * @param getFile - whether file should be retrieved
-   */
-  function handleExistingLinkChange(
-    e: React.ChangeEvent<HTMLInputElement>,
-    linkId: number,
-    field: "name" | "url"
-  ): void {
-    retrieveAndExecuteLink(linkId, link => {
-      if (field === "name") {
-        link[field] = e.target.value;
-      } else {
-        link[field] = e.target.value;
-      }
-    });
-  }
-
-  /**
-   * Add 'deleted' attribute to mark the worksheet as deleted.
-   *
-   * The value should not matter (as the attribute should not exist
-   * on worksheets that are not marked for deletion), but is set to true nonetheless.
-   *
-   * @param worksheetId id of worksheet that was deleted
-   */
-  function handleExistingWorksheetDelete(worksheetId: number): void {
-    // update touched and formErrors
-    const updatedFormErrors = { ...formErrors };
-    updatedFormErrors.existingWorksheets = new Map(updatedFormErrors.existingWorksheets);
-    updatedFormErrors.existingWorksheets.delete(worksheetId);
-    setFormErrors(updatedFormErrors);
-
-    worksheetDispatch({
-      type: ResourceWorksheetActionType.DeleteWorksheet,
-      worksheetId: worksheetId,
-      kind: ResourceWorksheetKind.EXISTING
-    });
-  }
-
-  /**
-   * Sets 'deleted' attribute to true to mark the link as deleted.
-   *
-   * @param linkId id of link that was deleted
-   */
-  function handleExistingLinkDelete(linkId: number): void {
-    const updatedFormErrors = { ...formErrors };
-    updatedFormErrors.existingLinks = new Map(updatedFormErrors.existingLinks);
-    updatedFormErrors.existingLinks.delete(linkId);
-    setFormErrors(updatedFormErrors);
-
-    retrieveAndExecuteLink(linkId, link => {
-      link.deleted = true;
-    });
-  }
-
-  /**
-   * Handles updating newly created links.
-   *
-   * @param e event object
-   * @param index new link index in array
-   * @param field changed field in link
-   */
-  function handleNewLinkChange(e: ChangeEvent<HTMLInputElement>, index: number, field: "name" | "url"): void {
-    const link = newLinks[index];
-    link[field] = e.target.value;
-    setNewLinks([...newLinks]);
-  }
-
-  /**
-   * Removes the new worksheet from the list.
-   *
-   * @param index index in newWorksheets
-   */
-  function handleNewWorksheetDelete(index: number): void {
-    // const updated = [...newWorksheets];
-    // updated.splice(index, 1);
-    // setNewWorksheets([...updated]);
-    worksheetDispatch({
-      type: ResourceWorksheetActionType.DeleteWorksheet,
-      kind: ResourceWorksheetKind.NEW,
-      worksheetId: index
+    const fieldsValid = validateResources({
+      resource,
+      newWorksheets,
+      existingWorksheets,
+      newLinks,
+      existingLinks,
+      touched,
+      formErrorDispatch,
+      validateAll: true
     });
 
-    // update touched and formErrors
-    const updatedTouched = { ...touched };
-    const oldWorksheets: Set<number> = updatedTouched.newWorksheets;
-    updatedTouched.newWorksheets = new Set();
-    for (const idx of oldWorksheets) {
-      if (idx < index) {
-        updatedTouched.newWorksheets.add(idx);
-      } else if (idx > index) {
-        // shift indices after deleted worksheet
-        updatedTouched.newWorksheets.add(idx - 1);
-      }
+    if (fieldsValid) {
+      onSubmit(e, existingWorksheets, existingLinks, newWorksheets, newLinks);
     }
-    setTouched(updatedTouched);
-    const updatedFormErrors = { ...formErrors };
-    const oldWorksheetErrors = updatedFormErrors.newWorksheets;
-    updatedFormErrors.newWorksheets = new Map();
-    for (const [idx, error] of oldWorksheetErrors.entries()) {
-      if (idx < index) {
-        updatedFormErrors.newWorksheets.set(idx, error);
-      } else if (idx > index) {
-        // shift indices after deleted worksheet
-        updatedFormErrors.newWorksheets.set(idx - 1, error);
-      }
-    }
-    setFormErrors(updatedFormErrors);
   }
 
   /**
-   * Removes the new link from the list.
+   * Mark a worksheet/link as deleted, and update `touched` and `formErrors`.
    *
-   * @param index index in newLinks
+   * @param kind - item in either `ResourceWorksheetKind` or `ResourceLinkKind`, indicating what item should be deleted
+   * @param id - ID of the item to be deleted
    */
-  function handleNewLinkDelete(index: number): void {
-    const updated = [...newLinks];
-    updated.splice(index, 1);
-    setNewLinks([...updated]);
-
-    // update touched and formErrors
-    const updatedTouched = { ...touched };
-    const oldLinks: Set<number> = updatedTouched.newLinks;
-    updatedTouched.newLinks = new Set();
-    for (const idx of oldLinks) {
-      if (idx < index) {
-        updatedTouched.newLinks.add(idx);
-      } else if (idx > index) {
-        // shift indices after deleted worksheet
-        updatedTouched.newLinks.add(idx - 1);
-      }
+  function handleDelete(kind: ResourceWorksheetKind | ResourceLinkKind, id: number): void {
+    let field: ResourceValidationField;
+    // here, we need to ensure that ResourceWorksheetKind and ResourceLinkKind have distinct values;
+    // the default integer enum assigns the same 0/1 values to these enums
+    switch (kind) {
+      case ResourceWorksheetKind.NEW:
+        field = ResourceValidationField.newWorksheets;
+        break;
+      case ResourceWorksheetKind.EXISTING:
+        field = ResourceValidationField.existingWorksheets;
+        break;
+      case ResourceLinkKind.NEW:
+        field = ResourceValidationField.newLinks;
+        break;
+      case ResourceLinkKind.EXISTING:
+        field = ResourceValidationField.existingLinks;
+        break;
     }
-    setTouched(updatedTouched);
-  }
 
-  /**
-   * Add a new empty link with null id to the local state.
-   */
-  function handleAddLink(): void {
-    setNewLinks([...newLinks, emptyLink()]);
+    formErrorDispatch({
+      type: ResourceFormErrorActionType.DeleteError,
+      field,
+      id,
+      deletedResource: true
+    });
+    touchDispatch({
+      type: ResourceTouchedActionType.DeleteTouched,
+      field,
+      id,
+      deletedResource: true
+    });
+
+    switch (kind) {
+      case ResourceWorksheetKind.NEW:
+      case ResourceWorksheetKind.EXISTING:
+        worksheetDispatch({
+          type: ResourceWorksheetActionType.DeleteWorksheet,
+          worksheetId: id,
+          kind
+        });
+        break;
+      case ResourceLinkKind.NEW:
+      case ResourceLinkKind.EXISTING:
+        linkDispatch({
+          type: ResourceLinkActionType.DeleteLink,
+          linkId: id,
+          kind
+        });
+        break;
+    }
   }
 
   const existingWorksheetDisplay =
@@ -466,24 +196,37 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
           worksheet={worksheet}
           worksheetKind={ResourceWorksheetKind.EXISTING}
           worksheetDispatch={worksheetDispatch}
-          onDelete={handleExistingWorksheetDelete}
-          onBlur={() => handleBlurExistingWorksheet(worksheet.id)}
+          onDelete={() => handleDelete(ResourceWorksheetKind.EXISTING, worksheet.id)}
+          onBlur={() =>
+            touchDispatch({
+              type: ResourceTouchedActionType.SetTouched,
+              field: ResourceValidationField.existingWorksheets,
+              id: worksheet.id
+            })
+          }
           formErrorsMap={formErrors.existingWorksheets}
         ></ResourceWorksheetEdit>
       )
     );
 
   const existingLinkDisplay =
-    existingLinkMap &&
-    [...existingLinkMap.values()].map(
+    existingLinks &&
+    [...existingLinks.values()].map(
       link =>
         !link.deleted && (
           <ResourceLinkEdit
             key={link.id}
             link={link}
-            onChange={handleExistingLinkChange}
-            onDelete={handleExistingLinkDelete}
-            onBlur={() => handleBlurExistingLink(link.id)}
+            linkKind={ResourceLinkKind.EXISTING}
+            linkDispatch={linkDispatch}
+            onDelete={() => handleDelete(ResourceLinkKind.EXISTING, link.id)}
+            onBlur={() =>
+              touchDispatch({
+                type: ResourceTouchedActionType.SetTouched,
+                field: ResourceValidationField.existingLinks,
+                id: link.id
+              })
+            }
             formErrorsMap={formErrors.existingLinks}
           ></ResourceLinkEdit>
         )
@@ -493,13 +236,19 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     newWorksheets &&
     newWorksheets.map((worksheet, index) => (
       <ResourceWorksheetEdit
-        key={index}
+        key={worksheet.id}
         worksheet={worksheet}
         worksheetKind={ResourceWorksheetKind.NEW}
         worksheetDispatch={worksheetDispatch}
         index={index}
-        onDelete={handleNewWorksheetDelete}
-        onBlur={() => handleBlurNewWorksheet(index)}
+        onDelete={() => handleDelete(ResourceWorksheetKind.NEW, index)}
+        onBlur={() =>
+          touchDispatch({
+            type: ResourceTouchedActionType.SetTouched,
+            field: ResourceValidationField.newWorksheets,
+            id: index
+          })
+        }
         formErrorsMap={formErrors.newWorksheets}
       ></ResourceWorksheetEdit>
     ));
@@ -508,17 +257,24 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
     newLinks &&
     newLinks.map((link, index) => (
       <ResourceLinkEdit
-        key={index}
+        key={link.id}
         index={index}
         link={link}
-        onChange={handleNewLinkChange}
-        onDelete={handleNewLinkDelete}
-        onBlur={() => handleBlurNewLink(index)}
+        linkKind={ResourceLinkKind.NEW}
+        linkDispatch={linkDispatch}
+        onDelete={() => handleDelete(ResourceLinkKind.NEW, index)}
+        onBlur={() =>
+          touchDispatch({
+            type: ResourceTouchedActionType.SetTouched,
+            field: ResourceValidationField.newLinks,
+            id: index
+          })
+        }
         formErrorsMap={formErrors.newLinks}
       ></ResourceLinkEdit>
     ));
 
-  const hasLinks = existingLinkMap && newLinks && (existingLinkDisplay.length > 0 || newLinkDisplay.length > 0);
+  const hasLinks = existingLinks && newLinks && (existingLinkDisplay.length > 0 || newLinkDisplay.length > 0);
 
   const tabErrorDisplay = (
     <div className="resource-tab-error-text">
@@ -535,11 +291,14 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
               Week Number
               <input
                 className="form-input"
-                type="text"
-                defaultValue={resource.weekNum}
+                type="number"
+                min={0}
+                defaultValue={isNaN(resource.weekNum) ? "" : resource.weekNum}
                 placeholder="Week Number"
-                onChange={e => onChange(e, "weekNum")}
-                onBlur={() => handleBlur("weekNum")}
+                onChange={e => onChange(e, ResourceKeys.weekNum)}
+                onBlur={() =>
+                  touchDispatch({ type: ResourceTouchedActionType.SetTouched, field: ResourceValidationField.weekNum })
+                }
               />
             </label>
             <div className="resource-validation-error">
@@ -554,8 +313,10 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                 className="form-date"
                 type="date"
                 defaultValue={resource.date}
-                onChange={e => onChange(e, "date")}
-                onBlur={() => handleBlur("date")}
+                onChange={e => onChange(e, ResourceKeys.date)}
+                onBlur={() =>
+                  touchDispatch({ type: ResourceTouchedActionType.SetTouched, field: ResourceValidationField.date })
+                }
               />
             </label>
             <div className="resource-validation-error">
@@ -575,8 +336,13 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
                       type="text"
                       defaultValue={resource.topics}
                       placeholder="Topics"
-                      onChange={e => onChange(e, "topics")}
-                      onBlur={() => handleBlur("topics")}
+                      onChange={e => onChange(e, ResourceKeys.topics)}
+                      onBlur={() =>
+                        touchDispatch({
+                          type: ResourceTouchedActionType.SetTouched,
+                          field: ResourceValidationField.topics
+                        })
+                      }
                     />
                   }
                 >
@@ -626,17 +392,21 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
               </div>
             )}
             {isEditingLinks && (
-              <div className="resource-worksheet-container">
+              <div className="resource-link-container">
                 {hasLinks && (
                   <div className="resource-link-head">
-                    <div className="resource-worksheet-head-item">Name</div>
-                    <div className="resource-worksheet-head-item">URL</div>
+                    <div className="resource-link-head-item">{/* empty for delete icon */}</div>
+                    <div className="resource-link-head-item">Name</div>
+                    <div className="resource-link-head-item">URL</div>
                   </div>
                 )}
                 {existingLinkDisplay}
                 {newLinkDisplay}
-                <div className="resource-worksheet-actions-container">
-                  <button onClick={handleAddLink} className="secondary-btn">
+                <div className="resource-link-actions-container">
+                  <button
+                    onClick={() => linkDispatch({ type: ResourceLinkActionType.AddLink })}
+                    className="secondary-btn"
+                  >
                     <PlusIcon className="icon" />
                     Add Link
                   </button>
@@ -646,12 +416,12 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
           </div>
         </div>
         <div className="resource-edit-footer">
-          <button onClick={handleSubmit} className="primary-btn" disabled={!checkValid()}>
-            <CheckCircle className="icon" id="save-icon" /> Save
-          </button>
           {!(!isEditingLinks && formErrors["existingLinks"].size == 0 && formErrors["newLinks"].size == 0) &&
             !(isEditingLinks && formErrors["existingWorksheets"].size == 0 && formErrors["newWorksheets"].size == 0) &&
             tabErrorDisplay}
+          <button onClick={handleSubmit} className="primary-btn" disabled={hasAnyErrors(formErrors)}>
+            <CheckCircle className="icon" id="save-icon" /> Save
+          </button>
         </div>
       </div>
     </Modal>

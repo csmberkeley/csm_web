@@ -149,3 +149,18 @@ export function formatForDatetimeInput(datetimeStr: string): string {
     }) ?? datetimeStr // if invalid, return it unchanged
   );
 }
+
+/**
+ * Convert a string taken from a `datetime-local` input field into a `DateTime` object,
+ * with the timezone set to PST.
+ *
+ * If the input string is invalid, the resulting `DateTime` object will have an `isValid` flag set to false,
+ * as per documentation on `DateTime.fromISO`.
+ *
+ * @see DateTime.fromISO
+ */
+export function parseDatetimeInput(datetimeStr: string): DateTime {
+  return DateTime.fromISO(datetimeStr, {
+    zone: DEFAULT_TIMEZONE
+  });
+}

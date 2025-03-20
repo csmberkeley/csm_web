@@ -65,6 +65,7 @@
   },
   "include": [
     "./csm_web/frontend/src/**/*.tsx",
+    "./csm_web/frontend/src/**/*.ts",
     "./csm_web/frontend/src/images.d.ts",
     "./csm_web/frontend/src/css.d.ts"
   ]

@@ -1,5 +1,4 @@
-import { DateTime } from "luxon";
-import { DEFAULT_TIMEZONE } from "../../utils/datetime";
+import { parseDatetimeInput } from "../../utils/datetime";
 
 export interface Resource {
   id?: number;
@@ -8,6 +7,15 @@ export interface Resource {
   topics: string;
   worksheets: Worksheet[];
   links: Link[];
+}
+
+export enum ResourceKeys {
+  id = "id",
+  weekNum = "weekNum",
+  date = "date",
+  topics = "topics",
+  worksheets = "worksheets",
+  links = "links"
 }
 
 export interface Worksheet {
@@ -49,25 +57,25 @@ export interface Link {
   deleted: boolean;
 }
 
-export interface FormErrors {
-  weekNum: string;
-  date: string;
-  topics: string;
-  existingWorksheets: Map<number, string>;
-  newWorksheets: Map<number, string>;
-  existingLinks: Map<number, string>;
-  newLinks: Map<number, string>;
+export enum LinkKeys {
+  id = "id",
+  resource = "resource",
+  name = "name",
+  url = "url",
+  deleted = "deleted"
 }
 
-export interface Touched {
-  weekNum: boolean;
-  date: boolean;
-  topics: boolean;
-  // set of ids/indices of touched worksheets
-  existingWorksheets: Set<number>;
-  newWorksheets: Set<number>;
-  existingLinks: Set<number>;
-  newLinks: Set<number>;
+/**
+ * Fields used in resource validation data structures.
+ */
+export enum ResourceValidationField {
+  weekNum = "weekNum",
+  date = "date",
+  topics = "topics",
+  existingWorksheets = "existingWorksheets",
+  newWorksheets = "newWorksheets",
+  existingLinks = "existingLinks",
+  newLinks = "newLinks"
 }
 
 /**
@@ -88,11 +96,21 @@ export function emptyResource(): Resource {
 /**
  * Creates an empty Worksheet object.
  *
+ * Other newly created worksheets should be passed as an argument,
+ * so that the worksheet ID can be assigned uniquely.
+ *
+ * The new worksheet ID is computed as -max(abs(other IDs)) - 1;
+ * this ensures that all new worksheet IDs are negative,
+ * while still being different from other worksheet IDs.
+ * If there are no other IDs, we start with -1.
+ *
  * @returns empty Worksheet object
  */
-export function emptyWorksheet(): Worksheet {
+export function emptyWorksheet(otherWorksheets: Worksheet[]): Worksheet {
+  const maxAbsId = Math.max(0, ...otherWorksheets.map(worksheet => Math.abs(worksheet.id)));
+  const nextWorksheetId = -maxAbsId - 1;
   return {
-    id: null as unknown as number,
+    id: nextWorksheetId,
     resource: null as unknown as number,
     name: "",
     worksheetFile: "",
@@ -102,9 +120,24 @@ export function emptyWorksheet(): Worksheet {
   };
 }
 
-export function emptyLink(): Link {
+/**
+ * Creates an empty Link object.
+ *
+ * Other newly created links should be passed as an argument,
+ * so that the link ID can be assigned uniquely.
+ *
+ * The new link ID is computed as -max(abs(other IDs)) - 1;
+ * this ensures that all new link IDs are negative,
+ * while still being different from other link IDs.
+ * If there are no other IDs, we start with -1.
+ *
+ * @returns empty Link object
+ */
+export function emptyLink(otherLinks: Link[]): Link {
+  const maxAbsId = Math.max(0, ...otherLinks.map(link => Math.abs(link.id)));
+  const nextLinkId = -maxAbsId - 1;
   return {
-    id: null as unknown as number,
+    id: nextLinkId,
     resource: null as unknown as number,
     name: "",
     url: "",
@@ -150,78 +183,52 @@ export function copyLink(link: Link): Link {
  * Assumes that the data has been validated.
  *
  * In particular, updates the following:
+ * - `id` is set to null if it is negative;
+ *   this is because new worksheets have temporary negative IDs
+ *   to distinguish them from each other.
  * - `worksheetSchedule` and `solutionSchedule` to be of correct ISO format;
  *   in particular, according to the JS specification, the time strings given
  *   will never have a timezone specified; we set the default timezone (PST) here.
  */
 export function normalizeWorksheet(worksheet: Worksheet): Worksheet {
+  let updatedWorksheetId = worksheet.id;
+  if (updatedWorksheetId < 0) {
+    updatedWorksheetId = null as unknown as number;
+  }
+
   let updatedWorksheetSchedule = worksheet.worksheetSchedule;
   if (worksheet.worksheetSchedule != null) {
-    updatedWorksheetSchedule = DateTime.fromISO(worksheet.worksheetSchedule, {
-      zone: DEFAULT_TIMEZONE
-    }).toISO();
+    updatedWorksheetSchedule = parseDatetimeInput(worksheet.worksheetSchedule).toISO();
   }
 
   let updatedSolutionSchedule = worksheet.solutionSchedule;
   if (worksheet.solutionSchedule != null) {
-    updatedSolutionSchedule = DateTime.fromISO(worksheet.solutionSchedule, {
-      zone: DEFAULT_TIMEZONE
-    }).toISO();
+    updatedSolutionSchedule = parseDatetimeInput(worksheet.solutionSchedule).toISO();
   }
 
-  return { ...worksheet, worksheetSchedule: updatedWorksheetSchedule, solutionSchedule: updatedSolutionSchedule };
-}
-
-/**
- * Creates an empty FormErrors object
- *
- * @returns empty FormErrors object
- */
-export function emptyFormErrors(): FormErrors {
   return {
-    weekNum: "",
-    date: "",
-    topics: "",
-    // mapping of worksheet id/index to error string
-    existingWorksheets: new Map(),
-    newWorksheets: new Map(),
-    existingLinks: new Map(),
-    newLinks: new Map()
+    ...worksheet,
+    id: updatedWorksheetId,
+    worksheetSchedule: updatedWorksheetSchedule,
+    solutionSchedule: updatedSolutionSchedule
   };
 }
 
 /**
- * Creates an empty Touched object
- *
- * @returns empty Touched object
+ * Convert a worksheet object into a key.
  */
-export function emptyTouched(): Touched {
-  return {
-    weekNum: false,
-    date: false,
-    topics: false,
-    // set of ids/indices of touched worksheets
-    existingWorksheets: new Set(),
-    newWorksheets: new Set(),
-    existingLinks: new Set(),
-    newLinks: new Set()
-  };
+export function worksheetToKey(worksheet: Worksheet): string {
+  return `${worksheet.id}#${worksheet.name}#${worksheet.deleted?.toString()}#${worksheet.resource}`;
 }
 
 /**
- * Creates a complete Touched object
- *
- * @returns complete Touched object
+ * Determines whether the given worksheet has an associated file of the given type.
  */
-export function allTouched(): Touched {
-  return {
-    weekNum: true,
-    date: true,
-    topics: true,
-    // set of ids/indices of touched worksheets
-    existingWorksheets: new Set(),
-    newWorksheets: new Set(),
-    existingLinks: new Set(),
-    newLinks: new Set()
-  };
+export function checkWorksheetFile(
+  worksheet: Worksheet,
+  fileType: WorksheetKeys.worksheetFile | WorksheetKeys.solutionFile
+): boolean {
+  const fileDeleted = worksheet.deleted && worksheet.deleted.includes(fileType);
+  // file must be present and not deleted
+  return !!worksheet[fileType] && !fileDeleted;
 }

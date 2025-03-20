@@ -137,9 +137,9 @@ $worksheet-edit-border-radius: 8px;
 .resource-worksheet-file a:hover,
 .resource-solution a:hover,
 .resource-link a:hover {
-  color: #4e7a5d;
+  color: $csm-green-darkened-2;
   cursor: pointer;
-  border-color: #4e7a5d;
+  border-color: $csm-green-darkened-2;
 }
 
 .topic {
@@ -158,14 +158,12 @@ $worksheet-edit-border-radius: 8px;
 
 .resource-info-edit {
   display: flex;
+  flex: min-content 0 1;
   flex-direction: column;
+  gap: 8px;
   align-items: center;
   padding: 4px;
   margin: 4px;
-}
-
-.resource-info-edit input {
-  width: 144px;
 }
 
 .resource-edit-head-item {
@@ -192,9 +190,18 @@ $worksheet-edit-border-radius: 8px;
 }
 
 @media screen and (width <= 1200px) {
+  .resource-link-container,
   .resource-worksheet-container {
     width: 90%;
   }
+}
+
+.resource-link-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  width: 70%;
+  margin: 20px auto;
 }
 
 .resource-worksheet-head {
@@ -209,9 +216,10 @@ $worksheet-edit-border-radius: 8px;
 .resource-link-head {
   display: grid;
 
-  /* name, url, delete */
-  grid-template-columns: 1fr 1fr 20px;
+  /* delete, name, url */
+  grid-template-columns: 20px 1fr 1fr;
   column-gap: 10px;
+  font-weight: bold;
   text-align: center;
 }
 
@@ -228,23 +236,34 @@ $worksheet-edit-border-radius: 8px;
   gap: 10px;
   align-content: flex-start;
   align-items: stretch;
+  padding-right: 10px; // additional padding matching the flex gap
   border: 2px $csm-neutral solid;
   border-radius: $worksheet-edit-border-radius;
 }
 
-.resource-link,
-.resource-link-edit {
-  display: grid;
-  column-gap: 10px;
+.resource-link {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
 }
 
 .resource-link-edit {
+  display: grid;
   grid-template-columns: 20px 1fr 1fr;
+  column-gap: 10px;
+  align-items: baseline;
+}
+
+.resource-link-edit-item {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
 }
 
 .resource-links-container {
-  display: grid;
-  row-gap: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   align-content: center;
 }
 
@@ -261,9 +280,21 @@ $worksheet-edit-border-radius: 8px;
   gap: 10px;
   margin: auto 0;
 
+  .resource-worksheet-edit-file-schedule-container,
+  .resource-worksheet-edit-file-upload-container {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    justify-content: center;
+  }
+
   .resource-worksheet-edit-file-upload,
   .resource-worksheet-edit-file-schedule {
     flex: 1;
+
+    .disabled {
+      color: $csm-neutral;
+    }
   }
 
   .resource-worksheet-edit-file-schedule {
@@ -274,10 +305,6 @@ $worksheet-edit-border-radius: 8px;
 
     .file-schedule-toggle {
       height: 100%;
-    }
-
-    .disabled {
-      color: $csm-neutral;
     }
   }
 }
@@ -290,7 +317,6 @@ $worksheet-edit-border-radius: 8px;
 .file-upload {
   box-sizing: border-box;
   display: flex;
-  flex: 1;
   flex-direction: row;
 
   width: 100%;
@@ -298,17 +324,25 @@ $worksheet-edit-border-radius: 8px;
   font-size: 90%;
   font-weight: normal; // override label font
 
-  cursor: pointer;
   background-color: white;
   border: 2px solid #ccc;
 
   .file-upload-text {
     flex: 1;
     padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  a.file-upload-text {
+    // specify color if the file upload text is a link
+    color: $csm-green-darkened;
 
     &:hover {
+      color: $csm-green-darkened-2;
+    }
+
+    &:visited {
       color: $csm-green-darkened;
-      border-color: $csm-neutral-darkened;
     }
   }
 
@@ -325,6 +359,10 @@ $worksheet-edit-border-radius: 8px;
     white-space: nowrap;
   }
 
+  // clear file button should still be enabled even when the rest of the input is disabled;
+  // the only reason why this button would be shown is if the user had specified a file,
+  // but a disabled input implies that the user should not have specified any file to begin with;
+  // keeping the clear file enabled allows the user to delete the file in this situation.
   button.clear-file {
     display: flex;
     align-items: center;
@@ -339,15 +377,39 @@ $worksheet-edit-border-radius: 8px;
       background-color: #eee;
     }
   }
+
+  // properties specific to disabled fields
+  &.disabled {
+    color: $csm-neutral;
+
+    .file-upload-text:not(a) {
+      // keep normal cursor if this is a link
+      cursor: not-allowed;
+    }
+  }
+
+  // properties specific to non-disabled fields
+  &:not(.disabled) {
+    // only set hover if not disabled
+    .file-upload-text:hover:not(a) {
+      // keep colors specified above if this is a link
+      color: $csm-green-darkened;
+      border-color: $csm-neutral-darkened;
+    }
+  }
 }
 
-.file-schedule {
-  display: flex;
-  flex-direction: row;
-  width: 100%;
+.file-schedule-label {
+  flex: 1;
 
-  .file-schedule-input {
-    flex: 1;
+  .file-schedule {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+
+    .file-schedule-input {
+      flex: 1;
+    }
   }
 }
 
@@ -366,6 +428,19 @@ $worksheet-edit-border-radius: 8px;
   }
 }
 
+.delete-link {
+  width: 20px;
+  padding: 0;
+  font-size: 18px;
+  color: $csm-neutral-darkened;
+  background-color: transparent;
+  border: none;
+
+  &:hover {
+    color: red;
+  }
+}
+
 .upload-icon {
   margin-right: 5px !important;
 }
@@ -375,6 +450,7 @@ $worksheet-edit-border-radius: 8px;
   font-weight: 600;
 }
 
+.resource-link-actions-container,
 .resource-worksheet-actions-container {
   display: flex;
   align-items: center;
@@ -407,6 +483,7 @@ $worksheet-edit-border-radius: 8px;
   flex-direction: row;
   gap: 4px;
   align-items: center;
+  margin: 8px 0;
   color: red;
   text-align: center;
 }

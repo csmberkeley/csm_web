@@ -68,22 +68,33 @@ const ResourceRowRender = ({ resource, canEdit, onSetEdit, onDelete }: ResourceR
         </div>
         <div className="resource-worksheet-files-container">
           {resource.worksheets &&
-            resource.worksheets.map(worksheet => (
-              <div key={worksheet.id} className="resource-worksheet">
-                <div className="resource-worksheet-file">
-                  <a href={worksheet.worksheetFile as string} target="_blank" rel="noreferrer">
-                    {worksheet.name}
-                  </a>
-                </div>
-                {worksheet.solutionFile && (
-                  <div className="resource-solution">
-                    <a href={worksheet.solutionFile as string} target="_blank" rel="noreferrer">
-                      Solutions
+            resource.worksheets.map(worksheet => {
+              // determine whether we should show the worksheet/solution files;
+              // in particular, do not show the file if a schedule is specified, unless the user is in edit mode
+              const showWorksheetFile = worksheet.worksheetFile && (canEdit || !worksheet.worksheetSchedule);
+              const showSolutionFile = worksheet.solutionFile && (canEdit || !worksheet.solutionSchedule);
+
+              return (
+                <div key={worksheet.id} className="resource-worksheet">
+                  <div className="resource-worksheet-file">
+                    <a
+                      href={showWorksheetFile ? (worksheet.worksheetFile as string) : undefined}
+                      target="_blank"
+                      rel="noreferrer"
+                    >
+                      {worksheet.name}
                     </a>
                   </div>
-                )}
-              </div>
-            ))}
+                  {showSolutionFile && (
+                    <div className="resource-solution">
+                      <a href={worksheet.solutionFile as string} target="_blank" rel="noreferrer">
+                        Solutions
+                      </a>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
         </div>
         <div className="resource-links-container">
           {resource.links &&

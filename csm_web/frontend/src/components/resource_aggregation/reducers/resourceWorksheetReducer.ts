@@ -1,4 +1,4 @@
-import { emptyWorksheet, Worksheet, WorksheetKeys } from "./ResourceTypes";
+import { emptyWorksheet, Worksheet, WorksheetKeys } from "../ResourceTypes";
 
 export enum ResourceWorksheetActionType {
   UpdateField,
@@ -8,8 +8,8 @@ export enum ResourceWorksheetActionType {
 }
 
 export enum ResourceWorksheetKind {
-  EXISTING = "existing",
-  NEW = "new"
+  EXISTING = "EXISTING_WORKSHEET",
+  NEW = "NEW_WORKSHEET"
 }
 
 /**
@@ -127,6 +127,9 @@ export function resourceWorksheetReducer(
           });
         }
       }
+
+      // unreachable due to enum cases above,
+      // but the break is still included here to be safe.
       break;
     }
 
@@ -171,7 +174,7 @@ export function resourceWorksheetReducer(
     }
 
     case ResourceWorksheetActionType.AddWorksheet: {
-      return { existingWorksheets, newWorksheets: [...newWorksheets, emptyWorksheet()] };
+      return { existingWorksheets, newWorksheets: [...newWorksheets, emptyWorksheet(newWorksheets)] };
     }
   }
 }
