@@ -6,7 +6,7 @@ from scheduler.factories import (
     SectionFactory,
     UserFactory,
 )
-from scheduler.models import WaitlistedStudent
+from scheduler.models import Student, WaitlistedStudent
 
 
 @pytest.fixture(name="setup_waitlist")

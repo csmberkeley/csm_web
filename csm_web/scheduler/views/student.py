@@ -6,11 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
-<<<<<<< HEAD
-from ..models import Student, WaitlistedStudent
-=======
 from ..models import Student
->>>>>>> ed65782 (Initial Waitlisting Feature Dev  (#506))
 from ..serializers import AttendanceSerializer, StudentSerializer
 from .section import add_from_waitlist
 from .utils import get_object_or_error, log_str, logger
@@ -67,15 +63,22 @@ class StudentViewSet(viewsets.GenericViewSet):
             )
         ).delete()
         logger.info(
-            f"<Drop> Deleted {num_deleted} attendances for user"
-            f" {log_str(student.user)} in Section {log_str(student.section)} after"
-            f" {now.date()}"
+            "<Drop> Deleted %s attendances for user %s in Section %s after %s",
+            num_deleted,
+            log_str(student.user),
+            log_str(student.section),
+            now.date(),
         )
         add_from_waitlist(pk=student.section.id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["get", "put"])
     def attendances(self, request, pk=None):
+        """
+        GET or PUT: /api/students/<pk>/attendances
+
+        Endpoint to get or edit a student's attendance
+        """
         student = get_object_or_error(self.get_queryset(), pk=pk)
         if request.method == "GET":
             return Response(
@@ -96,22 +99,25 @@ class StudentViewSet(viewsets.GenericViewSet):
                 },
             )
         except ObjectDoesNotExist:
-            logger.error(
-                "<Attendance:Failure> Could not record attendance for User"
-                f" {log_str(request.user)}, used non-existent attendance id"
-                f" {request.data['id']}"
+            logger.info(
+                "<Attendance:Failure> Could not record attendance for user"
+                "%s used non-existent attendance id %s",
+                log_str(request.user),
+                request.data["id"],
             )
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if serializer.is_valid():
             attendance = serializer.save()
             logger.info(
-                f"<Attendance:Success> Attendance {log_str(attendance)} recorded for"
-                f" User {log_str(request.user)}"
+                "<Attendance:Success> Attendance %s recorded for user %s",
+                log_str(attendance),
+                log_str(request.user),
             )
             return Response(status=status.HTTP_204_NO_CONTENT)
-        logger.error(
-            "<Attendance:Failure> Could not record attendance for User"
-            f" {log_str(request.user)}, errors: {serializer.errors}"
+        logger.info(
+            "<Attendance:Failure> Could not record attendance for user %s errors: %s",
+            log_str(request.user),
+            serializer.errors,
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
