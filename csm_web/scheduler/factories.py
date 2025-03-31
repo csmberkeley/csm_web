@@ -116,6 +116,7 @@ class CourseFactory(factory.django.DjangoModelFactory):
 
 
 BUILDINGS = ("Cory", "Soda", "Kresge", "Moffitt")
+DEFAULT_WAITLIST_CAP = 3
 
 
 class SpacetimeFactory(factory.django.DjangoModelFactory):
@@ -199,7 +200,7 @@ class SectionFactory(factory.django.DjangoModelFactory):
         model = Section
 
     capacity = factory.LazyFunction(lambda: random.randint(3, 6))
-    waitlist_capacity = 3
+    waitlist_capacity = DEFAULT_WAITLIST_CAP
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
@@ -264,6 +265,12 @@ class WaitlistedStudentFactory(factory.django.DjangoModelFactory):
 
     user = factory.SubFactory(UserFactory)
     section = factory.SubFactory(SectionFactory)
+
+    @classmethod
+    def _create(cls, model_class, *args, **kwargs):
+        """Handles uniqueness and assigns position correctly."""
+        waitlisted_student, _ = model_class.objects.get_or_create(**kwargs)
+        return waitlisted_student
 
 
 class ResourceFactory(factory.django.DjangoModelFactory):
@@ -550,6 +557,7 @@ def generate_test_data(preconfirm=False):
     spacetime_objects = []
     section_occurrence_objects = []
     student_objects = []
+    waitlisted_student_objects = []
 
     print("Creating model instances... ", end="")
     _create_models_start = time.perf_counter_ns()
@@ -591,6 +599,20 @@ def generate_test_data(preconfirm=False):
                     )
                 )
             student_objects.extend(students)
+
+            if len(student_users) >= section.capacity:
+                waitlisted_users = UserFactory.build_batch(
+                    random.randint(0, section.waitlist_capacity)
+                )
+                user_objects.extend(waitlisted_users)
+                waitlisted_students = []
+                for waitlisted_user in waitlisted_users:
+                    waitlisted_students.append(
+                        WaitlistedStudentFactory.build(
+                            section=section, course=course, user=waitlisted_user
+                        )
+                    )
+                waitlisted_student_objects.extend(waitlisted_students)
 
     # courses with many sections/students
     for (
@@ -651,6 +673,7 @@ def generate_test_data(preconfirm=False):
     random.shuffle(spacetime_objects)
     random.shuffle(section_occurrence_objects)
     random.shuffle(student_objects)
+    random.shuffle(waitlisted_student_objects)
 
     print("Saving models to database... ", end="")
     _save_models_start = time.perf_counter_ns()
@@ -662,6 +685,7 @@ def generate_test_data(preconfirm=False):
     Spacetime.objects.bulk_create(spacetime_objects)
     SectionOccurrence.objects.bulk_create(section_occurrence_objects)
     Student.objects.bulk_create(student_objects)
+    WaitlistedStudent.objects.bulk_create(waitlisted_student_objects)
 
     print(f"({(time.perf_counter_ns() - _save_models_start)/1e6:.6f} ms)")
 
