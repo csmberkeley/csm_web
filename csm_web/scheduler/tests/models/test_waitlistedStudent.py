@@ -346,4 +346,5 @@ def test_user_drops_from_nonexistent_waitlisted_student(setup_waitlist, client):
     client.force_login(coordinator_user)
     response = client.patch("/api/waitlist/999/drop/")
 
-    assert response.status_code == 403
+    assert response.data["detail"] == "Student is not on the waitlist for this section"
+    assert response.status_code == 404

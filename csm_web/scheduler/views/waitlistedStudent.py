@@ -1,7 +1,6 @@
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework import status
 from rest_framework.decorators import api_view
-from rest_framework.exceptions import PermissionDenied
+from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.response import Response
 from scheduler.serializers import WaitlistedStudentSerializer
 from scheduler.views.utils import get_object_or_error
@@ -123,7 +122,7 @@ def drop(request, pk=None):
     user = request.user
     waitlisted_student = WaitlistedStudent.objects.filter(pk=pk).first()
     if waitlisted_student is None:
-        raise ObjectDoesNotExist("You are not on the waitlist for this section")
+        raise NotFound("Student is not on the waitlist for this section")
     section = waitlisted_student.section
     course = section.mentor.course
     is_coordinator = course.coordinator_set.filter(user=user).exists()
