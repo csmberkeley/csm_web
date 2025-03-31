@@ -1,19 +1,26 @@
-// import React from "react";
-// import Dropdown from 'react-bootstrap/Dropdown';
-// import styles from "../../css/coord_interface.scss";
+import React from "react";
 
-// export default function DropBox(click) {
-//     return (
-//     <Dropdown>
-//       <Dropdown.Toggle variant="success" id="dropdown-basic">
-//         Dropdown Button
-//       </Dropdown.Toggle>
+interface DropBoxProps {
+  items: Array<string>;
+  name: string;
+  func: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+  reset: (event: React.MouseEvent<HTMLButtonElement, MouseEvent>) => void;
+}
 
-//       <Dropdown.Menu>
-//         <Dropdown.Item href="#/action-1">Action</Dropdown.Item>
-//         <Dropdown.Item href="#/action-2">Another action</Dropdown.Item>
-//         <Dropdown.Item href="#/action-3">Something else</Dropdown.Item>
-//       </Dropdown.Menu>
-//     </Dropdown>
-//   );
-// }
+export default function DropBox({ name, items, func, reset }: DropBoxProps) {
+  return (
+    <div className="dropdown">
+      <button className="dropbtn" onClick={event => reset(event)}>
+        {name}
+        <div></div>
+      </button>
+      <div className="dropdown-content">
+        {items.map(item => (
+          <button onClick={event => func(event)} key={item}>
+            {item}
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
