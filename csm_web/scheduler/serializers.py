@@ -280,7 +280,7 @@ class CoordStudentSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Student
-        fields = ("id", "name", "email", "num_unexcused", "section")
+        fields = ("active", "id", "name", "email", "num_unexcused", "section")
 
 
 class CoordMentorSerializer(serializers.ModelSerializer):

@@ -76,3 +76,37 @@ def delete_section(request, pk):
     # Delete the section itself, will cascade and delete everything else
     section.delete()
     return Response(status=204)
+
+@api_view(["POST"])
+def add_family(request, pk): # currently erroring -- in progress
+
+    print(f"Request Method: {request.method}") # does this print?
+    is_coord = bool(
+        get_object_or_error(Course.objects, pk=pk)
+        .coordinator_set.filter(user=request.user)
+        .count()
+    )
+    if not is_coord:
+        raise PermissionDenied(
+            "You do not have permission to view the coordinator view."
+        )
+    print(request.data)
+
+    is_valid_student = Student.objects.filter(active=True, course=pk).filter(user=request.user).exists()
+    is_valid_mentor = Mentor.objects.filter(active=True, course=pk).filter(user=request.user).exists()
+    
+    if is_valid_mentor or is_valid_student: 
+        user = request.user
+        user.family = request.field
+        user.save()
+    
+        return Response(f"Family {request.field} updated for user.", status=200)
+    return Response(f"Family addition failed", status=400)
+
+
+# must be coord, course should be passed in with request
+# post/update
+# url contains course
+# data contains name of family being added
+# check if family is there, if not, add to database
+# course id should be in url
