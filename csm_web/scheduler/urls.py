@@ -15,8 +15,14 @@ router.register(r"resources", views.ResourceViewSet, basename="resource")
 urlpatterns = router.urls
 
 urlpatterns += [
-    path("affinity_tags/", views.affinity_tags.get_tags, name="get_tags"),
-    # path("affinity_tags/", views.affinity_tags.other_function, name="other_function"),
+    path(
+        "affinity_tags/", views.affinity_tags.configure_tags, name="affinity_tags_list"
+    ),
+    path(
+        "affinity_tags/<int:pk>/",
+        views.affinity_tags.configure_tags,
+        name="affinity_tags_detail",
+    ),
     path("userinfo/", views.userinfo, name="userinfo"),
     path("matcher/active/", views.matcher.active),
     path("matcher/<int:pk>/slots/", views.matcher.slots),
