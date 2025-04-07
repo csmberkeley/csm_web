@@ -6,6 +6,14 @@ from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 
+from ..email.email_utils import (
+    EmailAuthError,
+    EmailFormattingError,
+    HttpError,
+    NoEmailError,
+    email_coordinator_drop,
+    email_student_drop,
+)
 from ..models import Student
 from ..serializers import AttendanceSerializer, StudentSerializer
 from .section import add_from_waitlist
@@ -54,7 +62,8 @@ class StudentViewSet(viewsets.GenericViewSet):
             student.section,
             student.user,
         )
-        # filter attendances and delete future attendances
+
+        # Filter attendances and delete future attendances
         now = timezone.now().astimezone(timezone.get_default_timezone())
         num_deleted, _ = student.attendance_set.filter(
             Q(

@@ -52,6 +52,9 @@ def week_bounds(date):
 
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
+    subscribed = models.BooleanField(
+        default=True, help_text="Email subscription status"
+    )
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         """Determine whether this user is allowed to enroll in the given course."""

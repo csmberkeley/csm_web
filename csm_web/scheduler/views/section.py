@@ -25,6 +25,7 @@ from scheduler.serializers import (
     StudentSerializer,
 )
 
+from ..email.email_utils import email_enroll, email_swap
 from ..models import WaitlistedStudent
 from .utils import (
     get_object_or_error,
