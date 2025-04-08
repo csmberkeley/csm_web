@@ -13,6 +13,7 @@ import { DataExport } from "./data_export/DataExport";
 import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 import { Resources } from "./resource_aggregation/Resources";
 import Section from "./section/Section";
+import { SettingsPage } from "./settings/SettingsPage";
 
 import LogOutIcon from "../../static/frontend/img/log_out.svg";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
@@ -42,6 +43,7 @@ const App = () => {
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
           <Route path="policies/*" element={<Policies />} />
           <Route path="export/*" element={<DataExport />} />
+          <Route path="settings/*" element={<SettingsPage />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

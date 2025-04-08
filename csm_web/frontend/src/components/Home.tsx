@@ -10,6 +10,7 @@ import LoadingSpinner from "./LoadingSpinner";
 
 import FileExport from "../../static/frontend/img/file-export.svg";
 import PlusIcon from "../../static/frontend/img/plus.svg";
+import SettingsGear from "../../static/frontend/img/settings-gear.svg";
 
 import scssColors from "../css/base/colors-export.module.scss";
 
@@ -59,10 +60,16 @@ const Home = () => {
 
     if (isCoordinator) {
       headingRight = (
-        <Link className="primary-btn" to="/export">
-          <FileExport className="icon" />
-          Export
-        </Link>
+        <div style={{ display: "flex", gap: "10px", alignItems: "center" }}>
+          <Link className="primary-btn" to="/settings">
+            <SettingsGear className="icon" />
+            Settings
+          </Link>
+          <Link className="primary-btn" to="/export">
+            <FileExport className="icon" />
+            Export
+          </Link>
+        </div>
       );
     }
   } else if (profilesLoadError) {

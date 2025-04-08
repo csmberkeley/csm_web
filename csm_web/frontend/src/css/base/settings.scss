@@ -1,0 +1,129 @@
+/* Data export styles */
+@use "base/variables" as *;
+
+.settings-container {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+
+  padding-right: 16px;
+}
+
+.settings-body {
+  display: flex;
+  flex-direction: row;
+
+  gap: 40px;
+}
+
+.settings-sidebar {
+  min-width: 150px;
+}
+
+.settings-content {
+  flex: 1;
+}
+
+.settings-page-sidebar-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.settings-page-sidebar-title {
+  margin-bottom: 8px;
+}
+
+.export-selector-data-type-options {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: center;
+
+  width: fit-content;
+}
+
+.settings-page-courses-options {
+  width: fit-content;
+  max-height: 25%;
+}
+
+.settings-data-type-label {
+  display: block;
+  width: 100%;
+
+  font-size: 1.1rem;
+
+  white-space: nowrap;
+
+  cursor: pointer;
+  user-select: none;
+
+  &.active {
+    color: $csm-green-darkened;
+  }
+}
+
+.settings-page-container {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: stretch;
+}
+
+.settings-page-config {
+  display: flex;
+  flex-flow: row wrap;
+  gap: 8px;
+}
+
+.settings-page-sidebar {
+  min-width: 650px;
+  padding: 16px 0;
+  background-color: #f3f3f3;
+  border-radius: 12px;
+}
+
+.settings-page-sidebar.sidebar-left {
+  flex: 1;
+}
+
+.settings-page-sidebar.sidebar-right {
+  flex: 2;
+}
+
+.settings-page-header {
+  display: flex;
+  gap: 16px;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.settings-page-footer {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+.settings-page-preview {
+  flex: 2;
+}
+
+.settings-page-preview-container {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.settings-page-preview-title {
+  // make margin smaller
+  margin-bottom: 8px;
+}
+
+.settings-page-preview-wrapper {
+  padding: 0 12px;
+}
