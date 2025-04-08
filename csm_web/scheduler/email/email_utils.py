@@ -287,6 +287,7 @@ def _email_send_message(subject, body, to_emails=[], cc_emails=[], bcc_emails=[]
 
     return send_message
 
+
 @email_error_handling
 def email_waitlist(waitlisted_student):
     """Sends the corresponding mentor an email notification that the STUDENT enrolled in their section"""
@@ -295,7 +296,9 @@ def email_waitlist(waitlisted_student):
         mentor = waitlisted_student.section.mentor
         course_title = waitlisted_student.course.title
         mentor_name = mentor.user.first_name + " " + mentor.user.last_name
-        student_name = waitlisted_student.user.first_name + " " + waitlisted_student.user.last_name
+        student_name = (
+            waitlisted_student.user.first_name + " " + waitlisted_student.user.last_name
+        )
         mentor_email = mentor.user.email
         student_email = waitlisted_student.user.email
     except AttributeError:
