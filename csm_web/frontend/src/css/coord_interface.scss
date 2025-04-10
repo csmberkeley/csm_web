@@ -282,6 +282,15 @@ main {
   user-select: none;
 }
 
+// .action-button {
+
+// }
+#table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
 @media screen and (width <= 640px) {
   .checkbox-wrapper .cbx {
     display: inline-block;

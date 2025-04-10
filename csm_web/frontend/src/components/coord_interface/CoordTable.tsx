@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { Mentor, Student, getCoordData } from "../../utils/queries/coord";
+import ActionButton from "./ActionButton";
 import { CheckBox } from "./CheckBox";
 import DropBox from "./DropBox";
 import { SearchBar } from "./SearchBar";
@@ -183,6 +184,21 @@ export default function CoordTable() {
     update(filteredData, filteredSelectedData);
   }
 
+  // Function for Copy Email
+  function copyEmail() {
+    //popup()
+    // const checkboxes = document.querySelectorAll("input[type=checkbox]");
+    const selected: string[] = [];
+    selectedData.forEach(userSelected => {
+      selected.push(userSelected["email"]);
+    });
+
+    //need a parameter (probably the list which tell us which emails were selected), bc this makes things mad
+    // we might want to do something with the toggles to grab all of the emails
+    // might use selected data (but we need a way to get the emails from there)
+    navigator.clipboard.writeText(selected.join(", "));
+  }
+
   // Debugging Function for seeing selected data
   function getSelectedData() {
     console.log(selectedData);
@@ -210,6 +226,12 @@ export default function CoordTable() {
           </>
         )}
       </div>
+
+      <div id="table-header">
+        <div>Students</div>
+        <ActionButton copyEmail={copyEmail} drop={copyEmail} />
+      </div>
+
       <table>
         <thead>
           <tr>
