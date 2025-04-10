@@ -290,14 +290,22 @@ class CoordMentorSerializer(serializers.ModelSerializer):
 
     email = serializers.EmailField(source="user.email")
     num_students = serializers.SerializerMethodField()
-    day_time = serializers.CharField(source="section.day_time")
+    day_time = serializers.SerializerMethodField()
+
+    def get_day_time(self, obj):
+        if obj.section:
+            return obj.section.day_time
+        return "N/A"
+
 
     def get_num_students(self, obj):
         """
         Get the number of students in the section
         """
-        students = obj.section.students.filter(active=True)
-        return students.count()
+        if obj.section:
+            students = obj.section.students.filter(active=True)
+            return students.count()
+        return 0
 
     class Meta:
         model = Mentor

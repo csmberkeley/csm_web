@@ -423,6 +423,7 @@ class MentorAdmin(BasePermissionModelAdmin):
         "user",
         "get_section",
         "get_students",
+        "family"
     )
     readonly_fields = (
         "name",

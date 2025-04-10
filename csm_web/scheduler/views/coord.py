@@ -78,9 +78,7 @@ def delete_section(request, pk):
     return Response(status=204)
 
 @api_view(["POST"])
-def add_family(request, pk): # currently erroring -- in progress
-
-    print(f"Request Method: {request.method}") # does this print?
+def add_family(request, pk): 
     is_coord = bool(
         get_object_or_error(Course.objects, pk=pk)
         .coordinator_set.filter(user=request.user)
@@ -90,17 +88,17 @@ def add_family(request, pk): # currently erroring -- in progress
         raise PermissionDenied(
             "You do not have permission to view the coordinator view."
         )
-    print(request.data)
+    print("FAMILY:", request.data["family"])
 
-    is_valid_student = Student.objects.filter(active=True, course=pk).filter(user=request.user).exists()
-    is_valid_mentor = Mentor.objects.filter(active=True, course=pk).filter(user=request.user).exists()
+    # is_valid_student = Student.objects.filter(active=True, course=pk).filter(user=request.user).exists()
+    mentor = Mentor.objects.filter(course=pk).filter(user=request.user).first()
+    # is_valid_mentor = Mentor.objects.filter(course=pk).filter(user=request.user).exists()
     
-    if is_valid_mentor or is_valid_student: 
-        user = request.user
-        user.family = request.field
-        user.save()
+    if mentor: 
+        mentor.family = request.data["family"]
+        mentor.save()
     
-        return Response(f"Family {request.field} updated for user.", status=200)
+        return Response(f"Family {request.data["family"]} updated for user.", status=200)
     return Response(f"Family addition failed", status=400)
 
 
