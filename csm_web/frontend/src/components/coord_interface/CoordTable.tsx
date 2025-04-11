@@ -18,7 +18,7 @@ export default function CoordTable() {
   const isStudents = pathname.includes("students");
   const [currentFilter, setCurrentFilter] = useState<HTMLButtonElement | null>(null);
   const sectionSizes = !isStudents
-    ? [...new Set(tableData.map(item => (item as Mentor).numStudents.toString()))].sort()
+    ? [...new Set(tableData.map(item => (item as Mentor).numStudents?.toString()))].sort()
     : []; // Unique section sizes for mentors
   const familyNames = !isStudents ? [...new Set(tableData.map(item => (item as Mentor).family))].sort() : []; // Unique family names for mentors
 
@@ -30,8 +30,21 @@ export default function CoordTable() {
       setSearch(data);
     };
     fetchData();
-  }, []);
+  }, [pathname]);
   const navigate = useNavigate();
+
+  function reset() {
+    setTableData([]);
+    setSearch([]);
+    setSelected([]);
+    setAllSelected(false);
+    const checkbox = document.getElementById("checkcheck") as HTMLInputElement;
+    checkbox.checked = false;
+    const searchFilter = document.getElementById("search-filter") as HTMLInputElement;
+    searchFilter.innerText = "";
+    searchFilter.value = "";
+    currentFilter?.classList.remove("using-filter");
+  }
 
   // Update function for search and selected data
   function update(filteredData: (Mentor | Student)[], filteredSelectData: (Mentor | Student)[]) {
@@ -104,15 +117,30 @@ export default function CoordTable() {
   }
 
   // Filter string
-  function filterString(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
+  function filterString(event: React.MouseEvent<HTMLButtonElement, MouseEvent>, field: keyof Mentor | keyof Student) {
     const filter = (event.target as HTMLButtonElement).innerText;
-    let filteredData: Student[] = [];
-    let filteredSelectedData: Student[] = [];
-    filteredData = (tableData as Student[]).filter(row => {
-      return row.dayTime.includes(filter);
+    let filteredData: (Student | Mentor)[] = [];
+    let filteredSelectedData: (Student | Mentor)[] = [];
+
+    filteredData = tableData.filter(row => {
+      if (field in row) {
+        const value = row[field as keyof typeof row];
+        if (filter.includes("+")) {
+          return value != null ? value.toString() >= filter.slice(0, -1) : false;
+        }
+        return value != null ? value.toString().includes(filter) : false;
+      }
+      return false;
     });
-    filteredSelectedData = (tableData as Student[]).filter(row => {
-      return row.dayTime.includes(filter);
+    filteredSelectedData = selectedData.filter(row => {
+      if (field in row) {
+        const value = row[field as keyof typeof row];
+        if (filter.includes("+")) {
+          return value != null ? value.toString() >= filter.slice(0, -1) : false;
+        }
+        return value != null ? value.toString().includes(filter) : false;
+      }
+      return false;
     });
 
     checkFilter(event);
@@ -144,58 +172,25 @@ export default function CoordTable() {
     setCurrentFilter(null);
   }
 
-  // FILTER FUNCTIONS -- Student
-
-  // Filter absences
-  function filterAbsences(event: React.MouseEvent<HTMLButtonElement, MouseEvent>) {
-    const filter = (event.target as HTMLButtonElement).innerText;
-    let filteredData: Student[] = [];
-    let filteredSelectedData: Student[] = [];
-    if (filter.includes("0")) {
-      filteredData = (tableData as Student[]).filter(row => {
-        return row.numUnexcused == 0;
-      });
-      filteredSelectedData = (tableData as Student[]).filter(row => {
-        return row.numUnexcused == 0;
-      });
-    } else if (filter.includes("1")) {
-      filteredData = (tableData as Student[]).filter(row => {
-        return row.numUnexcused == 1;
-      });
-      filteredSelectedData = (tableData as Student[]).filter(row => {
-        return row.numUnexcused == 1;
-      });
-    } else if (filter.includes("2")) {
-      filteredData = (tableData as Student[]).filter(row => {
-        return row.numUnexcused == 2;
-      });
-      filteredSelectedData = (tableData as Student[]).filter(row => {
-        return row.numUnexcused == 2;
-      });
-    } else if (filter.includes("3")) {
-      filteredData = (tableData as Student[]).filter(row => {
-        return row.numUnexcused >= 3;
-      });
-      filteredSelectedData = (tableData as Student[]).filter(row => {
-        return row.numUnexcused >= 3;
-      });
-    }
-    checkFilter(event);
-    update(filteredData, filteredSelectedData);
-  }
-
   // Function for Copy Email
   function copyEmail() {
-    //popup()
-    // const checkboxes = document.querySelectorAll("input[type=checkbox]");
     const selected: string[] = [];
     selectedData.forEach(userSelected => {
       selected.push(userSelected["email"]);
     });
 
-    //need a parameter (probably the list which tell us which emails were selected), bc this makes things mad
-    // we might want to do something with the toggles to grab all of the emails
-    // might use selected data (but we need a way to get the emails from there)
+    const defaultCopy = document.getElementById("default-copy") as HTMLDivElement;
+    const successCopy = document.getElementById("success-copy") as HTMLDivElement;
+
+    defaultCopy.classList.add("hidden");
+    successCopy.classList.remove("hidden");
+
+    // reset to default state
+    setTimeout(() => {
+      defaultCopy.classList.remove("hidden");
+      successCopy.classList.add("hidden");
+    }, 2000);
+
     navigator.clipboard.writeText(selected.join(", "));
   }
 
@@ -214,22 +209,41 @@ export default function CoordTable() {
         <DropBox
           items={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]}
           name={"Day"}
+          field={"dayTime"}
           func={filterString}
           reset={resetFilters}
         ></DropBox>
         {isStudents ? (
-          <DropBox items={["0", "1", "2", "3+"]} name={"Absences"} func={filterAbsences} reset={resetFilters}></DropBox>
+          <DropBox
+            items={["0", "1", "2", "3+"]}
+            name={"Absences"}
+            field={"numUnexcused"}
+            func={filterString}
+            reset={resetFilters}
+          ></DropBox>
         ) : (
           <>
-            <DropBox items={familyNames} name={"Family"} func={filterString} reset={resetFilters}></DropBox>
-            <DropBox items={sectionSizes} name={"Section Size"} func={filterString} reset={resetFilters}></DropBox>
+            <DropBox
+              items={familyNames}
+              name={"Family"}
+              field={"family"}
+              func={filterString}
+              reset={resetFilters}
+            ></DropBox>
+            <DropBox
+              items={sectionSizes}
+              name={"Section Size"}
+              field={"numStudents"}
+              func={filterString}
+              reset={resetFilters}
+            ></DropBox>
           </>
         )}
       </div>
 
       <div id="table-header">
-        <div>Students</div>
-        <ActionButton copyEmail={copyEmail} drop={copyEmail} />
+        {isStudents ? <div className="title">Students List</div> : <div className="title">Mentors List</div>}
+        <ActionButton copyEmail={copyEmail} drop={copyEmail} reset={reset} />
       </div>
 
       <table>
