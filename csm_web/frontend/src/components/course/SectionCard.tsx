@@ -18,6 +18,7 @@ interface SectionCardProps {
   spacetimes: Spacetime[];
   mentor: Mentor;
   numStudentsEnrolled: number;
+  numWaitlisted: number;
   capacity: number;
   description: string;
   userIsCoordinator: boolean;
@@ -29,6 +30,7 @@ export const SectionCard = ({
   spacetimes,
   mentor,
   numStudentsEnrolled,
+  numWaitlisted,
   capacity,
   description,
   userIsCoordinator,
@@ -172,6 +174,9 @@ export const SectionCard = ({
           </p>
           <p title="Current enrollment">
             <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}
+          </p>
+          <p title="Waitlist">
+            <GroupIcon width={iconWidth} height={iconHeight} /> Waitlist: {numWaitlisted}
           </p>
         </div>
         {userIsCoordinator ? (

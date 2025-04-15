@@ -341,6 +341,12 @@ class Section(ValidatingModel):
             ' or "early start".'
         ),
     )
+    waitlist = models.ManyToManyField(
+        "User",
+        blank=True,
+        related_name="waitlisted_sections",
+        help_text="Users who are waitlisted for this section"
+    )
 
     # @functional.cached_property
     # def course(self):
