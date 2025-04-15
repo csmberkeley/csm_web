@@ -26,6 +26,32 @@ Cypress.Commands.add("login", (loginInfo: LoginInfo = { username: "demo_user", p
     });
 });
 
+/**
+ * Headless logout
+ */
+Cypress.Commands.add("logout", () => {
+  cy.getCookie("csrftoken").then(csrfCookie => {
+    return cy.request({
+      method: "POST",
+      url: "/logout/",
+      form: true,
+      body: { csrfmiddlewaretoken: csrfCookie.value }
+    });
+  });
+});
+
+/**
+ * Logout with redirect
+ */
+Cypress.Commands.add("logout_redirect", () => {
+  cy.getCookie("csrftoken").then(csrfCookie => {
+    cy.visit("/logout/", {
+      method: "POST",
+      body: { csrfmiddlewaretoken: csrfCookie.value }
+    });
+  });
+});
+
 interface SetupDBOptions {
   force?: boolean;
   mutate?: boolean;

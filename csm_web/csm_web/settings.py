@@ -173,7 +173,13 @@ AWS_S3_FILE_OVERWRITE = False
 AWS_DEFAULT_ACL = None
 AWS_S3_VERIFY = True
 AWS_QUERYSTRING_AUTH = False  # public bucket
-DEFAULT_FILE_STORAGE = "storages.backends.s3boto3.S3Boto3Storage"
+
+STORAGES = {
+    "default": {"BACKEND": "storages.backends.s3boto3.S3Boto3Storage"},
+    "staticfiles": {
+        "BACKEND": "django.contrib.staticfiles.storage.StaticFilesStorage",
+    },
+}
 
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
@@ -182,7 +188,17 @@ STATIC_URL = "/static/"
 
 if DJANGO_ENV in (PRODUCTION, STAGING):
     # Enables compression and caching
-    STATICFILES_STORAGE = "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    STORAGES["staticfiles"] = {
+        "BACKEND": "whitenoise.storage.CompressedManifestStaticFilesStorage"
+    }
+
+    # set the static root path
+    STATIC_ROOT = os.path.join(BASE_DIR, "staticfiles")
+
+    # add whitenoise to the middleware
+    # this should be added after the security middleware, so that security redirects still occur
+    MIDDLEWARE.insert(1, "whitenoise.middleware.WhiteNoiseMiddleware")
+
     WHITENOISE_MAX_AGE = 31536000  # one year
 
 AUTHENTICATION_BACKENDS = (
@@ -303,4 +319,4 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     # Heroku setup
     import django_heroku
 
-    django_heroku.settings(locals())
+    django_heroku.settings(locals(), staticfiles=False)

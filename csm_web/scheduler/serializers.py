@@ -252,6 +252,7 @@ class StudentSerializer(serializers.ModelSerializer):
 class SectionSerializer(serializers.ModelSerializer):
     spacetimes = SpacetimeSerializer(many=True)
     num_students_enrolled = serializers.SerializerMethodField()
+    num_waitlisted = serializers.SerializerMethodField()
     mentor = MentorSerializer()
     course = serializers.CharField(source="mentor.course.name")
     course_title = serializers.CharField(source="mentor.course.title")
@@ -266,6 +267,10 @@ class SectionSerializer(serializers.ModelSerializer):
             if hasattr(obj, "num_students_annotation")
             else obj.current_student_count
         )
+
+    def get_num_waitlisted(self, obj):
+        """Retrieve the number of students waitlisted for the section"""
+        return obj.waitlist.count()
 
     def user_associated_profile(self, obj):
         """Retrieve the user profile associated with the section"""
@@ -301,13 +306,13 @@ class SectionSerializer(serializers.ModelSerializer):
             "spacetimes",
             "mentor",
             "capacity",
-            "associated_profile_id",
-            "num_students_enrolled",
             "description",
-            "mentor",
+            "num_students_enrolled",
+            "num_waitlisted",
             "course",
-            "user_role",
             "course_title",
+            "user_role",
+            "associated_profile_id",
             "course_restricted",
         )
 
@@ -386,7 +391,7 @@ class MatcherSerializer(serializers.ModelSerializer):
 class MatcherSlotSerializer(serializers.ModelSerializer):
     class Meta:
         model = MatcherSlot
-        fields = ["id", "matcher", "times"]
+        fields = ["id", "matcher", "times", "description"]
 
 
 class MatcherPreferenceSerializer(serializers.ModelSerializer):

@@ -10,6 +10,7 @@ const Policies = () => {
   const htsu = SECTIONS.howToSignUp;
   const guides = SECTIONS.guidelines;
   const comms = SECTIONS.communications;
+  const attendance = SECTIONS.attendance;
   const aff = SECTIONS.affinitySections;
   const forUnit = SECTIONS.csmForUnit;
   const faq = SECTIONS.faq;
@@ -64,21 +65,11 @@ const Policies = () => {
             <li>{guides.body.i5}</li>
           </ol>
         </div>
-
         <div className="divider"></div>
-
         <div>
-          <h1> {comms.title} </h1>
-          <p>
-            {comms.body.p1_1}
-            <a href={comms.body.p1_a.link}>{comms.body.p1_a.text}</a>
-            {comms.body.p1_2}
-          </p>
-          <p>
-            {comms.body.p2_1}
-            <a href={comms.body.p2_a.link}>{comms.body.p2_a.text}</a>
-            {comms.body.p2_2}
-          </p>
+          <h1> {attendance.title}</h1>
+          <p> {attendance.body.p1_1}</p>
+          <p> {attendance.body.p2_1}</p>
         </div>
 
         <div className="divider"></div>
@@ -106,17 +97,33 @@ const Policies = () => {
         <div className="divider"></div>
 
         <div>
+          <h1> {comms.title} </h1>
+          <p>
+            {comms.body.p1_1}
+            <a href={comms.body.p1_a.link}>{comms.body.p1_a.text}</a>
+            {comms.body.p1_2}
+          </p>
+          <p>
+            {comms.body.p2_1}
+            <a href={comms.body.p2_a.link}>{comms.body.p2_a.text}</a>
+            {comms.body.p2_2}
+          </p>
+        </div>
+
+        <div className="divider"></div>
+
+        <div>
           <h1> {forUnit.title} </h1>
           <p>
             {forUnit.body.p1_1}
             <b> {forUnit.body.p1_b} </b>
             {forUnit.body.p1_2}
-            <b> {forUnit.body.p1_b2} </b>
           </p>
           <p>
             {forUnit.body.p2_1}
             <b> {forUnit.body.p2_b} </b>
             {forUnit.body.p2_2}
+            <a href={forUnit.body.p2_a.link}>{forUnit.body.p2_a.text}</a>
           </p>
           <p>
             {forUnit.body.p3_1}
@@ -128,31 +135,31 @@ const Policies = () => {
             <b>{forUnit.body.p4_b}</b>
             {forUnit.body.p4_2}
           </p>
-          <p>{forUnit.body.p5}</p>
+          <p>
+            <b> {forUnit.body.p5_b} </b>
+            {forUnit.body.p5_1}
+          </p>
           <p> {forUnit.body.p6}</p>
           <ul>
-            <li> {forUnit.body.li2_1} </li>
             <li>
-              {forUnit.body.li2_2.bullet}
+              {forUnit.body.li2_1.bullet}
               <ul>
                 <li>
-                  {forUnit.body.li2_2.subbull_1}
-                  <b>{forUnit.body.li2_2.subbull_b}</b>
-                  {forUnit.body.li2_2.subbull_2}
-                  <a href={forUnit.body.li2_2.subbull_a.link}>{forUnit.body.li2_2.subbull_a.text}</a>
+                  {forUnit.body.li2_1.subbull_1}
+                  <b>{forUnit.body.li2_1.subbull_b}</b>
+                  {forUnit.body.li2_1.subbull_2}
+                  <a href={forUnit.body.li2_1.subbull_a.link}>{forUnit.body.li2_1.subbull_a.text}</a>
                 </li>
               </ul>
             </li>
-            <li>
-              {forUnit.body.li2_3.bullet}
-              <ul>
-                <li>
-                  <b>{forUnit.body.li2_3.subbull_b}</b>
-                  {forUnit.body.li2_3.subbull_2}
-                </li>
-              </ul>
-            </li>
+            <li> {forUnit.body.li2_2} </li>
+            <li> {forUnit.body.li2_3} </li>
           </ul>
+          <p>
+            {forUnit.body.p8_1}
+            <a href={forUnit.body.p8_a.link}>{forUnit.body.p8_a.text}</a>
+            {forUnit.body.p8_2}
+          </p>
         </div>
 
         <div className="divider"></div>
@@ -168,7 +175,11 @@ const Policies = () => {
             {" "}
             <b> {faq.body.p3_b} </b>{" "}
           </p>
-          <p> {faq.body.p4} </p>
+          <p>
+            {faq.body.p4_1}
+            <b> {faq.body.p4_b} </b>
+            {faq.body.p4_2}
+          </p>
           <p>
             {" "}
             <b> {faq.body.p5_b} </b>{" "}

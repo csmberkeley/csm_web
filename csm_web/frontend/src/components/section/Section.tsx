@@ -64,7 +64,7 @@ export function SectionSidebar({ links }: SectionSidebarProps) {
   return (
     <nav id="section-detail-sidebar">
       {links.map(([label, href]) => (
-        <NavLink end to={href} key={href}>
+        <NavLink end to={`${href}`} key={href}>
           {label}
         </NavLink>
       ))}
