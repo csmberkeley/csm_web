@@ -481,7 +481,7 @@ export const useEnrollStudentMutation = (
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, EnrollStudentMutationResponse, EnrollStudentMutationRequest>(
     async (body: EnrollStudentMutationRequest) => {
-      const response = await fetchWithMethod(`sections/${sectionId}/students`, HTTP_METHODS.PUT, body);
+      const response = await fetchWithMethod(`waitlist/${sectionId}/add`, HTTP_METHODS.POST, body);
       if (response.ok) {
         return;
       } else {

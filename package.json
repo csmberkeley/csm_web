@@ -4,6 +4,7 @@
   "description": "",
   "main": "index.tsx",
   "scripts": {
+    "start": "npm run watch",
     "dev": "webpack --mode development",
     "build:js": "webpack --mode production",
     "build": "npm run build:js",

@@ -53,12 +53,14 @@ export default function MentorSectionInfo({
   const [showModal, setShowModal] = useState(ModalStates.NONE);
   const [focusedSpacetimeID, setFocusedSpacetimeID] = useState<number>(-1);
   const [isAddingStudent, setIsAddingStudent] = useState<boolean>(false);
+  const [isAddingWaitlistedStudent, setIsAddingWaitlistedStudent] = useState<boolean>(false);
   const [deleteType, setDeleteType] = useState<boolean>(false);
 
   const closeModal = () => setShowModal(ModalStates.NONE);
 
   const closeAddModal = () => {
     setIsAddingStudent(false);
+    setIsAddingWaitlistedStudent(false);
   };
 
   return (
@@ -103,7 +105,7 @@ export default function MentorSectionInfo({
                         </tr>
                       )
                     )}
-                    {isCoordinator && (
+                    {isCoordinator && students.length < capacity && (
                       <React.Fragment>
                         <tr className="csm-table-row">
                           <td className="csm-table-item">
@@ -117,7 +119,7 @@ export default function MentorSectionInfo({
                   </tbody>
                 </table>
                 {isCoordinator && isAddingStudent && (
-                  <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} />
+                  <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} isWaitlist={false} />
                 )}
               </React.Fragment>
             ) : studentsLoadError ? (
@@ -168,7 +170,7 @@ export default function MentorSectionInfo({
                         <React.Fragment>
                           <tr className="csm-table-row">
                             <td className="csm-table-item">
-                              <button className="secondary-btn" onClick={() => setIsAddingStudent(true)}>
+                              <button className="secondary-btn" onClick={() => setIsAddingWaitlistedStudent(true)}>
                                 Add waitlisted students
                               </button>
                             </td>
@@ -177,8 +179,8 @@ export default function MentorSectionInfo({
                       )}
                     </tbody>
                   </table>
-                  {isCoordinator && isAddingStudent && (
-                    <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} />
+                  {isCoordinator && isAddingWaitlistedStudent && (
+                    <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} isWaitlist={true} />
                   )}
                 </React.Fragment>
               ) : waitlistLoadError ? (

@@ -2,7 +2,7 @@ import { DateTime } from "luxon";
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
-import { useUserEmails } from "../../utils/queries/base";
+import { useUserEmails, useUserInfo } from "../../utils/queries/base";
 import { useEnrollStudentMutation } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
@@ -22,6 +22,7 @@ enum CoordModalStates {
 interface CoordinatorAddStudentModalProps {
   closeModal: (arg0?: boolean) => void;
   sectionId: number;
+  isWaitlist: boolean;
 }
 
 interface RequestType {
@@ -50,10 +51,21 @@ interface ActionType {
 
 export function CoordinatorAddStudentModal({
   closeModal,
-  sectionId
+  sectionId,
+  isWaitlist
 }: CoordinatorAddStudentModalProps): React.ReactElement {
   const { data: userEmails, isSuccess: userEmailsLoaded } = useUserEmails();
   const enrollStudentMutation = useEnrollStudentMutation(sectionId);
+  const { data: user, isSuccess: userLoaded } = useUserInfo();
+
+  let addText = "Add new students";
+  let expandText = "Enroll and expand section";
+  let capacityText = "Section capacity exceeded!";
+  if (isWaitlist) {
+    addText = "Add new waitlisted students";
+    expandText = "Add and expand waitlist";
+    capacityText = "Waitlist capacity exceeded!";
+  }
 
   const [emailsToAdd, setEmailsToAdd] = useState<string[]>([""]);
   const [response, setResponse] = useState<ResponseType>({} as ResponseType);
@@ -107,6 +119,13 @@ export function CoordinatorAddStudentModal({
   function handleAddStudentSubmit(e: React.ChangeEvent<HTMLFormElement>): void {
     e.preventDefault(); // prevent refresh on submit, which stops this request
     setAddStage(CoordModalStates.LOADING);
+    setValidationEnabled(true);
+
+    if (userLoaded && emailsToAdd.includes(user.email)) {
+      alert("You cannot add yourself to your own section. We’ve removed your email from the list.");
+      setAddStage(CoordModalStates.INITIAL);
+      return;
+    }
 
     const request_emails = emailsToAdd.map(email => {
       let action: ActionType = {};
@@ -182,7 +201,7 @@ export function CoordinatorAddStudentModal({
 
   const initial_component = (
     <React.Fragment>
-      <h2>Add new students</h2>
+      <h2>{addText}</h2>
       <div className="coordinator-email-content">
         <div className="coordinator-email-input-list">
           {emailsToAdd.map((email, index) => (
@@ -222,7 +241,7 @@ export function CoordinatorAddStudentModal({
             )
           }
         </div>
-        <button className="primary-btn" type="submit" onClick={() => setValidationEnabled(true)}>
+        <button className="primary-btn" type="submit">
           Submit
         </button>
       </div>
@@ -231,7 +250,7 @@ export function CoordinatorAddStudentModal({
 
   const loading_component = (
     <React.Fragment>
-      <h2>Add new students</h2>
+      <h2>{addText}</h2>
       <LoadingSpinner />
       <div></div> {/* empty element to align the content */}
     </React.Fragment>
@@ -270,7 +289,7 @@ export function CoordinatorAddStudentModal({
 
   const warning_component = (
     <React.Fragment>
-      <h2>Add new students</h2>
+      <h2>{addText}</h2>
       <div className="coordinator-email-content">
         <div className="coordinator-email-response-list">
           {conflict_arr.length > 0 && (
@@ -469,7 +488,7 @@ export function CoordinatorAddStudentModal({
               <div className="coordinator-email-response-email-status">
                 <div className="coordinator-email-response-capacity">
                   <ErrorCircle className="coordinator-email-response-status-conflict-icon" />
-                  Section capacity exceeded!
+                  {capacityText}
                 </div>
               </div>
               <div className="coordinator-email-response-form">
@@ -480,7 +499,7 @@ export function CoordinatorAddStudentModal({
                     value="EXPAND"
                     onChange={e => updateGeneralResponseAction(e, "capacity")}
                   />
-                  Enroll and expand section
+                  {expandText}
                 </label>
                 <label>
                   <input

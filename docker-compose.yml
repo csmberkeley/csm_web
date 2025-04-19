@@ -22,7 +22,6 @@ services:
       - type: bind
         source: ./
         target: /opt/csm_web/app
-        read_only: true
       # output from webpack
       - type: bind
         source: ./csm_web/frontend/static/frontend/
@@ -31,11 +30,9 @@ services:
       - type: bind
         source: ./package.json
         target: /opt/csm_web/package.json
-        read_only: true
       - type: bind
         source: ./package-lock.json
         target: /opt/csm_web/package-lock.json
-        read_only: true
     command: sh -c "npm install && npm start"
 
   django:
