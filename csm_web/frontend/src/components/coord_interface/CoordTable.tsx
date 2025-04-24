@@ -60,6 +60,7 @@ export default function CoordTable() {
     const checkbox = document.getElementById(id + "check") as HTMLInputElement;
     checkbox.checked = !checkbox.checked;
     if (checkbox.checked) {
+      console.log("Checkbox checked");
       const selectedRow = searchData.find(row => row.id === id);
       if (selectedRow) {
         setSelected([...selectedData, selectedRow] as Mentor[] | Student[]);
@@ -195,10 +196,10 @@ export default function CoordTable() {
   }
 
   // Debugging Function for seeing selected data
-  function getSelectedData() {
-    console.log(selectedData);
-    return selectedData;
-  }
+  // function getSelectedData() {
+  //   console.log(selectedData);
+  //   return selectedData;
+  // }
 
   return (
     <div className={styles}>
@@ -277,7 +278,13 @@ export default function CoordTable() {
               onDoubleClick={() => navigate(`/sections/${row.section}`)}
               onClick={() => selectCheckbox(row.id)}
             >
-              <CheckBox id={row.id.toString()} />
+              <CheckBox
+                id={row.id.toString()}
+                onClick={e => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                }}
+              />
               {isStudents ? (
                 <>
                   <td>{row.name}</td>

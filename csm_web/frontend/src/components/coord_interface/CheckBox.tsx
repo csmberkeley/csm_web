@@ -3,7 +3,7 @@ import styles from "../../css/coord_interface.scss";
 
 interface CheckBoxProps {
   id: string;
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLInputElement>) => void;
 }
 
 export function CheckBox({ id, onClick: onClick }: CheckBoxProps) {
