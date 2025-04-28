@@ -187,10 +187,12 @@ def test_student_update_wotd_failure(client, setup_section):
     ],
     ids=["invalid", "invalid with whitespace"],
 )
-def test_submit_attendance_failure(client, setup_section, word):
+def test_submit_attendance_failure(client, setup_section, word, mocker):
     """
     Check that submitting an invalid word fails to update attendance.
     """
+    mocker.patch('scheduler.email.email_utils._email_send_message')
+
     _mentor, student_user, _course, section = setup_section
     with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):
         client.force_login(student_user)
@@ -229,10 +231,12 @@ def test_submit_attendance_failure(client, setup_section, word):
 
 
 @pytest.mark.django_db
-def test_submit_another_student_wotd_failure(client, setup_section):
+def test_submit_another_student_wotd_failure(client, setup_section, mocker):
     """
     Check that another student cannot change someone else's attendance.
     """
+    mocker.patch('scheduler.email.email_utils._email_send_message')
+
     _mentor, student_user, course, section = setup_section
     with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):
         client.force_login(student_user)
@@ -351,11 +355,13 @@ def test_submit_another_student_wotd_failure(client, setup_section):
     ],
 )
 def test_submit_attendance_dates(
-    client, setup_section, submission_limit, submission_date, expected_success
+    client, setup_section, submission_limit, submission_date, expected_success, mocker
 ):
     """
     Check that submitting a matching word of the day marks the student attendance as present.
     """
+    mocker.patch('scheduler.email.email_utils._email_send_message')
+
     _mentor, student_user, course, section = setup_section
     # set wotd limit for course
     course.word_of_the_day_limit = submission_limit
@@ -414,10 +420,12 @@ def test_submit_attendance_dates(
 
 
 @pytest.mark.django_db
-def test_student_submit_wotd_for_previous_attendance_failure(client, setup_section):
+def test_student_submit_wotd_for_previous_attendance_failure(client, setup_section, mocker):
     """
     Check that a student cannot overwrite a previously submitted attendance.
     """
+    mocker.patch('scheduler.email.email_utils._email_send_message')
+
     _mentor_user, student_user, _course, section = setup_section
 
     with freeze_time(timezone.datetime(2020, 6, 1, 0, 0, 0, tzinfo=DEFAULT_TZ)):

@@ -119,6 +119,10 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# Email credentials
+csm_web/scheduler/email/credentials.json
+csm_web/scheduler/email/token.json
+
 ### Python Patch ###
 .venv/
 

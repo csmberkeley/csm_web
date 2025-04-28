@@ -25,6 +25,7 @@ from scheduler.serializers import (
     StudentSerializer,
 )
 
+from ..email.email_utils import email_enroll, email_swap
 from .utils import (
     get_object_or_error,
     log_str,
@@ -671,6 +672,10 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 log_str(section),
                 log_str(old_section),
             )
+
+            # Send swap email
+            email_swap(student, logger)
+
             return Response(status=status.HTTP_204_NO_CONTENT)
 
         # student_queryset.count() == 0
@@ -682,6 +687,10 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             log_str(student.user),
             log_str(section),
         )
+
+        # Send enroll email
+        email_enroll(student, logger)
+
         return Response({"id": student.id}, status=status.HTTP_201_CREATED)
 
     @action(detail=True, methods=["get", "put"])
