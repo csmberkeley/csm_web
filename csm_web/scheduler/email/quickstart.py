@@ -20,10 +20,10 @@
 # [START gmail_quickstart]
 from __future__ import print_function
 
-import os.path
 import json
-import dotenv
+import os.path
 
+import dotenv
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
@@ -31,7 +31,7 @@ from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/gmail.modify']
+SCOPES = ["https://www.googleapis.com/auth/gmail.modify"]
 
 
 def main():
@@ -42,8 +42,8 @@ def main():
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists('token.json'):
-        creds = Credentials.from_authorized_user_file('token.json', SCOPES)
+    if os.path.exists("token.json"):
+        creds = Credentials.from_authorized_user_file("token.json", SCOPES)
     else:  # Attempt to load from .env variables
         creds = Credentials.from_authorized_user_info(
             {
@@ -53,7 +53,7 @@ def main():
                 "client_id": os.getenv("GMAIL_CLIENT_ID"),
                 "client_secret": os.getenv("GMAIL_CLIENT_SECRET"),
                 "scopes": SCOPES,
-                "expiry": os.getenv("GMAIL_EXPIRY")
+                "expiry": os.getenv("GMAIL_EXPIRY"),
             }
         )
 
@@ -62,8 +62,7 @@ def main():
         if creds and creds.expired and creds.refresh_token:
             creds.refresh(Request())
         else:
-            flow = InstalledAppFlow.from_client_secrets_file(
-                'credentials.json', SCOPES)
+            flow = InstalledAppFlow.from_client_secrets_file("credentials.json", SCOPES)
             creds = flow.run_local_server(port=0)
         # Save the credentials for the next run
         creds_dict = json.loads(creds.to_json())
@@ -75,13 +74,20 @@ def main():
         os.environ["GMAIL_CLIENT_SECRET"] = creds_dict["client_secret"]
         os.environ["GMAIL_EXPIRY"] = creds_dict["expiry"]
 
-        for key in ("GMAIL_TOKEN", "GMAIL_REFRESH_TOKEN", "GMAIL_TOKEN_URL",
-                    "GMAIL_CLIENT_ID", "GMAIL_CLIENT_SECRET", "GMAIL_EXPIRY"):
+        for key in (
+            "GMAIL_TOKEN",
+            "GMAIL_REFRESH_TOKEN",
+            "GMAIL_TOKEN_URL",
+            "GMAIL_CLIENT_ID",
+            "GMAIL_CLIENT_SECRET",
+            "GMAIL_EXPIRY",
+        ):
             dotenv.set_key(dotenv_file, key, os.environ[key])
 
-        print("Please restart your environment to load the new email environment variables")
+        print(
+            "Please restart your environment to load the new email environment variables"
+        )
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()
-# [END gmail_quickstart]

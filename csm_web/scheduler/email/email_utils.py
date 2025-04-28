@@ -1,15 +1,19 @@
-import os
 import base64
 import html
+import os
 from email.message import EmailMessage
 
 from django.conf import settings
-
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
 
-from .email_errors import EmailFormattingError, NoEmailError, EmailAuthError, email_error_handling
+from .email_errors import (
+    EmailAuthError,
+    EmailFormattingError,
+    NoEmailError,
+    email_error_handling,
+)
 
 PROFILE_URL = "https://scheduler.csmentors.org/profile"
 
@@ -36,7 +40,9 @@ def email_enroll(student):
             mentor_name=html.escape(mentor_name),
             student_name=html.escape(student_name),
         )
-        _email_send_message(f"[CSM - {course_title}] Student Enrolled", body, mentor_email)
+        _email_send_message(
+            f"[CSM - {course_title}] Student Enrolled", body, mentor_email
+        )
 
     if student.user.subscribed:
         body = _render_template("student_enroll/confirm.html").format(
@@ -44,7 +50,12 @@ def email_enroll(student):
             mentor_name=html.escape(mentor_name),
             student_name=html.escape(student_name),
         )
-        _email_send_message(f"[CSM - {course_title}] Section Enrollment Confirmation", body, student_email)
+        _email_send_message(
+            f"[CSM - {course_title}] Section Enrollment Confirmation",
+            body,
+            student_email,
+        )
+
 
 # Email error handling wrapper adds logger argument as last argument
 
@@ -69,7 +80,9 @@ def email_swap(student):
             mentor_name=html.escape(mentor_name),
             student_name=html.escape(student_name),
         )
-        _email_send_message(f"[CSM - {course_title}] Student Swapped", body, mentor_email)
+        _email_send_message(
+            f"[CSM - {course_title}] Student Swapped", body, mentor_email
+        )
 
     if student.user.subscribed:
         body = _render_template("student_swap/confirm.html").format(
@@ -77,7 +90,10 @@ def email_swap(student):
             mentor_name=html.escape(mentor_name),
             student_name=html.escape(student_name),
         )
-        _email_send_message(f"[CSM - {course_title}] Section Swap Confirmation", body, student_email)
+        _email_send_message(
+            f"[CSM - {course_title}] Section Swap Confirmation", body, student_email
+        )
+
 
 # Email error handling wrapper adds logger argument as last argument
 
@@ -102,7 +118,9 @@ def email_student_drop(student):
             mentor_name=html.escape(mentor_name),
             student_name=html.escape(student_name),
         )
-        _email_send_message(f"[CSM - {course_title}] Student Dropped", body, mentor_email)
+        _email_send_message(
+            f"[CSM - {course_title}] Student Dropped", body, mentor_email
+        )
 
     if student.user.subscribed:
         body = _render_template("student_drop/confirm.html").format(
@@ -110,7 +128,10 @@ def email_student_drop(student):
             mentor_name=html.escape(mentor_name),
             student_name=html.escape(student_name),
         )
-        _email_send_message(f"[CSM - {course_title}] Section Drop Confirmation", body, student_email)
+        _email_send_message(
+            f"[CSM - {course_title}] Section Drop Confirmation", body, student_email
+        )
+
 
 # Email error handling wrapper adds logger argument as last argument
 
@@ -118,7 +139,7 @@ def email_student_drop(student):
 @email_error_handling
 def email_coordinator_drop(student):
     """Sends the corresponding mentor and STUDENT an email notification that
-        the student has been dropped out of the section by the coordinator"""
+    the student has been dropped out of the section by the coordinator"""
 
     try:
         mentor = student.section.mentor
@@ -136,7 +157,9 @@ def email_coordinator_drop(student):
             mentor_name=html.escape(mentor_name),
             student_name=html.escape(student_name),
         )
-        _email_send_message(f"[CSM - {course_title}] Coordinator Dropped Student", body, mentor_email)
+        _email_send_message(
+            f"[CSM - {course_title}] Coordinator Dropped Student", body, mentor_email
+        )
 
     if student.user.subscribed:
         body = _render_template("coord_drop/student_notif.html").format(
@@ -144,7 +167,9 @@ def email_coordinator_drop(student):
             mentor_name=html.escape(mentor_name),
             student_name=html.escape(student_name),
         )
-        _email_send_message(f"[CSM - {course_title}] Student Dropped", body, student_email)
+        _email_send_message(
+            f"[CSM - {course_title}] Student Dropped", body, student_email
+        )
 
 
 def _render_template(filepaths):
@@ -153,10 +178,16 @@ def _render_template(filepaths):
 
     body = ""
     for filepath in filepaths:
-        with open(os.path.join(settings.BASE_DIR, "scheduler/email/email_content", filepath), 'r') as file:
+        with open(
+            os.path.join(settings.BASE_DIR, "scheduler/email/email_content", filepath),
+            "r",
+        ) as file:
             body += file.read()
 
-    with open(os.path.join(settings.BASE_DIR, "scheduler/email/email_content/signature.html"), 'r') as file:
+    with open(
+        os.path.join(settings.BASE_DIR, "scheduler/email/email_content/signature.html"),
+        "r",
+    ) as file:
         body += file.read().format(PROFILE_URL=html.escape(PROFILE_URL))
 
     return "<html><body>" + body + "</html></body>"
@@ -188,7 +219,7 @@ def _email_send_message(subject, body, to_emails=[], cc_emails=[], bcc_emails=[]
                 "client_id": os.getenv("GMAIL_CLIENT_ID"),
                 "client_secret": os.getenv("GMAIL_CLIENT_SECRET"),
                 "scopes": ["https://www.googleapis.com/auth/gmail.modify"],
-                "expiry": os.getenv("GMAIL_EXPIRY")
+                "expiry": os.getenv("GMAIL_EXPIRY"),
             }
         )
     except:
@@ -203,17 +234,25 @@ def _email_send_message(subject, body, to_emails=[], cc_emails=[], bcc_emails=[]
     labels = service.users().labels().list(userId="me").execute()
 
     # Get label
-    for existing_label in labels['labels']:
+    for existing_label in labels["labels"]:
         if existing_label["name"] == label_name:
             label = existing_label
 
     # Create label
     if not label:
-        label = service.users().labels().create(userId="me", body={
-            "name": label_name,
-            "messageListVisibility": "show",
-            "labelListVisibility": "labelShow",
-        }).execute()
+        label = (
+            service.users()
+            .labels()
+            .create(
+                userId="me",
+                body={
+                    "name": label_name,
+                    "messageListVisibility": "show",
+                    "labelListVisibility": "labelShow",
+                },
+            )
+            .execute()
+        )
 
     # Create message
     message = EmailMessage()
@@ -223,20 +262,66 @@ def _email_send_message(subject, body, to_emails=[], cc_emails=[], bcc_emails=[]
     message["Bcc"] = bcc_emails
     message["Subject"] = subject
 
-    message.set_content(body, 'html')
+    message.set_content(body, "html")
 
     encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
     create_message = {"raw": encoded_message}
 
     # Send message
-    send_message = service.users().messages().send(userId="me", body=create_message).execute()
+    send_message = (
+        service.users().messages().send(userId="me", body=create_message).execute()
+    )
 
     # Add label
-    send_message = service.users().messages().modify(
-        userId='me',
-        id=send_message['id'],
-        body={"addLabelIds": [label['id']]},
-    ).execute()
+    send_message = (
+        service.users()
+        .messages()
+        .modify(
+            userId="me",
+            id=send_message["id"],
+            body={"addLabelIds": [label["id"]]},
+        )
+        .execute()
+    )
 
     return send_message
+
+
+@email_error_handling
+def email_waitlist(waitlisted_student):
+    """Sends the corresponding mentor an email notification that the STUDENT enrolled in their section"""
+
+    try:
+        mentor = waitlisted_student.section.mentor
+        course_title = waitlisted_student.course.title
+        mentor_name = mentor.user.first_name + " " + mentor.user.last_name
+        student_name = (
+            waitlisted_student.user.first_name + " " + waitlisted_student.user.last_name
+        )
+        mentor_email = mentor.user.email
+        student_email = waitlisted_student.user.email
+    except AttributeError:
+        raise NoEmailError
+
+    if mentor.user.subscribed:
+        body = _render_template("student_enroll/notif.html").format(
+            course_title=html.escape(course_title),
+            mentor_name=html.escape(mentor_name),
+            student_name=html.escape(student_name),
+        )
+        _email_send_message(
+            f"[CSM - {course_title}] Student Enrolled", body, mentor_email
+        )
+
+    if waitlisted_student.user.subscribed:
+        body = _render_template("student_enroll/confirm.html").format(
+            course_title=html.escape(course_title),
+            mentor_name=html.escape(mentor_name),
+            student_name=html.escape(student_name),
+        )
+        _email_send_message(
+            f"[CSM - {course_title}] Section Enrollment Confirmation",
+            body,
+            student_email,
+        )

@@ -6,16 +6,27 @@ MOCK_GMAIL_ENV = {
     "GMAIL_TOKEN_URI": "token_uri",
     "GMAIL_CLIENT_ID": "client_id",
     "GMAIL_CLIENT_SECRET": "client_secret",
-    "GMAIL_EXPIRY": "expiry"
+    "GMAIL_EXPIRY": "expiry",
 }
 
 
 class MockCredentials:
     """Mock credentials class modeled after https://google-auth.readthedocs.io/en/stable/reference/google.oauth2.credentials.html"""
 
-    def __init__(self, token, refresh_token=None, id_token=None, token_uri=None,
-                 client_id=None, client_secret=None, scopes=None, default_scopes=None,
-                 quota_project_id=None, expiry=None, rapt_token=None):
+    def __init__(
+        self,
+        token,
+        refresh_token=None,
+        id_token=None,
+        token_uri=None,
+        client_id=None,
+        client_secret=None,
+        scopes=None,
+        default_scopes=None,
+        quota_project_id=None,
+        expiry=None,
+        rapt_token=None,
+    ):
         pass
 
     def from_authorized_user_file(filename, scopes=None):
@@ -26,10 +37,22 @@ class MockCredentials:
         pass
 
 
-def mock_build(serviceName, version, http=None, discoveryServiceUrl=None,
-               developerKey=None, model=None, requestBuilder=None, credentials=None,
-               cache_discovery=True, cache=None, client_options=None, adc_cert_path=None,
-               adc_key_path=None, num_retries=1):
+def mock_build(
+    serviceName,
+    version,
+    http=None,
+    discoveryServiceUrl=None,
+    developerKey=None,
+    model=None,
+    requestBuilder=None,
+    credentials=None,
+    cache_discovery=True,
+    cache=None,
+    client_options=None,
+    adc_cert_path=None,
+    adc_key_path=None,
+    num_retries=1,
+):
     """Mock build function modeled after https://googleapis.github.io/google-api-python-client/docs/epy/index.html"""
     return MockGmailAPI()
 
@@ -140,7 +163,9 @@ class MockGmailAPI:
                     self.gmail_api = gmail_api
 
                 def execute(self):
-                    message = MockGmailAPI.MockObjects.email_message(len(self.gmail_api.messages), body)
+                    message = MockGmailAPI.MockObjects.email_message(
+                        len(self.gmail_api.messages), body
+                    )
                     self.gmail_api.messages.append(message)
                     return message
 
@@ -174,7 +199,8 @@ class MockGmailAPI:
                 def execute(self):
                     return {
                         "labels": [  # List of labels. Note that each label resource only contains an id, name, messageListVisibility, labelListVisibility, and type. The labels.get method can fetch additional label details.
-                            MockGmailAPI.MockObjects.MOCK_LABEL, MockGmailAPI.MockObjects.MOCK_LABEL
+                            MockGmailAPI.MockObjects.MOCK_LABEL,
+                            MockGmailAPI.MockObjects.MOCK_LABEL,
                         ],
                     }
 

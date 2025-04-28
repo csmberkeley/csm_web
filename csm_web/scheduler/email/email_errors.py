@@ -19,23 +19,16 @@ def email_error_handling(email_fn):
         args = args[:-1]
         try:
             email_fn(*args)
-            logger.info(
-                f"<Email:Success> Email sent"
-            )
+            logger.info(f"<Email:Success> Email sent")
         except NoEmailError:
-            logger.info(
-                f"<Email:Failure> Email address not found"
-            )
+            logger.info(f"<Email:Failure> Email address not found")
         except EmailFormattingError:
             logger.info(
                 f"<Email:Failure> Email has not been formatted correctly for sending"
             )
         except EmailAuthError:
-            logger.info(
-                f"<Email:Failure> Cannot log into CSM email"
-            )
+            logger.info(f"<Email:Failure> Cannot log into CSM email")
         except HttpError:
-            logger.info(
-                f"<Email:Failure> Email failed to send"
-            )
+            logger.info(f"<Email:Failure> Email failed to send")
+
     return wrapper
