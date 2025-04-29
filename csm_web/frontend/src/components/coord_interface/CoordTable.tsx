@@ -34,6 +34,7 @@ export default function CoordTable() {
   const navigate = useNavigate();
 
   function reset() {
+    // Used for chainging url
     setTableData([]);
     setSearch([]);
     setSelected([]);
@@ -60,7 +61,6 @@ export default function CoordTable() {
     const checkbox = document.getElementById(id + "check") as HTMLInputElement;
     checkbox.checked = !checkbox.checked;
     if (checkbox.checked) {
-      console.log("Checkbox checked");
       const selectedRow = searchData.find(row => row.id === id);
       if (selectedRow) {
         setSelected([...selectedData, selectedRow] as Mentor[] | Student[]);
@@ -101,7 +101,7 @@ export default function CoordTable() {
   function filterSearch(event: React.ChangeEvent<HTMLInputElement>) {
     const search = event.target.value.toLowerCase();
     if (search.length === 0) {
-      update(tableData, [] as Mentor[] | Student[]);
+      update(tableData, selectedData);
       return;
     }
     const filteredData = tableData.filter(row => {
@@ -168,7 +168,7 @@ export default function CoordTable() {
     if (currentFilter != null && currentFilter != resetButton) {
       return;
     }
-    update(tableData, [] as Mentor[] | Student[]);
+    update(tableData, selectedData);
     resetButton.classList.remove("using-filter");
     setCurrentFilter(null);
   }
