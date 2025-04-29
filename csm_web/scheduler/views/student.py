@@ -78,6 +78,13 @@ class StudentViewSet(viewsets.GenericViewSet):
             log_str(student.section),
             now.date(),
         )
+
+        # Send drop email
+        if is_coordinator:
+            email_coordinator_drop(student, logger)
+        else:
+            email_student_drop(student, logger)
+
         add_from_waitlist(pk=student.section.id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 

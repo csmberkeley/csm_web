@@ -7,9 +7,25 @@ from scheduler.factories import (
     UserFactory,
 )
 from scheduler.models import Student, WaitlistedStudent
+from unittest.mock import patch
+from scheduler.email.email_mocks import (
+    MOCK_GMAIL_ENV,
+    MockCredentials,
+    MockHttpError,
+    mock_build,
+)
 
+@pytest.fixture(autouse=True)
+def patch_email_utils():
+    with patch("scheduler.email.email_utils.Credentials", MockCredentials), \
+         patch("scheduler.email.email_utils.build", mock_build), \
+         patch("scheduler.email.email_utils.HttpError", MockHttpError), \
+         patch.dict("os.environ", MOCK_GMAIL_ENV):
+        
+        yield  # Everything above is patched during the test
 
 @pytest.fixture(name="setup_waitlist")
+
 def fixture_setup_waitlist(db):  # pylint: disable=unused-argument
     """
     Set up a mentor user, student user, course, and section for waitlist testing
@@ -357,4 +373,4 @@ def test_positions_update_properly():
     When a coordinator adds a student on the waitlist at a certain position,
     The waitlist students have the correct order.
     """
-    return True
+    assert True

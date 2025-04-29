@@ -197,6 +197,10 @@ def _email_send_message(subject, body, to_emails=[], cc_emails=[], bcc_emails=[]
     """Helper function to send an email to the email addresses TO_EMAILS, CCing CC_EMAILS
     and BCCing BCC_EMAILS, with subject SUBJECT and message MESSAGE"""
 
+    # Handle email has no recipients
+    if not (to_emails or cc_emails or bcc_emails):
+        raise EmailFormattingError
+
     # Reformat single recipient to list
     if isinstance(to_emails, list):
         to_emails = ", ".join(to_emails)
@@ -204,10 +208,6 @@ def _email_send_message(subject, body, to_emails=[], cc_emails=[], bcc_emails=[]
         cc_emails = ", ".join(cc_emails)
     if isinstance(bcc_emails, list):
         bcc_emails = ", ".join(bcc_emails)
-
-    # Handle email has no recipients
-    if to_emails + cc_emails + bcc_emails == []:
-        raise EmailFormattingError
 
     # Authenticate with token
     try:
@@ -290,38 +290,52 @@ def _email_send_message(subject, body, to_emails=[], cc_emails=[], bcc_emails=[]
 
 @email_error_handling
 def email_waitlist(waitlisted_student):
-    """Sends the corresponding mentor an email notification that the STUDENT enrolled in their section"""
+    """Sends the corresponding student an email notification that the STUDENT waitlist in their section"""
 
     try:
         mentor = waitlisted_student.section.mentor
-        course_title = waitlisted_student.course.title
+        course_title = mentor.course.title
         mentor_name = mentor.user.first_name + " " + mentor.user.last_name
         student_name = (
             waitlisted_student.user.first_name + " " + waitlisted_student.user.last_name
         )
-        mentor_email = mentor.user.email
         student_email = waitlisted_student.user.email
     except AttributeError:
         raise NoEmailError
 
-    if mentor.user.subscribed:
-        body = _render_template("student_enroll/notif.html").format(
-            course_title=html.escape(course_title),
-            mentor_name=html.escape(mentor_name),
-            student_name=html.escape(student_name),
-        )
-        _email_send_message(
-            f"[CSM - {course_title}] Student Enrolled", body, mentor_email
-        )
-
     if waitlisted_student.user.subscribed:
-        body = _render_template("student_enroll/confirm.html").format(
+        body = _render_template("waitlist_enroll/confirm.html").format(
             course_title=html.escape(course_title),
             mentor_name=html.escape(mentor_name),
             student_name=html.escape(student_name),
         )
         _email_send_message(
-            f"[CSM - {course_title}] Section Enrollment Confirmation",
+            f"[CSM - {course_title}] Section Waitlist Confirmation",
             body,
             student_email,
+        )
+
+@email_error_handling
+def email_waitlist_drop(waitlisted_student):
+    """Sends the corresponding student an email notification that they have been dropped from the waitlist"""
+
+    try:
+        mentor = waitlisted_student.section.mentor
+        course_title = mentor.course.title
+        mentor_name = mentor.user.first_name + " " + mentor.user.last_name
+        student_name = (
+            waitlisted_student.user.first_name + " " + waitlisted_student.user.last_name
+        )
+        student_email = waitlisted_student.user.email
+    except AttributeError:
+        raise NoEmailError
+
+    if waitlisted_student.user.subscribed:
+        body = _render_template("waitlist_drop/notif.html").format(
+            course_title=html.escape(course_title),
+            mentor_name=html.escape(mentor_name),
+            student_name=html.escape(student_name),
+        )
+        _email_send_message(
+            f"[CSM - {course_title}] Waitlist Drop Confirmation", body, student_email
         )

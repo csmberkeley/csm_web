@@ -25,7 +25,7 @@ from scheduler.serializers import (
     StudentSerializer,
 )
 
-from ..email.email_utils import email_enroll, email_swap
+from ..email.email_utils import email_enroll, email_swap, email_waitlist_drop
 from ..models import WaitlistedStudent
 from .utils import (
     get_object_or_error,
@@ -112,6 +112,10 @@ def add_student(section, user):
             log_str(section),
             log_str(old_section),
         )
+
+        # Send swap email
+        email_swap(student, logger)  
+
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     student = Student.objects.create(
@@ -128,11 +132,18 @@ def add_student(section, user):
         # waitlist.delete()
         waitlist.save()
 
+        # Send drop email
+        email_waitlist_drop(waitlist, logger)
+
     logger.info(
         "<Enrollment:Success> User %s enrolled in Section %s",
         log_str(student.user),
         log_str(section),
     )
+
+    # Send enroll email
+    email_enroll(student, logger)
+
     return Response({"id": student.id}, status=status.HTTP_201_CREATED)
 
 
@@ -739,7 +750,6 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
             section.save()
 
-        # expand waitlist capacity
         return Response(status=status.HTTP_200_OK)
 
     def _student_add(self, request, section):
