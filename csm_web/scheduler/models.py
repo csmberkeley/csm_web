@@ -274,9 +274,12 @@ class WaitlistedStudent(Profile):
                 .order_by("position")
             )
             # shifting over other student's positions
+            previous_position = self.position
             for student in conflicting_students:
-                student.position += 1
-                student.save()
+                if student.position <= previous_position:
+                    student.position += 1
+                    previous_position = student.position
+                    student.save()
 
         super().save(*args, **kwargs)
 

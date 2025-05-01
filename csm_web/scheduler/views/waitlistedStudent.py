@@ -5,7 +5,7 @@ from rest_framework.response import Response
 from scheduler.serializers import WaitlistedStudentSerializer
 from scheduler.views.utils import get_object_or_error
 
-from ..models import Section, WaitlistedStudent
+from ..models import Section, WaitlistedStudent, Student
 from .section import add_student
 from .utils import logger
 
@@ -29,7 +29,7 @@ def view(request, pk=None):
     waitlist_queryset = WaitlistedStudent.objects.filter(active=True, section=section)
     return Response(WaitlistedStudentSerializer(waitlist_queryset, many=True).data)
 
-
+# CURRENT ISSUES: 61a and eecs16b don't allow adding to waitlist? may not be an issue
 @api_view(["POST"])
 def add(request, pk=None):
     """
@@ -45,37 +45,57 @@ def add(request, pk=None):
     section = get_object_or_error(Section.objects, pk=pk)
     course = section.mentor.course
     user = request.user
+    student = user
 
-    # Checks that student is able to enroll in the course
-    if not user.can_enroll_in_course(course):
-        log_enroll_result(
-            False,
-            user,
-            section,
-            reason=(
-                "User already involved in this course or course is closed for"
-                " enrollment"
-            ),
-        )
-        raise PermissionDenied(
-            "You are either mentoring for this course, already enrolled in a section, "
-            "or the course is closed for enrollment.",
-        )
+    is_coord = bool(
+        section.mentor.course.coordinator_set.filter(user=request.user).count()
+    )
 
+    if not is_coord: # check if it's a student
+        # Checks that student is able to enroll in the course
+        if not student.can_enroll_in_course(course):
+            log_enroll_result(
+                False,
+                student,
+                section,
+                reason=(
+                    "User already involved in this course or course is closed for"
+                    " enrollment"
+                ),
+            )
+            raise PermissionDenied(
+                "You are either mentoring for this course, already enrolled in a section, "
+                "or the course is closed for enrollment.",
+            )
+    if is_coord:
+        data = request.data
+        email = data.get("email")
+        if not email: # singular student for now -- may need to adapt to a list
+            return Response(
+                {"error": "Must specify email of student to enroll"},
+                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            )
+        student_queryset = Student.objects.filter(
+                course=section.mentor.course, user__email=email
+            )
+
+        student = student_queryset.first().user 
+        print(student_queryset.count())
+    # user is either a coord or a student
     # If there is space in the section, attempt to enroll the student directly
     if not section.is_section_full:
-        return add_student(section, user)
+        return add_student(section, student)
 
     # If the waitlist is full, throw an error
     if section.is_waitlist_full:
-        log_enroll_result(False, user, section, reason="Waitlist is full")
+        log_enroll_result(False, student, section, reason="Waitlist is full")
         raise PermissionDenied("There is no space available in this section.")
 
     # If user has waitlisted in the max number of waitlists allowed for the course
-    if not user.can_enroll_in_waitlist(course):
+    if not student.can_enroll_in_waitlist(course):
         log_enroll_result(
             False,
-            user,
+            student,
             section,
             reason="User has waitlisted in max amount of waitlists for the course",
         )
@@ -85,12 +105,12 @@ def add(request, pk=None):
 
     # Check if the student is already enrolled in the waitlist for this section
     waitlist_queryset = WaitlistedStudent.objects.filter(
-        active=True, section=section, user=user
+        active=True, section=section, user=student
     )
     if waitlist_queryset.count() != 0:
         log_enroll_result(
             False,
-            user,
+            student,
             section,
             reason="User is already waitlisted in this section",
         )
@@ -101,7 +121,7 @@ def add(request, pk=None):
 
     # Create the new waitlist student and save
     waitlisted_student = WaitlistedStudent.objects.create(
-        user=user, section=section, course=course, position=specified_position
+        user=student, section=section, course=course, position=specified_position
     )
     waitlisted_student.save()
 
