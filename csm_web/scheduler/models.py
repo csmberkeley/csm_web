@@ -108,6 +108,9 @@ class OneToOneOrNoneField(models.OneToOneField):
     A OneToOneField that returns None if the related object does not exist
     """
 
+    # pylint warns about an abstract method that is not implemented; this is a false warning here.
+    # pylint: disable=abstract-method
+
     related_accessor_class = ReverseOneToOneOrNoneDescriptor
 
 
@@ -260,19 +263,15 @@ class Student(Profile):
             ):
                 if settings.DJANGO_ENV != settings.DEVELOPMENT:
                     logger.info(
-                        (
-                            "<SectionOccurrence> SO automatically created for student"
-                            " %s in course %s for date %s"
-                        ),
+                        "<SectionOccurrence> SO automatically created for student"
+                        " %s in course %s for date %s",
                         self.user.email,
                         course.name,
                         now.date(),
                     )
                     logger.info(
-                        (
-                            "<Attendance> Attendance automatically created for student"
-                            " %s in course %s for date %s"
-                        ),
+                        "<Attendance> Attendance automatically created for student"
+                        " %s in course %s for date %s",
                         self.user.email,
                         course.name,
                         now.date(),
@@ -584,6 +583,7 @@ class MatcherSlot(ValidatingModel):
     times = models.JSONField()
     min_mentors = models.PositiveSmallIntegerField()
     max_mentors = models.PositiveSmallIntegerField()
+    description = models.TextField(default="", blank=True)
 
     def clean(self):
         super().clean()

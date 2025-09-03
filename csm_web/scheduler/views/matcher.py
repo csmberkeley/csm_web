@@ -1,4 +1,5 @@
 import datetime
+import random
 
 from django.db import transaction
 from django.db.models import Q
@@ -139,6 +140,9 @@ def slots(request, pk=None):
                 max_mentors = (
                     slot_json["maxMentors"] if "maxMentors" in slot_json else 10
                 )
+                description = (
+                    slot_json["description"] if "description" in slot_json else ""
+                )
                 if min_mentors > max_mentors:
                     return Response(
                         {
@@ -157,10 +161,12 @@ def slots(request, pk=None):
                         times=times,
                         min_mentors=min_mentors,
                         max_mentors=max_mentors,
+                        description=description,
                     )
                 else:
                     slot.min_mentors = min_mentors
                     slot.max_mentors = max_mentors
+                    slot.description = description
                     slot.save()
 
         return Response(status=status.HTTP_202_ACCEPTED)
@@ -410,13 +416,20 @@ def configure(request, pk=None):
                 matcher_assignment, unmatched = run_matcher(course)
             except Exception as e:  # pylint: disable=broad-except
                 return Response({"error": str(e)}, status=status.HTTP_400_BAD_REQUEST)
+
+            matcher_slots = MatcherSlot.objects.filter(matcher=course.matcher)
+            matcher_slot_map = {slot.id: slot for slot in matcher_slots}
+
             # assignment is of the form {"mentor", "capacity"};
             # add a "section" key with default values of capacity and description
             updated_assignment = [
                 {
                     "slot": int(slot),
                     "mentor": int(mentor),
-                    "section": {"capacity": DEFAULT_CAPACITY, "description": ""},
+                    "section": {
+                        "capacity": DEFAULT_CAPACITY,
+                        "description": matcher_slot_map[slot].description,
+                    },
                 }
                 for (mentor, slot) in matcher_assignment.items()
             ]
@@ -547,6 +560,13 @@ def run_matcher(course: Course):
             matcher_preferences,
         )
     )
+
+    # randomize lists, seeded with the course id;
+    # this ensures that tiebreaks are approximately uniform
+    random.seed(course.id)
+    random.shuffle(mentor_list)
+    random.shuffle(slot_list)
+    random.shuffle(preference_list)
 
     # run the matcher
     return get_matches(mentor_list, slot_list, preference_list)

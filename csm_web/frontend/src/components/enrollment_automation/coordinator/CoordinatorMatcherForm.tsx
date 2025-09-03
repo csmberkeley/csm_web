@@ -61,7 +61,7 @@ export function CoordinatorMatcherForm({
     }
 
     // convert times to numbers
-    const new_slots: Slot[] = jsonSlots.slots.map((slot: { id: number; times: StrTime[] }) => {
+    const new_slots: Slot[] = jsonSlots.slots.map((slot: { id: number; times: StrTime[]; description: string }) => {
       const new_times: Time[] = slot.times.map((time: StrTime) => {
         return {
           interval: Interval.fromDateTimes(parseTime(time.startTime), parseTime(time.endTime)),
@@ -71,7 +71,8 @@ export function CoordinatorMatcherForm({
       });
       return {
         id: slot.id,
-        times: new_times
+        times: new_times,
+        description: slot.description
       };
     });
 

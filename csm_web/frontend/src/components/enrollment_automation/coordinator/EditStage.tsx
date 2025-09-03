@@ -340,17 +340,33 @@ export const EditStage = ({
         if (isNaN(slotId)) {
           return;
         }
-        if (slotId === -1) {
-          // unassign the mentor
-          row.slotId = -1;
-          row[attr] = [];
-        } else {
+
+        // by default unassign the mentor (if slot ID = -1)
+        let newSlotId = -1;
+        let newAttrValue: Time[] = [];
+        if (slotId !== -1) {
           const slot = slotsById.get(slotId);
           if (slot == null) {
             return;
           }
-          row.slotId = slotId;
-          row[attr] = slot.times;
+          newSlotId = slotId;
+          newAttrValue = slot.times;
+        }
+
+        // set current row value
+        row.slotId = slotId;
+        row[attr] = newAttrValue;
+
+        // if the row is selected, update all selected rows
+        if (selectedRowIndices.has(rowIdx)) {
+          selectedRowIndices.forEach(idx => {
+            if (idx !== rowIdx) {
+              const newRow = { ...newEditTable[idx] };
+              newRow[attr] = newAttrValue;
+              newRow.slotId = newSlotId;
+              newEditTable[idx] = newRow;
+            }
+          });
         }
       } else {
         // should not get here
@@ -568,7 +584,7 @@ export const EditStage = ({
           )}
         </div>
         <div className="matcher-assignment-button-div">
-          <button className="secondary-btn" onClick={() => saveAssignment()}>
+          <button className="primary-btn" onClick={() => saveAssignment()}>
             Save
           </button>
           <button className="danger-btn" onClick={() => setCreateConfirmModalOpen(true)}>

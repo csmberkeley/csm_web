@@ -98,18 +98,34 @@ describe("attendances", () => {
     cy.get("#attendance-date-tabs-container")
       .children()
       .should("have.length", 2)
-      // click second (inactive) tab
+      // first tab should be active, since it's the first date in the future
+      .first()
+      .should("have.class", "active");
+
+    cy.get("#attendance-date-tabs-container")
+      .children()
+      // click second (inactive) tab (it's in the past)
       .last()
       .then($tab => {
         cy.wrap($tab).should("not.have.class", "active").click();
         cy.wrap($tab).should("have.class", "active");
       });
 
-    // attendances in the second tab should all be present
+    // attendances in for the past day should all be present
     cy.get("#mentor-attendance-table select")
       .should("have.length", 4)
       .each($select => {
         expect($select.val()).to.be.eq("PR");
+      });
+
+    cy.get("#attendance-date-tabs-container")
+      .children()
+      .should("have.length", 2)
+      // click first (inactive) tab (it's in the future)
+      .first()
+      .then($tab => {
+        cy.wrap($tab).should("not.have.class", "active").click();
+        cy.wrap($tab).should("have.class", "active");
       });
   });
 
@@ -128,7 +144,7 @@ describe("attendances", () => {
       cy.get("#mentor-attendance-table select")
         .should("have.length", 4)
         .each($select => {
-          expect($select.val()).to.be.null;
+          expect($select.val()).to.be.empty;
         });
 
       cy.contains(".primary-link-btn", /mark all as present/i).click();
@@ -165,7 +181,7 @@ describe("attendances", () => {
       cy.get("#mentor-attendance-table select")
         .should("have.length", 4)
         .each($select => {
-          expect($select.val()).to.be.null;
+          expect($select.val()).to.be.empty;
         });
 
       cy.get("#mentor-attendance-table select").first().select("EX");
@@ -175,7 +191,7 @@ describe("attendances", () => {
         if (idx === 0) {
           expect($select.val()).to.be.eq("EX");
         } else {
-          expect($select.val()).to.be.null;
+          expect($select.val()).to.be.empty;
         }
       });
 
@@ -192,7 +208,7 @@ describe("attendances", () => {
         if (idx === 0) {
           expect($select.val()).to.be.eq("EX");
         } else {
-          expect($select.val()).to.be.null;
+          expect($select.val()).to.be.empty;
         }
       });
     });

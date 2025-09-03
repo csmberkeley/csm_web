@@ -82,11 +82,18 @@ export interface Student {
   email: string;
 }
 
+export enum AttendancePresence {
+  EX = "EX",
+  PR = "PR",
+  UN = "UN",
+  EMPTY = ""
+}
+
 export interface Attendance {
   id: number;
   date: string;
   student: Student;
-  presence: string;
+  presence: AttendancePresence;
   occurrenceId: number;
   wordOfTheDayDeadline: string;
 }
@@ -98,7 +105,7 @@ export interface RawAttendance {
   attendances: Array<{
     id: number;
     date: string;
-    presence: string;
+    presence: AttendancePresence;
     studentName: string;
     studentId: number;
     studentEmail: string;
