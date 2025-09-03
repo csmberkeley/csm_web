@@ -13,20 +13,25 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
-from django.contrib import admin
-from django.contrib.auth.views import logout_then_login
-from django.urls import path, include
-from django.shortcuts import render
 
 from django.conf import settings
 from django.conf.urls.static import static
+from django.contrib import admin
+from django.contrib.auth.views import logout_then_login
 from django.contrib.staticfiles.views import serve
+from django.shortcuts import render
+from django.urls import include, path
 from django.views.decorators.cache import cache_control
 
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("scheduler.urls")),
-    path("login/", lambda request: render(request, "frontend/login.html", context={"DJANGO_ENV": settings.DJANGO_ENV})),
+    path(
+        "login/",
+        lambda request: render(
+            request, "frontend/login.html", context={"DJANGO_ENV": settings.DJANGO_ENV}
+        ),
+    ),
     path("logout/", logout_then_login),
     path("", include("social_django.urls", namespace="social")),
     path("", include("frontend.urls")),

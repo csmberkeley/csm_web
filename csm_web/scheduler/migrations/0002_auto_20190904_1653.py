@@ -6,19 +6,19 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scheduler', '0001_initial'),
+        ("scheduler", "0001_initial"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='course',
-            name='permitted_absences',
+            model_name="course",
+            name="permitted_absences",
             field=models.PositiveSmallIntegerField(default=0),
             preserve_default=False,
         ),
         migrations.AddField(
-            model_name='student',
-            name='active',
+            model_name="student",
+            name="active",
             field=models.BooleanField(default=True),
         ),
     ]

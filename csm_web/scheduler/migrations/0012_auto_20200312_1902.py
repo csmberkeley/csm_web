@@ -6,16 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scheduler', '0011_auto_20200312_1704'),
+        ("scheduler", "0011_auto_20200312_1704"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='attendance',
-            options={'ordering': ('date',)},
+            name="attendance",
+            options={"ordering": ("date",)},
         ),
         migrations.AddIndex(
-            model_name='attendance',
-            index=models.Index(fields=['date'], name='scheduler_a_date_e76868_idx'),
+            model_name="attendance",
+            index=models.Index(fields=["date"], name="scheduler_a_date_e76868_idx"),
         ),
     ]

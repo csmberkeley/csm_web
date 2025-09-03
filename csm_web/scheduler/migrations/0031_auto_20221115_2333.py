@@ -7,18 +7,20 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scheduler', '0030_alter_matcherslot_unique_together'),
+        ("scheduler", "0030_alter_matcherslot_unique_together"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='course',
-            name='is_restricted',
+            model_name="course",
+            name="is_restricted",
             field=models.BooleanField(default=False),
         ),
         migrations.AddField(
-            model_name='course',
-            name='whitelist',
-            field=models.ManyToManyField(blank=True, related_name='whitelist', to=settings.AUTH_USER_MODEL),
+            model_name="course",
+            name="whitelist",
+            field=models.ManyToManyField(
+                blank=True, related_name="whitelist", to=settings.AUTH_USER_MODEL
+            ),
         ),
     ]

@@ -1,8 +1,13 @@
 import pytest
-
 from django.core.exceptions import ValidationError
+from scheduler.factories import (
+    CourseFactory,
+    MentorFactory,
+    SectionFactory,
+    StudentFactory,
+    UserFactory,
+)
 from scheduler.models import Student, User
-from scheduler.factories import UserFactory, CourseFactory, SectionFactory, StudentFactory, MentorFactory
 
 
 @pytest.mark.django_db

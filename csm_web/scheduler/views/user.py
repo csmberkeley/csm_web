@@ -1,11 +1,11 @@
-from rest_framework.exceptions import PermissionDenied
-from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view
-
-from .utils import viewset_with
-from ..models import Coordinator, User
+from rest_framework.exceptions import PermissionDenied
+from rest_framework.response import Response
 from scheduler.serializers import UserSerializer
+
+from ..models import Coordinator, User
+from .utils import viewset_with
 
 
 class UserViewSet(*viewset_with("list")):

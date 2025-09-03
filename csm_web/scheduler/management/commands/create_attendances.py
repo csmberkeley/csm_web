@@ -1,12 +1,18 @@
-from django.utils import timezone
-from django.core.management import BaseCommand
-from scheduler.models import Attendance, SectionOccurrence, Section, week_bounds, day_to_number
-from psqlextra.util import postgres_manager
-from psqlextra.types import ConflictAction
-from datetime import timedelta
 import logging
-from django.db import transaction, Error
+from datetime import timedelta
 
+from django.core.management import BaseCommand
+from django.db import Error, transaction
+from django.utils import timezone
+from psqlextra.types import ConflictAction
+from psqlextra.util import postgres_manager
+from scheduler.models import (
+    Attendance,
+    Section,
+    SectionOccurrence,
+    day_to_number,
+    week_bounds,
+)
 
 logger = logging.getLogger(__name__)
 logger.info = logger.warning
@@ -24,8 +30,15 @@ class Command(BaseCommand):
             # with postgres_manager(SectionOccurrence) as so_db:
             #     so_manager = so_db.on_conflict(["date", "section"], ConflictAction.NOTHING)
 
-            sos = [{"date": week_start + timedelta(days=day_to_number(spacetime.day_of_week)),
-                    "section": section} for section in sections for spacetime in section.spacetimes.all()]
+            sos = [
+                {
+                    "date": week_start
+                    + timedelta(days=day_to_number(spacetime.day_of_week)),
+                    "section": section,
+                }
+                for section in sections
+                for spacetime in section.spacetimes.all()
+            ]
             sos_models = []  # list of section occurrence models
             for so in sos:
                 section = so["section"]
@@ -43,8 +56,11 @@ class Command(BaseCommand):
 
             # with postgres_manager(Attendance) as attend_db:
             #     attendance_manager = attend_db.on_conflict(["sectionOccurrence", "student"], ConflictAction.NOTHING)
-            attendances = [{"student": student, "sectionOccurrence": so}
-                           for so in sos_models for student in so.section.students.filter(active=True)]
+            attendances = [
+                {"student": student, "sectionOccurrence": so}
+                for so in sos_models
+                for student in so.section.students.filter(active=True)
+            ]
 
             # validate attendances
             valid = True
@@ -55,7 +71,8 @@ class Command(BaseCommand):
                     if student.section.pk != SO.section.pk:
                         valid = False
                         logger.error(
-                            f"<Logging> student.section.pk != SO.section.pk, attendance to add: {attendances}")
+                            f"<Logging> student.section.pk != SO.section.pk, attendance to add: {attendances}"
+                        )
                         break
 
             if attendances and valid:

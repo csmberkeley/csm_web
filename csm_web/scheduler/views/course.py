@@ -29,19 +29,27 @@ class CourseViewSet(*viewset_with("list")):
             "section__mentor__course__id", flat=True
         )
         now = timezone.now().astimezone(timezone.get_default_timezone())
-        unrestricted_courses = set(Course.objects.filter(is_restricted=False).values_list('pk', flat=True))
+        unrestricted_courses = set(
+            Course.objects.filter(is_restricted=False).values_list("pk", flat=True)
+        )
         user = self.request.user
-        user_coords = set(user.coordinator_set.values_list('course__pk', flat=True))
-        user_mentors = set(user.mentor_set.values_list('course__pk', flat=True))
-        user_students = set(user.student_set.values_list('course__pk', flat=True))
-        user_whitelist = set(user.whitelist.values_list('pk', flat=True))
+        user_coords = set(user.coordinator_set.values_list("course__pk", flat=True))
+        user_mentors = set(user.mentor_set.values_list("course__pk", flat=True))
+        user_students = set(user.student_set.values_list("course__pk", flat=True))
+        user_whitelist = set(user.whitelist.values_list("pk", flat=True))
         # mentor/student/whitelist/unrestricted all have restriction of valid_until
-        course_pks_filter_valid = user_mentors | user_students | user_whitelist | unrestricted_courses
-        valid_courses = Course.objects.filter(pk__in=course_pks_filter_valid, valid_until__gte=now.date())
+        course_pks_filter_valid = (
+            user_mentors | user_students | user_whitelist | unrestricted_courses
+        )
+        valid_courses = Course.objects.filter(
+            pk__in=course_pks_filter_valid, valid_until__gte=now.date()
+        )
         # coord can still see invalid courses
-        coord_courses = Course.objects.exclude(pk__in=banned_from).filter(pk__in=user_coords)
+        coord_courses = Course.objects.exclude(pk__in=banned_from).filter(
+            pk__in=user_coords
+        )
 
-        return (valid_courses | coord_courses).distinct().order_by('name')
+        return (valid_courses | coord_courses).distinct().order_by("name")
 
     def get_sections_by_day(self, course):
         """Get a course's sections, grouped by the days the section occurs."""
@@ -132,9 +140,9 @@ class CourseViewSet(*viewset_with("list")):
         )
 
         response = HttpResponse(content_type="text/csv")
-        response[
-            "Content-Disposition"
-        ] = 'attachment; filename="csm-student-emails.csv"'
+        response["Content-Disposition"] = (
+            'attachment; filename="csm-student-emails.csv"'
+        )
         writer = csv.writer(response)
 
         for s in studs:

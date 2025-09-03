@@ -1,5 +1,4 @@
 import pytest
-
 from scheduler.models import User
 
 

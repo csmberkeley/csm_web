@@ -2,9 +2,10 @@
 Makes sure nothing in the system is overly screwed up.
 """
 
-from django.core.management import BaseCommand
-from scheduler.models import User, Mentor, Section, Spacetime
 import datetime as dt
+
+from django.core.management import BaseCommand
+from scheduler.models import Mentor, Section, Spacetime, User
 
 
 class Command(BaseCommand):
@@ -33,8 +34,13 @@ class Command(BaseCommand):
         """
         for user in User.objects.all():
             student_set = user.student_set
-            if student_set.values("section__course").distinct().count() != student_set.count():
-                self._err(f"User {user} had multiple Student profiles in same course: {student_set.all()}")
+            if (
+                student_set.values("section__course").distinct().count()
+                != student_set.count()
+            ):
+                self._err(
+                    f"User {user} had multiple Student profiles in same course: {student_set.all()}"
+                )
 
     def _check_section_integrities(self):
         """
@@ -54,8 +60,13 @@ class Command(BaseCommand):
             for i, st in enumerate(spacetimes):
                 st_start = dt.datetime.combine(dt.date.today(), st.start_time)
                 st_end = st_start + st.duration
-                for st_2 in spacetimes[i + 1:]:
+                for st_2 in spacetimes[i + 1 :]:
                     st_2_start = dt.datetime.combine(dt.date.today(), st_2.start_time)
                     st_2_end = st_2_start + st_2.duration
-                    if st_2_start <= st_start < st_2_end or st_2_start < st_end <= st_2_end:
-                        self._err(f"Mentor {email} has overlapping sections at {st_2} and {st}")
+                    if (
+                        st_2_start <= st_start < st_2_end
+                        or st_2_start < st_end <= st_2_end
+                    ):
+                        self._err(
+                            f"Mentor {email} has overlapping sections at {st_2} and {st}"
+                        )

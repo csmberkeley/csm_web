@@ -6,14 +6,16 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scheduler', '0009_course_section_start'),
+        ("scheduler", "0009_course_section_start"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='student',
-            name='banned',
+            model_name="student",
+            name="banned",
             field=models.BooleanField(
-                default=False, help_text='A banned student cannot enroll in another section for the course they are banned from'),
+                default=False,
+                help_text="A banned student cannot enroll in another section for the course they are banned from",
+            ),
         ),
     ]

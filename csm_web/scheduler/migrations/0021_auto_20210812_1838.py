@@ -6,18 +6,18 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scheduler', '0020_auto_20210812_1643'),
+        ("scheduler", "0020_auto_20210812_1643"),
     ]
 
     operations = [
         migrations.RenameField(
-            model_name='worksheet',
-            old_name='solution',
-            new_name='solution_file',
+            model_name="worksheet",
+            old_name="solution",
+            new_name="solution_file",
         ),
         migrations.RenameField(
-            model_name='worksheet',
-            old_name='worksheet',
-            new_name='worksheet_file',
+            model_name="worksheet",
+            old_name="worksheet",
+            new_name="worksheet_file",
         ),
     ]

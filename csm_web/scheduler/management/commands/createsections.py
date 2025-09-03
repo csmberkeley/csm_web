@@ -11,10 +11,17 @@ For sections that do not require room bookings, see createlibrarysections.py
 
 import csv
 import datetime as dt
+
 from django.core.management import BaseCommand
-from django.db import transaction, IntegrityError
+from django.db import IntegrityError, transaction
 from scheduler.management.commands.params import Courses  # pylint: disable=E0401
-from scheduler.models import Course, User, Section, Mentor, Spacetime  # pylint: disable=E0401
+from scheduler.models import (  # pylint: disable=E0401
+    Course,
+    Mentor,
+    Section,
+    Spacetime,
+    User,
+)
 
 
 class Cols:
@@ -25,7 +32,8 @@ class Cols:
     SECOND_SECTION_ROOM = "room_1"
 
 
-def alcove_restriction(spacetime): return 4 if "Soda 283" in spacetime.location else 5
+def alcove_restriction(spacetime):
+    return 4 if "Soda 283" in spacetime.location else 5
 
 
 # gets capacity of a section
@@ -36,7 +44,7 @@ CAPACITY_FUNCS = {
     Courses.EE16A: lambda _: 5,
     Courses.EE16B: alcove_restriction,
     Courses.CS61C: alcove_restriction,
-    Courses.CS61A: alcove_restriction
+    Courses.CS61A: alcove_restriction,
 }
 # gets duration of a section
 one_and_half_hr = dt.timedelta(hours=1, minutes=30)
@@ -48,7 +56,7 @@ DURATIONS = {
     Courses.EE16A: one_and_half_hr,
     Courses.EE16B: one_and_half_hr,
     Courses.CS61C: one_hr,
-    Courses.CS61A: one_hr
+    Courses.CS61A: one_hr,
 }
 
 DAY_OF_WEEK_DICT = {
@@ -56,7 +64,7 @@ DAY_OF_WEEK_DICT = {
     "Tuesday": Spacetime.TUESDAY,
     "Wednesday": Spacetime.WEDNESDAY,
     "Thursday": Spacetime.THURSDAY,
-    "Friday": Spacetime.FRIDAY
+    "Friday": Spacetime.FRIDAY,
 }
 
 
@@ -68,7 +76,7 @@ def parse_time(timestring, room, course_name):
         location=room.replace("-", " "),
         start_time=start_time,
         duration=DURATIONS[course_name],
-        day_of_week=day_of_week
+        day_of_week=day_of_week,
     )
 
 
@@ -76,8 +84,12 @@ class Command(BaseCommand):
     generated = []
 
     def add_arguments(self, parser):
-        parser.add_argument("csv_path", type=str, help="the path to the csv file to be read")
-        parser.add_argument("course_name", type=str, help="the slug of the course to make sections for")
+        parser.add_argument(
+            "csv_path", type=str, help="the path to the csv file to be read"
+        )
+        parser.add_argument(
+            "course_name", type=str, help="the slug of the course to make sections for"
+        )
 
     def handle(self, *args, **options):
         filename = options["csv_path"]
@@ -109,23 +121,29 @@ class Command(BaseCommand):
             raise Exception("Non-Berkeley email found: {}".format(email))
         course = Course.objects.get(name=course_name)
         user, _ = User.objects.get_or_create(username=chunks[0], email=email)
-        spacetime_0 = parse_time(row[Cols.FIRST_SECTION_TIME], row[Cols.FIRST_SECTION_ROOM], course_name)
+        spacetime_0 = parse_time(
+            row[Cols.FIRST_SECTION_TIME], row[Cols.FIRST_SECTION_ROOM], course_name
+        )
         profile_0 = Mentor.objects.create(user=user)
         section_0 = Section.objects.create(
             course=course,
             spacetime=spacetime_0,
             capacity=CAPACITY_FUNCS[course_name](spacetime_0),
-            mentor=profile_0
+            mentor=profile_0,
         )
         self.generated.append(section_0)
         if Cols.SECOND_SECTION_TIME in row and row[Cols.SECOND_SECTION_TIME] != "":
-            spacetime_1 = parse_time(row[Cols.SECOND_SECTION_TIME], row[Cols.SECOND_SECTION_ROOM], course_name)
+            spacetime_1 = parse_time(
+                row[Cols.SECOND_SECTION_TIME],
+                row[Cols.SECOND_SECTION_ROOM],
+                course_name,
+            )
             profile_1 = Mentor.objects.create(user=user)
             section_1 = Section.objects.create(
                 course=course,
                 spacetime=spacetime_1,
                 capacity=CAPACITY_FUNCS[course_name](spacetime_1),
-                mentor=profile_1
+                mentor=profile_1,
             )
             self.generated.append(section_1)
             return 2

@@ -1,4 +1,5 @@
 import csv
+
 from django.core.management import BaseCommand
 from scheduler.models import Mentor, Section
 
@@ -17,6 +18,9 @@ class Command(BaseCommand):
                 self.stdout.write(
                     "    - {}; students {}".format(
                         mentor.section,
-                        [s.user.email for s in mentor.section.students.filter(active=True)],
+                        [
+                            s.user.email
+                            for s in mentor.section.students.filter(active=True)
+                        ],
                     )
                 )

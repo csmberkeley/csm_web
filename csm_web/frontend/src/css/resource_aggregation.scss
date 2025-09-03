@@ -91,9 +91,8 @@ $modal-height: 75vh;
   display: grid;
   grid-auto-columns: 2fr 1.5fr;
   row-gap: 10px;
-  align-content: center;
+  place-content: center center;
   align-items: center;
-  justify-content: center;
 }
 
 .resource-solution a,

@@ -1,9 +1,10 @@
 import csv
+import datetime
+
 from django.core.management import BaseCommand
 from django.db import transaction
-from scheduler.models import User  # pylint: disable=E0401
-import datetime
 from django.utils.timezone import make_aware
+from scheduler.models import User  # pylint: disable=E0401
 
 
 class Command(BaseCommand):
@@ -11,12 +12,19 @@ class Command(BaseCommand):
 
     def add_arguments(self, parser):
         parser.add_argument("csv_path", type=str, help="path to the csv file")
-        parser.add_argument("priority_enrollment_date", type=str, help="date in the form 'mm-dd-yyyy hh:mm:ss'")
+        parser.add_argument(
+            "priority_enrollment_date",
+            type=str,
+            help="date in the form 'mm-dd-yyyy hh:mm:ss'",
+        )
 
     def handle(self, *args, **options):
         filename = options["csv_path"]
-        enrollment_date = make_aware(datetime.datetime.strptime(
-            options["priority_enrollment_date"], '%m-%d-%Y %H:%M:%S'))
+        enrollment_date = make_aware(
+            datetime.datetime.strptime(
+                options["priority_enrollment_date"], "%m-%d-%Y %H:%M:%S"
+            )
+        )
         with open(filename, "r") as csvfile:
             reader = csv.DictReader(csvfile)
             with transaction.atomic():
@@ -27,7 +35,9 @@ class Command(BaseCommand):
                         if len(chunks) != 2:
                             raise Exception("Malformed email: {}".format(email))
                         if chunks[1] != "berkeley.edu":
-                            raise Exception("Non-Berkeley email found: {}".format(email))
+                            raise Exception(
+                                "Non-Berkeley email found: {}".format(email)
+                            )
                         u, status = User.objects.get_or_create(
                             email=email,
                             username=chunks[0],

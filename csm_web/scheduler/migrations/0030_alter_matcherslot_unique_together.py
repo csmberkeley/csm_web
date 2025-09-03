@@ -6,12 +6,12 @@ from django.db import migrations
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('scheduler', '0029_auto_20220621_2235'),
+        ("scheduler", "0029_auto_20220621_2235"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='matcherslot',
-            unique_together={('matcher', 'times')},
+            name="matcherslot",
+            unique_together={("matcher", "times")},
         ),
     ]
