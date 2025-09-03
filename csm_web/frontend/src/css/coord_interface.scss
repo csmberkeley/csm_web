@@ -1,30 +1,30 @@
-table {
+.coord-table table {
   width: 100%;
   padding: 10%;
   border-collapse: collapse;
 }
 
-td {
+.coord-table td {
   padding: 7px 10px 7px 0;
   font-size: 14px;
 }
 
-th {
+.coord-table th {
   padding: 10px 0;
   font-size: 16px;
   text-align: left;
 }
 
-tr {
+.coord-table tr {
   cursor: pointer;
   border-bottom: 1px solid #ccc;
 }
 
-.data-row:hover {
+.coord-table .data-row:hover {
   background-color: #f5f5f5;
 }
 
-.search-filter input {
+.coord-table .search-filter input {
   width: 100%;
   padding: 20px 45px;
   background-color: rgb(243 247 251);
@@ -32,7 +32,7 @@ tr {
   border-radius: 30px;
 }
 
-.search-filter {
+.coord-table .search-filter {
   display: flex;
   align-items: center;
   justify-content: left;
@@ -41,18 +41,18 @@ tr {
   max-width: none;
 }
 
-.search-container {
+.coord-table .search-container {
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.search-icon {
+.coord-table .search-icon {
   margin-left: 10px;
 }
 
 /* Links inside the dropdown */
-.dropdown-content button {
+.coord-table .dropdown-content button {
   display: block;
   width: 100%;
   padding: 12px 16px;
@@ -69,24 +69,24 @@ tr {
 }
 
 /* Change color of dropdown links on hover */
-.dropdown-content button:hover {
+.coord-table .dropdown-content button:hover {
   background-color: #f1f1f1;
 }
 
-#table-buttons {
+.coord-table #table-buttons {
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 20px 15%;
 }
 
-#table-header div {
+.coord-table #table-header div {
   font-size: 18px;
   font-weight: 600;
   color: rgb(68 68 68);
 }
 
-#table-header button div {
+.coord-table #table-header button div {
   font:
     14px Garamond,
     sans-serif;
@@ -94,13 +94,13 @@ tr {
   color: rgb(5 5 5);
 }
 
-#table-header {
+.coord-table #table-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
 }
 
-#table-header button {
+.coord-table #table-header button {
   padding: 10px 25px;
   margin-left: 10px;
   cursor: pointer;
@@ -111,7 +111,7 @@ tr {
   border-radius: 10px;
 }
 
-#table-buttons .dropbtn div {
+.coord-table #table-buttons .dropbtn div {
   width: 0;
   height: 0;
   margin-left: 10px;
@@ -121,13 +121,13 @@ tr {
   border-left: 5px solid transparent;
 }
 
-main {
+.coord-table main {
   min-height: 70vh;
   padding: max(2%, 30px) 4%;
   overflow: auto;
 }
 
-.no-data {
+.coord-table .no-data {
   padding: 20px;
   font:
     14px Montserrat,
@@ -136,7 +136,7 @@ main {
 
 /* Dropdown */
 
-.dropbtn {
+.coord-table .dropbtn {
   padding: 16px;
   font-size: 16px;
   color: white;
@@ -144,7 +144,7 @@ main {
   border: none;
 }
 
-#table-buttons .dropbtn {
+.coord-table #table-buttons .dropbtn {
   display: flex;
   place-items: center right;
   padding: 10px 25px;
@@ -162,18 +162,18 @@ main {
   border-radius: 10px;
 }
 
-#table-buttons .dropbtn:hover {
+.coord-table #table-buttons .dropbtn:hover {
   background-color: rgb(241 245 250);
 }
 
 /* The container <div> - needed to position the dropdown content */
-.dropdown {
+.coord-table .dropdown {
   position: relative;
   display: inline-block;
 }
 
 /* Dropdown Content (Hidden by Default) */
-.dropdown-content {
+.coord-table .dropdown-content {
   position: absolute;
   z-index: 1;
   display: none;
@@ -183,19 +183,19 @@ main {
 }
 
 /* Show the dropdown menu on hover */
-.dropdown:hover .dropdown-content {
+.coord-table .dropdown:hover .dropdown-content {
   display: block;
 }
 
-#table-buttons .dropbtn.using-filter {
+.coord-table #table-buttons .dropbtn.using-filter {
   background-color: #c2e7ff;
 }
 
-#table-buttons .dropbtn.using-filter:hover {
+.coord-table #table-buttons .dropbtn.using-filter:hover {
   background-color: #addeff;
 }
 
-#table-buttons .dropbtn.using-filter div {
+.coord-table #table-buttons .dropbtn.using-filter div {
   position: relative;
   width: 10px;
   height: 10px;
@@ -204,7 +204,7 @@ main {
 }
 
 #table-buttons .dropbtn.using-filter div::before,
-#table-buttons .dropbtn.using-filter div::after {
+.coord-table #table-buttons .dropbtn.using-filter div::after {
   position: absolute;
   top: 50%;
   left: 0;
@@ -215,19 +215,19 @@ main {
   background-color: rgb(0 0 0);
 }
 
-#table-buttons .dropbtn.using-filter div::before {
+.coord-table #table-buttons .dropbtn.using-filter div::before {
   transform: rotate(45deg);
 }
 
-#table-buttons .dropbtn.using-filter div::after {
+.coord-table #table-buttons .dropbtn.using-filter div::after {
   transform: rotate(-45deg);
 }
 
-.hidden {
+.coord-table .hidden {
   display: none !important;
 }
 
-.checkmark {
+.coord-table .checkmark {
   display: inline-block;
   width: 3px;
   height: 7px;
@@ -237,7 +237,7 @@ main {
   transform: rotate(45deg);
 }
 
-#success-copy {
+.coord-table #success-copy {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -245,12 +245,12 @@ main {
 
 /* Checkbox */
 
-.checkbox-wrapper * {
+.coord-table .checkbox-wrapper * {
   box-sizing: border-box;
   margin-top: 1px;
 }
 
-.checkbox-wrapper .cbx {
+.coord-table .checkbox-wrapper .cbx {
   display: inline-block;
   padding: 6px 8px;
   overflow: hidden;
@@ -260,21 +260,21 @@ main {
   transition: all 0.2s ease;
 }
 
-.checkbox-wrapper .cbx:not(:last-child) {
+.coord-table .checkbox-wrapper .cbx:not(:last-child) {
   margin-right: 6px;
 }
 
-.checkbox-wrapper .cbx:hover {
+.coord-table .checkbox-wrapper .cbx:hover {
   background: rgb(0 119 255 / 6%);
 }
 
-.checkbox-wrapper .cbx span {
+.coord-table .checkbox-wrapper .cbx span {
   float: left;
   vertical-align: middle;
   transform: translate3d(0, 0, 0);
 }
 
-.checkbox-wrapper .cbx span:first-child {
+.coord-table .checkbox-wrapper .cbx span:first-child {
   position: relative;
   width: 18px;
   height: 18px;
@@ -285,7 +285,7 @@ main {
   transform: scale(1);
 }
 
-.checkbox-wrapper .cbx span:first-child svg {
+.coord-table .checkbox-wrapper .cbx span:first-child svg {
   position: absolute;
   top: 3px;
   left: 2px;
@@ -301,31 +301,31 @@ main {
   transform: translate3d(0, 0, 0);
 }
 
-.checkbox-wrapper .cbx span:last-child {
+.coord-table .checkbox-wrapper .cbx span:last-child {
   padding-left: 8px;
   line-height: 18px;
 }
 
-.checkbox-wrapper .cbx:hover span:first-child {
+.coord-table .checkbox-wrapper .cbx:hover span:first-child {
   border-color: #07f;
 }
 
-.checkbox-wrapper .inp-cbx {
+.coord-table .checkbox-wrapper .inp-cbx {
   position: absolute;
   visibility: hidden;
 }
 
-.checkbox-wrapper .inp-cbx:checked + .cbx span:first-child {
+.coord-table .checkbox-wrapper .inp-cbx:checked + .cbx span:first-child {
   background: #07f;
   border-color: #07f;
   animation: wave 0.4s ease;
 }
 
-.checkbox-wrapper .inp-cbx:checked + .cbx span:first-child svg {
+.coord-table .checkbox-wrapper .inp-cbx:checked + .cbx span:first-child svg {
   stroke-dashoffset: 0;
 }
 
-.checkbox-wrapper .inline-svg {
+.coord-table .checkbox-wrapper .inline-svg {
   position: absolute;
   width: 0;
   height: 0;
@@ -334,7 +334,7 @@ main {
 }
 
 @media screen and (width <= 640px) {
-  .checkbox-wrapper .cbx {
+  .coord-table .checkbox-wrapper .cbx {
     display: inline-block;
     width: 100%;
   }
