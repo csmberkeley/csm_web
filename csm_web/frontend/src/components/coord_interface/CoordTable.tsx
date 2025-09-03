@@ -244,7 +244,7 @@ export default function CoordTable() {
 
       <div id="table-header">
         {isStudents ? <div className="title">Students List</div> : <div className="title">Mentors List</div>}
-        <ActionButton copyEmail={copyEmail} drop={copyEmail} reset={reset} />
+        <ActionButton copyEmail={copyEmail} reset={reset} />
       </div>
 
       <table>

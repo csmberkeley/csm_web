@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { DEFAULT_LONG_LOCALE_OPTIONS } from "../../utils/datetime";
 import { useCourseSections } from "../../utils/queries/courses";
 import { Course as CourseType } from "../../utils/types";
@@ -154,6 +154,10 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
         </label>
         {userIsCoordinator && (
           <div id="course-coord-buttons">
+            <Link to={`/coord/${courseId}/students`} className="no-underline">
+              <button className="primary-btn">Coordinator View</button>
+            </Link>
+
             <button
               className="primary-btn"
               onClick={() => {

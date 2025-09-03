@@ -3,11 +3,10 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 interface ActionButtonProps {
   copyEmail: () => void;
-  drop: () => void;
   reset: () => void;
 }
 
-export default function ActionButton({ copyEmail, drop, reset }: ActionButtonProps) {
+export default function ActionButton({ copyEmail, reset }: ActionButtonProps) {
   const navigate = useNavigate();
   const { pathname } = useLocation();
   const isStudents = pathname.includes("students");
@@ -19,19 +18,16 @@ export default function ActionButton({ copyEmail, drop, reset }: ActionButtonPro
   return (
     <div className="actionButtons">
       <button onClick={copyEmail}>
-        <div id="default-copy">Copy Email</div>
+        <div id="default-copy">Copy Selected Emails</div>
         <div id="success-copy" className="hidden">
           <div className="checkmark"></div>
 
           <div>Copied!</div>
         </div>
       </button>
-      <button onClick={drop}>
-        <div>Drop</div>
-      </button>
       {isStudents ? (
         <button onClick={changeURL}>
-          <div>Mentors</div>
+          <div>See Mentors</div>
         </button>
       ) : (
         <button onClick={changeURL}>

@@ -135,9 +135,6 @@ const CourseCard = ({ profiles }: CourseCardProps): React.ReactElement => {
         <Link to={`/courses/${courseId}`} className="course-card-link">
           <Card />
         </Link>
-        <Link to={`/coord/${courseId}/students`} className="course-card-link">
-          <Card />
-        </Link>
       </>
     );
   }
