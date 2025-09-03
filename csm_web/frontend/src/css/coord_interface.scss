@@ -1,7 +1,365 @@
-.table {
+table {
   width: 100%;
-  margin-bottom: 1rem;
-  color: #212529;
-  border-spacing: 0;
+  padding: 10%;
   border-collapse: collapse;
+}
+
+td {
+  padding: 7px 10px 7px 0;
+  font-size: 14px;
+}
+
+th {
+  padding: 10px 0;
+  font-size: 16px;
+  text-align: left;
+}
+
+tr {
+  cursor: pointer;
+  border-bottom: 1px solid #ccc;
+}
+
+.data-row:hover {
+  background-color: #f5f5f5;
+}
+
+.search-filter input {
+  width: 100%;
+  padding: 20px 45px;
+  background-color: rgb(243 247 251);
+  border-color: rgb(226 230 240);
+  border-radius: 30px;
+}
+
+.search-filter {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  width: 70%;
+  min-width: none;
+  max-width: none;
+}
+
+.search-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-icon {
+  margin-left: 10px;
+}
+
+/* Links inside the dropdown */
+.dropdown-content button {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  margin: 0;
+  font:
+    14px Montserrat,
+    sans-serif;
+  color: black;
+  text-align: left;
+  text-decoration: none;
+  background-color: #f9f9f9;
+  border: none;
+  border-radius: 0;
+}
+
+/* Change color of dropdown links on hover */
+.dropdown-content button:hover {
+  background-color: #f1f1f1;
+}
+
+#table-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 15%;
+}
+
+#table-header div {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgb(68 68 68);
+}
+
+#table-header button div {
+  font:
+    14px Garamond,
+    sans-serif;
+  font-weight: 500;
+  color: rgb(5 5 5);
+}
+
+#table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+#table-header button {
+  padding: 10px 25px;
+  margin-left: 10px;
+  cursor: pointer;
+  background-color: rgb(255 255 255);
+  border-color: rgb(191 193 197);
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 10px;
+}
+
+#table-buttons .dropbtn div {
+  width: 0;
+  height: 0;
+  margin-left: 10px;
+  pointer-events: none;
+  border-top: 5px solid rgb(0 0 0);
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+}
+
+main {
+  min-height: 70vh;
+  padding: max(2%, 30px) 4%;
+  overflow: auto;
+}
+
+.no-data {
+  padding: 20px;
+  font:
+    14px Montserrat,
+    sans-serif;
+}
+
+/* Dropdown */
+
+.dropbtn {
+  padding: 16px;
+  font-size: 16px;
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+
+#table-buttons .dropbtn {
+  display: flex;
+  place-items: center right;
+  padding: 10px 25px;
+  margin: 0 10px;
+  font:
+    14px Garamond,
+    sans-serif;
+  font-weight: 500;
+  color: rgb(5 5 5);
+  cursor: pointer;
+  background-color: rgb(255 255 255);
+  border-color: rgb(191 193 197);
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 10px;
+}
+
+#table-buttons .dropbtn:hover {
+  background-color: rgb(241 245 250);
+}
+
+/* The container <div> - needed to position the dropdown content */
+.dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.dropdown-content {
+  position: absolute;
+  z-index: 1;
+  display: none;
+  min-width: 160px;
+  background-color: #f9f9f9;
+  box-shadow: 0 8px 16px 0 rgb(0 0 0 / 20%);
+}
+
+/* Show the dropdown menu on hover */
+.dropdown:hover .dropdown-content {
+  display: block;
+}
+
+#table-buttons .dropbtn.using-filter {
+  background-color: #c2e7ff;
+}
+
+#table-buttons .dropbtn.using-filter:hover {
+  background-color: #addeff;
+}
+
+#table-buttons .dropbtn.using-filter div {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  margin-left: 10px;
+  border: none;
+}
+
+#table-buttons .dropbtn.using-filter div::before,
+#table-buttons .dropbtn.using-filter div::after {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 10px;
+  height: 2px;
+  margin-top: -1px;
+  content: "";
+  background-color: rgb(0 0 0);
+}
+
+#table-buttons .dropbtn.using-filter div::before {
+  transform: rotate(45deg);
+}
+
+#table-buttons .dropbtn.using-filter div::after {
+  transform: rotate(-45deg);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.checkmark {
+  display: inline-block;
+  width: 3px;
+  height: 7px;
+  margin-right: 6px;
+  border-right: 2px solid #000;
+  border-bottom: 2px solid #000;
+  transform: rotate(45deg);
+}
+
+#success-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Checkbox */
+
+.checkbox-wrapper * {
+  box-sizing: border-box;
+  margin-top: 1px;
+}
+
+.checkbox-wrapper .cbx {
+  display: inline-block;
+  padding: 6px 8px;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.checkbox-wrapper .cbx:not(:last-child) {
+  margin-right: 6px;
+}
+
+.checkbox-wrapper .cbx:hover {
+  background: rgb(0 119 255 / 6%);
+}
+
+.checkbox-wrapper .cbx span {
+  float: left;
+  vertical-align: middle;
+  transform: translate3d(0, 0, 0);
+}
+
+.checkbox-wrapper .cbx span:first-child {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #cccfdb;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgb(0 16 75 / 5%);
+  transition: all 0.2s ease;
+  transform: scale(1);
+}
+
+.checkbox-wrapper .cbx span:first-child svg {
+  position: absolute;
+  top: 3px;
+  left: 2px;
+  fill: none;
+  stroke: #fff;
+  stroke-dasharray: 16px;
+  stroke-dashoffset: 16px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  transition: all 0.3s ease;
+  transition-delay: 0.1s;
+  transform: translate3d(0, 0, 0);
+}
+
+.checkbox-wrapper .cbx span:last-child {
+  padding-left: 8px;
+  line-height: 18px;
+}
+
+.checkbox-wrapper .cbx:hover span:first-child {
+  border-color: #07f;
+}
+
+.checkbox-wrapper .inp-cbx {
+  position: absolute;
+  visibility: hidden;
+}
+
+.checkbox-wrapper .inp-cbx:checked + .cbx span:first-child {
+  background: #07f;
+  border-color: #07f;
+  animation: wave 0.4s ease;
+}
+
+.checkbox-wrapper .inp-cbx:checked + .cbx span:first-child svg {
+  stroke-dashoffset: 0;
+}
+
+.checkbox-wrapper .inline-svg {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media screen and (width <= 640px) {
+  .checkbox-wrapper .cbx {
+    display: inline-block;
+    width: 100%;
+  }
+}
+
+@keyframes wave {
+  50% {
+    transform: scale(0.9);
+  }
+}
+
+@keyframes wave {
+  50% {
+    transform: scale(0.9);
+  }
+}
+
+@keyframes wave {
+  50% {
+    transform: scale(0.9);
+  }
+}
+
+@keyframes wave {
+  50% {
+    transform: scale(0.9);
+  }
 }
