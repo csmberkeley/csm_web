@@ -43,11 +43,6 @@ const App = () => {
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
           <Route path="policies/*" element={<Policies />} />
           <Route path="export/*" element={<DataExport />} />
-          {
-            // TODO: add route for profiles (/profile/:id/* element = {UserProfile})
-            // TODO: add route for your own profile /profile/*
-            // reference Section
-          }
           <Route path="profile/*" element={<UserProfile />} />
           <Route path="profile/:id/*" element={<UserProfile />} />
           <Route path="*" element={<NotFound />} />

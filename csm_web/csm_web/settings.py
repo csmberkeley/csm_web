@@ -16,7 +16,6 @@ import sentry_sdk
 from factory.django import DjangoModelFactory
 from rest_framework.serializers import ModelSerializer, Serializer
 from sentry_sdk.integrations.django import DjangoIntegration
-from storages.backends.s3boto3 import S3Boto3Storage
 
 # Analogous to RAILS_ENV, is one of {prod, staging, dev}. Defaults to dev. This default can
 # be dangerous, but is worth it to avoid the hassle for developers setting the local ENV var
@@ -187,24 +186,6 @@ STORAGES = {
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = "/static/"
-
-
-class ProfileImageStorage(S3Boto3Storage):
-    bucket_name = "csm-web-profile-pictures"
-    file_overwrite = True  # should be true so that we replace one profile for user
-
-    def get_accessed_time(self, name):
-        # Implement logic to get the last accessed time
-        raise NotImplementedError("This backend does not support this method.")
-
-    def get_created_time(self, name):
-        # Implement logic to get the creation time
-        raise NotImplementedError("This backend does not support this method.")
-
-    def path(self, name):
-        # S3 does not support file paths
-        raise NotImplementedError("This backend does not support absolute paths.")
-
 
 if DJANGO_ENV in (PRODUCTION, STAGING):
     # Enables compression and caching

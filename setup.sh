@@ -80,6 +80,7 @@ then
 else
 	echo "You are logged in to the AWS CLI with the credentials for 'csm-web-user'."
 	echo "AWS_STORAGE_BUCKET_NAME=csm-web-resource-aggregation" >> .env
+    echo "AWS_PROFILE_PICTURE_BUCKET_NAME=csm-web-profile-pictures-dev" >> .env
 	echo 'AWS_ACCESS_KEY_ID=$(aws configure get aws_access_key_id)' >> .env
 	echo 'AWS_SECRET_ACCESS_KEY=$(aws configure get aws_secret_access_key)' >> .env
 	echo 'AWS_S3_REGION_NAME=$(aws configure get region)' >> .env

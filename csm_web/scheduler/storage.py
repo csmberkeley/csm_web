@@ -1,8 +1,12 @@
+import os
+
 from storages.backends.s3boto3 import S3Boto3Storage
+
+AWS_PROFILE_PICTURE_BUCKET_NAME = os.environ.get("AWS_PROFILE_PICTURE_BUCKET_NAME")
 
 
 class ProfileImageStorage(S3Boto3Storage):
-    bucket_name = "csm-web-profile-pictures"
+    bucket_name = AWS_PROFILE_PICTURE_BUCKET_NAME
     file_overwrite = True  # should be true so that we replace one profile for user
 
     def get_accessed_time(self, name):
