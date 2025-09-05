@@ -80,7 +80,6 @@ export const useUserInfoUpdateMutation = (): UseMutationResult<RawUserInfo, Upda
     {
       onSuccess: () => {
         // Invalidate queries related to the user's profile to ensure fresh data
-        console.log("Invalidating query user");
         queryClient.invalidateQueries(["user"]);
       }
     }

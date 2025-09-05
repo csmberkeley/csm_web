@@ -363,6 +363,7 @@ def demoify_user(user, username):
         name_parts[0].capitalize(),
         "".join(name_parts[1:]).capitalize(),
     )
+    user.preferred_name = user.first_name + " " + user.last_name
     user.set_password("pass")
     user.save()
 
@@ -456,10 +457,12 @@ def create_demo_account():
             user=demo_user, course=Course.objects.get(name=large_course_name)
         )
 
-    print("""
+    print(
+        """
     A demo account has been created with username 'demo_user' and password 'pass'
     Log in at localhost:8000/admin/
-    """)
+    """
+    )
 
     # make demo_user a coord for one more course
     coord_2_whitelist_course = random.choice(
@@ -491,20 +494,24 @@ def create_demo_account():
         )
         large_course_section.mentor.user = demo_mentor_user
 
-    print("""
+    print(
+        """
     A demo mentor has been created with username 'demo_mentor' and password 'pass'
     Log in at localhost:8000/admin/
-    """)
+    """
+    )
 
 
 def confirm_run():
     """Display warning message for user to confirm flushing the database."""
-    choice = input("""You have requested a flush of the database.
+    choice = input(
+        """You have requested a flush of the database.
             This will DELETE EVERYTHING IN THE DATABASE, and return all tables to an empty state.
 
             Are you sure you want to do this?
 
-            Type 'yes' to continue, or 'no' to abort:  """)
+            Type 'yes' to continue, or 'no' to abort:  """
+    )
     while choice not in ("yes", "no"):
         choice = input("Please type 'yes' or 'no' (without the quotes):  ")
     return choice == "yes"

@@ -71,14 +71,12 @@ class User(AbstractUser):
     def __init__(self, *args, **kwargs):
         """Overrides default init method to initialize preferred name."""
         super().__init__(*args, **kwargs)
-        if self.first_name and self.last_name:
-            self.preferred_name = self.get_full_name()
+        self.override_preferred_name()
 
     def save(self, *args, **kwargs):
-        """Overrides default save method to initialize preferred name."""
-        if not self.preferred_name:
-            self.preferred_name = self.get_full_name()
+        """Overrides default save method to override preferred name."""
         super().save(*args, **kwargs)
+        self.override_preferred_name()
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         """Determine whether this user is allowed to enroll in the given course."""
@@ -105,6 +103,11 @@ class User(AbstractUser):
     def is_whitelisted_for(self, course: "Course"):
         """Determine whether this user is whitelisted for the given course."""
         return not course.is_restricted or self.whitelist.filter(pk=course.pk).exists()
+
+    def override_preferred_name(self):
+        """Update preferred name to full name if blank."""
+        if not self.preferred_name:
+            self.preferred_name = self.get_full_name()
 
     class Meta:
         indexes = (models.Index(fields=("email",)),)

@@ -98,19 +98,26 @@ const UserProfile: React.FC = () => {
     const userInfo = new FormData();
     userInfo.append("id", userId.toString());
 
-    for (const field of [
-      "preferredName",
-      "bio",
-      "pronouns",
-      "pronunciation",
-      "profileImage"
-    ] as (keyof FormUserInfo)[]) {
-      userInfo.append(field, formData[field]);
+    for (const [requestField, formField] of [
+      ["preferred_name", "preferredName"],
+      ["bio", "bio"],
+      ["pronouns", "pronouns"],
+      ["pronunciation", "pronunciation"],
+      ["profile_image_link", "profileImage"]
+    ]) {
+      userInfo.append(requestField, formData[formField as keyof FormUserInfo]);
     }
 
     if (file || clearFile) {
       userInfo.append("file", file);
     }
+
+    const dataObject: { [key: string]: string } = {};
+    userInfo.forEach((value, key) => {
+      dataObject[key] = value as string;
+    });
+
+    console.log(dataObject);
 
     updateMutation.mutate(userInfo, {
       onSuccess: () => {
