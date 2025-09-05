@@ -80,6 +80,11 @@
   justify-content: center;
 }
 
+.user-icon {
+  width: 1.3em;
+  height: 1.3em;
+}
+
 #day-selector {
   display: grid;
   grid-template-columns: repeat(auto-fit, $day-btn-size);

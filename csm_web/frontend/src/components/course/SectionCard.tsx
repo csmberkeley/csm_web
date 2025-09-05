@@ -90,15 +90,13 @@ export const SectionCard = ({
     const iconWidth = "8em";
     const iconHeight = "8em";
     if (enrollmentSuccessful) {
-      const inlineIconWidth = "1.3em";
-      const inlineIconHeight = "1.3em";
       return (
         <div className="enroll-confirm-modal-contents">
           <CheckCircle height={iconHeight} width={iconWidth} />
           <h3>Successfully enrolled</h3>
           <h4>To view and update your profile, click the button below</h4>
           <Link className="primary-btn" to="/profile">
-            <UserIcon width={inlineIconWidth} height={inlineIconHeight} />
+            <UserIcon className="user-icon" />
             Profile
           </Link>
         </div>

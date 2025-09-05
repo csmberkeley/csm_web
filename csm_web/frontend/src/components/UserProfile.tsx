@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useParams } from "react-router-dom";
 import { PermissionError } from "../utils/queries/helpers";
-import { useUserInfo, useUserInfoUpdateMutation } from "../utils/queries/profiles";
-import { ChangeableUserInfo, RawUserInfo } from "../utils/types";
+import { UpdateUserMutationResponse, useUserInfo, useUserInfoUpdateMutation } from "../utils/queries/profiles";
 import LoadingSpinner from "./LoadingSpinner";
 import { Tooltip } from "./Tooltip";
 import ExclamationCircle from "../../static/frontend/img/exclamation-circle.svg";
@@ -13,6 +12,14 @@ import Upload from "../../static/frontend/img/upload.svg";
 import "../css/base/form.scss";
 import "../css/base/table.scss";
 import "../css/profile.scss";
+
+export interface FormUserInfo {
+  preferredName: string;
+  bio: string;
+  pronouns: string;
+  pronunciation: string;
+  profileImage: string;
+}
 
 const MAX_SIZE_MB = 2;
 const MAX_FILE_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
@@ -30,27 +37,15 @@ const UserProfile: React.FC = () => {
   const [showSaveSpinner, setShowSaveSpinner] = useState(false);
   const [validationText, setValidationText] = useState("");
 
-  const [formData, setFormData] = useState<ChangeableUserInfo>({
+  const [formData, setFormData] = useState<FormUserInfo>({
     preferredName: "",
     bio: "",
     pronouns: "",
-    pronunciation: ""
+    pronunciation: "",
+    profileImage: ""
   });
-  const [imageLink, setImageLink] = useState<string | undefined>("");
-  const [file, setFile] = useState<File | null>(null);
-
-  // Populate form data with fetched user data
-  useEffect(() => {
-    if (requestedData) {
-      setFormData({
-        preferredName: requestedData.preferredName || "",
-        bio: requestedData.bio || "",
-        pronouns: requestedData.pronouns || "",
-        pronunciation: requestedData.pronunciation || ""
-      });
-      setImageLink(requestedData.profileImage);
-    }
-  }, [requestedData]);
+  const [file, setFile] = useState<File | "">("");
+  const [clearFile, setClearFile] = useState<boolean>(false);
 
   // If loading, return loading spinner
   if (requestedIsLoading || currUserIsLoading) {
@@ -88,7 +83,7 @@ const UserProfile: React.FC = () => {
       if (!["image/png", "image/jpeg"].includes(selectedFile.type)) {
         setValidationText(`File is not a PNG or JPEG.`);
       } else if (selectedFile.size > MAX_FILE_SIZE_BYTES) {
-        setValidationText(`File size exceeds max limit of ${MAX_SIZE_MB}MB.`);
+        setValidationText(`Image size exceeds maximum allowed size of ${MAX_SIZE_MB}MB.`);
       } else {
         setFile(selectedFile);
         setValidationText("");
@@ -103,24 +98,29 @@ const UserProfile: React.FC = () => {
     const userInfo = new FormData();
     userInfo.append("id", userId.toString());
 
-    for (const field of ["preferredName", "bio", "pronouns", "pronunciation"] as (keyof ChangeableUserInfo)[]) {
+    for (const field of [
+      "preferredName",
+      "bio",
+      "pronouns",
+      "pronunciation",
+      "profileImage"
+    ] as (keyof FormUserInfo)[]) {
       userInfo.append(field, formData[field]);
     }
 
-    if (file) {
+    if (file || clearFile) {
       userInfo.append("file", file);
     }
 
     updateMutation.mutate(userInfo, {
-      onSuccess: (data: RawUserInfo) => {
-        console.log(data.profileImage);
-        setImageLink(data.profileImage);
+      onSuccess: () => {
+        setFile("");
+        setClearFile(false);
         setViewing(true); // Exit edit mode after successful save
-        console.log("Profile updated successfully");
         setShowSaveSpinner(false);
       },
-      onError: () => {
-        setValidationText("Error occurred on save.");
+      onError: ({ detail }: UpdateUserMutationResponse) => {
+        setValidationText(detail);
         setShowSaveSpinner(false);
       }
     });
@@ -131,6 +131,15 @@ const UserProfile: React.FC = () => {
 
   // Toggle edit mode
   const handleEditToggle = () => {
+    setFormData({
+      preferredName: requestedData.preferredName || "",
+      bio: requestedData.bio || "",
+      pronouns: requestedData.pronouns || "",
+      pronunciation: requestedData.pronunciation || "",
+      profileImage: requestedData.profileImage || ""
+    });
+    setFile("");
+    setClearFile(false);
     setViewing(false);
   };
 
@@ -146,11 +155,12 @@ const UserProfile: React.FC = () => {
             <div className="user-profile-viewing-header">
               <div
                 className={
-                  "user-profile-item user-profile-image-container" + (imageLink?.trim() ? "" : " user-profile-border")
+                  "user-profile-item user-profile-image-container" +
+                  (requestedData.profileImage?.trim() ? "" : " user-profile-border")
                 }
               >
-                {imageLink?.trim() ? (
-                  <img src={imageLink} className="user-profile-image" />
+                {requestedData.profileImage?.trim() ? (
+                  <img src={requestedData.profileImage} className="user-profile-image" />
                 ) : (
                   <LogoNoText id="logo" className="user-profile-image user-profile-placeholder" />
                 )}
@@ -158,20 +168,20 @@ const UserProfile: React.FC = () => {
               <div className="user-profile-fields">
                 <div className="user-profile-item">
                   <p className="user-profile-text user-profile-name">
-                    {formData.preferredName}
-                    {formData.pronouns?.trim() && (
+                    {requestedData.preferredName}
+                    {requestedData.pronouns?.trim() && (
                       <>
                         &nbsp;
-                        <small>[{formData.pronouns.toLowerCase()}]</small>
+                        <small>[{requestedData.pronouns.toLowerCase()}]</small>
                       </>
                     )}
                   </p>
                 </div>
 
                 <div className="user-profile-item">
-                  {formData.pronunciation?.trim() && (
+                  {requestedData.pronunciation?.trim() && (
                     <>
-                      <p className="user-profile-text user-profile-pronunciation">{formData.pronunciation}</p>
+                      <p className="user-profile-text user-profile-pronunciation">{requestedData.pronunciation}</p>
                     </>
                   )}
                 </div>
@@ -182,7 +192,7 @@ const UserProfile: React.FC = () => {
               </div>
             </div>
             <div className="user-profile-bio">
-              {formData.bio?.trim() && <p className="form-static">{formData.bio}</p>}
+              {requestedData.bio?.trim() && <p className="form-static">{requestedData.bio}</p>}
             </div>
 
             <div className="form-actions">
@@ -198,7 +208,8 @@ const UserProfile: React.FC = () => {
             <div>
               <div
                 className={
-                  "user-profile-image-upload-container" + (imageLink?.trim() || file ? "" : " user-profile-border")
+                  "user-profile-image-upload-container" +
+                  (formData.profileImage?.trim() || file ? "" : " user-profile-border")
                 }
               >
                 <input
@@ -211,8 +222,11 @@ const UserProfile: React.FC = () => {
                   htmlFor="image-upload"
                   className="user-profile-item user-profile-image-container user-profile-image-upload-label"
                 >
-                  {imageLink?.trim() || file ? (
-                    <img src={file ? URL.createObjectURL(file) : imageLink?.trim()} className="user-profile-image" />
+                  {formData.profileImage?.trim() || file ? (
+                    <img
+                      src={file ? URL.createObjectURL(file) : formData.profileImage?.trim()}
+                      className="user-profile-image user-profile-image-upload-preview"
+                    />
                   ) : (
                     <LogoNoText id="logo" className="user-profile-image user-profile-placeholder" />
                   )}
@@ -220,10 +234,6 @@ const UserProfile: React.FC = () => {
                 </label>
               </div>
             </div>
-            {/* <div className="user-profile-item user-profile-image-container">
-              {formData.profileImage?.trim() ? <img src={formData.profileImage} /> : <LogoNoText id="logo" />}
-            </div> */}
-            {/* {!viewing && <ImageUploader />} */}
             <div className="user-profile-input">
               <div className="user-profile-name-label">
                 <label htmlFor="preferredName" className="form-label">
@@ -306,7 +316,7 @@ const UserProfile: React.FC = () => {
               </div>
             )}
             <div className="user-profile-buttons">
-              <button className="primary-btn" onClick={handleCancelToggle}>
+              <button className="secondary-btn" onClick={handleCancelToggle}>
                 Cancel
               </button>
               <button className="primary-btn" onClick={handleFormSubmit} disabled={showSaveSpinner}>

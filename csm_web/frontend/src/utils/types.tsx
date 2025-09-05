@@ -30,17 +30,14 @@ export interface Profile {
   sectionSpacetimes: Array<Spacetime>;
 }
 
-export interface ChangeableUserInfo {
+export interface UserInfo {
+  id: number;
+  firstName: string;
+  lastName: string;
   preferredName: string;
   bio: string;
   pronouns: string;
   pronunciation: string;
-}
-
-export interface UserInfo extends ChangeableUserInfo {
-  id: number;
-  firstName: string;
-  lastName: string;
   email: string;
   priorityEnrollment?: DateTime;
   isEditable: boolean;

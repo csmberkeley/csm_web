@@ -63,7 +63,6 @@ class User(AbstractUser):
     preferred_name = models.TextField(default="", blank=True)
     pronouns = models.CharField(max_length=20, default="", blank=True)
     pronunciation = models.CharField(max_length=50, default="", blank=True)
-    # uploaded_at = models.DateTimeField(auto_now_add=True)
     profile_image = models.ImageField(
         storage=ProfileImageStorage(), upload_to=image_path, blank=True
     )
@@ -139,6 +138,12 @@ class OneToOneOrNoneField(models.OneToOneField):
     """
 
     related_accessor_class = ReverseOneToOneOrNoneDescriptor
+
+    def get_cache_name(self):
+        """
+        Returns the attribute name used to cache the related object
+        """
+        return f"_{self.name}_cache"
 
 
 class Attendance(ValidatingModel):

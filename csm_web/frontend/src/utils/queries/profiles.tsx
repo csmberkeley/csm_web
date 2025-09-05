@@ -4,6 +4,10 @@ import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
 import { RawUserInfo } from "../types";
 import { handleError, handlePermissionsError, handleRetry, ServerError } from "./helpers";
 
+export interface UpdateUserMutationResponse {
+  detail: string;
+}
+
 /**
  * Hook to get a list of all user emails.
  */
@@ -57,9 +61,9 @@ export const useUserInfo = (userId?: number): UseQueryResult<RawUserInfo, Error>
 /**
  * Hook to update a user's profile information.
  */
-export const useUserInfoUpdateMutation = (): UseMutationResult<RawUserInfo, ServerError, FormData> => {
+export const useUserInfoUpdateMutation = (): UseMutationResult<RawUserInfo, UpdateUserMutationResponse, FormData> => {
   const queryClient = useQueryClient();
-  const mutationResult = useMutation<RawUserInfo, Error, FormData>(
+  const mutationResult = useMutation<RawUserInfo, UpdateUserMutationResponse, FormData>(
     async (body: FormData) => {
       const response = await fetchWithMethod(
         `/user/${body.get("id")!.toString()}/update`,
@@ -70,19 +74,17 @@ export const useUserInfoUpdateMutation = (): UseMutationResult<RawUserInfo, Serv
       if (response.ok) {
         return await response.json();
       } else {
-        handlePermissionsError(response.status);
-        throw new ServerError(`Failed to update user profile with ID ${body.get("id")}`);
+        throw await response.json();
       }
     },
     {
       onSuccess: () => {
         // Invalidate queries related to the user's profile to ensure fresh data
+        console.log("Invalidating query user");
         queryClient.invalidateQueries(["user"]);
-      },
-      retry: handleRetry
+      }
     }
   );
 
-  handleError(mutationResult);
   return mutationResult;
 };
