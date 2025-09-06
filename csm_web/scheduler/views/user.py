@@ -1,3 +1,4 @@
+import json
 from io import BytesIO
 
 from django.core.files.base import ContentFile
@@ -87,7 +88,10 @@ def user_update(request, pk):
     serializer = UserSerializer(user, data=request.data, partial=True)
     if not serializer.is_valid():
         print(serializer.errors)
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            {"detail": json.dumps(serializer.errors)},
+            status=status.HTTP_400_BAD_REQUEST,
+        )
 
     # Save new user data
     try:

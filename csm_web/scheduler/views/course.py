@@ -29,19 +29,27 @@ class CourseViewSet(*viewset_with("list")):
             "section__mentor__course__id", flat=True
         )
         now = timezone.now().astimezone(timezone.get_default_timezone())
-        unrestricted_courses = set(Course.objects.filter(is_restricted=False).values_list('pk', flat=True))
+        unrestricted_courses = set(
+            Course.objects.filter(is_restricted=False).values_list("pk", flat=True)
+        )
         user = self.request.user
-        user_coords = set(user.coordinator_set.values_list('course__pk', flat=True))
-        user_mentors = set(user.mentor_set.values_list('course__pk', flat=True))
-        user_students = set(user.student_set.values_list('course__pk', flat=True))
-        user_whitelist = set(user.whitelist.values_list('pk', flat=True))
+        user_coords = set(user.coordinator_set.values_list("course__pk", flat=True))
+        user_mentors = set(user.mentor_set.values_list("course__pk", flat=True))
+        user_students = set(user.student_set.values_list("course__pk", flat=True))
+        user_whitelist = set(user.whitelist.values_list("pk", flat=True))
         # mentor/student/whitelist/unrestricted all have restriction of valid_until
-        course_pks_filter_valid = user_mentors | user_students | user_whitelist | unrestricted_courses
-        valid_courses = Course.objects.filter(pk__in=course_pks_filter_valid, valid_until__gte=now.date())
+        course_pks_filter_valid = (
+            user_mentors | user_students | user_whitelist | unrestricted_courses
+        )
+        valid_courses = Course.objects.filter(
+            pk__in=course_pks_filter_valid, valid_until__gte=now.date()
+        )
         # coord can still see invalid courses
-        coord_courses = Course.objects.exclude(pk__in=banned_from).filter(pk__in=user_coords)
+        coord_courses = Course.objects.exclude(pk__in=banned_from).filter(
+            pk__in=user_coords
+        )
 
-        return (valid_courses | coord_courses).distinct().order_by('name')
+        return (valid_courses | coord_courses).distinct().order_by("name")
 
     def get_sections_by_day(self, course):
         """Get a course's sections, grouped by the days the section occurs."""
@@ -85,18 +93,21 @@ class CourseViewSet(*viewset_with("list")):
         #
         # Python's groupby assumes things are in sorted order, all it does is find the indices
         # where one group ends and the next begins, the DB is doing all the heavy lifting here.
-        return {
-            day_key: SectionSerializer(
-                group,
-                many=True,
-                context={
-                    "omit_spacetime_links": True,
-                    "omit_mentor_emails": True,
-                    "omit_overrides": True,
-                },
-            ).data
+        return [
+            {
+                "days": day_key.strip("{}").split(","),
+                "sections": SectionSerializer(
+                    group,
+                    many=True,
+                    context={
+                        "omit_spacetime_links": True,
+                        "omit_mentor_emails": True,
+                        "omit_overrides": True,
+                    },
+                ).data,
+            }
             for day_key, group in groupby(sections, lambda section: section.day_key)
-        }
+        ]
 
     @action(detail=True)
     def sections(self, request, pk=None):
@@ -111,7 +122,7 @@ class CourseViewSet(*viewset_with("list")):
                 "userIsCoordinator": course.coordinator_set.filter(
                     user=request.user
                 ).exists(),
-                "sections": sections_by_day,
+                "sections_by_day": sections_by_day,
             }
         )
 
@@ -132,9 +143,9 @@ class CourseViewSet(*viewset_with("list")):
         )
 
         response = HttpResponse(content_type="text/csv")
-        response[
-            "Content-Disposition"
-        ] = 'attachment; filename="csm-student-emails.csv"'
+        response["Content-Disposition"] = (
+            'attachment; filename="csm-student-emails.csv"'
+        )
         writer = csv.writer(response)
 
         for s in studs:
@@ -158,7 +169,7 @@ class CourseViewSet(*viewset_with("list")):
                 {"users": UserSerializer(whitelisted, many=True).data},
                 status=status.HTTP_200_OK,
             )
-        elif request.method == "PUT":
+        if request.method == "PUT":
             for email in request.data["emails"]:
                 if not email or "@" not in email:
                     # invalid or blank email
@@ -168,17 +179,17 @@ class CourseViewSet(*viewset_with("list")):
                     user, _ = User.objects.get_or_create(username=username, email=email)
                     course.whitelist.add(user)
             return Response({}, status=status.HTTP_200_OK)
-        elif request.method == "DELETE":
+        if request.method == "DELETE":
             for email in request.data["emails"]:
                 if not email or "@" not in email:
                     # invalid or blank email
                     pass
                 else:
                     username = email.split("@")[0]
-                    userQueryset = User.objects.filter(username=username, email=email)
+                    user_queryset = User.objects.filter(username=username, email=email)
                     # do nothing if user is not whitelisted
-                    if userQueryset.exists():
-                        user = userQueryset.get()
+                    if user_queryset.exists():
+                        user = user_queryset.get()
                         course.whitelist.remove(user)
             return Response({}, status=status.HTTP_200_OK)
 

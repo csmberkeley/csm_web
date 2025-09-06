@@ -60,13 +60,13 @@ def image_path(instance, filename):
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
 
-    preferred_name = models.TextField(default="", blank=True)
-    pronouns = models.CharField(max_length=20, default="", blank=True)
-    pronunciation = models.CharField(max_length=50, default="", blank=True)
+    preferred_name = models.TextField(max_length=100, default="", blank=True)
+    pronouns = models.CharField(max_length=50, default="", blank=True)
+    pronunciation = models.TextField(max_length=100, default="", blank=True)
     profile_image = models.ImageField(
         storage=ProfileImageStorage(), upload_to=image_path, blank=True
     )
-    bio = models.TextField(default="", blank=True)
+    bio = models.TextField(max_length=700, default="", blank=True)
 
     def __init__(self, *args, **kwargs):
         """Overrides default init method to initialize preferred name."""

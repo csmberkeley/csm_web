@@ -44,7 +44,6 @@ const App = () => {
           <Route path="policies/*" element={<Policies />} />
           <Route path="export/*" element={<DataExport />} />
           <Route path="profile/*" element={<UserProfile />} />
-          <Route path="profile/:id/*" element={<UserProfile />} />
           <Route path="*" element={<NotFound />} />
         </Route>
       </Routes>

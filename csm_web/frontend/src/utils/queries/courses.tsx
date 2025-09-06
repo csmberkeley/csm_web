@@ -31,18 +31,20 @@ export const useCourses = (): UseQueryResult<Course[], ServerError> => {
   return queryResult;
 };
 
+export interface DayGroup {
+  days: string[];
+  sections: Section[];
+}
+
 interface CourseSectionsQueryResponse {
-  sections: { [day: string]: Section[] };
+  sectionsByDay: DayGroup[];
   userIsCoordinator: boolean;
 }
 
 /**
  * Hook to get all sections for a course.
  */
-export const useCourseSections = (
-  id: number | undefined,
-  onSuccess?: (response: CourseSectionsQueryResponse) => void
-): UseQueryResult<CourseSectionsQueryResponse, ServerError> => {
+export const useCourseSections = (id: number | undefined): UseQueryResult<CourseSectionsQueryResponse, ServerError> => {
   const queryResult = useQuery<CourseSectionsQueryResponse, Error>(
     ["courses", id, "sections"],
     async () => {
@@ -60,7 +62,6 @@ export const useCourseSections = (
     },
     {
       enabled: id !== undefined,
-      onSuccess: onSuccess,
       retry: handleRetry
     }
   );

@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Routes, Route, useParams } from "react-router-dom";
 import { PermissionError } from "../utils/queries/helpers";
 import { UpdateUserMutationResponse, useUserInfo, useUserInfoUpdateMutation } from "../utils/queries/profiles";
 import LoadingSpinner from "./LoadingSpinner";
@@ -26,6 +26,15 @@ const MAX_SIZE_MB = 2;
 const MAX_FILE_SIZE_BYTES = MAX_SIZE_MB * 1024 * 1024;
 
 const UserProfile: React.FC = () => {
+  return (
+    <Routes>
+      <Route path=":id/*" element={<UserProfileContent />} />
+      <Route index element={<UserProfileContent />} />
+    </Routes>
+  );
+};
+
+const UserProfileContent: React.FC = () => {
   let userId = Number(useParams().id);
 
   // We always need to get the current user and the viewed profile to check if the current profile page being viewed is the current user (and therefore editable)
@@ -101,6 +110,25 @@ const UserProfile: React.FC = () => {
   const handleFormSubmit = () => {
     setShowSaveSpinner(true);
 
+    // Length checks
+    if (formData["preferredName"].length > 100) {
+      setValidationText("Preferred name is over 100 characters.");
+      setShowSaveSpinner(false);
+      return;
+    } else if (formData["pronouns"].length > 50) {
+      setValidationText("Pronouns are over 50 characters.");
+      setShowSaveSpinner(false);
+      return;
+    } else if (formData["pronunciation"].length > 100) {
+      setValidationText("Pronounciation is over 100 characters.");
+      setShowSaveSpinner(false);
+      return;
+    } else if (formData["bio"].length > 700) {
+      setValidationText("Bio is over 700 characters.");
+      setShowSaveSpinner(false);
+      return;
+    }
+
     const userInfo = new FormData();
     userInfo.append("id", userId.toString());
 
@@ -126,7 +154,8 @@ const UserProfile: React.FC = () => {
     updateMutation.mutate(userInfo, {
       onSuccess: () => {
         setFile("");
-        setViewing(true); // Exit edit mode after successful save
+        setValidationText("");
+        setViewing(true);
         setShowSaveSpinner(false);
       },
       onError: ({ detail }: UpdateUserMutationResponse) => {
@@ -166,9 +195,9 @@ const UserProfile: React.FC = () => {
             className="user-profile-tooltip"
           >
             <div>
-              Edit your profile so others can get to know you. <br /> <br />
-              Students: your profile is visible to mentors and coordinators. <br />
-              Mentors: your profile is publicly viewable.
+              Edit your profile so others can learn about you. <br /> <br />
+              Students: visible to your mentors and coordinators. <br />
+              Mentors: visible to everyone.
             </div>
           </Tooltip>
         )}
@@ -214,7 +243,7 @@ const UserProfile: React.FC = () => {
               </div>
             </div>
             <div className="user-profile-bio">
-              {requestedData.bio?.trim() && <p className="form-static">{requestedData.bio}</p>}
+              {requestedData.bio?.trim() && <p className="user-profile-text">{requestedData.bio}</p>}
             </div>
 
             <div className="form-actions">
@@ -286,6 +315,7 @@ const UserProfile: React.FC = () => {
                 type="text"
                 id="preferredName"
                 name="preferredName"
+                maxLength={100}
                 className="form-input user-profile-input-field"
                 value={formData.preferredName}
                 onChange={handleInputChange}
@@ -299,7 +329,7 @@ const UserProfile: React.FC = () => {
                 type="text"
                 id="pronouns"
                 name="pronouns"
-                maxLength={20}
+                maxLength={50}
                 className="form-input user-profile-input-field"
                 value={formData.pronouns}
                 onChange={handleInputChange}
@@ -313,7 +343,7 @@ const UserProfile: React.FC = () => {
                 type="text"
                 id="pronunciation"
                 name="pronunciation"
-                maxLength={50}
+                maxLength={100}
                 className="form-input user-profile-input-field"
                 value={formData.pronunciation}
                 onChange={handleInputChange}
