@@ -86,7 +86,9 @@ function StudentSectionInfo({ mentor, spacetimes, associatedProfileId }: Student
         {mentor && (
           <InfoCard title="Mentor">
             <h5>
-              <Link to={`/profile/${mentor.user.id}`}>{mentor.name}</Link>
+              <Link className="hyperlink" to={`/profile/${mentor.user.id}`}>
+                {mentor.name}
+              </Link>
             </h5>
             <a href={`mailto:${mentor.email}`}>{mentor.email}</a>
           </InfoCard>

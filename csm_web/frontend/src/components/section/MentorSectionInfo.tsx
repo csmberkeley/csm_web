@@ -60,7 +60,8 @@ export default function MentorSectionInfo({
       <h3 className="section-detail-page-title">
         {isCoordinator ? (
           <>
-            <Link to={`/profile/${mentor.user.id}`}>{`${mentor.name || mentor.email}`}</Link>&apos;s
+            <Link className="hyperlink" to={`/profile/${mentor.user.id}`}>{`${mentor.name || mentor.email}`}</Link>
+            &apos;s
           </>
         ) : (
           "My"
@@ -103,7 +104,7 @@ export default function MentorSectionInfo({
                               courseRestricted={courseRestricted}
                             />
                           )}
-                          <Link to={`/profile/${studentUser.id}`}>
+                          <Link className="hyperlink" to={`/profile/${studentUser.id}`}>
                             <span className="student-info">{name || email}</span>
                           </Link>
                         </td>

@@ -41,7 +41,9 @@ export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
             {students.map(({ name, email, id, user: studentUser }) => (
               <tr key={id} className="csm-table-row">
                 <td className="csm-table-item">
-                  <Link to={`/profile/${studentUser.id}`}>{name}</Link>
+                  <Link className="hyperlink" to={`/profile/${studentUser.id}`}>
+                    {name}
+                  </Link>
                 </td>
                 <td className="csm-table-item">{email}</td>
               </tr>

@@ -171,7 +171,9 @@ export const SectionCard = ({
           </p>
           <p title="Mentor">
             <UserIcon width={iconWidth} height={iconHeight} />{" "}
-            <Link to={`/profile/${mentor.user.id}`}>{mentor.name}</Link>
+            <Link className="hyperlink" to={`/profile/${mentor.user.id}`}>
+              {mentor.name}
+            </Link>
           </p>
           <p title="Current enrollment">
             <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}

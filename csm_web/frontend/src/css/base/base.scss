@@ -84,3 +84,15 @@ h6 {
 
   border-radius: 20px;
 }
+
+// Styling for hyperlinks
+.hyperlink {
+  color: $csm-link-blue;
+
+  &:link,
+  &:visited,
+  &:hover,
+  &:active {
+    color: $csm-link-blue;
+  }
+}
