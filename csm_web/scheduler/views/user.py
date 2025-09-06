@@ -128,6 +128,7 @@ def user_editable(request_user, target_user):
         coordinator_courses = Coordinator.objects.filter(user=request_user).values_list(
             "course", flat=True
         )
+        print(coordinator_courses)
         if Student.objects.filter(
             user=target_user, course__in=coordinator_courses
         ).exists():
@@ -150,7 +151,7 @@ def has_permission(request_user, target_user):
 
     # If the request_user can edit the target_user's profile, return True
     # This includes superusers, if the request_user is the target_user, or
-    # if the request_user is a coordinator or a course the target_user is in
+    # if the request_user is a coordinator of a course the target_user is in
     if user_editable(request_user, target_user):
         return True
 
@@ -158,27 +159,30 @@ def has_permission(request_user, target_user):
     if Mentor.objects.filter(user=target_user).exists():
         return True
 
+    ### For future use for students to contact other students in their section
     # If requestor is a student, get all the sections they are in
     # If the target user is a student in any of those sections, return True
-    if Student.objects.filter(user=request_user).exists():
-        if Student.objects.filter(user=target_user).exists():
-            request_user_sections = Student.objects.filter(
-                user=request_user
-            ).values_list("section", flat=True)
-            target_user_sections = Student.objects.filter(user=target_user).values_list(
-                "section", flat=True
-            )
-            if set(request_user_sections) & set(target_user_sections):
-                return True
+    # if Student.objects.filter(user=request_user).exists():
+    #     if Student.objects.filter(user=target_user).exists():
+    #         request_user_sections = Student.objects.filter(
+    #             user=request_user
+    #         ).values_list("section", flat=True)
+    #         target_user_sections = Student.objects.filter(user=target_user).values_list(
+    #             "section", flat=True
+    #         )
+    #         if set(request_user_sections) & set(target_user_sections):
+    #             return True
 
-    # If requestor is a mentor, get all the courses they mentor
-    # If the target user is a student or mentor in any of those courses, return True
+    # If requestor is a mentor, get all the sections they mentor
+    # If the target user is a student in any of those sections, return True
     if Mentor.objects.filter(user=request_user).exists():
-        mentor_courses = Mentor.objects.filter(user=request_user).values_list(
-            "course", flat=True
+        mentor_sections = Mentor.objects.filter(user=request_user).values_list(
+            "section", flat=True
         )
 
-        if Student.objects.filter(user=target_user, course__in=mentor_courses).exists():
+        if Student.objects.filter(
+            user=target_user, section__in=mentor_sections
+        ).exists():
             return True
 
     return False

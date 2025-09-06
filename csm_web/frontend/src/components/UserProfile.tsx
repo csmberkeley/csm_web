@@ -159,6 +159,19 @@ const UserProfile: React.FC = () => {
   return (
     <div className="user-profile-page">
       <div className="user-profile-main">
+        {canEdit && (
+          <Tooltip
+            placement="bottom"
+            source={<InfoIcon className="icon user-tooltip-icon" />}
+            className="user-profile-tooltip"
+          >
+            <div>
+              Edit your profile so others can get to know you. <br /> <br />
+              Students: your profile is visible to mentors and coordinators. <br />
+              Mentors: your profile is publicly viewable.
+            </div>
+          </Tooltip>
+        )}
         {viewing ? (
           <>
             <div className="user-profile-viewing-header">
@@ -257,7 +270,11 @@ const UserProfile: React.FC = () => {
                 <label htmlFor="preferredName" className="form-label">
                   Preferred&nbsp;Name
                 </label>
-                <Tooltip placement="top" source={<InfoIcon className="icon" />} className="user-profile-tooltip">
+                <Tooltip
+                  placement="top"
+                  source={<InfoIcon className="icon user-tooltip-icon" />}
+                  className="user-profile-preferred-name-tooltip"
+                >
                   <div>
                     A blank name field will default to
                     <br />

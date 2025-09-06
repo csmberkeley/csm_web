@@ -7,6 +7,7 @@
 }
 
 .user-profile-main {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
@@ -84,6 +85,27 @@
   width: 100%;
 }
 
+.user-profile-tooltip {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+
+  display: inline-flex; // shrink to icon size
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: auto;
+
+  .icon {
+    width: 1.25rem; // or whatever size you like
+    height: 1.25rem;
+  }
+}
+
+.user-tooltip-icon {
+  color: $csm-neutral;
+}
+
 .user-profile-input {
   display: flex;
   flex-direction: row;
@@ -154,7 +176,7 @@
   align-items: center;
 }
 
-.user-profile-tooltip {
+.user-profile-preferred-name-tooltip {
   flex: 0;
 }
 
