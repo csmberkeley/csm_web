@@ -8,6 +8,7 @@ import ExclamationCircle from "../../static/frontend/img/exclamation-circle.svg"
 import InfoIcon from "../../static/frontend/img/info.svg";
 import LogoNoText from "../../static/frontend/img/logo_no_text.svg";
 import Upload from "../../static/frontend/img/upload.svg";
+import XIcon from "../../static/frontend/img/x.svg";
 
 import "../css/base/form.scss";
 import "../css/base/table.scss";
@@ -45,7 +46,6 @@ const UserProfile: React.FC = () => {
     profileImage: ""
   });
   const [file, setFile] = useState<File | "">("");
-  const [clearFile, setClearFile] = useState<boolean>(false);
 
   // If loading, return loading spinner
   if (requestedIsLoading || currUserIsLoading) {
@@ -91,6 +91,12 @@ const UserProfile: React.FC = () => {
     }
   };
 
+  // Handle file deletion change
+  const handleFileDeletion = () => {
+    setFile("");
+    setFormData(prev => ({ ...prev, profileImage: "" }));
+  };
+
   // Handle form submission
   const handleFormSubmit = () => {
     setShowSaveSpinner(true);
@@ -108,7 +114,7 @@ const UserProfile: React.FC = () => {
       userInfo.append(requestField, formData[formField as keyof FormUserInfo]);
     }
 
-    if (file || clearFile) {
+    if (file) {
       userInfo.append("file", file);
     }
 
@@ -117,12 +123,9 @@ const UserProfile: React.FC = () => {
       dataObject[key] = value as string;
     });
 
-    console.log(dataObject);
-
     updateMutation.mutate(userInfo, {
       onSuccess: () => {
         setFile("");
-        setClearFile(false);
         setViewing(true); // Exit edit mode after successful save
         setShowSaveSpinner(false);
       },
@@ -146,7 +149,6 @@ const UserProfile: React.FC = () => {
       profileImage: requestedData.profileImage || ""
     });
     setFile("");
-    setClearFile(false);
     setViewing(false);
   };
 
@@ -239,6 +241,15 @@ const UserProfile: React.FC = () => {
                   )}
                   <Upload className="user-profile-image-upload-icon" />
                 </label>
+                {formData.profileImage?.trim() || file ? (
+                  <button
+                    className="user-profile-clear-image-button"
+                    aria-label="Remove profile image"
+                    onClick={handleFileDeletion}
+                  >
+                    <XIcon className="icon" />
+                  </button>
+                ) : null}
               </div>
             </div>
             <div className="user-profile-input">

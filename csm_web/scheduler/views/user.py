@@ -93,11 +93,10 @@ def user_update(request, pk):
     try:
         with transaction.atomic():
             if "file" in request.FILES:
+                user.profile_image.delete(save=True)
                 user.profile_image.save(file.name, file)
             elif (
-                "file" in request.POST
-                and request.POST["file"] == ""
-                and user.profile_image
+                "file" not in request.FILES and request.data["profile_image_link"] == ""
             ):
                 user.profile_image.delete(save=True)
             serializer.save()
