@@ -1,8 +1,9 @@
+from .utils import viewset_with
+
 from django.db.models.query import EmptyQuerySet
 from rest_framework.response import Response
 
 from ..serializers import ProfileSerializer
-from .utils import viewset_with
 
 
 class ProfileViewSet(*viewset_with("list")):

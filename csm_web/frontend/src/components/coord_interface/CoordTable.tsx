@@ -5,7 +5,7 @@ import ActionButton from "./ActionButton";
 import { CheckBox } from "./CheckBox";
 import DropBox from "./DropBox";
 import { SearchBar } from "./SearchBar";
-import "../../css/coord_interface.scss";
+import styles from "../../css/coord_interface.scss";
 
 export default function CoordTable() {
   const [tableData, setTableData] = useState<Mentor[] | Student[]>([]);
@@ -202,110 +202,112 @@ export default function CoordTable() {
   // }
 
   return (
-    <div className="coord-table">
-      <div className="search-container">
-        <SearchBar onChange={filterSearch} />
-      </div>
-      <div id="table-buttons">
-        <DropBox
-          items={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]}
-          name={"Day"}
-          field={"dayTime"}
-          func={filterString}
-          reset={resetFilters}
-        ></DropBox>
-        {isStudents ? (
+    <div className={styles}>
+      <div className="coord-table">
+        <div className="search-container">
+          <SearchBar onChange={filterSearch} />
+        </div>
+        <div id="table-buttons">
           <DropBox
-            items={["0", "1", "2", "3+"]}
-            name={"Absences"}
-            field={"numUnexcused"}
+            items={["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"]}
+            name={"Day"}
+            field={"dayTime"}
             func={filterString}
             reset={resetFilters}
           ></DropBox>
-        ) : (
-          <>
+          {isStudents ? (
             <DropBox
-              items={familyNames}
-              name={"Family"}
-              field={"family"}
+              items={["0", "1", "2", "3+"]}
+              name={"Absences"}
+              field={"numUnexcused"}
               func={filterString}
               reset={resetFilters}
             ></DropBox>
-            <DropBox
-              items={sectionSizes}
-              name={"Section Size"}
-              field={"numStudents"}
-              func={filterString}
-              reset={resetFilters}
-            ></DropBox>
-          </>
-        )}
-      </div>
+          ) : (
+            <>
+              <DropBox
+                items={familyNames}
+                name={"Family"}
+                field={"family"}
+                func={filterString}
+                reset={resetFilters}
+              ></DropBox>
+              <DropBox
+                items={sectionSizes}
+                name={"Section Size"}
+                field={"numStudents"}
+                func={filterString}
+                reset={resetFilters}
+              ></DropBox>
+            </>
+          )}
+        </div>
 
-      <div id="table-header">
-        {isStudents ? <div className="title">Students List</div> : <div className="title">Mentors List</div>}
-        <ActionButton copyEmail={copyEmail} reset={reset} />
-      </div>
+        <div id="table-header">
+          {isStudents ? <div className="title">Students List</div> : <div className="title">Mentors List</div>}
+          <ActionButton copyEmail={copyEmail} reset={reset} />
+        </div>
 
-      <table>
-        <thead>
-          <tr>
-            <CheckBox id="check" onClick={toggleAllCheckboxes} />
-            <th>Name</th>
-            <th>Email</th>
-            {isStudents ? (
-              <>
-                <th>Mentor Name</th>
-                <th>Time</th>
-                <th>Unexcused Absenses</th>
-              </>
-            ) : (
-              <>
-                <th>Family</th>
-                <th>Time</th>
-                <th>Section Size</th>
-              </>
-            )}
-          </tr>
-        </thead>
-        <tbody>
-          {searchData.length === 0 ? <div className="no-data">No data found...</div> : null}
-
-          {searchData.map(row => (
-            <tr
-              key={row.id}
-              className="data-row"
-              onDoubleClick={() => navigate(`/sections/${row.section}`)}
-              onClick={() => selectCheckbox(row.id)}
-            >
-              <CheckBox
-                id={row.id.toString()}
-                onClick={e => {
-                  e.preventDefault();
-                  e.stopPropagation();
-                }}
-              />
+        <table>
+          <thead>
+            <tr>
+              <CheckBox id="check" onClick={toggleAllCheckboxes} />
+              <th>Name</th>
+              <th>Email</th>
               {isStudents ? (
                 <>
-                  <td>{row.name}</td>
-                  <td>{row.email}</td>
-                  <td>{(row as Student).mentorName}</td>
-                  <td>{row.dayTime}</td>
-                  <td>{(row as Student).numUnexcused}</td>
+                  <th>Mentor Name</th>
+                  <th>Time</th>
+                  <th>Unexcused Absenses</th>
                 </>
               ) : (
                 <>
-                  <td>{row.name}</td>
-                  <td>{row.email}</td>
-                  <td>{(row as Mentor).family}</td>
-                  <td>{row.dayTime}</td>
-                  <td>{(row as Mentor).numStudents}</td>
+                  <th>Family</th>
+                  <th>Time</th>
+                  <th>Section Size</th>
                 </>
               )}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+          <tbody>
+            {searchData.length === 0 ? <div className="no-data">No data found...</div> : null}
+
+            {searchData.map(row => (
+              <tr
+                key={row.id}
+                className="data-row"
+                onDoubleClick={() => navigate(`/sections/${row.section}`)}
+                onClick={() => selectCheckbox(row.id)}
+              >
+                <CheckBox
+                  id={row.id.toString()}
+                  onClick={e => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                />
+                {isStudents ? (
+                  <>
+                    <td>{row.name}</td>
+                    <td>{row.email}</td>
+                    <td>{(row as Student).mentorName}</td>
+                    <td>{row.dayTime}</td>
+                    <td>{(row as Student).numUnexcused}</td>
+                  </>
+                ) : (
+                  <>
+                    <td>{row.name}</td>
+                    <td>{row.email}</td>
+                    <td>{(row as Mentor).family}</td>
+                    <td>{row.dayTime}</td>
+                    <td>{(row as Mentor).numStudents}</td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

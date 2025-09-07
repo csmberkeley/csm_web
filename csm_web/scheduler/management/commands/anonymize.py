@@ -1,6 +1,6 @@
 from django.conf import settings
 from django.core.management import BaseCommand
-from django.db import IntegrityError, transaction
+from django.db import transaction, IntegrityError
 from scheduler.models import User
 
 

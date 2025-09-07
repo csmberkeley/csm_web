@@ -1,5 +1,4 @@
 import csv
-
 from django.core.management import BaseCommand
 from django.db import transaction
 from scheduler.models import User  # pylint: disable=E0401
@@ -27,17 +26,14 @@ class Command(BaseCommand):
                         if len(chunks) != 2:
                             raise Exception("Malformed email: {}".format(email))
                         if chunks[1] != "berkeley.edu":
-                            raise Exception(
-                                "Non-Berkeley email found: {}".format(email)
-                            )
+                            raise Exception("Non-Berkeley email found: {}".format(email))
                         u, _ = User.objects.get_or_create(
-                            email=email, username=chunks[0]
+                            email=email,
+                            username=chunks[0]
                         )
                         if not u.first_name or u.last_name:
                             u.first_name = firstname
                             u.last_name = lastname
                             u.save()
                     except Exception as e:
-                        raise Exception(
-                            f"Errored trying to enter user {email} ({name}): {e}"
-                        )
+                        raise Exception(f"Errored trying to enter user {email} ({name}): {e}")

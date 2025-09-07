@@ -1,6 +1,7 @@
 import pytest
-from scheduler.factories import CourseFactory
+
 from scheduler.models import Mentor, User
+from scheduler.factories import CourseFactory
 
 
 @pytest.mark.django_db

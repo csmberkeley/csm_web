@@ -1,8 +1,7 @@
 import csv
 import datetime as dt
-
 from django.core.management import BaseCommand
-from scheduler.models import Course, Spacetime, Student
+from scheduler.models import Course, Student, Spacetime
 
 
 class Command(BaseCommand):

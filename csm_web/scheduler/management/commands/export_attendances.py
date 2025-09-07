@@ -46,9 +46,7 @@ class Command(BaseCommand):
             student = attendance.student
             section = student.section
             mentor = section.mentor
-            spacetimes = list(
-                section.spacetimes.all().order_by("day_of_week", "start_time")
-            )
+            spacetimes = list(section.spacetimes.all().order_by('day_of_week', 'start_time'))
             row = (
                 student.user.get_full_name(),
                 student.user.email,

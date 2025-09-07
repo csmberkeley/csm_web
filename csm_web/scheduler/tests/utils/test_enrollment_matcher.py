@@ -1,10 +1,10 @@
 import pytest
 from scheduler.utils.match_solver import (
-    MatcherValidationError,
-    MentorTuple,
-    PreferenceTuple,
-    SlotTuple,
     get_matches,
+    MentorTuple,
+    SlotTuple,
+    PreferenceTuple,
+    MatcherValidationError,
 )
 
 

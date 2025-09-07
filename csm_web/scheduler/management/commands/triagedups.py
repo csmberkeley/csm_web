@@ -1,7 +1,7 @@
 # Emergency triage script for removing duplicate sections.
+from scheduler.models import *
 from django.core.management import BaseCommand
 from django.db import transaction
-from scheduler.models import *
 
 
 class Command(BaseCommand):

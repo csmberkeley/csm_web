@@ -1,8 +1,8 @@
 import random
 
-from django.core.exceptions import ValidationError
 from django.core.management import BaseCommand
-from scheduler.models import Course, MatcherPreference, MatcherSlot, Mentor
+from django.core.exceptions import ValidationError
+from scheduler.models import Course, MatcherSlot, MatcherPreference, Mentor
 
 
 class Command(BaseCommand):

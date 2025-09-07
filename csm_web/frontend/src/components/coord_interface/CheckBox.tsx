@@ -1,5 +1,5 @@
 import React from "react";
-import "../../css/coord_interface.scss";
+import styles from "../../css/coord_interface.scss";
 
 interface CheckBoxProps {
   id: string;
@@ -8,7 +8,7 @@ interface CheckBoxProps {
 
 export function CheckBox({ id, onClick: onClick }: CheckBoxProps) {
   return (
-    <td>
+    <td className={styles}>
       <div className="checkbox-wrapper">
         <input className="inp-cbx" id={id + "check"} type="checkbox" onClick={onClick} />
         <label className="cbx" htmlFor={id + "check"}>

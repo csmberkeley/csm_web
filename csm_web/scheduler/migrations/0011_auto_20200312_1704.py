@@ -6,13 +6,13 @@ from django.db import migrations, models
 class Migration(migrations.Migration):
 
     dependencies = [
-        ("scheduler", "0010_student_banned"),
+        ('scheduler', '0010_student_banned'),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name="spacetime",
-            name="location",
+            model_name='spacetime',
+            name='location',
             field=models.CharField(max_length=200),
         ),
     ]
