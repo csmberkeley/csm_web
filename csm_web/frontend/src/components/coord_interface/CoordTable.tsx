@@ -258,7 +258,7 @@ export default function CoordTable() {
                 <>
                   <th>Mentor Name</th>
                   <th>Time</th>
-                  <th>Unexcused Absenses</th>
+                  <th>Unexcused Absences</th>
                 </>
               ) : (
                 <>
