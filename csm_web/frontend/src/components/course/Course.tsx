@@ -1,6 +1,6 @@
 import { DateTime } from "luxon";
 import React, { useState } from "react";
-import { useParams } from "react-router-dom";
+import { Routes, Route, Link, useParams } from "react-router-dom";
 import { DEFAULT_LONG_LOCALE_OPTIONS } from "../../utils/datetime";
 import { useCourseSections } from "../../utils/queries/courses";
 import { Course as CourseType } from "../../utils/types";
@@ -31,7 +31,12 @@ export interface CourseProps {
   priorityEnrollment: DateTime | undefined;
 }
 
-const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps) => {
+const CourseHeader = ({
+  courses,
+  priorityEnrollment,
+  enrollmentTimes,
+  display
+}: CourseProps & { display: "sections" | "bios" }) => {
   /**
    * Course id from the URL.
    */
@@ -46,8 +51,6 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps) =
     isError: sectionsLoadError,
     refetch: reloadSections
   } = useCourseSections(courseId ? parseInt(courseId) : undefined);
-
-  const [display, setDisplay] = useState<"sections" | "bios">("sections");
 
   if (courses === null) {
     // if courses not loaded, parent component deals with loading spinner
@@ -75,9 +78,9 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps) =
     <div id="course-section-selector">
       <div id="course-header">
         <h2 className="course-title">{course.name}</h2>
-        <button className="primary-outline-btn" onClick={() => setDisplay(display == "sections" ? "bios" : "sections")}>
+        <Link className="primary-outline-btn" to={`/courses/${courseId}${display == "sections" ? "/bios" : ""}`}>
           View {display == "sections" ? "Bios" : "Sections"}
-        </button>
+        </Link>
       </div>
       {display == "sections" ? (
         <CourseSections
@@ -92,6 +95,15 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps) =
         <CourseBios sectionsByDay={sectionsByDay} />
       )}
     </div>
+  );
+};
+
+const Course = (props: CourseProps) => {
+  return (
+    <Routes>
+      <Route path="/bios" element={<CourseHeader {...props} display="bios" />} />
+      <Route index element={<CourseHeader {...props} display="sections" />} />
+    </Routes>
   );
 };
 export default Course;

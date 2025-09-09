@@ -35,6 +35,18 @@ class UserViewSet(*viewset_with("list")):
 
 
 @api_view(["GET"])
+def user_info(request):
+    """
+    Get user info for request user
+    """
+    serializer = UserSerializer(request.user)
+    return Response(
+        {**serializer.data, "roles": user_roles(request.user)},
+        status=status.HTTP_200_OK,
+    )
+
+
+@api_view(["GET"])
 def user_retrieve(request, pk):
     """
     Retrieve user profile. Only accessible by superusers and the user themselves.
@@ -49,7 +61,11 @@ def user_retrieve(request, pk):
 
     serializer = UserSerializer(user)
     return Response(
-        {**serializer.data, "isEditable": user_editable(request.user, user)}
+        {
+            **serializer.data,
+            "roles": user_roles(user),
+            "isEditable": user_editable(request.user, user),
+        }
     )
 
 
@@ -110,13 +126,17 @@ def user_update(request, pk):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 
-@api_view(["GET"])
-def user_info(request):
-    """
-    Get user info for request user
-    """
-    serializer = UserSerializer(request.user)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+def user_roles(user):
+    """Get list of user roles"""
+    roles = []
+    if Student.objects.filter(user=user, active=True).exists():
+        roles.append("student")
+    if Mentor.objects.filter(user=user, section__isnull=False).exists():
+        roles.append("mentor")
+    if Coordinator.objects.filter(user=user).exists():
+        roles.append("coordinator")
+
+    return roles
 
 
 def user_editable(request_user, target_user):

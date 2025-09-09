@@ -195,9 +195,22 @@ const UserProfileContent: React.FC = () => {
             className="user-profile-tooltip"
           >
             <div>
-              Edit your profile so others can learn about you. <br /> <br />
-              Students: visible to your mentors and coordinators. <br />
-              Mentors: visible to everyone.
+              Edit your profile so others can learn about you.
+              {requestedData.roles.includes("mentor") ? (
+                <>
+                  <br />
+                  <br />
+                  This profile is visible to everyone.
+                </>
+              ) : requestedData.roles.includes("student") ? (
+                <>
+                  <br />
+                  <br />
+                  This profile is visible to your mentors and coordinators.
+                </>
+              ) : (
+                ""
+              )}
             </div>
           </Tooltip>
         )}
@@ -307,7 +320,7 @@ const UserProfileContent: React.FC = () => {
                   <div>
                     A blank name field will default to
                     <br />
-                    the user&apos;s first and last name.
+                    your first and last name.
                   </div>
                 </Tooltip>
               </div>

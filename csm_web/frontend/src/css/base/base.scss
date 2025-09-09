@@ -91,8 +91,11 @@ h6 {
 
   &:link,
   &:visited,
-  &:hover,
   &:active {
     color: $csm-link-blue;
+  }
+
+  &:hover {
+    color: $csm-link-hover;
   }
 }

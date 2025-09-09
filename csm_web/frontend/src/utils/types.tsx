@@ -39,6 +39,7 @@ export interface UserInfo {
   pronouns: string;
   pronunciation: string;
   email: string;
+  roles: ("student" | "mentor" | "coordinator")[];
   priorityEnrollment?: DateTime;
   isEditable: boolean;
   profileImage?: string;
