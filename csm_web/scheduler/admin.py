@@ -15,6 +15,7 @@ from scheduler.models import (
     Spacetime,
     Student,
     User,
+    WaitlistedStudent,
 )
 
 # Helper methods
@@ -237,6 +238,16 @@ class UserAdmin(BasePermissionModelAdmin):
     # pylint: disable=unused-argument
     def has_delete_permission(self, request, obj=None):
         return request.user.is_superuser
+
+
+@admin.register(WaitlistedStudent)
+class WaitlistedStudentAdmin(BasePermissionModelAdmin):
+    autocomplete_fields = (
+        "user",
+        "section",
+        "course",
+    )
+    list_display = ("id", "user", "section", "course", "position")
 
 
 @admin.register(Student)

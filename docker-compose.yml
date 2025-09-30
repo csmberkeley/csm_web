@@ -1,3 +1,5 @@
+# version: '3.8'
+
 services:
   postgres:
     image: postgres:14
@@ -10,6 +12,7 @@ services:
       POSTGRES_DB: csm_web_dev
       PGUSER: postgres
       POSTGRES_HOST_AUTH_METHOD: trust
+
   node:
     build:
       context: .
@@ -33,8 +36,8 @@ services:
         source: ./package-lock.json
         target: /opt/csm_web/package-lock.json
         read_only: true
-      # prevent node modules from being overwritten on host
-      - notused:/opt/csm_web/app/node_modules
+    command: sh -c "npm install && npm start"
+
   django:
     tty: true
     build:
@@ -63,7 +66,3 @@ services:
 networks:
   default:
     name: csm_web_default
-
-# volume to exclude files from being mounted
-volumes:
-  notused:

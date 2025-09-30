@@ -8,12 +8,14 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 from django.dispatch import receiver
-from django.utils import functional, timezone
+from django.utils import timezone
 from rest_framework.serializers import ValidationError
 
 logger = logging.getLogger(__name__)
 
 logger.info = logger.warning
+
+DEFAULT_WAITLIST_CAP = 3
 
 
 class DayOfWeekField(models.Field):
@@ -72,6 +74,15 @@ class User(AbstractUser):
         else:
             is_valid_enrollment_time = course.is_open()
         return is_valid_enrollment_time and not is_associated
+
+    def can_enroll_in_waitlist(self, course):
+        """Determine whether this user is allowed to waitlist in the given course."""
+        return (
+            self.waitlistedstudent_set.filter(
+                active=True, section__mentor__course=course
+            ).count()
+            < course.max_waitlist_enroll
+        )
 
     def is_whitelisted_for(self, course: "Course"):
         """Determine whether this user is whitelisted for the given course."""
@@ -170,12 +181,12 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
-    # time limit for wotd submission;
+    # time limit fdocor wotd submission;
     # section occurrence date + day limit, rounded to EOD
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
-
     is_restricted = models.BooleanField(default=False)
     whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
+    max_waitlist_enroll = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
 
     def __str__(self):
         return self.name
@@ -201,6 +212,14 @@ class Course(ValidatingModel):
         now = timezone.now().astimezone(timezone.get_default_timezone())
         return self.enrollment_start < now < self.enrollment_end
 
+    def is_coordinator(self, user):
+        """
+        Returns boolean
+        - True if is coord
+        - False if is not coord
+        """
+        return self.coordinator_set.filter(user=user).exists()
+
 
 class Profile(ValidatingModel):
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
@@ -218,6 +237,61 @@ class Profile(ValidatingModel):
 
     class Meta:
         abstract = True
+
+
+class WaitlistedStudent(Profile):
+    """
+    Represents a given "instance" of a waitlisted student. Every section in which a student enrolls
+    on the waitlist should have a new WaitlistedStudent profile.
+    """
+
+    section = models.ForeignKey(
+        "Section", on_delete=models.CASCADE, related_name="waitlist_set"
+    )
+    active = models.BooleanField(
+        default=True, help_text="An inactive student is a dropped student."
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+    position = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Manual position on the waitlist. Lower numbers have higher priority."
+        ),
+    )
+
+    class Meta:
+        ordering = ["position", "timestamp"]
+
+    def save(self, *args, **kwargs):
+        # manually assigning a position to a student
+        if self.position is not None:
+            conflicting_students = (
+                WaitlistedStudent.objects.filter(
+                    section=self.section, position__gte=self.position
+                )
+                .exclude(pk=self.pk)
+                .order_by("position")
+            )
+            # shifting over other student's positions
+            previous_position = self.position
+            for student in conflicting_students:
+                if student.position <= previous_position:
+                    student.position += 1
+                    previous_position = student.position
+                    student.save()
+
+        super().save(*args, **kwargs)
+
+        # If position is not set, assign it based on timestamp
+        if self.position is None:
+            waitlisted_students = WaitlistedStudent.objects.filter(section=self.section)
+            # assigning a position based on timestamp
+            if waitlisted_students.count() == 1:
+                self.position = 1
+            else:
+                self.position = waitlisted_students.count()
+            WaitlistedStudent.objects.filter(pk=self.pk).update(position=self.position)
 
 
 class Student(Profile):
@@ -312,7 +386,7 @@ class Mentor(Profile):
 
 class Coordinator(Profile):
     """
-    This profile is used to allow coordinators to acess the admin page.
+    This profile is used to allow coordinators to access the admin page.
     """
 
     def save(self, *args, **kwargs):
@@ -330,6 +404,9 @@ class Coordinator(Profile):
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
+    max_waitlist_capacity = models.PositiveSmallIntegerField(
+        default=DEFAULT_WAITLIST_CAP
+    )
     mentor = OneToOneOrNoneField(
         Mentor, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -342,14 +419,25 @@ class Section(ValidatingModel):
         ),
     )
 
-    # @functional.cached_property
-    # def course(self):
-    #     return self.mentor.course
-
-    @functional.cached_property
+    @property
     def current_student_count(self):
         """Query the number of students currently enrolled in this section."""
         return self.students.filter(active=True).count()
+
+    @property
+    def current_waitlist_count(self):
+        """Query the number of waitlisted students currently enrolled in this section."""
+        return WaitlistedStudent.objects.filter(active=True, section=self).count()
+
+    @property
+    def is_waitlist_full(self):
+        """Returns whether waitlist is open"""
+        return self.current_waitlist_count >= self.max_waitlist_capacity
+
+    @property
+    def is_section_full(self):
+        """Returns whether section capacity is open"""
+        return self.current_student_count >= self.capacity
 
     def delete(self, *args, **kwargs):
         if self.current_student_count and not kwargs.get("force"):
