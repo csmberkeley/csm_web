@@ -78,6 +78,39 @@ def delete_section(request, pk):
     return Response(status=204)
 
 @api_view(["POST"])
+def drop_students(request, pk):
+    """
+    Endpoint: /coord/<course id: int>/drop_students/
+    pk= course id
+    request body: {"ids": [..., ..., ...]}
+
+    GET: view all mentors in course
+    """
+
+    is_coord = bool(
+        get_object_or_error(Course.objects, pk=pk)
+        .coordinator_set.filter(user=request.user)
+        .count()
+    )
+    if not is_coord:
+        raise PermissionDenied(
+            "You do not have permission to view the coordinator view."
+        )
+    students_list = request.data["ids"]
+
+    if not isinstance(students_list, list):
+        return Response({"error": "has to be a list of ID's"}, status=400)
+    students = Student.objects.filter(pk__in=students_list, course=pk, active=True)
+    
+    if not students.exists():
+        return Response({"error": "One or more of the students does not have a valid ID; no match was found."}, status=400)
+
+    students.update(active=False)
+    return Response(status=204)
+
+    
+
+@api_view(["POST"])
 def add_family(request, pk): 
     is_coord = bool(
         get_object_or_error(Course.objects, pk=pk)
