@@ -3,6 +3,7 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
 from scheduler.serializers import CoordMentorSerializer, CoordStudentSerializer
 from scheduler.views.utils import get_object_or_error
+from scheduler.views.student import StudentViewSet
 
 from ..models import Course, Mentor, Section, Student
 
@@ -105,7 +106,17 @@ def drop_students(request, pk):
     if not students.exists():
         return Response({"error": "One or more of the students does not have a valid ID; no match was found."}, status=400)
 
-    students.update(active=False)
+    viewset = StudentViewSet()
+    viewset.request = request
+
+    for student in students:
+        response = viewset.drop(request, pk=student.pk)
+        if response.status_code not in (204, 200):
+            return Response(
+                {"error": f"Failed to drop student {student.id}", "detail": response.data},
+                status=response.status_code,
+            )
+        
     return Response(status=204)
 
     
