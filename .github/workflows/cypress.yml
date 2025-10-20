@@ -66,7 +66,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        containers: [1, 2, 3, 4]
+        containers: [1]
     services:
       postgres:
         image: postgres:14
