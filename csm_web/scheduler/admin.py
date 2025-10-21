@@ -525,6 +525,7 @@ class MentorAdmin(BasePermissionModelAdmin):
                 "admin:scheduler_student_change",
             )
             for student in obj.section.students.all()
+            if student.active
         )
         return format_html("".join(student_links))
 
