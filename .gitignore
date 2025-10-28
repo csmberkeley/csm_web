@@ -228,3 +228,5 @@ main.css
 
 # Mac OS X dir files
 .DS_Store
+
+private_key.pem

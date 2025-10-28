@@ -416,6 +416,11 @@ class Worksheet(ValidatingModel):
     name = models.CharField(max_length=100)
     worksheet_file = models.FileField(blank=True, upload_to=worksheet_path)
     solution_file = models.FileField(blank=True, upload_to=worksheet_path)
+    solution_url = models.TextField(blank=True, max_length=1024)
+    start_time = models.DateTimeField(default=timezone.now)
+    end_time = models.DateTimeField(
+        default=(timezone.now() + timezone.timedelta(days=180))
+    )
 
 
 @receiver(models.signals.post_delete, sender=Worksheet)

@@ -313,6 +313,8 @@ class SectionSerializer(serializers.ModelSerializer):
 
 
 class WorksheetSerializer(serializers.ModelSerializer):
+    solution_file = serializers.CharField(source="solution_url")
+
     class Meta:
         model = Worksheet
         fields = ["id", "name", "resource", "worksheet_file", "solution_file"]

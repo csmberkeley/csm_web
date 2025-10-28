@@ -1,5 +1,10 @@
+# from datetime import datetime, timedelta, timezone
+import datetime
+
 from django.core.exceptions import ValidationError
+from django.db import models
 from django.http.response import JsonResponse
+from django.utils import timezone
 from drf_nested_forms.parsers import NestedJSONParser, NestedMultiPartParser
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -7,8 +12,9 @@ from rest_framework.exceptions import PermissionDenied
 from rest_framework.parsers import FormParser
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from scheduler.utils.sign_document import sign_document
 
-from ..models import Course, Resource, Link, Worksheet
+from ..models import Course, Link, Resource, Worksheet
 from ..serializers import ResourceSerializer
 
 
@@ -37,7 +43,29 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
 
         if request.method == "GET":
             # return all resources for current course as a response
-            return Response(ResourceSerializer(resources, many=True).data)
+            print(
+                resources.prefetch_related(
+                    models.Prefetch(
+                        "worksheet_set",
+                        queryset=Worksheet.objects.filter(
+                            start_time__gte=timezone.now()
+                        ),
+                    )
+                )
+            )
+            return Response(
+                ResourceSerializer(
+                    resources.prefetch_related(
+                        models.Prefetch(
+                            "worksheet_set",
+                            queryset=Worksheet.objects.filter(
+                                start_time__lte=timezone.now()
+                            ),
+                        )
+                    ),
+                    many=True,
+                ).data
+            )
 
         elif request.method in ("PUT", "POST"):
             # replace database entry for current course resources
@@ -49,6 +77,7 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                 )
 
             resource = request.data
+            print("RESOURCE DATA:", resource)
             # query by resource id, update resource with new info
             resource_query = None
             if "id" in resource and resource["id"]:
@@ -153,6 +182,20 @@ class ResourceViewSet(viewsets.GenericViewSet, APIView):
                         )
 
                     worksheet_obj.save()
+                    if worksheet_obj.solution_file:
+                        start_time = datetime.datetime.now(
+                            datetime.timezone.utc
+                        ) + datetime.timedelta(seconds=15)
+                        end_time = start_time + datetime.timedelta(days=6)
+                        worksheet_obj.solution_url = sign_document(
+                            f"https://dysweoslr1ko6.cloudfront.net/{worksheet_obj.solution_file}",
+                            start_time,
+                            end_time,
+                        )
+                        worksheet_obj.start_time = start_time
+                        worksheet_obj.end_time = end_time
+                        worksheet_obj.save()
+
         elif request.method == "DELETE":
             # remove resource from db
             is_coordinator = course.coordinator_set.filter(user=request.user).exists()
