@@ -199,7 +199,7 @@ class SectionFactory(factory.django.DjangoModelFactory):
         model = Section
 
     capacity = factory.LazyFunction(lambda: random.randint(3, 6))
-    max_waitlist_capacity = DEFAULT_WAITLIST_CAP
+    waitlist_capacity = DEFAULT_WAITLIST_CAP
 
     @classmethod
     def _create(cls, model_class, *args, **kwargs):
@@ -601,7 +601,7 @@ def generate_test_data(preconfirm=False):
 
             if len(student_users) >= section.capacity:
                 waitlisted_users = UserFactory.build_batch(
-                    random.randint(0, section.max_waitlist_capacity)
+                    random.randint(0, section.waitlist_capacity)
                 )
                 user_objects.extend(waitlisted_users)
                 waitlisted_students = []

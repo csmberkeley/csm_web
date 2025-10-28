@@ -318,7 +318,7 @@ class SectionSerializer(serializers.ModelSerializer):
             "user_role",
             "course_title",
             "course_restricted",
-            "max_waitlist_capacity",
+            "waitlist_capacity",
         )
 
 
