@@ -428,6 +428,8 @@ class WorksheetSerializer(serializers.ModelSerializer):
     Serializer for Worksheet objects
     """
 
+    solution_file = serializers.CharField(source="solution_url")
+
     class Meta:
         model = Worksheet
         fields = ["id", "name", "resource", "worksheet_file", "solution_file"]
