@@ -10,16 +10,18 @@ interface MetaEditModalProps {
   closeModal: () => void;
   capacity: number;
   description: string;
+  waitlistCapacity: number;
 }
 
 export default function MetaEditModal({
   closeModal,
   sectionId,
   capacity,
-  description
+  description,
+  waitlistCapacity
 }: MetaEditModalProps): React.ReactElement {
   // use existing capacity and description as initial values
-  const [formState, setFormState] = useState({ capacity: capacity, description: description });
+  const [formState, setFormState] = useState({ capacity, description, waitlistCapacity });
   const [validationText, setValidationText] = useState("");
 
   const sectionUpdateMutation = useSectionUpdateMutation(sectionId);
@@ -31,7 +33,7 @@ export default function MetaEditModal({
   });
 
   const handleChange = ({ target: { name, value } }: React.ChangeEvent<HTMLInputElement>) => {
-    if (name === "capacity") {
+    if (name === "capacity" || name === "waitlist-capacity") {
       setFormState(prevFormState => ({ ...prevFormState, [name]: parseInt(value) }));
     } else {
       setFormState(prevFormState => ({ ...prevFormState, [name]: value }));
@@ -90,6 +92,20 @@ export default function MetaEditModal({
             name="description"
             type="text"
             value={formState.description}
+            onChange={handleChange}
+          />
+        </label>
+        <label className="form-label">
+          Waitlist Capacity
+          <input
+            className="form-input"
+            required
+            name="waitlistCapacity"
+            type="number"
+            min="0"
+            inputMode="numeric"
+            pattern="[0-9]*"
+            value={isNaN(formState.waitlistCapacity) ? "" : formState.waitlistCapacity.toString()}
             onChange={handleChange}
           />
         </label>

@@ -66,6 +66,48 @@ export const useSectionStudents = (id: number): UseQueryResult<Student[], Server
 };
 
 /**
+ * Hook to get the WAITLISTED students for a section.
+ *
+ * Tries query-param first; if that fails, falls back to /sections/:id/waitlisted.
+ * Returns students sorted by name.
+ */
+export const useSectionWaitlistedStudents = (id: number): UseQueryResult<Student[], ServerError> => {
+  const queryResult = useQuery<Student[], Error>(
+    ["sections", id, "waitlisted-students"],
+    async () => {
+      if (isNaN(id)) {
+        throw new PermissionError("Invalid section id");
+      }
+
+      // Preferred: filter via query param if backend supports it.
+      const resp1 = await fetchNormalized(`/sections/${id}/students?status=waitlisted`);
+      if (resp1.ok) {
+        const students = await resp1.json();
+        return students.sort((a: Student, b: Student) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+      }
+
+      // Fallback: dedicated waitlist endpoint.
+      if (resp1.status === 404) {
+        const resp2 = await fetchNormalized(`/sections/${id}/waitlisted`);
+        if (resp2.ok) {
+          const students = await resp2.json();
+          return students.sort((a: Student, b: Student) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+        }
+        handlePermissionsError(resp2.status);
+        throw new ServerError(`Failed to fetch waitlisted students for section ${id}`);
+      }
+
+      handlePermissionsError(resp1.status);
+      throw new ServerError(`Failed to fetch waitlisted students for section ${id}`);
+    },
+    { retry: handleRetry }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+
+/**
  * Hook to get the attendances for a section.
  */
 export const useSectionAttendances = (id: number): UseQueryResult<RawAttendance[], ServerError> => {
@@ -470,6 +512,7 @@ export const useSectionCreateMutation = (): UseMutationResult<Section, ServerErr
 export interface SectionUpdateMutationBody {
   capacity: number;
   description: string;
+  waitlistCapacity: number;
 }
 
 /**
