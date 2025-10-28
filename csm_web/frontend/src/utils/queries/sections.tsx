@@ -512,6 +512,7 @@ export const useSectionCreateMutation = (): UseMutationResult<Section, ServerErr
 export interface SectionUpdateMutationBody {
   capacity: number;
   description: string;
+  waitlistCapacity: number;
 }
 
 /**

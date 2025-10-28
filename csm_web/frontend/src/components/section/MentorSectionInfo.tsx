@@ -30,6 +30,7 @@ interface MentorSectionInfoProps {
   description: string;
   id: number;
   courseRestricted: boolean;
+  waitlistCapacity: number;
 }
 
 export default function MentorSectionInfo({
@@ -39,7 +40,8 @@ export default function MentorSectionInfo({
   capacity,
   id: sectionId,
   description,
-  courseRestricted
+  courseRestricted,
+  waitlistCapacity
 }: MentorSectionInfoProps) {
   const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(sectionId);
 
@@ -218,6 +220,7 @@ export default function MentorSectionInfo({
                     closeModal={closeModal}
                     capacity={capacity}
                     description={description}
+                    waitlistCapacity={waitlistCapacity}
                   />
                 )}
               </React.Fragment>
@@ -227,6 +230,9 @@ export default function MentorSectionInfo({
             </p>
             <p>
               <span className="meta-field">Description:</span> {description}
+            </p>
+            <p>
+              <span className="meta-field">Waitlist Capacity:</span> {waitlistCapacity}
             </p>
           </InfoCard>
         </div>
