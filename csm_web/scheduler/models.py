@@ -404,9 +404,7 @@ class Coordinator(Profile):
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
-    max_waitlist_capacity = models.PositiveSmallIntegerField(
-        default=DEFAULT_WAITLIST_CAP
-    )
+    waitlist_capacity = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
     mentor = OneToOneOrNoneField(
         Mentor, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -432,7 +430,7 @@ class Section(ValidatingModel):
     @property
     def is_waitlist_full(self):
         """Returns whether waitlist is open"""
-        return self.current_waitlist_count >= self.max_waitlist_capacity
+        return self.current_waitlist_count >= self.waitlist_capacity
 
     @property
     def is_section_full(self):
