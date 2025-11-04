@@ -119,7 +119,8 @@ export const SectionCard = ({
 
   const iconWidth = "1.3em";
   const iconHeight = "1.3em";
-  const isFull = numStudentsEnrolled >= capacity;
+  const isFull = numStudentsEnrolled >= capacity && numStudentsWaitlisted >= waitlistCapacity;
+  const isEnrolledFull = numStudentsEnrolled >= capacity;
   if (!showModal && enrollmentSuccessful) {
     // redirect to the section page if the user was successfully enrolled in the section
     return <Navigate to="/" />;
@@ -193,7 +194,7 @@ export const SectionCard = ({
             disabled={!courseOpen || isFull}
             onClick={isFull ? undefined : enroll}
           >
-            ENROLL
+            {isEnrolledFull ? "JOIN WAITLIST" : "ENROLL"}
           </button>
         )}
       </section>
