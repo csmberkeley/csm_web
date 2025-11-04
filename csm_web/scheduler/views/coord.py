@@ -80,46 +80,42 @@ def delete_section(request, pk):
 
 @api_view(["POST"])
 def drop_students(request, pk):
-    """
-    Endpoint: /coord/<course id: int>/drop_students/
-    pk= course id
-    request body: {"ids": [..., ..., ...]}
-
-    GET: view all mentors in course
-    """
-
-    is_coord = bool(
-        get_object_or_error(Course.objects, pk=pk)
-        .coordinator_set.filter(user=request.user)
-        .count()
-    )
-    if not is_coord:
+    course = get_object_or_error(Course.objects, pk=pk)
+    if not course.coordinator_set.filter(user=request.user).exists():
         raise PermissionDenied(
             "You do not have permission to view the coordinator view."
         )
-    students_list = request.data["ids"]
 
+    students_list = request.data.get("ids")
     if not isinstance(students_list, list):
         return Response({"error": "has to be a list of ID's"}, status=400)
-    students = Student.objects.filter(pk__in=students_list, course=pk, active=True)
-    
-    if not students.exists():
-        return Response({"error": "One or more of the students does not have a valid ID; no match was found."}, status=400)
 
+    students_list = [int(i) for i in students_list]
+    
     viewset = StudentViewSet()
     viewset.request = request
 
-    for student in students:
-        response = viewset.drop(request, pk=student.pk)
-        if response.status_code not in (204, 200):
-            return Response(
-                {"error": f"Failed to drop student {student.id}", "detail": response.data},
-                status=response.status_code,
-            )
-        
-    return Response(status=204)
+    valid_drops = []
+    failed_drops = []
 
+    for student_id in students_list:
+        try:
+            response = viewset.drop(request, pk=student_id)
+            if response.status_code in (200, 204):
+                valid_drops.append(student_id)
+        except Exception:
+            failed_drops.append(student_id)
+
+    if not valid_drops:
+        return Response({"error": "Failed to drop all students"}, status=400)
     
+    if not failed_drops:
+        return Response(status=200)
+
+    return Response({
+        "error": f"Failed to drop: {', '.join(map(str, failed_drops))}. "
+                 f"Successfully dropped: {', '.join(map(str, valid_drops))}"
+    }, status=200)
 
 @api_view(["POST"])
 def add_family(request, pk): 
