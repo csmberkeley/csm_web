@@ -31,18 +31,102 @@ def view(request, pk=None):
 
 
 # CURRENT ISSUES: 61a and eecs16b don't allow adding to waitlist? may not be an issue
-@api_view(["POST"])
-def add(request, pk=None):
+# already works as a student so the put doesn't actually work 
+@api_view(["PUT"])
+def add(request, pk=None): 
     """
     Endpoint: /api/waitlist/<pk>/add
     pk= section id
 
-    POST: Add a new waitlist student to section. Pass in section id. Called by user
+    PUT: Add a new waitlist student to section. Pass in section id. Called by user 
+    who wants to be waitlisted. NOT by coordinator on behalf of student.
     - if user cannot enroll in section, deny permission
     - if user is already on waitlist for this section, deny
     - if waitlist is full, deny permission
     - if section is not full, enroll instead.
     """
+
+    section = get_object_or_error(Section.objects, pk=pk)
+    course = section.mentor.course
+    student = request.user
+
+    # Checks that student is able to enroll in the course
+    if not student.can_enroll_in_course(course):
+        log_enroll_result(
+            False,
+            student,
+            section,
+            reason=(
+                "User already involved in this course or course is closed for"
+                " enrollment"
+            ),
+        )
+        raise PermissionDenied(
+            "You are either mentoring for this course, already enrolled in a section, "
+            "or the course is closed for enrollment.",
+        )
+    
+    # If there is space in the section, attempt to enroll the student directly
+    if not section.is_section_full:
+        return add_student(section, student)
+
+    # If the waitlist is full, throw an error
+    if section.is_waitlist_full:
+        log_enroll_result(False, student, section, reason="Waitlist is full")
+        raise PermissionDenied("There is no space available in this section.")
+
+    # If user has waitlisted in the max number of waitlists allowed for the course
+    if not student.can_enroll_in_waitlist(course):
+        log_enroll_result(
+            False,
+            student,
+            section,
+            reason="User has waitlisted in max amount of waitlists for the course",
+        )
+        raise PermissionDenied(
+            "You are waitlisted in the max amount of waitlists for this course."
+        )
+
+    # Check if the student is already enrolled in the waitlist for this section
+    waitlist_queryset = WaitlistedStudent.objects.filter(
+        active=True, section=section, user=student
+    )
+    if waitlist_queryset.count() != 0:
+        log_enroll_result(
+            False,
+            student,
+            section,
+            reason="User is already waitlisted in this section",
+        )
+        raise PermissionDenied("You are already waitlisted in this section.")
+
+    # Check if the waitlist student has a position (only occurs when manually inserting a student)
+    specified_position = request.data.get("position", None)
+
+    # Create the new waitlist student and save
+    waitlisted_student = WaitlistedStudent.objects.create(
+        user=student, section=section, course=course, position=specified_position
+    )
+    waitlisted_student.save()
+
+    log_enroll_result(True, request.user, section)
+    return Response(status=status.HTTP_201_CREATED)
+
+@api_view(["PUT"])
+def add_by_coord(request, pk=None):
+    """
+    Endpoint: /api/waitlist/<pk>/add
+    pk= section id
+
+    PUT: Add student to waitlist by coordinator. 
+    emails: Array<{ [email: string]: string }>;
+    actions: {
+        [action: string]: string;
+    };
+    """
+
+    # TODO function not finished yet
+    
     section = get_object_or_error(Section.objects, pk=pk)
     course = section.mentor.course
     user = request.user
@@ -53,35 +137,23 @@ def add(request, pk=None):
     )
 
     if not is_coord:  # check if it's a student
-        # Checks that student is able to enroll in the course
-        if not student.can_enroll_in_course(course):
-            log_enroll_result(
-                False,
-                student,
-                section,
-                reason=(
-                    "User already involved in this course or course is closed for"
-                    " enrollment"
-                ),
-            )
-            raise PermissionDenied(
-                "You are either mentoring for this course, already enrolled in a section, "
-                "or the course is closed for enrollment.",
-            )
-    if is_coord:
-        data = request.data
-        email = data.get("email")
-        if not email:  # singular student for now -- may need to adapt to a list
-            return Response(
-                {"error": "Must specify email of student to enroll"},
-                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-        student_queryset = Student.objects.filter(
-            course=section.mentor.course, user__email=email
+        raise PermissionDenied(
+            "You must be a coord to perform this action.",
         )
+    
+    data = request.data
+    email = data.get("email")
+    if not email:  # singular student for now -- may need to adapt to a list
+        return Response(
+            {"error": "Must specify email of student to enroll"},
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+    student_queryset = Student.objects.filter(
+        course=section.mentor.course, user__email=email
+    )
 
-        student = student_queryset.first().user
-        print(student_queryset.count())
+    student = student_queryset.first().user
+    print(student_queryset.count())
     # user is either a coord or a student
     # If there is space in the section, attempt to enroll the student directly
     if not section.is_section_full:

@@ -22,6 +22,7 @@ enum CoordModalStates {
 interface CoordinatorAddStudentModalProps {
   closeModal: (arg0?: boolean) => void;
   sectionId: number;
+  title: string;
 }
 
 interface RequestType {
@@ -50,10 +51,14 @@ interface ActionType {
 
 export function CoordinatorAddStudentModal({
   closeModal,
-  sectionId
+  sectionId,
+  title
 }: CoordinatorAddStudentModalProps): React.ReactElement {
   const { data: userEmails, isSuccess: userEmailsLoaded } = useUserEmails();
-  const enrollStudentMutation = useEnrollStudentMutation(sectionId);
+  const endpoint = title.toLocaleLowerCase().includes("waitlist")
+    ? `waitlist/${sectionId}/add`
+    : `sections/${sectionId}/students`;
+  const enrollStudentMutation = useEnrollStudentMutation(sectionId, endpoint);
 
   const [emailsToAdd, setEmailsToAdd] = useState<string[]>([""]);
   const [response, setResponse] = useState<ResponseType>({} as ResponseType);
@@ -182,7 +187,7 @@ export function CoordinatorAddStudentModal({
 
   const initial_component = (
     <React.Fragment>
-      <h2>Add new students</h2>
+      <h2>Add new {title}</h2>
       <div className="coordinator-email-content">
         <div className="coordinator-email-input-list">
           {emailsToAdd.map((email, index) => (

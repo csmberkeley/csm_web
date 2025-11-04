@@ -79,23 +79,21 @@ export const useSectionWaitlistedStudents = (id: number): UseQueryResult<Student
         throw new PermissionError("Invalid section id");
       }
 
-      // Preferred: filter via query param if backend supports it.
-      const resp1 = await fetchNormalized(`/sections/${id}/students?status=waitlisted`);
+      const resp1 = await fetchNormalized(`/waitlist/${id}/`);
       if (resp1.ok) {
         const students = await resp1.json();
         return students.sort((a: Student, b: Student) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
       }
 
-      // Fallback: dedicated waitlist endpoint.
-      if (resp1.status === 404) {
-        const resp2 = await fetchNormalized(`/sections/${id}/waitlisted`);
-        if (resp2.ok) {
-          const students = await resp2.json();
-          return students.sort((a: Student, b: Student) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
-        }
-        handlePermissionsError(resp2.status);
-        throw new ServerError(`Failed to fetch waitlisted students for section ${id}`);
-      }
+      // if (resp1.status === 404) {
+      //   const resp2 = await fetchNormalized(`/sections/${id}/waitlisted`);
+      //   if (resp2.ok) {
+      //     const students = await resp2.json();
+      //     return students.sort((a: Student, b: Student) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+      //   }
+      //   handlePermissionsError(resp2.status);
+      //   throw new ServerError(`Failed to fetch waitlisted students for section ${id}`);
+      // }
 
       handlePermissionsError(resp1.status);
       throw new ServerError(`Failed to fetch waitlisted students for section ${id}`);
@@ -456,12 +454,14 @@ interface EnrollStudentMutationResponse {
  * Invalidates all queries associated with the section.
  */
 export const useEnrollStudentMutation = (
-  sectionId: number
+  sectionId: number,
+  endpoint: string
 ): UseMutationResult<void, EnrollStudentMutationResponse, EnrollStudentMutationRequest> => {
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, EnrollStudentMutationResponse, EnrollStudentMutationRequest>(
     async (body: EnrollStudentMutationRequest) => {
-      const response = await fetchWithMethod(`sections/${sectionId}/students`, HTTP_METHODS.PUT, body);
+      console.log("Enrolling students via endpoint:", endpoint);
+      const response = await fetchWithMethod(endpoint, HTTP_METHODS.PUT, body);
       if (response.ok) {
         return;
       } else {

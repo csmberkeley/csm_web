@@ -35,7 +35,7 @@ from .utils import (
 )
 
 
-def add_student(section, user):
+def add_student(section, user): #make this endpoint for only adding as a student
     """
     Helper Function:
 
@@ -55,7 +55,7 @@ def add_student(section, user):
             status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
-    # Check that the section is not full
+    # Check that the section is not full, wouldn't we want that to allow that 
     if section.is_section_full:
         logger.warning(
             "<Enrollment:Failure> User %s was unable to enroll in Section %s"
