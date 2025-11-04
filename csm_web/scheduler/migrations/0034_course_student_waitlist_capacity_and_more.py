@@ -19,7 +19,7 @@ class Migration(migrations.Migration):
         ),
         migrations.AddField(
             model_name="section",
-            name="max_waitlist_capacity",
+            name="waitlist_capacity",
             field=models.PositiveSmallIntegerField(default=3),
         ),
         migrations.CreateModel(

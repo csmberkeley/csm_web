@@ -267,6 +267,7 @@ class SectionSerializer(serializers.ModelSerializer):
     user_role = serializers.SerializerMethodField()
     associated_profile_id = serializers.SerializerMethodField()
     course_restricted = serializers.BooleanField(source="mentor.course.is_restricted")
+    num_students_waitlisted = serializers.SerializerMethodField()
 
     def get_num_students_enrolled(self, obj):
         """Retrieve the number of students enrolled in the section"""
@@ -274,6 +275,14 @@ class SectionSerializer(serializers.ModelSerializer):
             obj.num_students_annotation
             if hasattr(obj, "num_students_annotation")
             else obj.current_student_count
+        )
+
+    def get_num_students_waitlisted(self, obj):
+        """Retrieve the number of students waitlisted for the section"""
+        return (
+            obj.num_waitlisted_annotation
+            if hasattr(obj, "num_waitlisted_annotation")
+            else obj.current_waitlist_count
         )
 
     def user_associated_profile(self, obj):
@@ -318,7 +327,8 @@ class SectionSerializer(serializers.ModelSerializer):
             "user_role",
             "course_title",
             "course_restricted",
-            "max_waitlist_capacity",
+            "waitlist_capacity",
+            "num_students_waitlisted",
         )
 
 

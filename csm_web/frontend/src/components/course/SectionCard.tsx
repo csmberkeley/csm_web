@@ -11,6 +11,7 @@ import ClockIcon from "../../../static/frontend/img/clock.svg";
 import GroupIcon from "../../../static/frontend/img/group.svg";
 import LocationIcon from "../../../static/frontend/img/location.svg";
 import UserIcon from "../../../static/frontend/img/user.svg";
+import WaitlistIcon from "../../../static/frontend/img/waitlist.svg";
 import XCircle from "../../../static/frontend/img/x_circle.svg";
 
 interface SectionCardProps {
@@ -22,6 +23,8 @@ interface SectionCardProps {
   description: string;
   userIsCoordinator: boolean;
   courseOpen: boolean;
+  numStudentsWaitlisted: number;
+  waitlistCapacity: number;
 }
 
 export const SectionCard = ({
@@ -32,7 +35,9 @@ export const SectionCard = ({
   capacity,
   description,
   userIsCoordinator,
-  courseOpen
+  courseOpen,
+  numStudentsWaitlisted,
+  waitlistCapacity
 }: SectionCardProps): React.ReactElement => {
   /**
    * Mutation to enroll a student in the section.
@@ -114,7 +119,8 @@ export const SectionCard = ({
 
   const iconWidth = "1.3em";
   const iconHeight = "1.3em";
-  const isFull = numStudentsEnrolled >= capacity;
+  const isFull = numStudentsEnrolled >= capacity && numStudentsWaitlisted >= waitlistCapacity;
+  const isEnrolledFull = numStudentsEnrolled >= capacity;
   if (!showModal && enrollmentSuccessful) {
     // redirect to the section page if the user was successfully enrolled in the section
     return <Navigate to="/" />;
@@ -171,7 +177,11 @@ export const SectionCard = ({
             <UserIcon width={iconWidth} height={iconHeight} /> {mentor.name}
           </p>
           <p title="Current enrollment">
-            <GroupIcon width={iconWidth} height={iconHeight} /> {`${numStudentsEnrolled}/${capacity}`}
+            <GroupIcon width={iconWidth} height={iconHeight} /> {`Enrolled: ${numStudentsEnrolled}/${capacity}`}
+          </p>
+          <p title="Current waitlist">
+            <WaitlistIcon width={iconWidth} height={iconHeight} />{" "}
+            {`Waitlisted: ${numStudentsWaitlisted}/${waitlistCapacity}`}
           </p>
         </div>
         {userIsCoordinator ? (
@@ -184,7 +194,7 @@ export const SectionCard = ({
             disabled={!courseOpen || isFull}
             onClick={isFull ? undefined : enroll}
           >
-            ENROLL
+            {isEnrolledFull ? "JOIN WAITLIST" : "ENROLL"}
           </button>
         )}
       </section>

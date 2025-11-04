@@ -252,3 +252,13 @@ def log_enroll_result(success, user, section, reason=None):
             section,
             reason,
         )
+
+
+@api_view(["GET"])
+def count_waitist(request, pk=None):
+    """
+    Endpoint: /api/waitlist/<pk>/count_waitlist
+    pk= section id
+    """
+    section = get_object_or_error(Section.objects, pk=pk)
+    return Response(section.current_waitlist_count())

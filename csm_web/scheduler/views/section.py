@@ -317,6 +317,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             data={
                 "capacity": request.data.get("capacity"),
                 "description": request.data.get("description"),
+                "waitlist_capacity": request.data.get("waitlist_capacity"),
             },
             partial=True,
         )
