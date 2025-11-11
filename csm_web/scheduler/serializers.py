@@ -34,9 +34,12 @@ class Role(Enum):
 
 def get_profile_role(profile):
     """Return role (enum) depending on the profile type"""
-    for role, klass in zip(Role, (Coordinator, Student, Mentor)):
-        if isinstance(profile, klass):
-            return role.value
+    if isinstance(profile, Coordinator):
+        return Role.COORDINATOR.value
+    elif isinstance(profile, Student) or isinstance(profile, WaitlistedStudent):
+        return Role.STUDENT.value
+    elif isinstance(profile, Mentor):
+        return Role.MENTOR.value
     return None
 
 

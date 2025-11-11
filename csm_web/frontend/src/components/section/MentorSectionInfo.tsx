@@ -3,6 +3,8 @@ import React, { useState } from "react";
 import {
   useSectionStudents,
   useSectionWaitlistedStudents,
+  useEnrollStudentMutation,
+  useCoordEnrollStudentToWaitlistMutation
 } from "../../utils/queries/sections";
 import { Mentor, Spacetime, Student } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
@@ -44,10 +46,14 @@ interface SectionInfoProps {
   isCoordinator: boolean;
   sectionId: number;
   courseRestricted: boolean;
+  mutation: (
+    sectionId: number
+  ) => ReturnType<typeof useEnrollStudentMutation> | ReturnType<typeof useCoordEnrollStudentToWaitlistMutation>;
 }
 
 export function SectionInfo({
   title,
+  mutation,
   students,
   studentsLoaded,
   studentsLoadError,
@@ -109,7 +115,12 @@ export function SectionInfo({
             </tbody>
           </table>
           {isCoordinator && isAddingStudent && (
-            <CoordinatorAddStudentModal closeModal={closeAddModal} sectionId={sectionId} title={title} />
+            <CoordinatorAddStudentModal
+              closeModal={closeAddModal}
+              sectionId={sectionId}
+              title={title}
+              mutation={mutation}
+            />
           )}
         </React.Fragment>
       ) : studentsLoadError ? (
@@ -154,6 +165,7 @@ export default function MentorSectionInfo({
       <div className="section-info-cards-container">
         <SectionInfo
           title="Enrolled Students"
+          mutation={useEnrollStudentMutation}
           students={students || []}
           studentsLoaded={studentsLoaded}
           studentsLoadError={studentsLoadError}
@@ -163,6 +175,7 @@ export default function MentorSectionInfo({
         />
         <SectionInfo
           title="Waitlisted Students"
+          mutation={useCoordEnrollStudentToWaitlistMutation}
           students={waitlistedStudents || []}
           studentsLoaded={waitlistedStudentsLoaded}
           studentsLoadError={waitlistedStudentsLoadError}

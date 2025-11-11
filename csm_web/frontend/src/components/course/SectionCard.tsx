@@ -2,7 +2,11 @@ import React, { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 
 import { formatSpacetimeInterval } from "../../utils/datetime";
-import { EnrollUserMutationResponse, useEnrollUserMutation } from "../../utils/queries/sections";
+import {
+  EnrollUserMutationResponse,
+  useEnrollUserMutation,
+  useEnrollStudentToWaitlistMutation
+} from "../../utils/queries/sections";
 import { Mentor, Spacetime } from "../../utils/types";
 import Modal, { ModalCloser } from "../Modal";
 
@@ -43,6 +47,10 @@ export const SectionCard = ({
    * Mutation to enroll a student in the section.
    */
   const enrollStudentMutation = useEnrollUserMutation(id);
+  /**
+   * Mutation to enroll a student in the section's waitlist.
+   */
+  const enrollStudentWaitlistMutation = useEnrollStudentToWaitlistMutation(id);
 
   /**
    * Whether to show the modal (after an attempt to enroll).
@@ -68,7 +76,12 @@ export const SectionCard = ({
       return;
     }
 
-    enrollStudentMutation.mutate(undefined, {
+    // Determine if we should use waitlist mutation (enrolled capacity is full but waitlist is not full)
+    const isEnrolledFull = numStudentsEnrolled >= capacity;
+    const shouldUseWaitlist = isEnrolledFull && numStudentsWaitlisted < waitlistCapacity;
+    const mutation = shouldUseWaitlist ? enrollStudentWaitlistMutation : enrollStudentMutation;
+
+    mutation.mutate(undefined, {
       onSuccess: () => {
         setEnrollmentSuccessful(true);
         setShowModal(true);
@@ -194,7 +207,7 @@ export const SectionCard = ({
             disabled={!courseOpen || isFull}
             onClick={isFull ? undefined : enroll}
           >
-            {isEnrolledFull ? "JOIN WAITLIST" : "ENROLL"}
+            {isFull ? "FULL" : isEnrolledFull ? "JOIN WAITLIST" : "ENROLL"}
           </button>
         )}
       </section>

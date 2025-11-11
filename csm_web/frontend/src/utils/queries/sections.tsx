@@ -423,6 +423,41 @@ export const useEnrollUserMutation = (sectionId: number): UseMutationResult<void
   return mutationResult;
 };
 
+/**
+ * Enroll the current user into a given section's waitlist.
+ *
+ * On success, returns nothing; on failure, returns the response body.
+ *
+ * Invalidates all queries associated with the section,
+ * along with the current user profile query.
+ */
+export const useEnrollStudentToWaitlistMutation = (
+  sectionId: number
+): UseMutationResult<void, EnrollUserMutationResponse, void> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, EnrollUserMutationResponse, void>(
+    async () => {
+      const response = await fetchWithMethod(`waitlist/${sectionId}/add`, HTTP_METHODS.PUT);
+      if (response.ok) {
+        return;
+      } else {
+        throw await response.json();
+      }
+    },
+    {
+      onSuccess: () => {
+        // invalidate all queries for the section
+        queryClient.invalidateQueries(["sections", sectionId]);
+        // invalidate profiles query for the user
+        queryClient.invalidateQueries(["profiles"]);
+      }
+    }
+  );
+
+  // handle error in component
+  return mutationResult;
+};
+
 interface EnrollStudentMutationRequest {
   emails: Array<{ [email: string]: string }>;
   actions: {
@@ -452,16 +487,49 @@ interface EnrollStudentMutationResponse {
  * Failure response body contains the JSON response along with the response status.
  *
  * Invalidates all queries associated with the section.
+ * This endpoint is used by BOTH coordinators and mentors.
  */
 export const useEnrollStudentMutation = (
-  sectionId: number,
-  endpoint: string
+  sectionId: number
 ): UseMutationResult<void, EnrollStudentMutationResponse, EnrollStudentMutationRequest> => {
   const queryClient = useQueryClient();
   const mutationResult = useMutation<void, EnrollStudentMutationResponse, EnrollStudentMutationRequest>(
     async (body: EnrollStudentMutationRequest) => {
-      console.log("Enrolling students via endpoint:", endpoint);
-      const response = await fetchWithMethod(endpoint, HTTP_METHODS.PUT, body);
+      const response = await fetchWithMethod(`sections/${sectionId}/students`, HTTP_METHODS.PUT, body);
+      if (response.ok) {
+        return;
+      } else {
+        throw { status: response.status, json: await response.json() };
+      }
+    },
+    {
+      onSuccess: () => {
+        // invalidate all queries for the section
+        queryClient.invalidateQueries(["sections", sectionId]);
+      }
+    }
+  );
+
+  // handle error in component
+  return mutationResult;
+};
+
+/**
+ * Enroll a list of waitlisted students into a given section.
+ *
+ * On success, returns nothing; on failure, returns the response body.
+ * Failure response body contains the JSON response along with the response status.
+ *
+ * Invalidates all queries associated with the section.
+ * This endpoint is used by coordinators only.
+ */
+export const useCoordEnrollStudentToWaitlistMutation = (
+  sectionId: number
+): UseMutationResult<void, EnrollStudentMutationResponse, EnrollStudentMutationRequest> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, EnrollStudentMutationResponse, EnrollStudentMutationRequest>(
+    async (body: EnrollStudentMutationRequest) => {
+      const response = await fetchWithMethod(`waitlist/${sectionId}/coordadd`, HTTP_METHODS.PUT, body);
       if (response.ok) {
         return;
       } else {
