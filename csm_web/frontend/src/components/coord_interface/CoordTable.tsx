@@ -3,6 +3,8 @@ import { useLocation, useParams, useNavigate } from "react-router-dom";
 import { Mentor, Student, getCoordData } from "../../utils/queries/coord";
 import ActionButton from "./ActionButton";
 import { CheckBox } from "./CheckBox";
+import CoordSectionDelete from "./CoordSectionDelete";
+import CoordStudentDropper from "./CoordStudentDropper";
 import DropBox from "./DropBox";
 import { SearchBar } from "./SearchBar";
 import styles from "../../css/coord_interface.scss";
@@ -196,10 +198,10 @@ export default function CoordTable() {
   }
 
   // Debugging Function for seeing selected data
-  // function getSelectedData() {
-  //   console.log(selectedData);
-  //   return selectedData;
-  // }
+  function getSelectedData() {
+    console.log(selectedData);
+    return selectedData;
+  }
 
   return (
     <div className={styles}>
@@ -246,6 +248,8 @@ export default function CoordTable() {
         <div id="table-header">
           {isStudents ? <div className="title">Students List</div> : <div className="title">Mentors List</div>}
           <ActionButton copyEmail={copyEmail} reset={reset} />
+          {/* <button onClick={getSelectedData}></button>  Used for looking at how the selectedData looks like */}
+          {/* {isStudents ? <CoordStudentDropper/> : <CoordSectionDelete></CoordSectionDelete>} */}
         </div>
 
         <table>
