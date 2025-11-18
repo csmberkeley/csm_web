@@ -4,6 +4,7 @@ export interface Roles {
   [Role.STUDENT]: Set<number>;
   [Role.MENTOR]: Set<number>;
   [Role.COORDINATOR]: Set<number>;
+  [Role.WAITLIST]: Set<number>;
 }
 
 /**
@@ -15,7 +16,8 @@ export function emptyRoles(): Roles {
   return {
     [Role.STUDENT]: new Set(),
     [Role.MENTOR]: new Set(),
-    [Role.COORDINATOR]: new Set()
+    [Role.COORDINATOR]: new Set(),
+    [Role.WAITLIST]: new Set()
   };
 }
 
