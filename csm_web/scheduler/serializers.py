@@ -30,16 +30,19 @@ class Role(Enum):
     COORDINATOR = "COORDINATOR"
     STUDENT = "STUDENT"
     MENTOR = "MENTOR"
+    WAITLIST = "WAITLIST"
 
 
 def get_profile_role(profile):
     """Return role (enum) depending on the profile type"""
     if isinstance(profile, Coordinator):
         return Role.COORDINATOR.value
-    elif isinstance(profile, Student) or isinstance(profile, WaitlistedStudent):
+    elif isinstance(profile, Student):
         return Role.STUDENT.value
     elif isinstance(profile, Mentor):
         return Role.MENTOR.value
+    elif isinstance(profile, WaitlistedStudent):
+        return Role.WAITLIST.value
     return None
 
 
@@ -296,6 +299,9 @@ class SectionSerializer(serializers.ModelSerializer):
         try:
             return obj.students.get(user=user)
         except Student.DoesNotExist:
+            waitlisted_student = obj.waitlist_set.filter(user=user).first()
+            if waitlisted_student:
+                return waitlisted_student
             coordinator = obj.mentor.course.coordinator_set.filter(user=user).first()
             if coordinator:
                 return coordinator

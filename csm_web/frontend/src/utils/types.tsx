@@ -3,7 +3,8 @@ import { DateTime } from "luxon";
 export enum Role {
   COORDINATOR = "COORDINATOR",
   MENTOR = "MENTOR",
-  STUDENT = "STUDENT"
+  STUDENT = "STUDENT",
+  WAITLIST = "WAITLIST"
 }
 
 export interface Override {

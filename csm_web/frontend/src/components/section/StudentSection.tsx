@@ -30,7 +30,38 @@ interface StudentSectionType {
   associatedProfileId: number;
 }
 
-export default function StudentSection({
+export function WaitlistStudentSection({
+  id,
+  course,
+  courseTitle,
+  mentor,
+  spacetimes,
+  override,
+  associatedProfileId
+}: StudentSectionType) {
+  return (
+    <SectionDetail course={course} courseTitle={courseTitle} userRole={Role.WAITLIST} links={[["Section", ""]]}>
+      <Routes>
+        <Route
+          index
+          element={
+            <>
+              <StudentSectionInfo
+                mentor={mentor}
+                spacetimes={spacetimes}
+                override={override}
+                associatedProfileId={associatedProfileId}
+              />
+              <h1>Waitlist Number</h1>
+            </>
+          }
+        />
+      </Routes>
+    </SectionDetail>
+  );
+}
+
+export function StudentSection({
   id,
   course,
   courseTitle,
