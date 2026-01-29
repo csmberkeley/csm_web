@@ -182,17 +182,20 @@ class Course(ValidatingModel):
 
     def clean(self):
         super().clean()
-        if self.section_start <= self.enrollment_start.date():
+        if (
+            self.section_start
+            <= self.enrollment_start.date()  # pylint: disable=no-member
+        ):
             raise ValidationError("section_start must be after enrollment_start")
         if self.enrollment_end <= self.enrollment_start:
             raise ValidationError("enrollment_end must be after enrollment_start")
-        if self.valid_until < self.enrollment_end.date():
+        if self.valid_until < self.enrollment_end.date():  # pylint: disable=no-member
             raise ValidationError("valid_until must be after enrollment_end")
 
         # check word of the day limit is in days
         if (
             isinstance(self.word_of_the_day_limit, datetime.timedelta)
-            and self.word_of_the_day_limit.seconds > 0
+            and self.word_of_the_day_limit.seconds > 0  # pylint: disable=no-member
         ):
             raise ValidationError("word of the day limit must be in days")
 
@@ -309,6 +312,8 @@ class Mentor(Profile):
     have a new Mentor profile.
     """
 
+    family = models.CharField(max_length=100, blank=True)
+
 
 class Coordinator(Profile):
     """
@@ -341,6 +346,16 @@ class Section(ValidatingModel):
             ' or "early start".'
         ),
     )
+
+    @property
+    def day_time(self):
+        """Get the day and time string for the first spacetime of this section."""
+        day_time = self.spacetimes.first()  # pylint: disable=no-member
+        if day_time:
+            return (
+                f"{day_time.day_of_week[:3]} {day_time.start_time.strftime('%I:%M%p')}"
+            )
+        return None
 
     # @functional.cached_property
     # def course(self):
@@ -499,9 +514,9 @@ class Spacetime(ValidatingModel):
                 year=1,
                 day=1,
                 month=1,
-                hour=self.start_time.hour,
-                minute=self.start_time.minute,
-                second=self.start_time.second,
+                hour=self.start_time.hour,  # pylint: disable=no-member
+                minute=self.start_time.minute,  # pylint: disable=no-member
+                second=self.start_time.second,  # pylint: disable=no-member
             )
             + self.duration
         ).time()
@@ -511,8 +526,12 @@ class Spacetime(ValidatingModel):
         return day_to_number(self.day_of_week)
 
     def __str__(self):
-        formatted_time = self.start_time.strftime("%I:%M %p")
-        num_minutes = int(self.duration.total_seconds() // 60)
+        formatted_time = self.start_time.strftime(  # pylint: disable=no-member
+            "%I:%M %p"
+        )
+        num_minutes = int(
+            self.duration.total_seconds() // 60  # pylint: disable=no-member
+        )
         return (
             f"{self.location} {self.day_of_week} {formatted_time} for {num_minutes} min"
         )
@@ -536,7 +555,9 @@ class Override(ValidatingModel):
         super().clean()
         if self.spacetime == self.overriden_spacetime:
             raise ValidationError("A spacetime cannot override itself")
+        # pylint: disable=no-member
         if self.spacetime.day_of_week != self.date.strftime("%A"):
+            # pylint: enable=no-member
             raise ValidationError(
                 "Day of week of spacetime and day of week of date do not match"
             )

@@ -1,0 +1,347 @@
+.coord-table table {
+  width: 100%;
+  padding: 10%;
+  border-collapse: collapse;
+}
+
+.coord-table td {
+  padding: 7px 10px 7px 0;
+  font-size: 14px;
+}
+
+.coord-table th {
+  padding: 10px 0;
+  font-size: 16px;
+  text-align: left;
+}
+
+.coord-table tr {
+  cursor: pointer;
+  border-bottom: 1px solid #ccc;
+}
+
+.coord-table .data-row:hover {
+  background-color: #f5f5f5;
+}
+
+.coord-table .search-filter input {
+  width: 100%;
+  padding: 20px 45px;
+  background-color: rgb(243 247 251);
+  border-color: rgb(226 230 240);
+  border-radius: 30px;
+}
+
+.coord-table .search-filter {
+  display: flex;
+  align-items: center;
+  justify-content: left;
+  width: 70%;
+  min-width: none;
+  max-width: none;
+}
+
+.coord-table .search-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.coord-table .search-icon {
+  margin-left: 10px;
+}
+
+/* Links inside the dropdown */
+.coord-table .dropdown-content button {
+  display: block;
+  width: 100%;
+  padding: 12px 16px;
+  margin: 0;
+  font:
+    14px Montserrat,
+    sans-serif;
+  color: black;
+  text-align: left;
+  text-decoration: none;
+  background-color: #f9f9f9;
+  border: none;
+  border-radius: 0;
+}
+
+/* Change color of dropdown links on hover */
+.coord-table .dropdown-content button:hover {
+  background-color: #f1f1f1;
+}
+
+.coord-table #table-buttons {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 15%;
+}
+
+.coord-table #table-header div {
+  font-size: 18px;
+  font-weight: 600;
+  color: rgb(68 68 68);
+}
+
+.coord-table #table-header button div {
+  font:
+    14px Garamond,
+    sans-serif;
+  font-weight: 500;
+  color: rgb(5 5 5);
+}
+
+.coord-table #table-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.coord-table #table-header button {
+  padding: 10px 25px;
+  margin-left: 10px;
+  cursor: pointer;
+  background-color: rgb(255 255 255);
+  border-color: rgb(191 193 197);
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 10px;
+}
+
+.coord-table #table-buttons .dropbtn div {
+  width: 0;
+  height: 0;
+  margin-left: 10px;
+  pointer-events: none;
+  border-top: 5px solid rgb(0 0 0);
+  border-right: 5px solid transparent;
+  border-left: 5px solid transparent;
+}
+
+.coord-table main {
+  min-height: 70vh;
+  padding: max(2%, 30px) 4%;
+  overflow: auto;
+}
+
+.coord-table .no-data {
+  padding: 20px;
+  font:
+    14px Montserrat,
+    sans-serif;
+}
+
+/* Dropdown */
+
+.coord-table .dropbtn {
+  padding: 16px;
+  font-size: 16px;
+  color: white;
+  cursor: pointer;
+  border: none;
+}
+
+.coord-table #table-buttons .dropbtn {
+  display: flex;
+  place-items: center right;
+  padding: 10px 25px;
+  margin: 0 10px;
+  font:
+    14px Garamond,
+    sans-serif;
+  font-weight: 500;
+  color: rgb(5 5 5);
+  cursor: pointer;
+  background-color: rgb(255 255 255);
+  border-color: rgb(191 193 197);
+  border-style: solid;
+  border-width: 1px;
+  border-radius: 10px;
+}
+
+.coord-table #table-buttons .dropbtn:hover {
+  background-color: rgb(241 245 250);
+}
+
+/* The container <div> - needed to position the dropdown content */
+.coord-table .dropdown {
+  position: relative;
+  display: inline-block;
+}
+
+/* Dropdown Content (Hidden by Default) */
+.coord-table .dropdown-content {
+  position: absolute;
+  z-index: 1;
+  display: none;
+  min-width: 160px;
+  background-color: #f9f9f9;
+  box-shadow: 0 8px 16px 0 rgb(0 0 0 / 20%);
+}
+
+/* Show the dropdown menu on hover */
+.coord-table .dropdown:hover .dropdown-content {
+  display: block;
+}
+
+.coord-table #table-buttons .dropbtn.using-filter {
+  background-color: #c2e7ff;
+}
+
+.coord-table #table-buttons .dropbtn.using-filter:hover {
+  background-color: #addeff;
+}
+
+.coord-table #table-buttons .dropbtn.using-filter div {
+  position: relative;
+  width: 10px;
+  height: 10px;
+  margin-left: 10px;
+  border: none;
+}
+
+#table-buttons .dropbtn.using-filter div::before,
+.coord-table #table-buttons .dropbtn.using-filter div::after {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  width: 10px;
+  height: 2px;
+  margin-top: -1px;
+  content: "";
+  background-color: rgb(0 0 0);
+}
+
+.coord-table #table-buttons .dropbtn.using-filter div::before {
+  transform: rotate(45deg);
+}
+
+.coord-table #table-buttons .dropbtn.using-filter div::after {
+  transform: rotate(-45deg);
+}
+
+.coord-table .hidden {
+  display: none !important;
+}
+
+.coord-table .checkmark {
+  display: inline-block;
+  width: 3px;
+  height: 7px;
+  margin-right: 6px;
+  border-right: 2px solid #000;
+  border-bottom: 2px solid #000;
+  transform: rotate(45deg);
+}
+
+.coord-table #success-copy {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Checkbox */
+
+.coord-table .checkbox-wrapper * {
+  box-sizing: border-box;
+  margin-top: 1px;
+}
+
+.coord-table .checkbox-wrapper .cbx {
+  display: inline-block;
+  padding: 6px 8px;
+  overflow: hidden;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.coord-table .checkbox-wrapper .cbx:not(:last-child) {
+  margin-right: 6px;
+}
+
+.coord-table .checkbox-wrapper .cbx:hover {
+  background: rgb(0 119 255 / 6%);
+}
+
+.coord-table .checkbox-wrapper .cbx span {
+  float: left;
+  vertical-align: middle;
+  transform: translate3d(0, 0, 0);
+}
+
+.coord-table .checkbox-wrapper .cbx span:first-child {
+  position: relative;
+  width: 18px;
+  height: 18px;
+  border: 1px solid #cccfdb;
+  border-radius: 4px;
+  box-shadow: 0 1px 1px rgb(0 16 75 / 5%);
+  transition: all 0.2s ease;
+  transform: scale(1);
+}
+
+.coord-table .checkbox-wrapper .cbx span:first-child svg {
+  position: absolute;
+  top: 3px;
+  left: 2px;
+  fill: none;
+  stroke: #fff;
+  stroke-dasharray: 16px;
+  stroke-dashoffset: 16px;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 2;
+  transition: all 0.3s ease;
+  transition-delay: 0.1s;
+  transform: translate3d(0, 0, 0);
+}
+
+.coord-table .checkbox-wrapper .cbx span:last-child {
+  padding-left: 8px;
+  line-height: 18px;
+}
+
+.coord-table .checkbox-wrapper .cbx:hover span:first-child {
+  border-color: #07f;
+}
+
+.coord-table .checkbox-wrapper .inp-cbx {
+  position: absolute;
+  visibility: hidden;
+}
+
+.coord-table .checkbox-wrapper .inp-cbx:checked + .cbx span:first-child {
+  background: #07f;
+  border-color: #07f;
+  animation: wave 0.4s ease;
+}
+
+.coord-table .checkbox-wrapper .inp-cbx:checked + .cbx span:first-child svg {
+  stroke-dashoffset: 0;
+}
+
+.coord-table .checkbox-wrapper .inline-svg {
+  position: absolute;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  user-select: none;
+}
+
+@media screen and (width <= 640px) {
+  .coord-table .checkbox-wrapper .cbx {
+    display: inline-block;
+    width: 100%;
+  }
+}
+
+@keyframes wave {
+  50% {
+    transform: scale(0.9);
+  }
+}

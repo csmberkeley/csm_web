@@ -13,10 +13,10 @@ env:
 jobs:
   cypress-run-chrome:
     name: Chrome tests (${{ matrix.containers }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        containers: [1, 2, 3, 4]
+        containers: [1]
     services:
       postgres:
         image: postgres:14
@@ -63,7 +63,7 @@ jobs:
 
   cypress-run-firefox:
     name: Firefox tests (${{ matrix.containers }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         containers: [1, 2, 3, 4]
