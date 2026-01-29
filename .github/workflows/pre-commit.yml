@@ -35,7 +35,7 @@ jobs:
           installer-parallel: true
       - name: Install dependencies with Poetry
         run: |
-          poetry install --no-root --with=prod --no-interaction --no-ansi
+          poetry install --no-root --no-interaction --no-ansi
           # add virtual environment to path for future steps
           echo $(poetry env info --path)/bin >> $GITHUB_PATH
       - name: Install npm dependencies

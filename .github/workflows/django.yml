@@ -40,7 +40,7 @@ jobs:
           installer-parallel: true
       - name: Install dependencies with Poetry
         run: |
-          poetry install --no-root --with=prod
+          poetry install --no-root
           # add virtual environment to path for future steps
           echo .venv/bin >> $GITHUB_PATH
       - name: Run Tests
