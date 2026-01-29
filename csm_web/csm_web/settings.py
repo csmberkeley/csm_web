@@ -317,6 +317,6 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     CSP_BLOCK_ALL_MIXED_CONTENT = True
 
     # Heroku setup
-    import django_heroku
+    import django_on_heroku
 
-    django_heroku.settings(locals(), staticfiles=False)
+    django_on_heroku.settings(locals(), staticfiles=False)
