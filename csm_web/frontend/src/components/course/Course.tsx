@@ -116,7 +116,10 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
 
   let currDaySections = sections && sections[currDayGroup];
   if (currDaySections && !showUnavailable) {
-    currDaySections = currDaySections.filter(({ numStudentsEnrolled, capacity }) => numStudentsEnrolled < capacity);
+    currDaySections = currDaySections.filter(
+      ({ numStudentsEnrolled, capacity, numStudentsWaitlisted, waitlistCapacity }) =>
+        numStudentsEnrolled < capacity || numStudentsWaitlisted < waitlistCapacity
+    );
   }
 
   const enrollmentDate =

@@ -6,7 +6,7 @@ import { useSection } from "../../utils/queries/sections";
 import { Override, Role, Spacetime } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
 import MentorSection from "./MentorSection";
-import StudentSection from "./StudentSection";
+import { WaitlistStudentSection, StudentSection } from "./StudentSection";
 
 import scssColors from "../../css/base/colors-export.module.scss";
 import "../../css/section.scss";
@@ -22,13 +22,15 @@ export default function Section(): React.ReactElement | null {
     }
     return <LoadingSpinner className="spinner-centered" />;
   }
-
+  console.log(section);
   switch (section.userRole) {
     case Role.COORDINATOR:
     case Role.MENTOR:
       return <MentorSection {...section} />;
     case Role.STUDENT:
       return <StudentSection {...section} />;
+    case Role.WAITLIST:
+      return <WaitlistStudentSection {...section} />;
     default:
       return null;
   }

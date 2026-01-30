@@ -35,7 +35,7 @@ from .utils import (
 )
 
 
-def add_student(section, user):
+def add_student(section, user):  # make this endpoint for only adding as a student
     """
     Helper Function:
 
@@ -55,7 +55,7 @@ def add_student(section, user):
             status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
-    # Check that the section is not full
+    # Check that the section is not full, wouldn't we want that to allow that
     if section.is_section_full:
         logger.warning(
             "<Enrollment:Failure> User %s was unable to enroll in Section %s"
@@ -83,6 +83,7 @@ def add_student(section, user):
             f" {student_queryset.all()}))",
             code=status.HTTP_500_INTERNAL_SERVER_ERROR,
         )
+
     if student_queryset.count() == 1:
         student = student_queryset.get()
         old_section = student.section
@@ -104,17 +105,23 @@ def add_student(section, user):
             log_str(student.user),
             log_str(section),
         )
-        student.save()
         logger.info(
-            "<Enrollment:Success> User %s swapped into Section %s from Section %s",
+            "<Enrollment:Pending> User %s swapping into Section %s from Section %s",
             log_str(student.user),
             log_str(section),
             log_str(old_section),
         )
-        return Response(status=status.HTTP_204_NO_CONTENT)
+    else:
+        student = Student.objects.create(
+            user=user, section=section, course=section.mentor.course
+        )
 
-    student = Student.objects.create(
-        user=user, section=section, course=section.mentor.course
+    student.save()
+
+    logger.info(
+        "<Enrollment:Success> User %s enrolled in Section %s",
+        log_str(student.user),
+        log_str(section),
     )
 
     # Removes all waitlists the student that added was a part of
@@ -128,10 +135,11 @@ def add_student(section, user):
         waitlist.save()
 
     logger.info(
-        "<Enrollment:Success> User %s enrolled in Section %s",
-        log_str(student.user),
-        log_str(section),
+        "<Enrollment:Success> User %s removed from all Waitlists for Course %s",
+        log_str(user),
+        log_str(student.course),
     )
+
     return Response({"id": student.id}, status=status.HTTP_201_CREATED)
 
 
@@ -201,6 +209,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 Q(mentor__user=self.request.user)
                 | Q(students__user=self.request.user)
                 | Q(mentor__course__coordinator__user=self.request.user)
+                | Q(waitlist_set__user=self.request.user)
             )
             .distinct()
         )

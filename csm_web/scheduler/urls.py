@@ -26,5 +26,6 @@ urlpatterns += [
     path("waitlist/<int:pk>/add/", views.waitlistedStudent.add),
     path("waitlist/<int:pk>/drop/", views.waitlistedStudent.drop),
     path("waitlist/<int:pk>/", views.waitlistedStudent.view),
+    path("waitlist/<int:pk>/coordadd/", views.waitlistedStudent.add_by_coord),
     path("export/", views.export_data),
 ]

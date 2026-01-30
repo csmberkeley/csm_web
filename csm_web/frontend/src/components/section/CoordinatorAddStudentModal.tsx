@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useUserEmails } from "../../utils/queries/base";
-import { useEnrollStudentMutation } from "../../utils/queries/sections";
+import { useEnrollStudentMutation, useCoordEnrollStudentToWaitlistMutation } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 
@@ -22,6 +22,10 @@ enum CoordModalStates {
 interface CoordinatorAddStudentModalProps {
   closeModal: (arg0?: boolean) => void;
   sectionId: number;
+  title: string;
+  mutation: (
+    sectionId: number
+  ) => ReturnType<typeof useEnrollStudentMutation> | ReturnType<typeof useCoordEnrollStudentToWaitlistMutation>;
 }
 
 interface RequestType {
@@ -50,10 +54,12 @@ interface ActionType {
 
 export function CoordinatorAddStudentModal({
   closeModal,
-  sectionId
+  sectionId,
+  title,
+  mutation
 }: CoordinatorAddStudentModalProps): React.ReactElement {
   const { data: userEmails, isSuccess: userEmailsLoaded } = useUserEmails();
-  const enrollStudentMutation = useEnrollStudentMutation(sectionId);
+  const enrollMutation = mutation(sectionId);
 
   const [emailsToAdd, setEmailsToAdd] = useState<string[]>([""]);
   const [response, setResponse] = useState<ResponseType>({} as ResponseType);
@@ -127,8 +133,8 @@ export function CoordinatorAddStudentModal({
       request.actions["capacity"] = responseActions.get("capacity") as string;
     }
 
-    enrollStudentMutation.mutate(request, {
-      onError: ({ status, json }) => {
+    enrollMutation.mutate(request, {
+      onError: ({ status, json }: { status: number; json: any }) => {
         if (status === 500) {
           // internal error
           setResponse({
@@ -182,7 +188,7 @@ export function CoordinatorAddStudentModal({
 
   const initial_component = (
     <React.Fragment>
-      <h2>Add new students</h2>
+      <h2>Add new {title}</h2>
       <div className="coordinator-email-content">
         <div className="coordinator-email-input-list">
           {emailsToAdd.map((email, index) => (
