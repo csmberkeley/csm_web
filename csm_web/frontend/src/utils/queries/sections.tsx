@@ -480,6 +480,18 @@ interface EnrollStudentMutationResponse {
   };
 }
 
+function normalizeEnrollError(response: Response, payload: any) {
+  if (!payload) {
+    return { errors: { critical: `Request failed (${response.status}).` } };
+  }
+
+  if (payload.detail && !payload.errors && !payload.progress) {
+    return { errors: { critical: payload.detail } };
+  }
+
+  return payload;
+}
+
 /**
  * Enroll a list of students into a given section.
  *
@@ -499,7 +511,13 @@ export const useEnrollStudentMutation = (
       if (response.ok) {
         return;
       } else {
-        throw { status: response.status, json: await response.json() };
+        let payload = null;
+        try {
+          payload = await response.json();
+        } catch (error) {
+          payload = null;
+        }
+        throw { status: response.status, json: normalizeEnrollError(response, payload) };
       }
     },
     {
@@ -533,7 +551,13 @@ export const useCoordEnrollStudentToWaitlistMutation = (
       if (response.ok) {
         return;
       } else {
-        throw { status: response.status, json: await response.json() };
+        let payload = null;
+        try {
+          payload = await response.json();
+        } catch (error) {
+          payload = null;
+        }
+        throw { status: response.status, json: normalizeEnrollError(response, payload) };
       }
     },
     {

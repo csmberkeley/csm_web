@@ -143,6 +143,48 @@ def add_student(section, user):  # make this endpoint for only adding as a stude
     return Response({"id": student.id}, status=status.HTTP_201_CREATED)
 
 
+def swap_from_waitlist(section, user):
+    """
+    Helper Function:
+
+    Swaps a waitlisted student into a new section by dropping their current
+    section enrollment first if needed.
+    """
+    active_student = user.student_set.filter(
+        active=True, course=section.mentor.course
+    ).first()
+
+    old_section_id = None
+    if active_student is not None:
+        if active_student.section == section:
+            raise PermissionDenied("User is already enrolled in this section")
+
+        # drop from current section
+        old_section = active_student.section
+        old_section_id = old_section.id
+        active_student.active = False
+        active_student.save()
+
+    try:
+        add_student(section, user)
+    except PermissionDenied:
+        if active_student is not None:
+            active_student.active = True
+            active_student.save()
+        raise
+
+    if active_student is not None:
+        now = timezone.now().astimezone(timezone.get_default_timezone())
+        active_student.attendance_set.filter(
+            Q(
+                sectionOccurrence__date__gte=now.date(),
+                sectionOccurrence__section=old_section,
+            )
+        ).delete()
+
+    return old_section_id
+
+
 def add_from_waitlist(pk):
     """
     Helper function for adding from waitlist. Called by drop user api
@@ -156,29 +198,52 @@ def add_from_waitlist(pk):
     """
     # Finds section and waitlist student, searches for position
     # (manually inserted student) then timestamp
-    section = Section.objects.get(pk=pk)
-    waitlisted_student = (
-        WaitlistedStudent.objects.filter(active=True, section=section)
-        .order_by("position", "timestamp")
-        .first()
-    )
-
-    # Check if there are waitlisted students
-    if not waitlisted_student:
-        logger.info(
-            "<Waitlist:Skipped> No waitlist users for section %s",
-            log_str(section),
+    cascade_section_id = None
+    response = None
+    with transaction.atomic():
+        section = Section.objects.select_for_update().get(pk=pk)
+        waitlisted_students = list(
+            WaitlistedStudent.objects.select_for_update()
+            .filter(active=True, section=section)
+            .order_by("position", "timestamp")
         )
-        return Response(status=status.HTTP_204_NO_CONTENT)
 
-    # Adds the student
-    add_student(waitlisted_student.section, waitlisted_student.user)
-    logger.info(
-        "<Enrollment:Success> User %s removed from all Waitlists for Course %s",
-        log_str(waitlisted_student.user),
-        log_str(waitlisted_student.course),
-    )
-    return Response(status=status.HTTP_201_CREATED)
+        # Check if there are waitlisted students
+        if not waitlisted_students:
+            logger.info(
+                "<Waitlist:Skipped> No waitlist users for section %s",
+                log_str(section),
+            )
+            response = Response(status=status.HTTP_204_NO_CONTENT)
+            return response
+
+        for waitlisted_student in waitlisted_students:
+            try:
+                cascade_section_id = swap_from_waitlist(
+                    waitlisted_student.section, waitlisted_student.user
+                )
+            except PermissionDenied:
+                continue
+
+            logger.info(
+                "<Enrollment:Success> User %s removed from all Waitlists for Course %s",
+                log_str(waitlisted_student.user),
+                log_str(waitlisted_student.course),
+            )
+            response = Response(status=status.HTTP_201_CREATED)
+            break
+
+        if response is None:
+            logger.info(
+                "<Waitlist:Skipped> No eligible waitlist users for section %s",
+                log_str(section),
+            )
+            response = Response(status=status.HTTP_204_NO_CONTENT)
+
+    if cascade_section_id is not None:
+        add_from_waitlist(pk=cascade_section_id)
+
+    return response
 
 
 class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):

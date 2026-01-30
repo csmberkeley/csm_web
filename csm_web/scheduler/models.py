@@ -75,6 +75,21 @@ class User(AbstractUser):
             is_valid_enrollment_time = course.is_open()
         return is_valid_enrollment_time and not is_associated
 
+    def can_waitlist_in_course(self, course, bypass_enrollment_time=False):
+        """Determine whether this user is allowed to waitlist in the given course."""
+        # check restricted first
+        if course.is_restricted and not self.is_whitelisted_for(course):
+            return False
+
+        if bypass_enrollment_time:
+            return True
+
+        if self.priority_enrollment:
+            now = timezone.now().astimezone(timezone.get_default_timezone())
+            return self.priority_enrollment < now < course.enrollment_end
+
+        return course.is_open()
+
     def can_enroll_in_waitlist(self, course):
         """Determine whether this user is allowed to waitlist in the given course."""
         return (
