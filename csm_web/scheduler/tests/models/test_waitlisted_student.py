@@ -89,8 +89,8 @@ def test_user_cannot_enroll_in_course(setup_waitlist, client):
 @pytest.mark.django_db
 def test_user_can_waitlist_only_once(setup_waitlist, client):
     """
-    Given a section that is full,
-    When a user attempts to enroll directly,
+    Given a user already on the waitlist for a section,
+    When they attempt to join the same waitlist again,
     Then they are denied with an appropriate error.
     """
     _, waitlisted_student_user, _, section = setup_waitlist
@@ -436,7 +436,7 @@ def test_user_drops_themselves_successfully(setup_waitlist, client):
     client.force_login(waitlisted_student_user)
     response = client.patch(f"/api/waitlist/{waitlisted_student.pk}/drop/")
 
-    assert response.status_code == 204  # Unsure why 200 is returned
+    assert response.status_code == 204
     waitlisted_student.refresh_from_db()
     assert waitlisted_student.active is False
 
@@ -698,3 +698,183 @@ def test_waitlist_count_endpoint(client):
 
     assert response.status_code == 200
     assert int(response.content.decode("utf-8")) == 1
+
+
+@pytest.mark.django_db
+def test_position_endpoint_returns_rank(client):
+    """
+    Given a waitlist with gaps in position numbers,
+    When a user requests their position,
+    Then the endpoint returns the 1-indexed rank (count of active students
+    with lower positions + 1), not the raw position value.
+    """
+    course = CourseFactory.create()
+    mentor_user = UserFactory.create()
+    mentor = MentorFactory.create(course=course, user=mentor_user)
+    section = SectionFactory.create(mentor=mentor, capacity=1, waitlist_capacity=5)
+
+    # Fill the section so users are forced onto the waitlist
+    filler_user = UserFactory.create()
+    Student.objects.create(user=filler_user, course=course, section=section)
+
+    # Create 3 waitlisted students (positions 1, 2, 3)
+    user1 = UserFactory.create()
+    WaitlistedStudent.objects.create(user=user1, course=course, section=section)
+    user2 = UserFactory.create()
+    ws2 = WaitlistedStudent.objects.create(user=user2, course=course, section=section)
+    user3 = UserFactory.create()
+    WaitlistedStudent.objects.create(user=user3, course=course, section=section)
+
+    # Verify initial ranks
+    client.force_login(user1)
+    response = client.get(f"/api/waitlist/{section.pk}/position/")
+    assert response.status_code == 200
+    assert response.data["position"] == 1
+
+    client.force_login(user3)
+    response = client.get(f"/api/waitlist/{section.pk}/position/")
+    assert response.status_code == 200
+    assert response.data["position"] == 3
+
+    # Drop user2 — creates a gap (positions 1, _, 3)
+    ws2.active = False
+    ws2.save()
+
+    # user3's rank should now be 2 (only user1 has a lower position)
+    client.force_login(user3)
+    response = client.get(f"/api/waitlist/{section.pk}/position/")
+    assert response.status_code == 200
+    assert response.data["position"] == 2
+
+    # A user not on the waitlist gets 404
+    non_waitlisted = UserFactory.create()
+    client.force_login(non_waitlisted)
+    response = client.get(f"/api/waitlist/{section.pk}/position/")
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_coord_add_success_and_mixed_results(client):
+    """
+    Given a coordinator adding students by email,
+    When some emails succeed and some are already enrolled,
+    Then the response reports per-email status and returns 422 on errors.
+    """
+    course = CourseFactory.create()
+    mentor_user = UserFactory.create()
+    mentor = MentorFactory.create(course=course, user=mentor_user)
+    section = SectionFactory.create(mentor=mentor, capacity=2, waitlist_capacity=3)
+
+    coord_user = UserFactory.create()
+    CoordinatorFactory.create(user=coord_user, course=course)
+
+    # Successful add — section has room, so user gets enrolled
+    client.force_login(coord_user)
+    response = client.put(
+        f"/api/waitlist/{section.pk}/coordadd/",
+        data={"emails": [{"email": "new_student@berkeley.edu"}]},
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+
+    # Add the same email again — should conflict
+    client.force_login(coord_user)
+    response = client.put(
+        f"/api/waitlist/{section.pk}/coordadd/",
+        data={"emails": [{"email": "new_student@berkeley.edu"}]},
+        content_type="application/json",
+    )
+    assert response.status_code == 422
+    assert response.data["progress"][0]["status"] == "CONFLICT"
+
+    # Mixed batch — one new, one duplicate
+    client.force_login(coord_user)
+    response = client.put(
+        f"/api/waitlist/{section.pk}/coordadd/",
+        data={
+            "emails": [
+                {"email": "another_student@berkeley.edu"},
+                {"email": "new_student@berkeley.edu"},
+            ]
+        },
+        content_type="application/json",
+    )
+    assert response.status_code == 422
+    statuses = [r["status"] for r in response.data["progress"]]
+    assert statuses == ["OK", "CONFLICT"]
+
+    # Empty emails returns 422
+    client.force_login(coord_user)
+    response = client.put(
+        f"/api/waitlist/{section.pk}/coordadd/",
+        data={"emails": []},
+        content_type="application/json",
+    )
+    assert response.status_code == 422
+
+
+@pytest.mark.django_db
+def test_view_waitlist_permissions(client):
+    """
+    Given a section with a waitlist,
+    When different users request the waitlist view,
+    Then only the mentor and coordinators are allowed to see it.
+    """
+    course = CourseFactory.create()
+    mentor_user = UserFactory.create()
+    mentor = MentorFactory.create(course=course, user=mentor_user)
+    section = SectionFactory.create(mentor=mentor, capacity=1, waitlist_capacity=3)
+
+    # Fill section so next user gets waitlisted
+    filler_user = UserFactory.create()
+    Student.objects.create(user=filler_user, course=course, section=section)
+
+    waitlisted_user = UserFactory.create()
+    WaitlistedStudent.objects.create(
+        user=waitlisted_user, course=course, section=section
+    )
+
+    # Mentor can view
+    client.force_login(mentor_user)
+    response = client.get(f"/api/waitlist/{section.pk}/")
+    assert response.status_code == 200
+    assert len(response.data) == 1
+
+    # Coordinator can view
+    coord_user = UserFactory.create()
+    CoordinatorFactory.create(user=coord_user, course=course)
+    client.force_login(coord_user)
+    response = client.get(f"/api/waitlist/{section.pk}/")
+    assert response.status_code == 200
+    assert len(response.data) == 1
+
+    # Random user cannot view
+    random_user = UserFactory.create()
+    client.force_login(random_user)
+    response = client.get(f"/api/waitlist/{section.pk}/")
+    assert response.status_code == 403
+
+
+@pytest.mark.django_db
+def test_drop_preserves_position():
+    """
+    Given a waitlisted student with an assigned position,
+    When they are dropped,
+    Then the position value is preserved (not cleared to None).
+    """
+    course = CourseFactory.create()
+    mentor_user = UserFactory.create()
+    mentor = MentorFactory.create(course=course, user=mentor_user)
+    section = SectionFactory.create(mentor=mentor, capacity=5, waitlist_capacity=5)
+
+    user = UserFactory.create()
+    ws = WaitlistedStudent.objects.create(user=user, course=course, section=section)
+    ws.refresh_from_db()
+    assert ws.position == 1
+
+    ws.active = False
+    ws.save()
+    ws.refresh_from_db()
+
+    assert ws.active is False
+    assert ws.position == 1  # position preserved, not cleared
