@@ -13,10 +13,10 @@ env:
 jobs:
   cypress-run-chrome:
     name: Chrome tests (${{ matrix.containers }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
-        containers: [1, 2, 3, 4]
+        containers: [1]
     services:
       postgres:
         image: postgres:14
@@ -36,7 +36,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r ci/requirements.txt
       - name: Install npm dependencies
         run: |
           npm ci
@@ -63,7 +63,7 @@ jobs:
 
   cypress-run-firefox:
     name: Firefox tests (${{ matrix.containers }})
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     strategy:
       matrix:
         containers: [1, 2, 3, 4]
@@ -86,7 +86,7 @@ jobs:
       - name: Install Python dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install -r requirements.txt
+          pip install -r ci/requirements.txt
       - name: Install npm dependencies
         run: |
           npm ci

@@ -12,7 +12,7 @@ export const SearchBar = ({ className, refObject, onChange }: SearchBarProps) =>
   return (
     <div className={`search-bar ${className ?? ""}`}>
       <SearchIcon className="search-icon" />
-      <input className="search-input" type="text" ref={refObject} onChange={onChange} />
+      <input placeholder="Search..." className="search-input" type="text" ref={refObject} onChange={onChange} />
     </div>
   );
 };

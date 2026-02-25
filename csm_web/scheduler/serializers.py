@@ -86,6 +86,10 @@ def make_omittable(field_class, omit_key, *args, predicate=None, **kwargs):
 
 
 class OverrideReadOnlySerializer(serializers.ModelSerializer):
+    """
+    Serializer for read-only access to overrides
+    """
+
     spacetime = serializers.SerializerMethodField()
     date = serializers.DateField(format="%b. %-d")
 
@@ -103,6 +107,10 @@ class OverrideReadOnlySerializer(serializers.ModelSerializer):
 
 
 class SpacetimeSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Spacetime objects
+    """
+
     duration = serializers.SerializerMethodField()
     day_of_week = serializers.SerializerMethodField()
     location = make_omittable(
@@ -137,6 +145,10 @@ class SpacetimeSerializer(serializers.ModelSerializer):
 
 
 class CourseSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Course objects
+    """
+
     enrollment_open = serializers.SerializerMethodField()
     user_can_enroll = serializers.SerializerMethodField()
 
@@ -172,6 +184,10 @@ class CourseSerializer(serializers.ModelSerializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    """
+    Serializer for User objects
+    """
+
     class Meta:
         model = User
         fields = ("id", "email", "first_name", "last_name", "priority_enrollment")
@@ -248,6 +264,10 @@ class AttendanceSerializer(serializers.ModelSerializer):
 
 
 class StudentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Student objects
+    """
+
     email = serializers.EmailField(source="user.email")
     attendances = AttendanceSerializer(source="attendance_set", many=True)
 
@@ -264,7 +284,69 @@ class WaitlistedStudentSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "email", "section", "position")
 
 
+class CoordStudentSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the coordinator view of students
+    """
+
+    email = serializers.EmailField(source="user.email")
+    mentor_name = serializers.CharField(source="section.mentor.name")
+    num_unexcused = serializers.SerializerMethodField()
+    day_time = serializers.CharField(source="section.day_time")
+
+    def get_num_unexcused(self, obj):
+        """
+        Count the number of unexcused absences for the student
+        """
+        return obj.attendance_set.filter(presence="UN").count()
+
+    class Meta:
+        model = Student
+        fields = (
+            "id",
+            "name",
+            "email",
+            "num_unexcused",
+            "section",
+            "mentor_name",
+            "day_time",
+        )
+
+
+class CoordMentorSerializer(serializers.ModelSerializer):
+    """
+    Serializer for the coordinator view of mentors
+    """
+
+    email = serializers.EmailField(source="user.email")
+    num_students = serializers.SerializerMethodField()
+    day_time = serializers.CharField(source="section.day_time")
+
+    def get_num_students(self, obj):
+        """
+        Get the number of students in the section
+        """
+        students = obj.section.students.filter(active=True)
+        return students.count()
+
+    class Meta:
+        model = Mentor
+        fields = (
+            "id",
+            "name",
+            "email",
+            "num_students",
+            "section",
+            "family",
+            "day_time",
+        )
+
+
 class SectionSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Section objects
+    """
+
     spacetimes = SpacetimeSerializer(many=True)
     num_students_enrolled = serializers.SerializerMethodField()
     mentor = MentorSerializer()
@@ -342,12 +424,20 @@ class SectionSerializer(serializers.ModelSerializer):
 
 
 class WorksheetSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Worksheet objects
+    """
+
     class Meta:
         model = Worksheet
         fields = ["id", "name", "resource", "worksheet_file", "solution_file"]
 
 
 class LinkSerializer(serializers.ModelSerializer):
+    """
+    Serializer for Link objects
+    """
+
     class Meta:
         model = Link
         fields = ["id", "name", "resource", "url"]
