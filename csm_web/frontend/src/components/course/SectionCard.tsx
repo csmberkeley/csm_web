@@ -2,12 +2,13 @@ import React, { useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 
 import { formatSpacetimeInterval } from "../../utils/datetime";
+import { useProfiles } from "../../utils/queries/base";
 import {
   EnrollUserMutationResponse,
   useEnrollUserMutation,
   useEnrollStudentToWaitlistMutation
 } from "../../utils/queries/sections";
-import { Mentor, Spacetime } from "../../utils/types";
+import { Mentor, Role, Spacetime } from "../../utils/types";
 import Modal, { ModalCloser } from "../Modal";
 
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
@@ -29,6 +30,7 @@ interface SectionCardProps {
   courseOpen: boolean;
   numStudentsWaitlisted: number;
   waitlistCapacity: number;
+  courseId: number;
 }
 
 export const SectionCard = ({
@@ -41,7 +43,8 @@ export const SectionCard = ({
   userIsCoordinator,
   courseOpen,
   numStudentsWaitlisted,
-  waitlistCapacity
+  waitlistCapacity,
+  courseId
 }: SectionCardProps): React.ReactElement => {
   /**
    * Mutation to enroll a student in the section.
@@ -51,6 +54,8 @@ export const SectionCard = ({
    * Mutation to enroll a student in the section's waitlist.
    */
   const enrollStudentWaitlistMutation = useEnrollStudentToWaitlistMutation(id);
+
+  const { data: profiles } = useProfiles();
 
   /**
    * Whether to show the modal (after an attempt to enroll).
@@ -64,6 +69,37 @@ export const SectionCard = ({
    * The error message if the enrollment failed.
    */
   const [errorMessage, setErrorMessage] = useState<string>("");
+  /**
+   * Whether to show the swap/waitlist confirmation modal.
+   */
+  const [showSwapConfirm, setShowSwapConfirm] = useState<boolean>(false);
+  /**
+   * Whether the pending action is a waitlist join (vs direct enroll).
+   */
+  const [pendingIsWaitlist, setPendingIsWaitlist] = useState<boolean>(false);
+
+  /**
+   * Check if the user is already enrolled in another section of this course.
+   */
+  const isAlreadyEnrolled = profiles?.some(p => p.courseId === courseId && p.role === Role.STUDENT) ?? false;
+
+  /**
+   * Perform the actual mutation (enroll or waitlist).
+   */
+  const performEnroll = (useWaitlist: boolean) => {
+    const mutation = useWaitlist ? enrollStudentWaitlistMutation : enrollStudentMutation;
+    mutation.mutate(undefined, {
+      onSuccess: () => {
+        setEnrollmentSuccessful(true);
+        setShowModal(true);
+      },
+      onError: ({ detail }: EnrollUserMutationResponse) => {
+        setEnrollmentSuccessful(false);
+        setErrorMessage(detail);
+        setShowModal(true);
+      }
+    });
+  };
 
   /**
    * Handle enrollment in the section.
@@ -79,19 +115,15 @@ export const SectionCard = ({
     // Determine if we should use waitlist mutation (enrolled capacity is full but waitlist is not full)
     const isEnrolledFull = numStudentsEnrolled >= capacity;
     const shouldUseWaitlist = isEnrolledFull && numStudentsWaitlisted < waitlistCapacity;
-    const mutation = shouldUseWaitlist ? enrollStudentWaitlistMutation : enrollStudentMutation;
 
-    mutation.mutate(undefined, {
-      onSuccess: () => {
-        setEnrollmentSuccessful(true);
-        setShowModal(true);
-      },
-      onError: ({ detail }: EnrollUserMutationResponse) => {
-        setEnrollmentSuccessful(false);
-        setErrorMessage(detail);
-        setShowModal(true);
-      }
-    });
+    // If user is already enrolled in another section, show a confirmation warning
+    if (isAlreadyEnrolled) {
+      setPendingIsWaitlist(shouldUseWaitlist);
+      setShowSwapConfirm(true);
+      return;
+    }
+
+    performEnroll(shouldUseWaitlist);
   };
 
   /**
@@ -149,6 +181,43 @@ export const SectionCard = ({
 
   return (
     <React.Fragment>
+      {showSwapConfirm && (
+        <Modal closeModal={() => setShowSwapConfirm(false)}>
+          <div className="enroll-confirm-modal-contents">
+            {pendingIsWaitlist ? (
+              <>
+                <h3>Join waitlist?</h3>
+                <p style={{ margin: "0.5em 1.5em", textAlign: "center" }}>
+                  You are currently enrolled in another section of this course. When a spot opens up on this waitlist,
+                  you will be <strong>automatically dropped</strong> from your current section and enrolled in this one.
+                </p>
+              </>
+            ) : (
+              <>
+                <h3>Switch sections?</h3>
+                <p style={{ margin: "0.5em 1.5em", textAlign: "center" }}>
+                  You are currently enrolled in another section of this course. Enrolling here will{" "}
+                  <strong>drop you from your current section</strong> and enroll you in this one.
+                </p>
+              </>
+            )}
+            <div style={{ display: "flex", gap: "1em", marginTop: "1em" }}>
+              <button className="secondary-btn" onClick={() => setShowSwapConfirm(false)}>
+                Cancel
+              </button>
+              <button
+                className="primary-btn"
+                onClick={() => {
+                  setShowSwapConfirm(false);
+                  performEnroll(pendingIsWaitlist);
+                }}
+              >
+                Confirm
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
       {showModal && <Modal closeModal={closeModal}>{modalContents()}</Modal>}
       <section className={`section-card ${isFull ? "full" : ""}`}>
         <div className="section-card-contents">

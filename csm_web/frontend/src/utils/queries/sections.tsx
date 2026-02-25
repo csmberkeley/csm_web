@@ -458,6 +458,56 @@ export const useEnrollStudentToWaitlistMutation = (
   return mutationResult;
 };
 
+/**
+ * Hook to get the current user's waitlist position for a section.
+ *
+ * Returns { position: number } where position is 1-indexed rank.
+ */
+export const useWaitlistPosition = (sectionId: number): UseQueryResult<{ position: number }, ServerError> => {
+  const queryResult = useQuery<{ position: number }, Error>(
+    ["waitlist", sectionId, "position"],
+    async () => {
+      const response = await fetchNormalized(`/waitlist/${sectionId}/position`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to fetch waitlist position for section ${sectionId}`);
+      }
+    },
+    { retry: handleRetry }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+
+/**
+ * Hook to drop the current user from a waitlist.
+ *
+ * Uses the waitlisted student profile ID (associatedProfileId when role is WAITLIST).
+ */
+export const useDropWaitlistMutation = (waitlistedStudentId: number) => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, ServerError, void>(
+    async () => {
+      const response = await fetchWithMethod(`waitlist/${waitlistedStudentId}/drop`, HTTP_METHODS.PATCH);
+      if (!response.ok) {
+        throw new ServerError(`Failed to drop from waitlist`);
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["sections"]);
+        queryClient.invalidateQueries(["waitlist"]);
+        queryClient.invalidateQueries(["profiles"]);
+      }
+    }
+  );
+
+  return mutationResult;
+};
+
 interface EnrollStudentMutationRequest {
   emails: Array<{ [email: string]: string }>;
   actions: {

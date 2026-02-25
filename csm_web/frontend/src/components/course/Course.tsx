@@ -205,6 +205,7 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
               key={section.id}
               userIsCoordinator={userIsCoordinator}
               courseOpen={course.enrollmentOpen}
+              courseId={course.id}
               {...section}
             />
           ))

@@ -303,6 +303,9 @@ export function CoordinatorAddStudentModal({
                       conflictDetail = "User is already a coordinator for the course!";
                     } else if (email_obj.detail.reason === "mentor") {
                       conflictDetail = "User is already a mentor for the course!";
+                    } else {
+                      // display the reason string directly (e.g. from waitlist coord-add)
+                      conflictDetail = email_obj.detail.reason;
                     }
                     drop_disabled = true;
                   } else if (email_obj.detail.section.id == sectionId) {

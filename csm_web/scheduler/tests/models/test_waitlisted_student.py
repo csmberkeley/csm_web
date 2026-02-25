@@ -515,8 +515,9 @@ def test_user_drops_from_nonexistent_waitlisted_student(setup_waitlist, client):
 def test_positions_update_properly():
     """
     Given a waitlist with existing students,
-    When a coordinator adds a student on the waitlist at a certain position,
-    The waitlist students have the correct order.
+    When new students are added and dropped,
+    Positions are auto-assigned as max+1 and gaps are left after drops
+    (rank is computed at query time, not by compacting).
     """
     course = CourseFactory.create()
     mentor_user = UserFactory.create()
@@ -539,21 +540,22 @@ def test_positions_update_properly():
     assert ws2.position == 2
     assert ws3.position == 3
 
-    # Insert a new student at position 2, should shift ws2 -> 3 and ws3 -> 4
-    user4 = UserFactory.create()
-    ws4 = WaitlistedStudent.objects.create(
-        user=user4, course=course, section=section, position=2
-    )
+    # Drop ws2; positions are NOT compacted — ws1 stays 1, ws3 stays 3
+    ws2.active = False
+    ws2.save()
 
     ws1.refresh_from_db()
-    ws2.refresh_from_db()
     ws3.refresh_from_db()
-    ws4.refresh_from_db()
 
     assert ws1.position == 1
-    assert ws4.position == 2
-    assert ws2.position == 3
-    assert ws3.position == 4
+    assert ws3.position == 3
+
+    # Add a new student; should get max(1,3) + 1 = 4
+    user4 = UserFactory.create()
+    ws4 = WaitlistedStudent.objects.create(user=user4, course=course, section=section)
+    ws4.refresh_from_db()
+
+    assert ws4.position == 4
 
 
 @pytest.mark.django_db

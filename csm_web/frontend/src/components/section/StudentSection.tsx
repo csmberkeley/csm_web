@@ -5,8 +5,10 @@ import { Navigate, Route, Routes } from "react-router-dom";
 import { DEFAULT_TIMEZONE } from "../../utils/datetime";
 import {
   useDropUserMutation,
+  useDropWaitlistMutation,
   useStudentAttendances,
-  useStudentSubmitWordOfTheDayMutation
+  useStudentSubmitWordOfTheDayMutation,
+  useWaitlistPosition
 } from "../../utils/queries/sections";
 import { AttendancePresence, Mentor, Override, Role, Spacetime } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
@@ -39,6 +41,8 @@ export function WaitlistStudentSection({
   override,
   associatedProfileId
 }: StudentSectionType) {
+  const { data: positionData, isSuccess: positionLoaded } = useWaitlistPosition(id);
+
   return (
     <SectionDetail course={course} courseTitle={courseTitle} userRole={Role.WAITLIST} links={[["Section", ""]]}>
       <Routes>
@@ -51,8 +55,17 @@ export function WaitlistStudentSection({
                 spacetimes={spacetimes}
                 override={override}
                 associatedProfileId={associatedProfileId}
+                isWaitlisted
               />
-              <h1>Waitlist Number</h1>
+              <div className="section-info-cards-container">
+                <InfoCard title="Waitlist Position">
+                  {positionLoaded ? <h5>You are #{positionData.position} on the waitlist</h5> : <LoadingSpinner />}
+                  <p style={{ fontSize: "0.85em", color: "#666", marginTop: "0.5em" }}>
+                    You will be automatically enrolled when a spot opens up.
+                  </p>
+                </InfoCard>
+                <DropWaitlist profileId={associatedProfileId} />
+              </div>
             </>
           }
         />
@@ -106,13 +119,14 @@ interface StudentSectionInfoProps {
   spacetimes: Spacetime[];
   override?: Override;
   associatedProfileId: number;
+  isWaitlisted?: boolean;
 }
 
 // eslint-disable-next-line no-unused-vars
-function StudentSectionInfo({ mentor, spacetimes, associatedProfileId }: StudentSectionInfoProps) {
+function StudentSectionInfo({ mentor, spacetimes, associatedProfileId, isWaitlisted }: StudentSectionInfoProps) {
   return (
     <React.Fragment>
-      <h3 className="section-detail-page-title">My Section</h3>
+      <h3 className="section-detail-page-title">{isWaitlisted ? "My Waitlisted Section" : "My Section"}</h3>
       <div className="section-info-cards-container">
         {mentor && (
           <InfoCard title="Mentor">
@@ -129,7 +143,7 @@ function StudentSectionInfo({ mentor, spacetimes, associatedProfileId }: Student
             override={override}
           />
         ))}
-        <DropSection profileId={associatedProfileId} />
+        {!isWaitlisted && <DropSection profileId={associatedProfileId} />}
       </div>
     </React.Fragment>
   );
@@ -181,6 +195,52 @@ function DropSection({ profileId }: DropSectionProps) {
         </Modal>
       );
     case DropSectionStage.DROPPED:
+      return <Navigate to="/" />;
+  }
+}
+
+enum DropWaitlistStage {
+  INITIAL = "INITIAL",
+  CONFIRM = "CONFIRM",
+  DROPPED = "DROPPED"
+}
+
+function DropWaitlist({ profileId }: DropSectionProps) {
+  const waitlistDropMutation = useDropWaitlistMutation(profileId);
+  const [stage, setStage] = useState<DropWaitlistStage>(DropWaitlistStage.INITIAL);
+
+  const performDrop = () => {
+    waitlistDropMutation.mutate(undefined, {
+      onSuccess: () => {
+        setStage(DropWaitlistStage.DROPPED);
+      }
+    });
+  };
+
+  switch (stage) {
+    case DropWaitlistStage.INITIAL:
+      return (
+        <InfoCard title="Leave Waitlist" showTitle={false}>
+          <h5>Leave Waitlist</h5>
+          <button className="danger-btn" onClick={() => setStage(DropWaitlistStage.CONFIRM)}>
+            <XIcon className="icon" />
+            Leave
+          </button>
+        </InfoCard>
+      );
+    case DropWaitlistStage.CONFIRM:
+      return (
+        <Modal closeModal={() => setStage(DropWaitlistStage.INITIAL)}>
+          <div className="drop-confirmation">
+            <h5>Are you sure you want to leave the waitlist?</h5>
+            <p>You will lose your position and are not guaranteed a spot if you rejoin.</p>
+            <button className="danger-btn" onClick={performDrop}>
+              Confirm
+            </button>
+          </div>
+        </Modal>
+      );
+    case DropWaitlistStage.DROPPED:
       return <Navigate to="/" />;
   }
 }

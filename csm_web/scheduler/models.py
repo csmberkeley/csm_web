@@ -279,38 +279,17 @@ class WaitlistedStudent(Profile):
         ordering = ["position", "timestamp"]
 
     def save(self, *args, **kwargs):
-        # manually assigning a position to a student
-        if self.position is not None:
-            conflicting_students = (
-                WaitlistedStudent.objects.filter(
-                    section=self.section, position__gte=self.position
-                )
+        if self.active and self.position is None:
+            max_pos = (
+                WaitlistedStudent.objects.filter(section=self.section, active=True)
                 .exclude(pk=self.pk)
-                .order_by("position")
+                .order_by("-position")
+                .values_list("position", flat=True)
+                .first()
             )
-            # shifting over other student's positions
-            previous_position = self.position
-            for student in conflicting_students:
-                if student.position <= previous_position:
-                    student.position += 1
-                    previous_position = student.position
-                    WaitlistedStudent.objects.filter(pk=student.pk).update(
-                        position=student.position
-                    )
+            self.position = (max_pos or 0) + 1
 
         super().save(*args, **kwargs)
-
-        # If position is not set, assign it based on timestamp
-        if self.position is None:
-            waitlisted_students = WaitlistedStudent.objects.filter(
-                section=self.section, active=True
-            )
-            # assigning a position based on timestamp
-            if waitlisted_students.count() == 1:
-                self.position = 1
-            else:
-                self.position = waitlisted_students.count()
-            WaitlistedStudent.objects.filter(pk=self.pk).update(position=self.position)
 
 
 class Student(Profile):

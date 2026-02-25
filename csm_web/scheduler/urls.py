@@ -31,5 +31,9 @@ urlpatterns += [
         "waitlist/<int:pk>/count_waitlist/",
         views.waitlistedStudent.count_waitlist,
     ),
+    path(
+        "waitlist/<int:pk>/position/",
+        views.waitlistedStudent.position,
+    ),
     path("export/", views.export_data),
 ]

@@ -112,6 +112,7 @@ def add_by_coord(request, pk=None):
         )
 
     results = []
+    any_errors = False
     for email in emails:
         with transaction.atomic():
             section = Section.objects.select_for_update().get(pk=section.pk)
@@ -125,13 +126,32 @@ def add_by_coord(request, pk=None):
                     bypass_enrollment_time=True,
                 )
                 results.append({"email": email, "status": "OK"})
+                logger.info(
+                    "<Waitlist:Success> User %s added to Waitlist for Section %s by coordinator %s",
+                    user,
+                    section,
+                    request.user,
+                )
             except PermissionDenied as exc:
+                any_errors = True
                 results.append(
-                    {"email": email, "status": "ERROR", "detail": str(exc.detail)}
+                    {
+                        "email": email,
+                        "status": "CONFLICT",
+                        "detail": {"reason": str(exc.detail)},
+                    }
+                )
+                logger.warning(
+                    "<Waitlist:Failure> User %s not added to Waitlist for Section %s: %s",
+                    user,
+                    section,
+                    exc.detail,
                 )
 
-    log_enroll_result(True, request.user, section)
-    return Response({"results": results}, status=status.HTTP_200_OK)
+    response_data = {"errors": {}, "progress": results}
+    if any_errors:
+        return Response(response_data, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
+    return Response(status=status.HTTP_200_OK)
 
 
 def _add_to_waitlist_or_section(section, user, *, bypass_enrollment_time=False):
@@ -239,3 +259,33 @@ def count_waitlist(request, pk=None):
     """
     section = get_object_or_error(Section.objects, pk=pk)
     return Response(section.current_waitlist_count)
+
+
+@api_view(["GET"])
+def position(request, pk=None):
+    """
+    Endpoint: /api/waitlist/<pk>/position
+    pk = section id
+
+    GET: Get the current user's position on the waitlist for a section.
+    Returns {"position": <int>} where position is 1-indexed rank among
+    active waitlisted students.
+    """
+    section = get_object_or_error(Section.objects, pk=pk)
+    waitlisted_student = WaitlistedStudent.objects.filter(
+        active=True, section=section, user=request.user
+    ).first()
+    if waitlisted_student is None:
+        raise NotFound("You are not on the waitlist for this section.")
+
+    # Count how many active waitlisted students have a higher-priority (lower) position
+    rank = (
+        WaitlistedStudent.objects.filter(
+            active=True,
+            section=section,
+            position__lt=waitlisted_student.position,
+        ).count()
+        + 1
+    )
+
+    return Response({"position": rank})
