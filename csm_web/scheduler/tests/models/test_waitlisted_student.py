@@ -69,11 +69,7 @@ def test_user_cannot_enroll_in_course(setup_waitlist, client):
     response = client.put(f"/api/waitlist/{section.pk}/add/")
 
     assert response.status_code == 403
-    assert (
-        response.data["detail"]
-        == "You are already either mentoring for this course or enrolled in a section, "
-        "or the course is closed for enrollment"
-    )
+    assert response.data["detail"] == "Mentors cannot waitlist in a course they mentor."
     assert WaitlistedStudent.objects.count() == 0
 
     client.force_login(user)
@@ -255,6 +251,47 @@ def test_user_enrolled_from_waitlist_and_dropped_from_others(setup_waitlist, cli
             user=waitlisted_student_user, active=True
         ).count()
         == 0
+    )
+
+
+@pytest.mark.django_db
+def test_enrolled_student_swaps_to_open_section(client):
+    """
+    Given a student enrolled in section A,
+    When they try to add to section B which has room,
+    Then they are swapped: dropped from A and enrolled in B.
+    """
+    course = CourseFactory.create()
+    mentor_user1 = UserFactory.create()
+    mentor1 = MentorFactory.create(course=course, user=mentor_user1)
+    section1 = SectionFactory.create(mentor=mentor1, capacity=2, waitlist_capacity=3)
+
+    mentor_user2 = UserFactory.create()
+    mentor2 = MentorFactory.create(course=course, user=mentor_user2)
+    section2 = SectionFactory.create(mentor=mentor2, capacity=2, waitlist_capacity=3)
+
+    enrolled_user = UserFactory.create()
+    Student.objects.create(user=enrolled_user, course=course, section=section1)
+
+    client.force_login(enrolled_user)
+    response = client.put(
+        f"/api/waitlist/{section2.pk}/add/", data={}, content_type="application/json"
+    )
+
+    assert response.status_code == 200
+    # User should now be in section2, not section1
+    active_student = Student.objects.filter(user=enrolled_user, active=True).first()
+    assert active_student is not None
+    assert active_student.section == section2
+    assert (
+        Student.objects.filter(
+            user=enrolled_user, active=True, section=section1
+        ).count()
+        == 0
+    )
+    # No waitlist entries should exist
+    assert (
+        WaitlistedStudent.objects.filter(user=enrolled_user, active=True).count() == 0
     )
 
 
@@ -481,7 +518,42 @@ def test_positions_update_properly():
     When a coordinator adds a student on the waitlist at a certain position,
     The waitlist students have the correct order.
     """
-    assert True
+    course = CourseFactory.create()
+    mentor_user = UserFactory.create()
+    mentor = MentorFactory.create(course=course, user=mentor_user)
+    section = SectionFactory.create(mentor=mentor, capacity=5, waitlist_capacity=5)
+
+    # Create 3 waitlisted students (positions auto-assigned as 1, 2, 3)
+    user1 = UserFactory.create()
+    ws1 = WaitlistedStudent.objects.create(user=user1, course=course, section=section)
+    user2 = UserFactory.create()
+    ws2 = WaitlistedStudent.objects.create(user=user2, course=course, section=section)
+    user3 = UserFactory.create()
+    ws3 = WaitlistedStudent.objects.create(user=user3, course=course, section=section)
+
+    ws1.refresh_from_db()
+    ws2.refresh_from_db()
+    ws3.refresh_from_db()
+
+    assert ws1.position == 1
+    assert ws2.position == 2
+    assert ws3.position == 3
+
+    # Insert a new student at position 2, should shift ws2 -> 3 and ws3 -> 4
+    user4 = UserFactory.create()
+    ws4 = WaitlistedStudent.objects.create(
+        user=user4, course=course, section=section, position=2
+    )
+
+    ws1.refresh_from_db()
+    ws2.refresh_from_db()
+    ws3.refresh_from_db()
+    ws4.refresh_from_db()
+
+    assert ws1.position == 1
+    assert ws4.position == 2
+    assert ws2.position == 3
+    assert ws3.position == 4
 
 
 @pytest.mark.django_db

@@ -29,7 +29,7 @@ urlpatterns += [
     path("waitlist/<int:pk>/coordadd/", views.waitlistedStudent.add_by_coord),
     path(
         "waitlist/<int:pk>/count_waitlist/",
-        views.waitlistedStudent.count_waitist,
+        views.waitlistedStudent.count_waitlist,
     ),
     path("export/", views.export_data),
 ]

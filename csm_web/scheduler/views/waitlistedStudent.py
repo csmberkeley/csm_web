@@ -7,7 +7,7 @@ from scheduler.serializers import WaitlistedStudentSerializer
 from scheduler.views.utils import get_object_or_error
 
 from ..models import Section, User, WaitlistedStudent
-from .section import add_student
+from .section import add_from_waitlist, add_student, swap_into_section
 from .utils import logger
 
 
@@ -20,6 +20,8 @@ def view(request, pk=None):
     GET: View all students on the waitlist for a section
     """
     section = get_object_or_error(Section.objects, pk=pk)
+    if section.mentor is None:
+        raise NotFound("This section has no mentor assigned.")
     is_mentor = request.user == section.mentor.user
     is_coord = bool(
         section.mentor.course.coordinator_set.filter(user=request.user).count()
@@ -31,8 +33,6 @@ def view(request, pk=None):
     return Response(WaitlistedStudentSerializer(waitlist_queryset, many=True).data)
 
 
-# CURRENT ISSUES: 61a and eecs16b don't allow adding to waitlist? may not be an issue
-# already works as a student so the put doesn't actually work
 @api_view(["PUT"])
 def add(request, pk=None):
     """
@@ -58,66 +58,88 @@ def add(request, pk=None):
             bypass_enrollment_time=False,
         )
         if response is not None:
+            # User was auto-enrolled (section had room), return the enrollment response
             return response
 
+    # User was added to the waitlist (not enrolled)
     log_enroll_result(True, request.user, section)
     return Response(status=status.HTTP_201_CREATED)
 
 
 @api_view(["PUT"])
-def add_by_coord(request, pk=None):  # get this to work with only emails and no actions
+def add_by_coord(request, pk=None):
     """
-    Endpoint: /api/waitlist/<pk>/add
-    pk= section id
+    Endpoint: /api/waitlist/<pk>/coordadd
+    pk = section id
 
-    PUT: Add student to waitlist by coordinator.
-    emails: Array<{ [email: string]: string }>;
-    actions: {
-        [action: string]: string;
-    };
+    PUT: Add students to waitlist (or section if room) by coordinator.
+    Processes each email independently — failures for one email do not
+    prevent other emails from being processed.
+
+    Request body:
+        emails: list of {"email": str}
     """
 
-    with transaction.atomic():
-        section = get_object_or_error(Section.objects, pk=pk)
-        section = Section.objects.select_for_update().get(pk=section.pk)
+    section = get_object_or_error(Section.objects, pk=pk)
 
-        is_coord = bool(
-            section.mentor.course.coordinator_set.filter(user=request.user).count()
+    is_coord = bool(
+        section.mentor.course.coordinator_set.filter(user=request.user).count()
+    )
+    if not is_coord:
+        raise PermissionDenied("You must be a coord to perform this action.")
+
+    data = request.data or {}
+
+    if not data.get("emails"):
+        return Response(
+            {"error": "Must specify emails of students to waitlist"},
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
         )
 
-        if not is_coord:
-            raise PermissionDenied("You must be a coord to perform this action.")
+    # Deduplicate and validate email list
+    email_set = set()
+    emails = []
+    for obj in data.get("emails"):
+        email = obj.get("email") if isinstance(obj, dict) else obj
+        if email and email not in email_set:
+            emails.append(email)
+            email_set.add(email)
 
-        data = request.data or {}
+    if not emails:
+        return Response(
+            {"error": "Must specify email of student to waitlist"},
+            status=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
 
-        if not data.get("emails"):
-            return Response(
-                {"error": "Must specify emails of students to waitlist"},
-                status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-
-        for email_obj in data.get("emails"):
-            email = email_obj.get("email") if isinstance(email_obj, dict) else email_obj
-            if not email:
-                return Response(
-                    {"error": "Must specify email of student to waitlist"},
-                    status=status.HTTP_422_UNPROCESSABLE_ENTITY,
-                )
-
+    results = []
+    for email in emails:
+        with transaction.atomic():
+            section = Section.objects.select_for_update().get(pk=section.pk)
             user, _ = User.objects.get_or_create(
                 username=email.split("@")[0], email=email
             )
-            _add_to_waitlist_or_section(
-                section,
-                user,
-                bypass_enrollment_time=True,
-            )
+            try:
+                _add_to_waitlist_or_section(
+                    section,
+                    user,
+                    bypass_enrollment_time=True,
+                )
+                results.append({"email": email, "status": "OK"})
+            except PermissionDenied as exc:
+                results.append(
+                    {"email": email, "status": "ERROR", "detail": str(exc.detail)}
+                )
 
     log_enroll_result(True, request.user, section)
-    return Response(status=status.HTTP_200_OK)
+    return Response({"results": results}, status=status.HTTP_200_OK)
 
 
 def _add_to_waitlist_or_section(section, user, *, bypass_enrollment_time=False):
+    """Add a user to a section or its waitlist.
+
+    Returns a Response when the user was enrolled (or swapped) into the section,
+    or None when the user was added to the waitlist.
+    """
     course = section.mentor.course
 
     if not user.can_waitlist_in_course(
@@ -128,7 +150,16 @@ def _add_to_waitlist_or_section(section, user, *, bypass_enrollment_time=False):
     if user.student_set.filter(active=True, section=section).exists():
         raise PermissionDenied("User is already enrolled in this section.")
 
+    if user.mentor_set.filter(section__mentor__course=course).exists():
+        raise PermissionDenied("Mentors cannot waitlist in a course they mentor.")
+
     if not section.is_section_full:
+        # If user is already enrolled in another section, swap them
+        if user.student_set.filter(active=True, course=course).exists():
+            old_section_id = swap_into_section(section, user)
+            if old_section_id is not None:
+                add_from_waitlist(pk=old_section_id)
+            return Response(status=status.HTTP_200_OK)
         return add_student(section, user)
 
     if section.is_waitlist_full:
@@ -144,10 +175,7 @@ def _add_to_waitlist_or_section(section, user, *, bypass_enrollment_time=False):
     ).exists():
         raise PermissionDenied("User is already waitlisted in this section.")
 
-    waitlisted_student = WaitlistedStudent.objects.create(
-        user=user, section=section, course=course
-    )
-    waitlisted_student.save()
+    WaitlistedStudent.objects.create(user=user, section=section, course=course)
     return None
 
 
@@ -155,9 +183,9 @@ def _add_to_waitlist_or_section(section, user, *, bypass_enrollment_time=False):
 def drop(request, pk=None):
     """
     Endpoint: /api/waitlist/<pk>/drop
-    pk= section id
+    pk = waitlisted student id
 
-    PATCH: Drop a student off the waitlist. Pass in waitlisted student ID
+    PATCH: Drop a student off the waitlist.
     - sets to inactive. Called by user or coordinator.
 
     """
@@ -204,7 +232,7 @@ def log_enroll_result(success, user, section, reason=None):
 
 
 @api_view(["GET"])
-def count_waitist(request, pk=None):
+def count_waitlist(request, pk=None):
     """
     Endpoint: /api/waitlist/<pk>/count_waitlist
     pk= section id

@@ -77,7 +77,7 @@ def add_student(section, user):  # make this endpoint for only adding as a stude
             " database (Students %s)!",
             student_queryset.all(),
         )
-        return PermissionDenied(
+        raise PermissionDenied(
             "An internal error occurred; email mentors@berkeley.edu"
             " immediately. (Duplicate students exist in the database (Students"
             f" {student_queryset.all()}))",
@@ -143,12 +143,15 @@ def add_student(section, user):  # make this endpoint for only adding as a stude
     return Response({"id": student.id}, status=status.HTTP_201_CREATED)
 
 
-def swap_from_waitlist(section, user):
+def swap_into_section(section, user):
     """
     Helper Function:
 
-    Swaps a waitlisted student into a new section by dropping their current
-    section enrollment first if needed.
+    Swaps a user into a new section by dropping their current
+    section enrollment first if needed. Handles attendance cleanup.
+
+    Returns the old section ID if the user was swapped, or None if
+    the user was not previously enrolled.
     """
     active_student = user.student_set.filter(
         active=True, course=section.mentor.course
@@ -219,7 +222,7 @@ def add_from_waitlist(pk):
 
         for waitlisted_student in waitlisted_students:
             try:
-                cascade_section_id = swap_from_waitlist(
+                cascade_section_id = swap_into_section(
                     waitlisted_student.section, waitlisted_student.user
                 )
             except PermissionDenied:
@@ -818,9 +821,23 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
     def _student_add(self, request, section):
         """
-        Adds a student to a section (initiated by a student)
+        Adds a student to a section (initiated by a student).
+        If the student is already enrolled in another section for the same
+        course, swaps them into this section instead.
         """
-        return add_student(section, request.user)
+        course = section.mentor.course
+        user = request.user
+
+        if user.student_set.filter(active=True, section=section).exists():
+            raise PermissionDenied("You are already enrolled in this section.")
+
+        if user.student_set.filter(active=True, course=course).exists():
+            old_section_id = swap_into_section(section, user)
+            if old_section_id is not None:
+                add_from_waitlist(pk=old_section_id)
+            return Response(status=status.HTTP_200_OK)
+
+        return add_student(section, user)
 
     @action(detail=True, methods=["get", "put"])
     def wotd(self, request, pk=None):

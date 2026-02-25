@@ -294,13 +294,17 @@ class WaitlistedStudent(Profile):
                 if student.position <= previous_position:
                     student.position += 1
                     previous_position = student.position
-                    student.save()
+                    WaitlistedStudent.objects.filter(pk=student.pk).update(
+                        position=student.position
+                    )
 
         super().save(*args, **kwargs)
 
         # If position is not set, assign it based on timestamp
         if self.position is None:
-            waitlisted_students = WaitlistedStudent.objects.filter(section=self.section)
+            waitlisted_students = WaitlistedStudent.objects.filter(
+                section=self.section, active=True
+            )
             # assigning a position based on timestamp
             if waitlisted_students.count() == 1:
                 self.position = 1
