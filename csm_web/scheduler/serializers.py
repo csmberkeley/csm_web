@@ -37,11 +37,11 @@ def get_profile_role(profile):
     """Return role (enum) depending on the profile type"""
     if isinstance(profile, Coordinator):
         return Role.COORDINATOR.value
-    elif isinstance(profile, Student):
+    if isinstance(profile, Student):
         return Role.STUDENT.value
-    elif isinstance(profile, Mentor):
+    if isinstance(profile, Mentor):
         return Role.MENTOR.value
-    elif isinstance(profile, WaitlistedStudent):
+    if isinstance(profile, WaitlistedStudent):
         return Role.WAITLIST.value
     return None
 

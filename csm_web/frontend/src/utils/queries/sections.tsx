@@ -525,12 +525,15 @@ interface EnrollStudentMutationResponse {
     progress?: Array<{
       email: string;
       status: string;
-      detail?: any;
+      detail?: {
+        reason?: string;
+        section?: { id: number; mentor: { name: string } };
+      };
     }>;
   };
 }
 
-function normalizeEnrollError(response: Response, payload: any) {
+function normalizeEnrollError(response: Response, payload: Record<string, unknown>) {
   if (!payload) {
     return { errors: { critical: `Request failed (${response.status}).` } };
   }

@@ -46,7 +46,10 @@ class Migration(migrations.Migration):
                     "position",
                     models.PositiveIntegerField(
                         blank=True,
-                        help_text="Manual position on the waitlist. Lower numbers have higher priority.",
+                        help_text=(
+                            "Manual position on the waitlist."
+                            " Lower numbers have higher priority."
+                        ),
                         null=True,
                     ),
                 ),
