@@ -32,14 +32,11 @@ def get_credentials():
 
     return creds
 
-def gmail_create_draft():
-  """Create and insert a draft email.
-   Print the returned draft's message and id.
-   Returns: Draft object, including draft id and message meta data.
+def gmail_send():
+  """Create and send an email.
+   Print the returned email's message and id.
+   Returns: Email object, including email id and message meta data.
 
-  Load pre-authorized user credentials from the environment.
-  TODO(developer) - See https://developers.google.com/identity
-  for guides on implementing OAuth2 for the application.
   """
   creds = get_credentials()
 
@@ -53,17 +50,16 @@ def gmail_create_draft():
 
     message["To"] = "alex05sim@berkeley.edu"
     message["From"] = "mentors@berkeley.edu"
-    message["Subject"] = "Automated draft"
+    message["Subject"] = "Hi Alex Sim"
 
     # encoded message
     encoded_message = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
-    #create_message = {"message": {"raw": encoded_message}}
     # pylint: disable=E1101
     sent = (
             service.users()
             .messages()
-            .send(userId="me", body={"raw": encoded_message})  # ← .messages().send() instead of .drafts().create()
+            .send(userId="me", body={"raw": encoded_message})
             .execute()
         )
 
@@ -77,4 +73,4 @@ def gmail_create_draft():
 
 
 if __name__ == "__main__":
-  gmail_create_draft()
+  gmail_send()
