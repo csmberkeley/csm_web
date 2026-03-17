@@ -228,3 +228,7 @@ main.css
 
 # Mac OS X dir files
 .DS_Store
+
+# Email tokens
+token.json
+credentials.json
