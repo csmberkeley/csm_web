@@ -306,13 +306,22 @@ class Student(Profile):
         unique_together = ("user", "section")
 
 
+class Family(ValidatingModel):
+    """
+    Represents a family of mentors.
+    """
+
+    course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    name = models.CharField(max_length=100, unique=True)
+
+
 class Mentor(Profile):
     """
     Represents a given "instance" of a mentor. Every section a mentor teaches in every course should
     have a new Mentor profile.
     """
 
-    family = models.CharField(max_length=100, blank=True)
+    family = models.ForeignKey(Family, on_delete=models.CASCADE)
 
 
 class Coordinator(Profile):
@@ -330,6 +339,71 @@ class Coordinator(Profile):
 
     class Meta:
         unique_together = ("user", "course")
+
+
+class Challenge(ValidatingModel):
+    """
+    This is used to create challenges with descriptions.
+    """
+
+    name = models.CharField(max_length=100)
+    description = models.TextField(blank=True)
+    maxPoints = models.IntegerField(default=0)
+
+
+class CupAdmin(ValidatingModel):
+    """
+    This class specifies users who are cup admins and are able to modify points.
+    """
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+
+    def save(self, *args, **kwargs):
+        self.user.is_staff = True
+        self.user.save()
+        super().save(*args, **kwargs)
+
+
+class Points(ValidatingModel):
+    """
+    Cup Chair adds points to each family per challenge
+    """
+
+    challenge_id = models.ForeignKey(Challenge, on_delete=models.CASCADE)
+    family_id = models.ForeignKey(Family, on_delete=models.CASCADE)
+    num_points = models.IntegerField(default=0)
+
+    @classmethod
+    def add(family_id, challenge_id, num_points):
+        """
+        Add points to a family for a challenge.
+        If the family or challenge doesn't exist, throw an error.
+        If the family already has points for the challenge, overwrite the points.
+        """
+
+        if not Family.objects.filter(pk=family_id).exists():
+            raise ValidationError("Family does not exist")
+        if not Challenge.objects.filter(pk=challenge_id).exists():
+            raise ValidationError("Challenge does not exist")
+        points, created = Points.objects.update_or_create(
+            family_id=family_id,
+            challenge_id=challenge_id,
+            defaults={"num_points": num_points},
+        )
+        if created:
+            logger.info(
+                "Points added for family %s for challenge %s with %d points",
+                family_id,
+                challenge_id,
+                num_points,
+            )
+        else:
+            logger.info(
+                "Points updated for family %s for challenge %s to %d points",
+                family_id,
+                challenge_id,
+                num_points,
+            )
 
 
 class Section(ValidatingModel):
