@@ -8,6 +8,7 @@ from .models import (
     Coordinator,
     Course,
     DayOfWeekField,
+    Family,
     Link,
     Matcher,
     MatcherPreference,
@@ -483,3 +484,16 @@ class MatcherPreferenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = MatcherPreference
         fields = ["slot", "mentor", "preference"]
+
+
+class LeaderboardSerializer(serializers.ModelSerializer):
+    course = serializers.CharField(source="course.name", read_only=True)
+    mentors = serializers.StringRelatedField(
+        source="mentor_set", many=True, read_only=True
+    )
+
+    total_points = serializers.IntegerField()
+
+    class Meta:
+        model = Family
+        fields = ["id", "name", "course", "mentors", "total_points"]

@@ -27,4 +27,5 @@ urlpatterns += [
     path("coord/<int:pk>/mentors/", views.coord.view_mentors),
     path("coord/<int:pk>/section/", views.coord.delete_section),
     path("export/", views.export_data),
+    path("cup/leaderboard/", views.cup.view_leaderboard),
 ]

@@ -1,6 +1,7 @@
 from . import matcher
 from .coord import delete_section, view_mentors, view_students
 from .course import CourseViewSet
+from .cup import view_leaderboard
 from .export import export_data
 from .profile import ProfileViewSet
 from .resource import ResourceViewSet
