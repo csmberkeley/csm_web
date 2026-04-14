@@ -1,4 +1,4 @@
-# CSM Web Applications
+e# CSM Web Applications
 
 This repository contains webapps that help support the infrastructure of CSM. Currently, it only holds Scheduler (our section signup and attendance system), but more are on the way.
 
