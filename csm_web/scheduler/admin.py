@@ -1,15 +1,19 @@
 from django.contrib import admin, messages
 from django.core.exceptions import ValidationError
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, Sum
+from django.db.models.functions import Coalesce
 from django.urls import reverse
 from django.utils.html import format_html, format_html_join
 from scheduler.models import (
     Attendance,
+    Challenge,
     Coordinator,
     Course,
+    Family,
     Mentor,
     Override,
+    Points,
     Section,
     SectionOccurrence,
     Spacetime,
@@ -423,6 +427,7 @@ class MentorAdmin(BasePermissionModelAdmin):
         "user",
         "get_section",
         "get_students",
+        "family",
     )
     readonly_fields = (
         "name",
@@ -890,6 +895,55 @@ class AttendanceAdmin(BasePermissionModelAdmin):
             "admin:scheduler_sectionoccurrence_change",
             display_text=obj.sectionOccurrence.date,
         )
+
+
+@admin.register(Family)
+class FamilyAdmin(BasePermissionModelAdmin):
+    list_display = ("name", "course", "get_total_points")
+    readonly_fields = ("get_total_points",)
+
+    def get_queryset(self, request):
+        """Annotate the queryset so the admin can access total_points."""
+        qs = super().get_queryset(request)
+        return qs.annotate(total_points=Coalesce(Sum("points__num_points"), 0))
+
+    @admin.display(ordering="total_points", description="Total Points")
+    def get_total_points(self, obj):
+        """Fetch the annotated value."""
+        return obj.total_points
+
+
+@admin.register(Points)
+class PointsAdmin(admin.ModelAdmin):
+    list_display = ("family_id", "challenge_id", "num_points")
+
+    list_filter = (
+        "challenge_id",
+        "family_id__course",
+    )
+
+    search_fields = ("family_id__name", "challenge_id__name")
+
+    ordering = ("-num_points",)
+
+
+@admin.register(Challenge)
+class ChallengeAdmin(admin.ModelAdmin):
+    list_display = (
+        "name",
+        "maxPoints",
+        "start_date",
+        "end_date",
+    )
+
+    search_fields = (
+        "name",
+        "description",
+    )
+
+    list_filter = ("start_date",)
+
+    ordering = ("-start_date",)
 
 
 @admin.register(Override)

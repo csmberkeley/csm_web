@@ -314,6 +314,9 @@ class Family(ValidatingModel):
     course = models.ForeignKey(Course, on_delete=models.CASCADE)
     name = models.CharField(max_length=100, unique=True)
 
+    def __str__(self):
+        return f"{self.name} ({self.course.name})"
+
 
 class Mentor(Profile):
     """
@@ -341,6 +344,14 @@ class Coordinator(Profile):
         unique_together = ("user", "course")
 
 
+def get_default_end_date():
+    """
+    Get the default end date for a challenge,
+    which is 7 days after the current date.
+    """
+    return datetime.date.today() + datetime.timedelta(days=7)
+
+
 class Challenge(ValidatingModel):
     """
     This is used to create challenges with descriptions.
@@ -349,6 +360,12 @@ class Challenge(ValidatingModel):
     name = models.CharField(max_length=100)
     description = models.TextField(blank=True)
     maxPoints = models.IntegerField(default=0)
+    start_date = models.DateField(default=datetime.date.today)
+    end_date = models.DateField(default=get_default_end_date)
+
+    def __str__(self):
+        return f"{self.name} ({self.start_date.strftime('%m/%d')} \
+            - {self.end_date.strftime('%m/%d')})"
 
 
 class CupAdmin(ValidatingModel):

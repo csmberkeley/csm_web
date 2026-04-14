@@ -5,6 +5,7 @@ from rest_framework import serializers
 
 from .models import (
     Attendance,
+    Challenge,
     Coordinator,
     Course,
     DayOfWeekField,
@@ -488,12 +489,26 @@ class MatcherPreferenceSerializer(serializers.ModelSerializer):
 
 class LeaderboardSerializer(serializers.ModelSerializer):
     course = serializers.CharField(source="course.name", read_only=True)
-    mentors = serializers.StringRelatedField(
-        source="mentor_set", many=True, read_only=True
-    )
+    # mentors = serializers.StringRelatedField(
+    #     source="mentor_set", many=True, read_only=True
+    # )
+    mentors = serializers.SerializerMethodField()
+    familyName = serializers.CharField(source="name", read_only=True)
 
-    total_points = serializers.IntegerField()
+    totalPoints = serializers.IntegerField()
 
     class Meta:
         model = Family
-        fields = ["id", "name", "course", "mentors", "total_points"]
+        fields = ["id", "familyName", "course", "mentors", "totalPoints"]
+
+    def get_mentors(self, obj):
+        """
+        Retrieve the names of the mentors in the family
+        """
+        return [mentor.name for mentor in obj.mentor_set.all()]
+
+
+class ChallengeSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Challenge
+        fields = ["id", "name", "description", "maxPoints", "start_date", "end_date"]

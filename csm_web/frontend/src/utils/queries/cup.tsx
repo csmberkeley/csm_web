@@ -3,10 +3,10 @@ import { handlePermissionsError, ServerError } from "./helpers";
 
 export interface LeaderboardEntry {
   id: number;
-  name: string;
+  familyName: string;
   course: string;
   mentors: string[];
-  total_points: number;
+  totalPoints: number;
 }
 
 export const getLeaderboardData = async () => {
