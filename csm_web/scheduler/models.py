@@ -321,7 +321,7 @@ class Mentor(Profile):
     have a new Mentor profile.
     """
 
-    family = models.ForeignKey(Family, on_delete=models.CASCADE)
+    family = models.ForeignKey(Family, on_delete=models.SET_NULL, null=True, blank=True)
 
 
 class Coordinator(Profile):
@@ -374,7 +374,7 @@ class Points(ValidatingModel):
     num_points = models.IntegerField(default=0)
 
     @classmethod
-    def add(family_id, challenge_id, num_points):
+    def add(cls, family_id, challenge_id, num_points):
         """
         Add points to a family for a challenge.
         If the family or challenge doesn't exist, throw an error.
@@ -385,7 +385,8 @@ class Points(ValidatingModel):
             raise ValidationError("Family does not exist")
         if not Challenge.objects.filter(pk=challenge_id).exists():
             raise ValidationError("Challenge does not exist")
-        points, created = Points.objects.update_or_create(
+
+        _, created = Points.objects.update_or_create(
             family_id=family_id,
             challenge_id=challenge_id,
             defaults={"num_points": num_points},
