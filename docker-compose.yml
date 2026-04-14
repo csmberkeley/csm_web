@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:14
+    image: postgres:17
     healthcheck:
       test: /usr/bin/pg_isready
       interval: 5s
