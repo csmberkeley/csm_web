@@ -226,6 +226,8 @@ def add_from_waitlist(pk):
                     waitlisted_student.section, waitlisted_student.user
                 )
             except PermissionDenied:
+                waitlisted_student.active = False
+                waitlisted_student.save()
                 continue
 
             logger.info(
@@ -721,6 +723,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
         # Phase 2: everything's good to go; do the database actions
         expand_capacity = False
+        old_section_ids = set()
         for db_action in db_actions:
             action_type, obj = db_action
             if action_type == "capacity":
@@ -765,8 +768,12 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     log_str(student.user),
                     log_str(section),
                 )
+                WaitlistedStudent.objects.filter(
+                    user=user, active=True, course=section.mentor.course
+                ).update(active=False)
             elif action_type in ("enroll", "unban_enroll"):  # obj=student, type Student
                 student = obj
+                was_active = student.active
                 if action_type == "unban_enroll":  # unban student first
                     student.banned = False
                 # enroll student
@@ -804,6 +811,11 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     log_str(section),
                     log_str(old_section),
                 )
+                WaitlistedStudent.objects.filter(
+                    user=student.user, active=True, course=student.course
+                ).update(active=False)
+                if was_active and old_section.id != section.id:
+                    old_section_ids.add(old_section.id)
             elif action_type == "unban":  # obj=student, type Student
                 student = obj
                 # unban student
@@ -817,6 +829,9 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             section.save()
 
         # expand waitlist capacity
+        for sid in old_section_ids:
+            add_from_waitlist(pk=sid)
+
         return Response(status=status.HTTP_200_OK)
 
     def _student_add(self, request, section):

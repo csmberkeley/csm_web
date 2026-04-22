@@ -878,3 +878,122 @@ def test_drop_preserves_position():
 
     assert ws.active is False
     assert ws.position == 1  # position preserved, not cleared
+
+
+@pytest.mark.django_db
+def test_waitlist_promotion_drops_failed_student(client):
+    """
+    Given a student on a waitlist,
+    When they are promoted but fail to enroll (e.g. because they became a mentor),
+    Then they are removed from the waitlist and the next student is promoted.
+    """
+    course = CourseFactory.create()
+    mentor_user = UserFactory.create()
+    mentor = MentorFactory.create(course=course, user=mentor_user)
+    section = SectionFactory.create(mentor=mentor, capacity=1, waitlist_capacity=2)
+
+    # Fill section
+    enrolled_user = UserFactory.create()
+    Student.objects.create(user=enrolled_user, course=course, section=section)
+
+    # Waitlist student 1
+    fail_user = UserFactory.create()
+    ws1 = WaitlistedStudent.objects.create(
+        user=fail_user, course=course, section=section
+    )
+
+    # Waitlist student 2
+    success_user = UserFactory.create()
+    ws2 = WaitlistedStudent.objects.create(
+        user=success_user, course=course, section=section
+    )
+
+    # Make student 1 fail to enroll by making them a mentor for the course with a section
+    mentor2 = MentorFactory.create(course=course, user=fail_user)
+    SectionFactory.create(mentor=mentor2, capacity=1)
+
+    # Now drop the enrolled user to trigger waitlist promotion
+    client.force_login(enrolled_user)
+    student_obj = enrolled_user.student_set.first()
+    response = client.patch(f"/api/students/{student_obj.pk}/drop/")
+    assert response.status_code == 204
+
+    # Waitlist student 1 should be dropped from waitlist
+    ws1.refresh_from_db()
+    assert not ws1.active
+
+    # Waitlist student 2 should be enrolled
+    ws2.refresh_from_db()
+    assert not ws2.active  # waitlisted student object is deactivated
+    assert Student.objects.filter(
+        user=success_user, section=section, active=True
+    ).exists()
+
+
+@pytest.mark.django_db
+def test_coordinator_add_cleans_waitlists_and_promotes(client):
+    """
+    Test that the coordinator bulk add tool correctly handles cascading waitlist logic:
+    1. Student S is in Section A and waitlisted in Section C.
+    2. Student W is waitlisted in Section A.
+    3. Coordinator moves Student S to Section B.
+    4. Student S should be removed from Section C's waitlist.
+    5. Student W should be promoted to Section A.
+    """
+    course = CourseFactory.create()
+    coord_user = UserFactory.create()
+    CoordinatorFactory.create(course=course, user=coord_user)
+
+    mentor_a = MentorFactory.create(course=course)
+    section_a = SectionFactory.create(mentor=mentor_a, capacity=1)
+
+    mentor_b = MentorFactory.create(course=course)
+    section_b = SectionFactory.create(mentor=mentor_b, capacity=1)
+
+    mentor_c = MentorFactory.create(course=course)
+    section_c = SectionFactory.create(mentor=mentor_c, capacity=1)
+
+    # 1. Student S is in Section A
+    s_user = UserFactory.create()
+    s_student = Student.objects.create(user=s_user, section=section_a, course=course)
+
+    # Student S is waitlisted in Section C
+    ws_c = WaitlistedStudent.objects.create(
+        user=s_user, section=section_c, course=course
+    )
+
+    # 2. Student W is waitlisted in Section A
+    w_user = UserFactory.create()
+    ws_a = WaitlistedStudent.objects.create(
+        user=w_user, section=section_a, course=course
+    )
+
+    # 3. Coordinator moves Student S to Section B
+    client.force_login(coord_user)
+    payload = {
+        "emails": [{"email": s_user.email, "conflict_action": "DROP"}],
+        "actions": {},
+    }
+    response = client.put(
+        f"/api/sections/{section_b.id}/students/",
+        data=payload,
+        content_type="application/json",
+    )
+    assert response.status_code == 200
+
+    # 4. Student S should be moved to Section B and no longer in Section A
+    s_student.refresh_from_db()
+    assert s_student.section == section_b
+    assert s_student.active is True
+    assert (
+        Student.objects.filter(user=s_user, section=section_a, active=True).count() == 0
+    )
+
+    # 5. Student S should be removed from Section C's waitlist
+    ws_c.refresh_from_db()
+    assert ws_c.active is False
+
+    # 6. Student W should be promoted to Section A
+    ws_a.refresh_from_db()
+    assert ws_a.active is False
+    assert Student.objects.filter(user=w_user, section=section_a, active=True).exists()

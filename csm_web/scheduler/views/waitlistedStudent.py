@@ -1,7 +1,8 @@
 from django.db import transaction
 from rest_framework import status
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotFound, PermissionDenied
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from scheduler.serializers import WaitlistedStudentSerializer
 from scheduler.views.utils import get_object_or_error
@@ -12,6 +13,7 @@ from .utils import logger
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def view(request, pk=None):
     """
     Endpoint: /api/waitlist/<pk>
@@ -34,6 +36,7 @@ def view(request, pk=None):
 
 
 @api_view(["PUT"])
+@permission_classes([IsAuthenticated])
 def add(request, pk=None):
     """
     Endpoint: /api/waitlist/<pk>/add
@@ -67,6 +70,7 @@ def add(request, pk=None):
 
 
 @api_view(["PUT"])
+@permission_classes([IsAuthenticated])
 def add_by_coord(request, pk=None):
     """
     Endpoint: /api/waitlist/<pk>/coordadd
@@ -200,6 +204,7 @@ def _add_to_waitlist_or_section(section, user, *, bypass_enrollment_time=False):
 
 
 @api_view(["PATCH"])
+@permission_classes([IsAuthenticated])
 def drop(request, pk=None):
     """
     Endpoint: /api/waitlist/<pk>/drop
@@ -252,6 +257,7 @@ def log_enroll_result(success, user, section, reason=None):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def count_waitlist(request, pk=None):
     """
     Endpoint: /api/waitlist/<pk>/count_waitlist
@@ -262,6 +268,7 @@ def count_waitlist(request, pk=None):
 
 
 @api_view(["GET"])
+@permission_classes([IsAuthenticated])
 def position(request, pk=None):
     """
     Endpoint: /api/waitlist/<pk>/position
