@@ -50,7 +50,7 @@ describe("waitlisted student section view", () => {
     cy.contains("button.danger-btn", /leave/i).click();
 
     // confirmation modal should appear
-    cy.get(".modal-contents, .drop-confirmation").within(() => {
+    cy.get(".drop-confirmation").within(() => {
       cy.contains(/are you sure/i).should("be.visible");
       cy.contains("button", /confirm/i).click();
     });

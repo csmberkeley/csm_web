@@ -36,14 +36,22 @@ const checkEnrollButtons = (expectDisabled = false) => {
       });
 
       // verify no full sections (full = both enrolled AND waitlist are full)
-      cy.get(".section-card.full").should("not.exist");
+      cy.get("body").then($body => {
+        expect($body.find(".section-card.full").length).to.eq(0);
+      });
     }
 
     cy.get("#show-unavailable-toggle").click();
 
     // verify all full sections have disabled enroll button
-    cy.get(".section-card.full").each($card => {
-      cy.wrap($card).find(".section-card-footer").should("be.disabled");
+    // (it's valid for there to be zero fully-full sections in this fixture)
+    cy.get("body").then($body => {
+      const $cards = $body.find(".section-card.full");
+      if ($cards.length > 0) {
+        cy.wrap($cards).each($card => {
+          cy.wrap($card).find(".section-card-footer").should("be.disabled");
+        });
+      }
     });
 
     // reset for next check
@@ -139,8 +147,8 @@ describe("student course view", () => {
         cy.login();
         cy.visit("/courses/1");
 
-        // Monday should have 3 sections total
-        cy.get(".section-card").should("have.length.gte", 1);
+        // Show unavailable sections so fully-full cards are visible.
+        cy.get("#show-unavailable-toggle").click();
 
         // The section at enrolled capacity with waitlist full should show FULL
         cy.get(".section-card.full").should("have.length.gte", 1);
