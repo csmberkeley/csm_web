@@ -3,14 +3,21 @@ import styles from "../../css/coord_interface.scss";
 
 interface CheckBoxProps {
   id: string;
-  onClick?: (e: React.MouseEvent<HTMLInputElement>) => void;
+  checked: boolean;
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-export function CheckBox({ id, onClick: onClick }: CheckBoxProps) {
+export function CheckBox({ id, checked, onChange }: CheckBoxProps) {
   return (
-    <td className={styles}>
+    <td className={styles} onClick={e => e.stopPropagation()}>
       <div className="checkbox-wrapper">
-        <input className="inp-cbx" id={id + "check"} type="checkbox" onClick={onClick} />
+        <input
+          className="inp-cbx"
+          id={id + "check"}
+          type="checkbox"
+          checked={checked} // Controlled by React State!
+          onChange={onChange} // Standard React event
+        />
         <label className="cbx" htmlFor={id + "check"}>
           <span>
             <svg width="12px" height="10px">

@@ -1,4 +1,4 @@
-import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
+import { useMutation, UseMutationResult, useQueryClient } from "@tanstack/react-query";
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
 import { handleError, handleRetry, handlePermissionsError, PermissionError, ServerError } from "./helpers";
 
@@ -23,7 +23,6 @@ export interface Mentor {
 }
 
 export const getCoordData = async (courseId: number, isStudents: boolean) => {
-  // query disabled when id undefined
   if (isNaN(courseId!)) {
     throw new PermissionError("Invalid course id");
   }
@@ -57,7 +56,7 @@ export const useCoordDropStudentMutation = (
       if (isNaN(studentId) || isNaN(sectionId)) {
         throw new PermissionError("Invalid section id");
       }
-      const response = await fetchWithMethod(`coord/${studentId}/drop_students`, HTTP_METHODS.PATCH, body); // changed this to match the path within urls.py
+      const response = await fetchWithMethod(`coord/${studentId}/drop_students`, HTTP_METHODS.PATCH, body);
       if (response.ok) {
         return;
       } else {
@@ -103,8 +102,7 @@ export const useCoordDeleteSectionMutation = (
     },
     {
       onSuccess: () => {
-        // invalidate all queries for the section
-        queryClient.invalidateQueries(["sections", sectionId]); // might still need this?
+        queryClient.invalidateQueries(["sections", sectionId]);
       },
       retry: handleRetry
     }

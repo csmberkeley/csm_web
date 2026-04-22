@@ -10,7 +10,7 @@ import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Policies from "./Policies";
 import CoordTable from "./coord_interface/CoordTable";
-import CupTable from "./cup/CupTable";
+import CupInterface from "./cup/CupTable";
 import { DataExport } from "./data_export/DataExport";
 import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 import { Resources } from "./resource_aggregation/Resources";
@@ -42,7 +42,7 @@ const App = () => {
           <Route path="courses/*" element={<CourseMenu />} />
           <Route path="coord/:id/students" element={<CoordTable />} />
           <Route path="coord/:id/mentors" element={<CoordTable />} />
-          <Route path="leaderboard" element={<CupTable />} />
+          <Route path="leaderboard" element={<CupInterface />} />
           <Route path="resources/*" element={<Resources />} />
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
           <Route path="policies/*" element={<Policies />} />

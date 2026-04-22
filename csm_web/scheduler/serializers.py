@@ -511,4 +511,49 @@ class LeaderboardSerializer(serializers.ModelSerializer):
 class ChallengeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Challenge
+        # Notice we removed "points" here because it's not a real database column
         fields = ["id", "name", "description", "maxPoints", "start_date", "end_date"]
+
+
+class FamilyChallengeSerializer(serializers.ModelSerializer):
+    # pylint: disable=abstract-method
+    points = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Challenge
+        fields = [
+            "id",
+            "name",
+            "description",
+            "maxPoints",
+            "start_date",
+            "end_date",
+            "points",
+        ]
+
+    def get_points(self, obj):
+        """
+        Retrieve the number of points the family has for this challenge,
+        or None if they have no points
+        """
+        return getattr(obj, "family_points", None)
+
+
+class AddPointsSerializer(serializers.Serializer):
+    # pylint: disable=abstract-method
+    # Validates the input is an ID AND that a Challenge with this ID actually exists
+    challenge = serializers.PrimaryKeyRelatedField(queryset=Challenge.objects.all())
+
+    # Validates it is a whole number and strictly greater than 0
+    points = serializers.IntegerField(min_value=1)
+
+    # Validates it is a list of IDs, isn't empty, AND that all Families exist
+    family_ids = serializers.PrimaryKeyRelatedField(
+        queryset=Family.objects.all(), many=True, allow_empty=False
+    )
+
+
+class FamilySerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Family
+        fields = ["id", "course", "name"]

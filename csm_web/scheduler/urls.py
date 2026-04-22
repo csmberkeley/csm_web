@@ -28,4 +28,7 @@ urlpatterns += [
     path("coord/<int:pk>/section/", views.coord.delete_section),
     path("export/", views.export_data),
     path("cup/leaderboard/", views.cup.view_leaderboard),
+    path("cup/<int:family_id>/challenges/", views.cup.view_family_challenges),
+    path("cup/challenges/", views.cup.view_and_create_challenges),
+    path("cup/add_points/", views.cup.post_points),
 ]
