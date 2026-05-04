@@ -258,13 +258,8 @@ describe("whitelisted courses", () => {
       .should("match", /^enrollment opens/i);
 
     // now try to enroll; taken from student-course.cy.ts
-    // shouldn't be able to click on enroll
-    cy.get(".section-card")
-      .contains(/enroll/i)
-      .within($enroll => {
-        // button should be disabled
-        cy.wrap($enroll).should("be.disabled");
-      });
+    // shouldn't be able to click on enroll/join waitlist
+    cy.get(".section-card").find(".section-card-footer").should("be.disabled");
 
     // go back to home page
     cy.visit("/");

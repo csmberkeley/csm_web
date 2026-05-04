@@ -1,4 +1,4 @@
-from . import matcher
+from . import matcher, waitlistedStudent
 from .coord import delete_section, view_mentors, view_students
 from .course import CourseViewSet
 from .export import export_data

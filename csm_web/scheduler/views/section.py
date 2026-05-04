@@ -25,6 +25,7 @@ from scheduler.serializers import (
     StudentSerializer,
 )
 
+from ..models import WaitlistedStudent
 from .utils import (
     get_object_or_error,
     log_str,
@@ -32,6 +33,222 @@ from .utils import (
     viewset_with,
     weekday_iso_to_string,
 )
+
+
+def add_student(section, user):  # make this endpoint for only adding as a student
+    """
+    Helper Function:
+
+    Adds a student to a section (initiated by an API call)
+    """
+    # Checks that user is able to enroll in the course
+    if not user.can_enroll_in_course(section.mentor.course):
+        logger.warning(
+            "<Enrollment:Failure> User %s was unable to enroll in Section %s"
+            " because they are already involved in this course",
+            log_str(user),
+            log_str(section),
+        )
+        raise PermissionDenied(
+            "You are already either mentoring for this course or enrolled in a"
+            " section, or the course is closed for enrollment",
+            status.HTTP_422_UNPROCESSABLE_ENTITY,
+        )
+
+    # Check that the section is not full, wouldn't we want that to allow that
+    if section.is_section_full:
+        logger.warning(
+            "<Enrollment:Failure> User %s was unable to enroll in Section %s"
+            " because it was full",
+            log_str(user),
+            log_str(section),
+        )
+        raise PermissionDenied(
+            "There is no space available in this section", status.HTTP_423_LOCKED
+        )
+
+    # Check that the student exists only once
+    student_queryset = user.student_set.filter(
+        active=False, course=section.mentor.course
+    )
+    if student_queryset.count() > 1:
+        logger.error(
+            "<Enrollment:Critical> Multiple student objects exist in the"
+            " database (Students %s)!",
+            student_queryset.all(),
+        )
+        raise PermissionDenied(
+            "An internal error occurred; email mentors@berkeley.edu"
+            " immediately. (Duplicate students exist in the database (Students"
+            f" {student_queryset.all()}))",
+            code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        )
+
+    if student_queryset.count() == 1:
+        student = student_queryset.get()
+        old_section = student.section
+        student.section = section
+        student.active = True
+        # generate new attendance objects for this student
+        # in all section occurrences past this date
+        now = timezone.now().astimezone(timezone.get_default_timezone())
+        future_section_occurrences = section.sectionoccurrence_set.filter(
+            Q(date__gte=now.date())
+        )
+        for section_occurrence in future_section_occurrences:
+            Attendance(
+                student=student, sectionOccurrence=section_occurrence, presence=""
+            ).save()
+        logger.info(
+            "<Enrollment> Created %s new attendances for user %s in Section %s",
+            len(future_section_occurrences),
+            log_str(student.user),
+            log_str(section),
+        )
+        logger.info(
+            "<Enrollment:Pending> User %s swapping into Section %s from Section %s",
+            log_str(student.user),
+            log_str(section),
+            log_str(old_section),
+        )
+    else:
+        student = Student.objects.create(
+            user=user, section=section, course=section.mentor.course
+        )
+
+    student.save()
+
+    logger.info(
+        "<Enrollment:Success> User %s enrolled in Section %s",
+        log_str(student.user),
+        log_str(section),
+    )
+
+    # Removes all waitlists the student that added was a part of
+    waitlist_set = WaitlistedStudent.objects.filter(
+        user=user, active=True, course=student.course
+    )
+
+    for waitlist in waitlist_set:
+        waitlist.active = False
+        # waitlist.delete()
+        waitlist.save()
+
+    logger.info(
+        "<Enrollment:Success> User %s removed from all Waitlists for Course %s",
+        log_str(user),
+        log_str(student.course),
+    )
+
+    return Response({"id": student.id}, status=status.HTTP_201_CREATED)
+
+
+def swap_into_section(section, user):
+    """
+    Helper Function:
+
+    Swaps a user into a new section by dropping their current
+    section enrollment first if needed. Handles attendance cleanup.
+
+    Returns the old section ID if the user was swapped, or None if
+    the user was not previously enrolled.
+    """
+    active_student = user.student_set.filter(
+        active=True, course=section.mentor.course
+    ).first()
+
+    old_section_id = None
+    if active_student is not None:
+        if active_student.section == section:
+            raise PermissionDenied("User is already enrolled in this section")
+
+        # drop from current section
+        old_section = active_student.section
+        old_section_id = old_section.id
+        active_student.active = False
+        active_student.save()
+
+    try:
+        add_student(section, user)
+    except PermissionDenied:
+        if active_student is not None:
+            active_student.active = True
+            active_student.save()
+        raise
+
+    if active_student is not None:
+        now = timezone.now().astimezone(timezone.get_default_timezone())
+        active_student.attendance_set.filter(
+            Q(
+                sectionOccurrence__date__gte=now.date(),
+                sectionOccurrence__section=old_section,
+            )
+        ).delete()
+
+    return old_section_id
+
+
+def add_from_waitlist(pk):
+    """
+    Helper function for adding from waitlist. Called by drop user api
+
+    Checks to see if it is possible to add a student to a section off the waitlist.
+    Will remove added student from all other waitlists as well
+    - Will only add ONE student
+    - Waitlist student is deactivated
+    - Changes nothing if fails to add class
+
+    """
+    # Finds section and waitlist student, searches for position
+    # (manually inserted student) then timestamp
+    cascade_section_id = None
+    response = None
+    with transaction.atomic():
+        section = Section.objects.select_for_update().get(pk=pk)
+        waitlisted_students = list(
+            WaitlistedStudent.objects.select_for_update()
+            .filter(active=True, section=section)
+            .order_by("position", "timestamp")
+        )
+
+        # Check if there are waitlisted students
+        if not waitlisted_students:
+            logger.info(
+                "<Waitlist:Skipped> No waitlist users for section %s",
+                log_str(section),
+            )
+            response = Response(status=status.HTTP_204_NO_CONTENT)
+            return response
+
+        for waitlisted_student in waitlisted_students:
+            try:
+                cascade_section_id = swap_into_section(
+                    waitlisted_student.section, waitlisted_student.user
+                )
+            except PermissionDenied:
+                waitlisted_student.active = False
+                waitlisted_student.save()
+                continue
+
+            logger.info(
+                "<Enrollment:Success> User %s removed from all Waitlists for Course %s",
+                log_str(waitlisted_student.user),
+                log_str(waitlisted_student.course),
+            )
+            response = Response(status=status.HTTP_201_CREATED)
+            break
+
+        if response is None:
+            logger.info(
+                "<Waitlist:Skipped> No eligible waitlist users for section %s",
+                log_str(section),
+            )
+            response = Response(status=status.HTTP_204_NO_CONTENT)
+
+    if cascade_section_id is not None:
+        add_from_waitlist(pk=cascade_section_id)
+
+    return response
 
 
 class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
@@ -62,6 +279,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 Q(mentor__user=self.request.user)
                 | Q(students__user=self.request.user)
                 | Q(mentor__course__coordinator__user=self.request.user)
+                | Q(waitlist_set__user=self.request.user)
             )
             .distinct()
         )
@@ -178,6 +396,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             data={
                 "capacity": request.data.get("capacity"),
                 "description": request.data.get("description"),
+                "waitlist_capacity": request.data.get("waitlist_capacity"),
             },
             partial=True,
         )
@@ -504,6 +723,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
 
         # Phase 2: everything's good to go; do the database actions
         expand_capacity = False
+        old_section_ids = set()
         for db_action in db_actions:
             action_type, obj = db_action
             if action_type == "capacity":
@@ -548,8 +768,12 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     log_str(student.user),
                     log_str(section),
                 )
+                WaitlistedStudent.objects.filter(
+                    user=user, active=True, course=section.mentor.course
+                ).update(active=False)
             elif action_type in ("enroll", "unban_enroll"):  # obj=student, type Student
                 student = obj
+                was_active = student.active
                 if action_type == "unban_enroll":  # unban student first
                     student.banned = False
                 # enroll student
@@ -587,6 +811,11 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     log_str(section),
                     log_str(old_section),
                 )
+                WaitlistedStudent.objects.filter(
+                    user=student.user, active=True, course=student.course
+                ).update(active=False)
+                if was_active and old_section.id != section.id:
+                    old_section_ids.add(old_section.id)
             elif action_type == "unban":  # obj=student, type Student
                 student = obj
                 # unban student
@@ -599,90 +828,31 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             )
             section.save()
 
+        # expand waitlist capacity
+        for sid in old_section_ids:
+            add_from_waitlist(pk=sid)
+
         return Response(status=status.HTTP_200_OK)
 
     def _student_add(self, request, section):
         """
-        Adds a student to a section (initiated by a student)
+        Adds a student to a section (initiated by a student).
+        If the student is already enrolled in another section for the same
+        course, swaps them into this section instead.
         """
-        if not request.user.can_enroll_in_course(section.mentor.course):
-            logger.warning(
-                "<Enrollment:Failure> User %s was unable to enroll in Section %s"
-                " because they are already involved in this course",
-                log_str(request.user),
-                log_str(section),
-            )
-            raise PermissionDenied(
-                "You are already either mentoring for this course or enrolled in a"
-                " section, or the course is closed for enrollment",
-                status.HTTP_422_UNPROCESSABLE_ENTITY,
-            )
-        if section.current_student_count >= section.capacity:
-            logger.warning(
-                "<Enrollment:Failure> User %s was unable to enroll in Section %s"
-                " because it was full",
-                log_str(request.user),
-                log_str(section),
-            )
-            raise PermissionDenied(
-                "There is no space available in this section", status.HTTP_423_LOCKED
-            )
+        course = section.mentor.course
+        user = request.user
 
-        student_queryset = request.user.student_set.filter(
-            active=False, course=section.mentor.course
-        )
-        if student_queryset.count() > 1:
-            logger.error(
-                "<Enrollment:Critical> Multiple student objects exist in the"
-                " database (Students %s)!",
-                student_queryset.all(),
-            )
-            return PermissionDenied(
-                "An internal error occurred; email mentors@berkeley.edu"
-                " immediately. (Duplicate students exist in the database (Students"
-                f" {student_queryset.all()}))",
-                code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-        if student_queryset.count() == 1:
-            student = student_queryset.get()
-            old_section = student.section
-            student.section = section
-            student.active = True
-            # generate new attendance objects for this student
-            # in all section occurrences past this date
-            now = timezone.now().astimezone(timezone.get_default_timezone())
-            future_section_occurrences = section.sectionoccurrence_set.filter(
-                Q(date__gte=now.date())
-            )
-            for section_occurrence in future_section_occurrences:
-                Attendance(
-                    student=student, sectionOccurrence=section_occurrence, presence=""
-                ).save()
-            logger.info(
-                "<Enrollment> Created %s new attendances for user %s in Section %s",
-                len(future_section_occurrences),
-                log_str(student.user),
-                log_str(section),
-            )
-            student.save()
-            logger.info(
-                "<Enrollment:Success> User %s swapped into Section %s from Section %s",
-                log_str(student.user),
-                log_str(section),
-                log_str(old_section),
-            )
-            return Response(status=status.HTTP_204_NO_CONTENT)
+        if user.student_set.filter(active=True, section=section).exists():
+            raise PermissionDenied("You are already enrolled in this section.")
 
-        # student_queryset.count() == 0
-        student = Student.objects.create(
-            user=request.user, section=section, course=section.mentor.course
-        )
-        logger.info(
-            "<Enrollment:Success> User %s enrolled in Section %s",
-            log_str(student.user),
-            log_str(section),
-        )
-        return Response({"id": student.id}, status=status.HTTP_201_CREATED)
+        if user.student_set.filter(active=True, course=course).exists():
+            old_section_id = swap_into_section(section, user)
+            if old_section_id is not None:
+                add_from_waitlist(pk=old_section_id)
+            return Response(status=status.HTTP_200_OK)
+
+        return add_student(section, user)
 
     @action(detail=True, methods=["get", "put"])
     def wotd(self, request, pk=None):

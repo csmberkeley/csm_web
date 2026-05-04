@@ -12,6 +12,7 @@ from scheduler.models import (
     Spacetime,
     Student,
     User,
+    WaitlistedStudent,
 )
 
 NOW = timezone.now().astimezone(timezone.get_default_timezone())
@@ -174,3 +175,20 @@ def setup_full_section():
         last_name="student",
     )
     Student.objects.create(user=user, course=cs61a, section=section)
+
+
+def setup_section_with_waitlist():
+    """Multiple mentor sections, with waitlisted students in the target section"""
+    setup_multiple_mentor_sections()
+    cs61a = Course.objects.get(name="CS61A")
+    section = Section.objects.get(mentor__user__username="testmentor")
+
+    # create waitlisted students
+    for prefix in ("W1", "W2"):
+        new_user = User.objects.create(
+            username=f"{prefix}_student",
+            first_name=prefix,
+            last_name="Waitlisted",
+            email=f"{prefix}_student@berkeley.edu",
+        )
+        WaitlistedStudent.objects.create(user=new_user, course=cs61a, section=section)

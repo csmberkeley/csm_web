@@ -16,7 +16,7 @@ const timeStringToDate = (time: string): DateTime => {
  * Check that the capacity of a section card is as expected
  */
 const checkCapacity = (text: string, isFull = false) => {
-  const groups = text.trim().match(/^(\d+)\/(\d+)$/i);
+  const groups = text.trim().match(/(\d+)\/(\d+)/);
   if (isFull) {
     expect(parseInt(groups[1]) / parseInt(groups[2])).to.be.eq(1);
   } else {
@@ -87,10 +87,10 @@ describe("coordinator course view", () => {
 
     // === Monday section cards ===
 
-    // should only show sections with space
+    // should show sections with space (including those with waitlist room)
     cy.get(".section-card")
-      // should have two cards
-      .should("have.length", 2)
+      // should have three cards (sections at enrolled capacity still show if waitlist has room)
+      .should("have.length", 3)
       .each($el => {
         cy.wrap($el)
           .should("be.visible")
@@ -99,28 +99,30 @@ describe("coordinator course view", () => {
             cy.get('[title="Time"]')
               .invoke("text")
               .should("match", /Monday/i);
-            // should show descriptions
-            cy.get(".section-card-description").should("be.visible");
             // should show "manage" button
             cy.contains(".section-card-footer", /manage/i).should("be.visible");
 
-            // should not be full
+            // should show enrollment count
             cy.get('[title="Current enrollment"]')
               .invoke("text")
-              .invoke("trim")
-              .should("match", /^\d+\/\d+$/i)
-              .then(checkCapacity);
+              .should("match", /Enrolled:/);
+
+            // should show waitlist count
+            cy.get('[title="Current waitlist"]')
+              .invoke("text")
+              .should("match", /Waitlisted:/);
           });
       });
 
     // should show sections in order by start time
     checkCardOrder();
 
-    // now show unavailable sections
+    // now show unavailable sections (toggle shouldn't change count since
+    // sections at enrolled capacity still have waitlist room)
     cy.get("#show-unavailable-toggle").click();
 
     cy.get(".section-card")
-      // should now have three cards
+      // should still have three cards (no fully-full sections on Monday)
       .should("have.length", 3)
       .each($el => {
         cy.wrap($el)
@@ -131,19 +133,8 @@ describe("coordinator course view", () => {
           .should("match", /Monday/i);
       });
 
-    // one section should be full
-    cy.get(".section-card.full")
-      .should("have.length", 1)
-      .within(() => {
-        // should be full
-        cy.get('[title="Current enrollment"]')
-          .invoke("text")
-          .invoke("trim")
-          .should("match", /^\d+\/\d+$/i)
-          .then(text => checkCapacity(text, true));
-        // should not have a description
-        cy.get(".section-card-description").should("not.exist");
-      });
+    // no section should be fully full (waitlist has room)
+    cy.get(".section-card.full").should("not.exist");
 
     // should show sections in order by start time
     checkCardOrder();
@@ -153,40 +144,41 @@ describe("coordinator course view", () => {
     // === Tuesday/Wednesday section cards ===
     cy.contains(".day-btn", /tu\/w/i).click().should("have.class", "active");
 
-    // should only show sections with space
+    // should show sections with space (including those with waitlist room)
     cy.get(".section-card")
-      // should have one card
-      .should("have.length", 1)
-      .should("be.visible")
-      .within(() => {
-        // should have both "Tuesday" and "Wednesday" somewhere in it
-        cy.get('[title="Time"]')
-          .invoke("text")
-          .then(text => {
-            expect(text).to.match(/Tuesday/i);
-            expect(text).to.match(/Wednesday/i);
-          });
-        // should show descriptions (all for Tu/W are online)
-        cy.get(".section-card-description")
+      // should have two cards (section at enrolled capacity now shows with waitlist room)
+      .should("have.length", 2)
+      .each($el => {
+        cy.wrap($el)
           .should("be.visible")
-          .invoke("text")
-          .should("match", /online/i);
-        // should show "manage" button
-        cy.contains(".primary-btn", /manage/i).should("be.visible");
+          .within(() => {
+            // should have both "Tuesday" and "Wednesday" somewhere in it
+            cy.get('[title="Time"]')
+              .invoke("text")
+              .then(text => {
+                expect(text).to.match(/Tuesday/i);
+                expect(text).to.match(/Wednesday/i);
+              });
+            // should show descriptions (all for Tu/W are online)
+            cy.get(".section-card-description")
+              .should("be.visible")
+              .invoke("text")
+              .should("match", /online/i);
+            // should show "manage" button
+            cy.contains(".primary-btn", /manage/i).should("be.visible");
 
-        // should not be full
-        cy.get('[title="Current enrollment"]')
-          .invoke("text")
-          .invoke("trim")
-          .should("match", /^\d+\/\d+$/i)
-          .then(checkCapacity);
+            // should show enrollment count
+            cy.get('[title="Current enrollment"]')
+              .invoke("text")
+              .should("match", /Enrolled:/);
+          });
       });
 
     // now show unavailable sections
     cy.get("#show-unavailable-toggle").click();
 
     cy.get(".section-card")
-      // should now have two cards
+      // should still have two cards (no fully-full Tu/W sections)
       .should("have.length", 2)
       .each($el => {
         cy.wrap($el)
@@ -207,15 +199,8 @@ describe("coordinator course view", () => {
           });
       });
 
-    // one section should be full
-    cy.get(".section-card.full")
-      .should("have.length", 1)
-      // should be full
-      .find('[title="Current enrollment"]')
-      .invoke("text")
-      .invoke("trim")
-      .should("match", /^\d+\/\d+$/i)
-      .then(text => checkCapacity(text, true));
+    // no section should be fully full (waitlist has room)
+    cy.get(".section-card.full").should("not.exist");
 
     // should show sections in order by start time
     checkCardOrder();
@@ -225,19 +210,11 @@ describe("coordinator course view", () => {
     // === Thursday section cards ===
     cy.get(".day-btn").contains(/th/i).click().should("have.class", "active");
 
-    // should show no sections by default
-    cy.get(".section-card").should("not.exist");
-    cy.get("#course-section-list-empty").should("be.visible");
-
-    // now show unavailable sections
-    cy.get("#show-unavailable-toggle").click();
-
-    // should have one full section
-    cy.get("#course-section-list-empty").should("not.exist");
+    // Thursday section is at enrolled capacity but has waitlist room,
+    // so it should appear by default (not hidden)
     cy.get(".section-card")
       .should("have.length", 1)
       .should("be.visible")
-      .should("have.class", "full")
       .within(() => {
         // should have "Thursday" somewhere in it
         cy.get('[title="Time"]')
@@ -245,13 +222,17 @@ describe("coordinator course view", () => {
           .should("match", /Thursday/i);
         // should have no description
         cy.get(".section-card-description").should("not.exist");
-        // should be full
+        // should show enrollment and waitlist counts
         cy.get('[title="Current enrollment"]')
           .invoke("text")
-          .invoke("trim")
-          .should("match", /^\d+\/\d+$/i)
-          .then(text => checkCapacity(text, true));
+          .should("match", /Enrolled:/);
+        cy.get('[title="Current waitlist"]')
+          .invoke("text")
+          .should("match", /Waitlisted:/);
       });
+
+    // should not be fully full (waitlist has room)
+    cy.get(".section-card.full").should("not.exist");
   });
 
   context("when the course is closed", () => {

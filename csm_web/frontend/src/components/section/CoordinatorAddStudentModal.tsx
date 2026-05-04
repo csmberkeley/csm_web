@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 
 import { useUserEmails } from "../../utils/queries/base";
-import { useEnrollStudentMutation } from "../../utils/queries/sections";
+import { useEnrollStudentMutation, useCoordEnrollStudentToWaitlistMutation } from "../../utils/queries/sections";
 import LoadingSpinner from "../LoadingSpinner";
 import Modal from "../Modal";
 
@@ -22,6 +22,10 @@ enum CoordModalStates {
 interface CoordinatorAddStudentModalProps {
   closeModal: (arg0?: boolean) => void;
   sectionId: number;
+  title: string;
+  mutation: (
+    sectionId: number
+  ) => ReturnType<typeof useEnrollStudentMutation> | ReturnType<typeof useCoordEnrollStudentToWaitlistMutation>;
 }
 
 interface RequestType {
@@ -39,7 +43,10 @@ interface ResponseType {
   progress?: Array<{
     email: string;
     status: string;
-    detail?: any;
+    detail?: {
+      reason?: string;
+      section?: { id: number; mentor: { name: string } };
+    };
   }>;
 }
 
@@ -50,10 +57,12 @@ interface ActionType {
 
 export function CoordinatorAddStudentModal({
   closeModal,
-  sectionId
+  sectionId,
+  title,
+  mutation
 }: CoordinatorAddStudentModalProps): React.ReactElement {
   const { data: userEmails, isSuccess: userEmailsLoaded } = useUserEmails();
-  const enrollStudentMutation = useEnrollStudentMutation(sectionId);
+  const enrollMutation = mutation(sectionId);
 
   const [emailsToAdd, setEmailsToAdd] = useState<string[]>([""]);
   const [response, setResponse] = useState<ResponseType>({} as ResponseType);
@@ -127,8 +136,8 @@ export function CoordinatorAddStudentModal({
       request.actions["capacity"] = responseActions.get("capacity") as string;
     }
 
-    enrollStudentMutation.mutate(request, {
-      onError: ({ status, json }) => {
+    enrollMutation.mutate(request, {
+      onError: ({ status, json }: { status: number; json: ResponseType }) => {
         if (status === 500) {
           // internal error
           setResponse({
@@ -182,7 +191,7 @@ export function CoordinatorAddStudentModal({
 
   const initial_component = (
     <React.Fragment>
-      <h2>Add new students</h2>
+      <h2>Add new {title}</h2>
       <div className="coordinator-email-content">
         <div className="coordinator-email-input-list">
           {emailsToAdd.map((email, index) => (
@@ -286,28 +295,32 @@ export function CoordinatorAddStudentModal({
               </div>
               <div className="coordinator-email-response-item-container">
                 {conflict_arr.map(email_obj => {
+                  const detail = email_obj.detail;
                   let conflictDetail: React.ReactNode = "";
                   let drop_disabled = false;
-                  if (!email_obj.detail.section) {
+                  if (!detail || !detail.section) {
                     // look at reason
-                    if (!email_obj.detail.reason || email_obj.detail.reason === "other") {
+                    if (!detail?.reason || detail.reason === "other") {
                       // unknown reason
                       conflictDetail = "Unable to enroll user in section!";
-                    } else if (email_obj.detail.reason === "coordinator") {
+                    } else if (detail.reason === "coordinator") {
                       conflictDetail = "User is already a coordinator for the course!";
-                    } else if (email_obj.detail.reason === "mentor") {
+                    } else if (detail.reason === "mentor") {
                       conflictDetail = "User is already a mentor for the course!";
+                    } else {
+                      // display the reason string directly (e.g. from waitlist coord-add)
+                      conflictDetail = detail.reason;
                     }
                     drop_disabled = true;
-                  } else if (email_obj.detail.section.id == sectionId) {
+                  } else if (detail.section.id == sectionId) {
                     conflictDetail = "Already enrolled!";
                     drop_disabled = true;
                   } else {
                     conflictDetail = (
                       <React.Fragment>
                         Conflict:{" "}
-                        <Link to={`/sections/${email_obj.detail.section.id}`} target="_blank" rel="noopener noreferrer">
-                          {email_obj.detail.section.mentor.name}
+                        <Link to={`/sections/${detail.section.id}`} target="_blank" rel="noopener noreferrer">
+                          {detail.section.mentor.name}
                         </Link>
                       </React.Fragment>
                     );
