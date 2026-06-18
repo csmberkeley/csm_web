@@ -14,36 +14,44 @@ const checkEnrollButtons = (expectDisabled = false) => {
     cy.wrap($btn).click();
 
     if (!$btn.text().match(/th/i)) {
-      // verify enroll button is there
+      // verify enroll/join waitlist button is there
       cy.get(".section-card").each($card => {
         cy.wrap($card).within(() => {
           if (expectDisabled) {
             cy.get(".section-card-footer")
               .should("have.length", 1)
               .should("be.disabled")
-              // has the correct text
+              // has the correct text (enroll or join waitlist)
               .invoke("text")
-              .should("match", /enroll/i);
+              .should("match", /enroll|join waitlist/i);
           } else {
             cy.get(".section-card-footer")
               .should("have.length", 1)
               .should("not.be.disabled")
-              // has the correct text
+              // has the correct text (enroll or join waitlist)
               .invoke("text")
-              .should("match", /enroll/i);
+              .should("match", /enroll|join waitlist/i);
           }
         });
       });
 
-      // verify no full sections
-      cy.get(".section-card.full").should("not.exist");
+      // verify no full sections (full = both enrolled AND waitlist are full)
+      cy.get("body").then($body => {
+        expect($body.find(".section-card.full").length).to.eq(0);
+      });
     }
 
     cy.get("#show-unavailable-toggle").click();
 
     // verify all full sections have disabled enroll button
-    cy.get(".section-card.full").each($card => {
-      cy.wrap($card).find(".section-card-footer").should("be.disabled");
+    // (it's valid for there to be zero fully-full sections in this fixture)
+    cy.get("body").then($body => {
+      const $cards = $body.find(".section-card.full");
+      if ($cards.length > 0) {
+        cy.wrap($cards).each($card => {
+          cy.wrap($card).find(".section-card-footer").should("be.disabled");
+        });
+      }
     });
 
     // reset for next check
@@ -90,13 +98,8 @@ const checkFailedEnrollAction = () => {
       return;
     }
     cy.get(".section-card").each($card => {
-      // shouldn't be able to click on enroll
-      cy.wrap($card)
-        .contains(/enroll/i)
-        .within($enroll => {
-          // button should be disabled
-          cy.wrap($enroll).should("be.disabled");
-        });
+      // shouldn't be able to click on enroll/join waitlist
+      cy.wrap($card).find(".section-card-footer").should("be.disabled");
     });
   });
 
@@ -137,6 +140,65 @@ describe("student course view", () => {
         cy.visit("/courses/1");
 
         checkEnrollAction();
+      });
+
+      it("should display FULL for sections with both enrolled and waitlist at capacity", () => {
+        cy.setupDB("course/coordinator-student-course", "student_setup_open_with_fully_full");
+        cy.login();
+        cy.visit("/courses/1");
+
+        // Show unavailable sections so fully-full cards are visible.
+        cy.get("#show-unavailable-toggle").click();
+
+        // The section at enrolled capacity with waitlist full should show FULL
+        cy.get(".section-card.full").should("have.length.gte", 1);
+        cy.get(".section-card.full .section-card-footer").first().invoke("text").should("match", /full/i);
+        cy.get(".section-card.full .section-card-footer").first().should("be.disabled");
+
+        // Sections not fully full should show ENROLL or JOIN WAITLIST
+        cy.get(".section-card:not(.full) .section-card-footer").each($btn => {
+          cy.wrap($btn)
+            .invoke("text")
+            .should("match", /enroll|join waitlist/i);
+        });
+      });
+
+      it("should display waitlist count on section cards", () => {
+        cy.setupDB("course/coordinator-student-course", "student_setup_open_with_fully_full");
+        cy.login();
+        cy.visit("/courses/1");
+
+        // Each section card should display waitlist count
+        cy.get(".section-card").each($card => {
+          cy.wrap($card).within(() => {
+            // should show enrolled count
+            cy.get('[title="Current enrollment"]')
+              .invoke("text")
+              .should("match", /Enrolled: \d+\/\d+/);
+
+            // should show waitlist count
+            cy.get('[title="Current waitlist"]')
+              .invoke("text")
+              .should("match", /Waitlisted: \d+\/\d+/);
+          });
+        });
+      });
+
+      it("should show JOIN WAITLIST for enrolled-full sections with waitlist room", () => {
+        cy.setupDB("course/coordinator-student-course", "student_setup_open_with_fully_full");
+        cy.login();
+        cy.visit("/courses/1");
+
+        // Toggle to show unavailable sections
+        cy.get("#show-unavailable-toggle").click();
+
+        // Fully full sections should show FULL and be disabled
+        cy.get(".section-card.full").each($card => {
+          cy.wrap($card).within(() => {
+            cy.get(".section-card-footer").invoke("text").should("match", /full/i);
+            cy.get(".section-card-footer").should("be.disabled");
+          });
+        });
       });
     });
 

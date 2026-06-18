@@ -20,6 +20,7 @@ from .models import (
     Spacetime,
     Student,
     User,
+    WaitlistedStudent,
     Worksheet,
     day_to_number,
 )
@@ -29,13 +30,19 @@ class Role(Enum):
     COORDINATOR = "COORDINATOR"
     STUDENT = "STUDENT"
     MENTOR = "MENTOR"
+    WAITLIST = "WAITLIST"
 
 
 def get_profile_role(profile):
     """Return role (enum) depending on the profile type"""
-    for role, klass in zip(Role, (Coordinator, Student, Mentor)):
-        if isinstance(profile, klass):
-            return role.value
+    if isinstance(profile, Coordinator):
+        return Role.COORDINATOR.value
+    if isinstance(profile, Student):
+        return Role.STUDENT.value
+    if isinstance(profile, Mentor):
+        return Role.MENTOR.value
+    if isinstance(profile, WaitlistedStudent):
+        return Role.WAITLIST.value
     return None
 
 
@@ -269,6 +276,14 @@ class StudentSerializer(serializers.ModelSerializer):
         fields = ("id", "name", "email", "attendances", "section")
 
 
+class WaitlistedStudentSerializer(serializers.ModelSerializer):
+    email = serializers.EmailField(source="user.email")
+
+    class Meta:
+        model = WaitlistedStudent
+        fields = ("id", "name", "email", "section", "position")
+
+
 class CoordStudentSerializer(serializers.ModelSerializer):
     """
     Serializer for the coordinator view of students
@@ -340,6 +355,7 @@ class SectionSerializer(serializers.ModelSerializer):
     user_role = serializers.SerializerMethodField()
     associated_profile_id = serializers.SerializerMethodField()
     course_restricted = serializers.BooleanField(source="mentor.course.is_restricted")
+    num_students_waitlisted = serializers.SerializerMethodField()
 
     def get_num_students_enrolled(self, obj):
         """Retrieve the number of students enrolled in the section"""
@@ -347,6 +363,14 @@ class SectionSerializer(serializers.ModelSerializer):
             obj.num_students_annotation
             if hasattr(obj, "num_students_annotation")
             else obj.current_student_count
+        )
+
+    def get_num_students_waitlisted(self, obj):
+        """Retrieve the number of students waitlisted for the section"""
+        return (
+            obj.num_waitlisted_annotation
+            if hasattr(obj, "num_waitlisted_annotation")
+            else obj.current_waitlist_count
         )
 
     def user_associated_profile(self, obj):
@@ -357,6 +381,9 @@ class SectionSerializer(serializers.ModelSerializer):
         try:
             return obj.students.get(user=user)
         except Student.DoesNotExist:
+            waitlisted_student = obj.waitlist_set.filter(user=user).first()
+            if waitlisted_student:
+                return waitlisted_student
             coordinator = obj.mentor.course.coordinator_set.filter(user=user).first()
             if coordinator:
                 return coordinator
@@ -391,6 +418,8 @@ class SectionSerializer(serializers.ModelSerializer):
             "user_role",
             "course_title",
             "course_restricted",
+            "waitlist_capacity",
+            "num_students_waitlisted",
         )
 
 
