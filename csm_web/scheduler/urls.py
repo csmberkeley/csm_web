@@ -12,6 +12,8 @@ router.register(r"spacetimes", views.SpacetimeViewSet, basename="spacetime")
 router.register(r"users", views.UserViewSet, basename="user")
 router.register(r"resources", views.ResourceViewSet, basename="resource")
 
+# register endpoint for 
+
 urlpatterns = router.urls
 
 urlpatterns += [

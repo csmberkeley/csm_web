@@ -7,11 +7,15 @@ interface EmailOptionProps {
 }
 
 export default function TextFields({ fieldName, numberOfFields, emailType}:EmailOptionProps ) {
+  /*fieldName would be a list*/
+  let textboxes = "<div class="";
+  /*for i in fieldName:
+    { <label for={ i }> { i }:</label> }
+    { <input type="text"> </input> }
+
   return (
     <div>
-        <text>{fieldName}</text>
-        {/* <label for={ name }> { name }:</label> */}
-        {/* <input type="text"> </input> */}
+        { textboxes }
     </div>
   );
 }
