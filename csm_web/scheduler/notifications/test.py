@@ -1,7 +1,6 @@
 import base64
 from email.message import EmailMessage
 
-import google.auth
 import os
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -12,6 +11,22 @@ import requests
 import time
 import json
 import datetime
+
+
+def gen_template(room: str, room_num: str, time_start: int, time_end: int) -> str:
+   
+   # fetching student emails + mentor emails
+   
+   return f"""Hey everyone,
+
+    Welcome to CSM!!!!!
+
+    
+    Best,
+    """
+
+   
+
 
 # Scopes define what permissions you're requesting
 SCOPES = ["https://www.googleapis.com/auth/gmail.compose"]

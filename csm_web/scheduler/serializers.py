@@ -483,3 +483,10 @@ class MatcherPreferenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = MatcherPreference
         fields = ["slot", "mentor", "preference"]
+
+class EmailSerializer(serializers.ModelSerializer):
+    
+    email = serializers.EmailField(source="user.email")
+    mentor_name = serializers.CharField(source="section.mentor.name")
+    num_unexcused = serializers.SerializerMethodField()
+    day_time = serializers.CharField(source="section.day_time")

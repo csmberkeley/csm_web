@@ -85,13 +85,18 @@ def send_gcal_invite():
         # attendee emails
         "attendees": [
             {"email": "mentors@berkeley.edu"},
-            {"email": "ericaliu9@gmail.com"}
+            {"email": "benhung@berkeley.edu"}
         ],
 
         "reminders": {
             "useDefault": True,
         },
     }
+
+    # add updating to calendars...
+    # also enable email notiications for calendar invites...
+
+    # notes: change calendarid to not primary to avoid conflicts.
     event = service.events().insert(calendarId='primary', body=event).execute()
     print ('Event created: %s' % (event.get('htmlLink')))
 
