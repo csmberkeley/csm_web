@@ -1,16 +1,15 @@
 from django.core.exceptions import ObjectDoesNotExist
 from django.db.models import Q
 from django.utils import timezone
-from scheduler.models import Attendance, SectionOccurrence
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
-import datetime
 
-from .utils import log_str, logger, get_object_or_error
 from ..models import Student
 from ..serializers import AttendanceSerializer, StudentSerializer
+from .section import add_from_waitlist
+from .utils import get_object_or_error, log_str, logger
 
 
 class StudentViewSet(viewsets.GenericViewSet):
@@ -28,6 +27,13 @@ class StudentViewSet(viewsets.GenericViewSet):
 
     @action(detail=True, methods=["patch"])
     def drop(self, request, pk=None):
+        """
+        PATCH: /api/students/<pk>/drop
+
+        Drops student from class
+        - Turns inactive
+        - Attempts to add from waitlist
+        """
         student = get_object_or_error(self.get_queryset(), pk=pk)
         is_coordinator = student.course.coordinator_set.filter(
             user=request.user
@@ -43,7 +49,10 @@ class StudentViewSet(viewsets.GenericViewSet):
                 student.course.whitelist.remove(student.user)
         student.save()
         logger.info(
-            f"<Drop> User {log_str(request.user)} dropped Section {log_str(student.section)} for Student user {log_str(student.user)}"
+            "<Drop> User %s dropped Section %sfor Student user %s",
+            request.user,
+            student.section,
+            student.user,
         )
         # filter attendances and delete future attendances
         now = timezone.now().astimezone(timezone.get_default_timezone())
@@ -54,12 +63,22 @@ class StudentViewSet(viewsets.GenericViewSet):
             )
         ).delete()
         logger.info(
-            f"<Drop> Deleted {num_deleted} attendances for user {log_str(student.user)} in Section {log_str(student.section)} after {now.date()}"
+            "<Drop> Deleted %s attendances for user %s in Section %s after %s",
+            num_deleted,
+            log_str(student.user),
+            log_str(student.section),
+            now.date(),
         )
+        add_from_waitlist(pk=student.section.id)
         return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=["get", "put"])
     def attendances(self, request, pk=None):
+        """
+        GET or PUT: /api/students/<pk>/attendances
+
+        Endpoint to get or edit a student's attendance
+        """
         student = get_object_or_error(self.get_queryset(), pk=pk)
         if request.method == "GET":
             return Response(
@@ -80,19 +99,25 @@ class StudentViewSet(viewsets.GenericViewSet):
                 },
             )
         except ObjectDoesNotExist:
-            logger.error(
-                f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, used non-existent attendance id {request.data['id']}"
+            logger.info(
+                "<Attendance:Failure> Could not record attendance for user"
+                "%s used non-existent attendance id %s",
+                log_str(request.user),
+                request.data["id"],
             )
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
         if serializer.is_valid():
             attendance = serializer.save()
             logger.info(
-                f"<Attendance:Success> Attendance {log_str(attendance)} recorded for User {log_str(request.user)}"
+                "<Attendance:Success> Attendance %s recorded for user %s",
+                log_str(attendance),
+                log_str(request.user),
             )
             return Response(status=status.HTTP_204_NO_CONTENT)
-        logger.error(
-            f"<Attendance:Failure> Could not record attendance for User {log_str(request.user)}, errors: {serializer.errors}"
+        logger.info(
+            "<Attendance:Failure> Could not record attendance for user %s errors: %s",
+            log_str(request.user),
+            serializer.errors,
         )
         return Response(serializer.errors, status=status.HTTP_422_UNPROCESSABLE_ENTITY)
-

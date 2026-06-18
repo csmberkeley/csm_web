@@ -25,14 +25,20 @@ describe("section details accessibility", () => {
     cy.contains(".section-detail-header-title", /cs61a/i).should("be.visible");
     cy.contains(".relation-label", /mentor/i).should("be.visible");
 
-    // students
-    cy.get(".section-detail-info-card.students")
+    // enrolled students
+    cy.get(".section-detail-info-card.enrolled-students")
       .should("be.visible")
       .find(".section-detail-info-card-contents")
       .should("be.visible")
       // 4 students enrolled
       .find(".student-info")
       .should("have.length", 4);
+
+    // waitlisted students card should exist (empty by default)
+    cy.get(".section-detail-info-card.waitlisted-students")
+      .should("be.visible")
+      .find(".section-detail-info-card-contents")
+      .should("be.visible");
 
     // time and location cards
     cy.get(".section-detail-info-card.time-and-location-1").should("be.visible");
@@ -51,6 +57,10 @@ describe("section details accessibility", () => {
           .parent()
           .invoke("text")
           .should("match", /test section$/i);
+        cy.contains(".meta-field", /waitlist capacity/i)
+          .parent()
+          .invoke("text")
+          .should("match", /3$/i);
       });
 
     // go to roster tab
