@@ -7,7 +7,7 @@ import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import CopyIcon from "../../../static/frontend/img/copy.svg";
 
 import MentorSectionEmailTemp from "../emailing/MentorSectionEmailTemp";
-import  './section.scss';
+import "../../css/section.scss";
 
 interface MentorSectionRosterProps {
   id: number;

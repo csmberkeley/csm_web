@@ -236,6 +236,21 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
     "https://www.googleapis.com/auth/userinfo.profile",
 ]
 
+# CSM org Gmail notification settings. Endpoint-triggered notifications are
+# opt-in so local/dev actions do not accidentally send real email.
+CSM_NOTIFICATIONS_ENABLED = os.environ.get("CSM_NOTIFICATIONS_ENABLED") == "true"
+CSM_GOOGLE_GMAIL_CREDENTIALS_FILE = os.environ.get(
+    "CSM_GOOGLE_GMAIL_CREDENTIALS_FILE",
+    os.path.join(BASE_DIR, "scheduler", "notifications", "credentials.json"),
+)
+CSM_GOOGLE_GMAIL_TOKEN_FILE = os.environ.get(
+    "CSM_GOOGLE_GMAIL_TOKEN_FILE",
+    os.path.join(BASE_DIR, "scheduler", "notifications", "token.json"),
+)
+CSM_GMAIL_SENDER_EMAIL = os.environ.get(
+    "CSM_GMAIL_SENDER_EMAIL", "mentors@berkeley.edu"
+)
+
 # To fix AuthStateMissing error: https://github.com/python-social-auth/social-core/issues/250
 SESSION_COOKIE_SAMESITE = None
 
