@@ -5,6 +5,7 @@ from rest_framework import status, viewsets
 from rest_framework.decorators import action
 from rest_framework.exceptions import PermissionDenied
 from rest_framework.response import Response
+from scheduler.notifications.ops_notifications import queue_drop_confirmation
 
 from ..models import Student
 from ..serializers import AttendanceSerializer, StudentSerializer
@@ -48,6 +49,7 @@ class StudentViewSet(viewsets.GenericViewSet):
             if student.course.is_restricted and request.data.get("blacklisted", False):
                 student.course.whitelist.remove(student.user)
         student.save()
+        queue_drop_confirmation(student)
         logger.info(
             "<Drop> User %s dropped Section %sfor Student user %s",
             request.user,

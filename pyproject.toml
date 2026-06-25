@@ -26,6 +26,8 @@ drf-nested-forms = "^1.1.8"
 factory-boy = "^3.3.0"
 # misc
 networkx = "^3.3"
+google-api-python-client = "^2.192.0"
+google-auth-oauthlib = "^1.3.0"
 
 # packages for testing
 pytest = "^8.2.2"

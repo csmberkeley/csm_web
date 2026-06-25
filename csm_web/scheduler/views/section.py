@@ -24,6 +24,7 @@ from scheduler.serializers import (
     SectionSerializer,
     StudentSerializer,
 )
+from scheduler.notifications.ops_notifications import queue_enrollment_confirmation
 
 from ..models import WaitlistedStudent
 from .utils import (
@@ -123,6 +124,7 @@ def add_student(section, user):  # make this endpoint for only adding as a stude
         log_str(student.user),
         log_str(section),
     )
+    queue_enrollment_confirmation(student)
 
     # Removes all waitlists the student that added was a part of
     waitlist_set = WaitlistedStudent.objects.filter(
@@ -763,6 +765,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     log_str(section),
                 )
                 student.save()
+                queue_enrollment_confirmation(student)
                 logger.info(
                     "<Enrollment:Success> User %s enrolled in Section %s",
                     log_str(student.user),
@@ -804,6 +807,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                     log_str(section),
                 )
                 student.save()
+                queue_enrollment_confirmation(student)
                 logger.info(
                     "<Enrollment:Success> User %s swapped into Section %s from"
                     " Section %s",

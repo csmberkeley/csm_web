@@ -4,6 +4,10 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.exceptions import NotFound, PermissionDenied
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
+from scheduler.notifications.ops_notifications import (
+    queue_waitlist_confirmation,
+    queue_waitlist_drop_confirmation,
+)
 from scheduler.serializers import WaitlistedStudentSerializer
 from scheduler.views.utils import get_object_or_error
 
@@ -199,7 +203,10 @@ def _add_to_waitlist_or_section(section, user, *, bypass_enrollment_time=False):
     ).exists():
         raise PermissionDenied("User is already waitlisted in this section.")
 
-    WaitlistedStudent.objects.create(user=user, section=section, course=course)
+    waitlisted_student = WaitlistedStudent.objects.create(
+        user=user, section=section, course=course
+    )
+    queue_waitlist_confirmation(waitlisted_student)
     return None
 
 
@@ -231,6 +238,7 @@ def drop(request, pk=None):
     waitlisted_student.active = False
     # waitlisted_student.delete()
     waitlisted_student.save()
+    queue_waitlist_drop_confirmation(waitlisted_student)
     logger.info(
         "<Drop> User %s dropped from Waitlist for Section %s",
         user,
