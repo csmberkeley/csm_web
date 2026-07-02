@@ -12,10 +12,7 @@ class Command(BaseCommand):
     def handle(self, *args, **options):
         email = options["email"]
 
-        result = GoogleGmailSender(
-            credentials_file="csm_web/scheduler/notifications/credentials.json",
-            token_file="csm_web/scheduler/notifications/token.json",
-        ).send_message(
+        result = GoogleGmailSender().send_message(
             to_email=email,
             subject="CSM web Gmail API test",
             body=(

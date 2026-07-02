@@ -480,21 +480,3 @@ $attendance-tab-radius: 10px;
 .calendar-warning-icon-tooltip {
   z-index: 5;
 }
-
-// Email modal pop-up
-.modal-overlay{
-  position: fixed;
-  inset: 0;
-  background: rgba(0,0,0,0.5);
-  display: flex; 
-  align-items: center;
-  justify-content: center;
-  z-Index: 50;
-}
-.modal-content{
-  background: white;
-  padding: 2rem;
-  border-radius: 8px;
-  min-width: 400px;
-}
-

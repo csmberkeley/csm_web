@@ -6,9 +6,6 @@ import LoadingSpinner from "../LoadingSpinner";
 import CheckCircle from "../../../static/frontend/img/check_circle.svg";
 import CopyIcon from "../../../static/frontend/img/copy.svg";
 
-import MentorSectionEmailTemp from "../emailing/MentorSectionEmailTemp";
-import "../../css/section.scss";
-
 interface MentorSectionRosterProps {
   id: number;
 }
@@ -16,7 +13,6 @@ interface MentorSectionRosterProps {
 export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
   const { data: students, isSuccess: studentsLoaded, isError: studentsLoadError } = useSectionStudents(id);
   const [emailsCopied, setEmailsCopied] = useState(false);
-  const [isOpen, setIsOpen] = useState(false);
   const handleCopyEmails = () => {
     if (studentsLoaded) {
       navigator.clipboard.writeText(students.map(({ email }) => email).join("\n")).then(() => {
@@ -54,26 +50,6 @@ export default function MentorSectionRoster({ id }: MentorSectionRosterProps) {
       ) : (
         <LoadingSpinner />
       )}
-      
-      <button onClick={() => setIsOpen(true)}>Save & Preview</button>
-      {isOpen && (
-        <div className="modal-overlay" onClick={() => setIsOpen(false)}>
-        <div className="modal-content" onClick={e => e.stopPropagation()}>
-          <button onClick={() => setIsOpen(false)}>×</button>
-          <h2>Subject here</h2>
-          <hr style={{ border: '1px solid black' }} />
-          <p>Email content here</p>
-          <hr style={{ border: '1px solid black' }} />
-          <button>Send</button>
-        </div>
-      </div>
-      )}
-
-      <MentorSectionEmailTemp></MentorSectionEmailTemp>
-  
-
-      
-
     </React.Fragment>
   );
 }

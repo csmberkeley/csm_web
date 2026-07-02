@@ -239,16 +239,19 @@ SOCIAL_AUTH_GOOGLE_OAUTH2_SCOPE = [
 # CSM org Gmail notification settings. Endpoint-triggered notifications are
 # opt-in so local/dev actions do not accidentally send real email.
 CSM_NOTIFICATIONS_ENABLED = os.environ.get("CSM_NOTIFICATIONS_ENABLED") == "true"
-CSM_GOOGLE_GMAIL_CREDENTIALS_FILE = os.environ.get(
-    "CSM_GOOGLE_GMAIL_CREDENTIALS_FILE",
-    os.path.join(BASE_DIR, "scheduler", "notifications", "credentials.json"),
-)
-CSM_GOOGLE_GMAIL_TOKEN_FILE = os.environ.get(
-    "CSM_GOOGLE_GMAIL_TOKEN_FILE",
-    os.path.join(BASE_DIR, "scheduler", "notifications", "token.json"),
-)
+# OAuth2 credentials for the mentors@berkeley.edu Gmail account, supplied via
+# environment variables so the app never depends on files on disk (Heroku's
+# filesystem is ephemeral). Obtain the refresh token by running the OAuth flow
+# locally once, signed in as mentors@berkeley.edu with the gmail.send scope.
+CSM_GOOGLE_GMAIL_CLIENT_ID = os.environ.get("CSM_GOOGLE_GMAIL_CLIENT_ID")
+CSM_GOOGLE_GMAIL_CLIENT_SECRET = os.environ.get("CSM_GOOGLE_GMAIL_CLIENT_SECRET")
+CSM_GOOGLE_GMAIL_REFRESH_TOKEN = os.environ.get("CSM_GOOGLE_GMAIL_REFRESH_TOKEN")
 CSM_GMAIL_SENDER_EMAIL = os.environ.get(
     "CSM_GMAIL_SENDER_EMAIL", "mentors@berkeley.edu"
+)
+# Display name shown in recipients' inboxes.
+CSM_GMAIL_SENDER_NAME = os.environ.get(
+    "CSM_GMAIL_SENDER_NAME", "Mentors Departmental"
 )
 
 # To fix AuthStateMissing error: https://github.com/python-social-auth/social-core/issues/250
