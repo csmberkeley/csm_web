@@ -106,13 +106,14 @@ def queue_enrollment_confirmation(student):
     """Send an enrollment email after the DB transaction succeeds."""
     _queue_email(
         to_email=student.user.email,
-        subject=f"Enrollment confirmed for {student.course.name}",
+        subject=f"Enrollment Confirmation for {student.course.name}",
         body=(
             f"Hi {student.name or 'there'},\n\n"
-            f"You are enrolled in {student.course.title}.\n\n"
+            f"This email confirms that you have successfully enrolled in a {student.course.title} section. Here are your section details: \n\n"
             f"Section: {student.section.day_time or 'TBD'}\n"
             f"Mentor: {student.section.mentor.name or student.section.mentor.user.email}\n\n"
-            "You can view your section details in CSM web.\n"
+            "You can view your section details, resources, and additional support in CSM web."
+            " We look forward to supporting your academic success!\n"
         ),
     )
     _queue_coordinator_email(
@@ -131,12 +132,13 @@ def queue_waitlist_confirmation(waitlisted_student):
     """Send a waitlist email after the DB transaction succeeds."""
     _queue_email(
         to_email=waitlisted_student.user.email,
-        subject=f"Waitlist confirmation for {waitlisted_student.course.name}",
+        subject=f"Waitlist Confirmation for {waitlisted_student.course.name}",
         body=(
             f"Hi {waitlisted_student.name or 'there'},\n\n"
-            f"You have been added to the waitlist for "
-            f"{waitlisted_student.course.title}.\n\n"
-            "We will email you if your enrollment status changes.\n"
+            f"Thank you for enrolling into a {waitlisted_student.course.title} section, "
+            f"but the section is currently full, and you are waitlisted.\n\n"
+            "We will email you if your enrollment status changes. You can view available "
+            "sections, resources, and additional support in CSM web.\n"
         ),
     )
     _queue_coordinator_email(
@@ -157,7 +159,7 @@ def queue_waitlist_drop_confirmation(waitlisted_student):
     """Send a waitlist-drop email after the DB transaction succeeds."""
     _queue_email(
         to_email=waitlisted_student.user.email,
-        subject=f"Waitlist drop confirmation for {waitlisted_student.course.name}",
+        subject=f"Waitlist Drop Confirmation for {waitlisted_student.course.name}",
         body=(
             f"Hi {waitlisted_student.name or 'there'},\n\n"
             f"This confirms that you have been removed from the waitlist for "
@@ -186,9 +188,9 @@ def queue_drop_confirmation(student):
         subject=f"Drop confirmation for {student.course.name}",
         body=(
             f"Hi {student.name or 'there'},\n\n"
-            f"This confirms that you have been dropped from "
-            f"{student.course.title}.\n\n"
-            "You can check CSM web for any available next steps.\n"
+            f"This email confirms that you have been dropped from a"
+            f"{student.course.title} section.\n\n"
+            "If you believe this was an error or have any questions, please don't hesitate to contact us.\n"
         ),
     )
     _queue_coordinator_email(
