@@ -40,13 +40,16 @@ def test_queue_enrollment_confirmation_sends_after_commit(monkeypatch):
     assert sent == [
         {
             "to_email": "student@berkeley.edu",
-            "subject": "Enrollment confirmed for CSM61A",
+            "subject": "Enrollment Confirmation for CSM61A",
             "body": (
                 "Hi Grace Student,\n\n"
-                "You are enrolled in CSM 61A Mentoring.\n\n"
+                "This email confirms that you have successfully enrolled in a "
+                "CSM 61A Mentoring section. Here are your section details: \n\n"
                 "Section: Monday 10 AM\n"
                 "Mentor: Ada Mentor\n\n"
-                "You can view your section details in CSM web.\n"
+                "You can view your section details, resources, and additional"
+                " support in CSM web. We look forward to supporting your academic"
+                " success!\n"
             ),
         },
         {
@@ -79,13 +82,13 @@ def test_waitlist_notifications_build_expected_subjects(monkeypatch):
     ops.queue_waitlist_drop_confirmation(waitlisted_student)
 
     assert sent[0][0] == "student@berkeley.edu"
-    assert sent[0][1] == "Waitlist confirmation for CSM61A"
-    assert "added to the waitlist" in sent[0][2]
+    assert sent[0][1] == "Waitlist Confirmation for CSM61A"
+    assert "you are waitlisted" in sent[0][2]
     assert sent[1][0] == "coord@berkeley.edu"
     assert sent[1][1] == "Waitlist notice for CSM61A"
     assert "has joined the waitlist" in sent[1][2]
     assert sent[2][0] == "student@berkeley.edu"
-    assert sent[2][1] == "Waitlist drop confirmation for CSM61A"
+    assert sent[2][1] == "Waitlist Drop Confirmation for CSM61A"
     assert "removed from the waitlist" in sent[2][2]
     assert sent[3][0] == "coord@berkeley.edu"
     assert sent[3][1] == "Waitlist drop notice for CSM61A"
@@ -110,9 +113,10 @@ def test_queue_drop_confirmation_builds_drop_email(monkeypatch):
         "Drop confirmation for CSM61A",
         (
             "Hi Grace Student,\n\n"
-            "This confirms that you have been dropped from "
-            "CSM 61A Mentoring.\n\n"
-            "You can check CSM web for any available next steps.\n"
+            "This email confirms that you have been dropped from a "
+            "CSM 61A Mentoring section.\n\n"
+            "If you believe this was an error or have any questions, please"
+            " don't hesitate to contact us.\n"
         ),
     )
     assert sent[1] == (
@@ -190,7 +194,7 @@ def test_google_gmail_sender_builds_and_sends_raw_message(monkeypatch):
     message = message_from_bytes(raw_message, policy=policy.default)
 
     assert message["To"] == "student@berkeley.edu"
-    assert message["From"] == "mentors@berkeley.edu"
+    assert message["From"] == "Mentors Departmental <mentors@berkeley.edu>"
     assert message["Subject"] == "Test subject"
     assert message.get_content().strip() == "Hello from CSM web."
 

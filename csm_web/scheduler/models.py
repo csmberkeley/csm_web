@@ -202,6 +202,9 @@ class Course(ValidatingModel):
     is_restricted = models.BooleanField(default=False)
     whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
     max_waitlist_enroll = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
+    # The Google Calendar this course's section events live on; blank = not yet
+    # created (see scheduler/notifications/gcal.py).
+    calendar_id = models.CharField(max_length=255, blank=True)
 
     def __str__(self):
         return self.name
@@ -419,6 +422,9 @@ class Section(ValidatingModel):
             ' or "early start".'
         ),
     )
+    # The recurring Google Calendar event for this section's weekly meeting; blank =
+    # not yet created (see scheduler/notifications/gcal.py).
+    calendar_event_id = models.CharField(max_length=255, blank=True)
 
     @property
     def day_time(self):
