@@ -36,6 +36,10 @@ class GoogleCalendarClient:
         """Fetch a single event."""
         pass
 
+    def delete_event(self, calendar_id, event_id):
+        """Delete a single event"""
+        pass
+
     def list_events(self, calendar_id):
         """List the events on a calendar."""
         pass
