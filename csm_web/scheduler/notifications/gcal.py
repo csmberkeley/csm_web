@@ -21,7 +21,7 @@ class GoogleCalendarClient:
         """Create a calendar for the course, return its id"""
         pass
 
-    def delete_calendar(self, calendar_id) -> None:
+    def delete_calendar(self, calendar_id):
         """Delete a calendar by id"""
 
     def create_event(self, calendar_id, body):
