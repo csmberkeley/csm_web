@@ -1,15 +1,15 @@
 """Google Calendar integration for section meetings.
 
 Each course has its own calendar; each section becomes a recurring weekly event
-on it. Reuses the shared mentors@berkeley.edu credentials from ops_notifications.
+on it. Uses the shared mentors@berkeley.edu credentials.
 """
 
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 
 from scheduler.notifications.ops_notifications import get_google_credentials
 
 CALENDAR_TIME_ZONE = "America/Los_Angeles"
-
 
 class GoogleCalendarClient:
     """Wrapper for the Google Calendar API."""
@@ -17,25 +17,25 @@ class GoogleCalendarClient:
     def __init__(self):
         self.service = build("calendar", "v3", credentials=get_google_credentials())
 
-    def ensure_course_calendar(self, course) -> str:
-        """Get-or-create the course's calendar, share it, and return its id.
+    def create_calendar(self, course):
+        """Create a calendar for the course, return its id"""
+        pass
 
-        Mentors get writer access, coordinators get reader access.
-        """
-        raise NotImplementedError
+    def delete_calendar(self, calendar_id) -> None:
+        """Delete a calendar by id"""
 
-    def share_calendar(self, calendar_id: str, email: str, role: str) -> None:
-        """Give an email address access to a calendar ("writer" or "reader")."""
-        raise NotImplementedError
+    def create_event(self, calendar_id, body):
+        """Create an event on a calendar, return the created event."""
+        pass
 
-    def upsert_section_event(self, section) -> str:
-        """Create or update the section's recurring weekly event; return its id."""
-        raise NotImplementedError
+    def update_event(self, calendar_id, event_id, body):
+        """Replace an existing event; return the updated event."""
+        pass
 
-    def delete_section_event(self, section) -> None:
-        """Remove the section's calendar event, if any."""
-        raise NotImplementedError
+    def get_event(self, calendar_id, event_id):
+        """Fetch a single event."""
+        pass
 
-    def delete_course_calendar(self, course) -> None:
-        """Delete the course's calendar at the end of the term."""
-        raise NotImplementedError
+    def list_events(self, calendar_id):
+        """List the events on a calendar."""
+        pass
