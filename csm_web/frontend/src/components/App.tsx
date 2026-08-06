@@ -10,6 +10,7 @@ import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Policies from "./Policies";
 import CoordTable from "./coord_interface/CoordTable";
+import Challenges from "./cup/Challenges";
 import CupInterface from "./cup/CupTable";
 import { DataExport } from "./data_export/DataExport";
 import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
@@ -44,6 +45,7 @@ const App = () => {
           <Route path="coord/:id/mentors" element={<CoordTable />} />
           <Route path="leaderboard" element={<CupInterface />} />
           <Route path="resources/*" element={<Resources />} />
+          <Route path="challenges" element={<Challenges />} />
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
           <Route path="policies/*" element={<Policies />} />
           <Route path="export/*" element={<DataExport />} />
@@ -135,6 +137,12 @@ function Header(): React.ReactElement {
         </NavLink>
         <NavLink to="/resources" className={navlinkClass}>
           <h3 className="site-title">Resources</h3>
+        </NavLink>
+        <NavLink to="/leaderboard" className={navlinkClass}>
+          <h3 className="site-title">Leaderboard</h3>
+        </NavLink>
+        <NavLink to="/challenges" className={navlinkClass}>
+          <h3 className="site-title">Challenges</h3>
         </NavLink>
         {activeMatcherRoles[Role.COORDINATOR].size > 0 || activeMatcherRoles[Role.MENTOR].size > 0 ? (
           <NavLink to="/matcher" className={navlinkClass}>
