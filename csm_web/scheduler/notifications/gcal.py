@@ -43,3 +43,5 @@ class GoogleCalendarClient:
     def list_events(self, calendar_id):
         """List the events on a calendar."""
         pass
+
+client = GoogleCalendarClient()

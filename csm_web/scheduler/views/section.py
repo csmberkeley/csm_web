@@ -35,6 +35,8 @@ from .utils import (
     weekday_iso_to_string,
 )
 
+from ..notifications.gcal import client
+
 
 def add_student(section, user):  # make this endpoint for only adding as a student
     """
@@ -112,6 +114,13 @@ def add_student(section, user):  # make this endpoint for only adding as a stude
             log_str(section),
             log_str(old_section),
         )
+        # Adding student as attendee to section event
+        client.update_event(calendar_id=student.section.course.calendar_id,
+                            event_id=student.section.calendar_event_id,
+                            body=student.section.calendar_event_id["attendees"].append({
+                                "email": student.email
+                            })
+        )
     else:
         student = Student.objects.create(
             user=user, section=section, course=section.mentor.course
@@ -169,9 +178,16 @@ def swap_into_section(section, user):
         old_section_id = old_section.id
         active_student.active = False
         active_student.save()
+        # Remove from old_section
+        client.update_event(calendar_id=old_section.course.calendar_id,
+                            event_id=old_section.calendar_event_id,
+                            body=old_section.calendar_event_id["attendees"].remove({
+                                "email": active_student.email
+                            })
+        )
 
     try:
-        add_student(section, user)
+        add_student(section, user)  
     except PermissionDenied:
         if active_student is not None:
             active_student.active = True
