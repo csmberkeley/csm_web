@@ -5,7 +5,6 @@ on it. Uses the shared mentors@berkeley.edu credentials.
 """
 
 from googleapiclient.discovery import build
-from googleapiclient.errors import HttpError
 
 from scheduler.notifications.ops_notifications import get_google_credentials
 
@@ -18,11 +17,19 @@ class GoogleCalendarClient:
         self.service = build("calendar", "v3", credentials=get_google_credentials())
 
     def create_calendar(self, course):
-        """Create a calendar for the course, return its id"""
-        pass
+        """Create a calendar for the course, store its id, and return it."""
+        calendar = self.service.calendars().insert(body={
+            "summary": course.name,
+            "description": course.title,
+            "timeZone": CALENDAR_TIME_ZONE,
+        }).execute()
+        course.calendar_id = calendar["id"]
+        course.save()
+        return calendar["id"]
 
     def delete_calendar(self, calendar_id):
-        """Delete a calendar by id"""
+        """Delete a calendar by id."""
+        self.service.calendars().delete(calendarId=calendar_id).execute()
 
     def create_event(self, calendar_id, body):
         """Create an event on a calendar, return the created event."""
@@ -38,7 +45,6 @@ class GoogleCalendarClient:
 
     def delete_event(self, calendar_id, event_id):
         """Delete a single event"""
-        pass
 
     def list_events(self, calendar_id):
         """List the events on a calendar."""
