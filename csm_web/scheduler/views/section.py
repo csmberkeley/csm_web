@@ -118,11 +118,12 @@ def add_student(section, user):  # make this endpoint for only adding as a stude
         # FIXME: this call cannot work as written -- see the drop path below for
         # the same four bugs. Needs a read-modify-write: get_event() to fetch the
         # current event, append to its "attendees", then write the whole dict back.
+        currAttendees = GoogleCalendarClient.get_event(calendar_id=student.section.course.calednar_id,
+                                       event_id=student.section.calednar_event_id)["attendees"]
+        updatedAttendees = currAttendees.append({"email": student.user.email})
         GoogleCalendarClient().update_event(calendar_id=student.section.course.calendar_id,
                             event_id=student.section.calendar_event_id,
-                            body=student.section.calendar_event_id["attendees"].append({
-                                "email": student.email
-                            })
+                            body={currAttendees: updatedAttendees}
         )
     else:
         student = Student.objects.create(
@@ -190,11 +191,13 @@ def swap_into_section(section, user):
         #   4. Student has no .email -- it is active_student.user.email
         # Also update_event is a full replace, so sending only attendees would
         # wipe summary/start/end/recurrence. Read-modify-write, or use patch().
-        GoogleCalendarClient().update_event(calendar_id=old_section.course.calendar_id,
-                            event_id=old_section.calendar_event_id,
-                            body=old_section.calendar_event_id["attendees"].remove({
-                                "email": active_student.email
-                            })
+        old_section_attendees = GoogleCalendarClient.get_event(calendar_id=active_student.old_section.course.calendar_id,
+                                       event_id=active_student.old_section.calendar_event_id)["attendees"]
+        old_section_attendees.remove({"email": active_student.user.email})
+
+        GoogleCalendarClient().patch_event(calendar_id=old_section.mentor.course.calendar_id,
+                            event_id=old_section.mentor.calendar_event_id,
+                            body={"attendees": old_section_attendees}
         )
 
     try:
