@@ -53,35 +53,35 @@ def make_section(students=()):
     )
 
 
-# --- first_occurrence: "Tuesdays" plus a start date -> a real date ---
+# --- _first_occurrence: "Tuesdays" plus a start date -> a real date ---
 
 
 def test_first_occurrence_same_day():
     # 2026-08-26 is itself a Wednesday.
-    assert gcal.first_occurrence(
+    assert gcal._first_occurrence(
         datetime.date(2026, 8, 26), "Wednesday"
     ) == datetime.date(2026, 8, 26)
 
 
 def test_first_occurrence_later_in_the_same_week():
-    assert gcal.first_occurrence(
+    assert gcal._first_occurrence(
         datetime.date(2026, 8, 26), "Friday"
     ) == datetime.date(2026, 8, 28)
 
 
 def test_first_occurrence_wraps_into_next_week():
-    assert gcal.first_occurrence(
+    assert gcal._first_occurrence(
         datetime.date(2026, 8, 26), "Tuesday"
     ) == datetime.date(2026, 9, 1)
 
 
-# --- build_attendees ---
+# --- _build_attendees ---
 
 
 def test_build_attendees_has_mentor_and_students():
     section = make_section([make_student("bob@berkeley.edu")])
 
-    assert gcal.build_attendees(section) == [
+    assert gcal._build_attendees(section) == [
         {"email": "ada@berkeley.edu"},
         {"email": "bob@berkeley.edu"},
     ]
@@ -90,20 +90,20 @@ def test_build_attendees_has_mentor_and_students():
 def test_build_attendees_skips_dropped_students():
     section = make_section([make_student("gone@berkeley.edu", active=False)])
 
-    assert gcal.build_attendees(section) == [{"email": "ada@berkeley.edu"}]
+    assert gcal._build_attendees(section) == [{"email": "ada@berkeley.edu"}]
 
 
 def test_build_attendees_skips_blank_emails():
     section = make_section([make_student("")])
 
-    assert gcal.build_attendees(section) == [{"email": "ada@berkeley.edu"}]
+    assert gcal._build_attendees(section) == [{"email": "ada@berkeley.edu"}]
 
 
-# --- build_event_body ---
+# --- _build_event_body ---
 
 
 def test_build_event_body_fields():
-    body = gcal.build_event_body(make_section())
+    body = gcal._build_event_body(make_section())
 
     assert body["summary"] == "CSM61A Section — Ada"
     assert body["location"] == "Gateway"
@@ -114,7 +114,7 @@ def test_build_event_body_fields():
 
 
 def test_build_event_body_keeps_the_roster_private():
-    body = gcal.build_event_body(make_section([make_student("bob@berkeley.edu")]))
+    body = gcal._build_event_body(make_section([make_student("bob@berkeley.edu")]))
 
     assert body["guestsCanModify"] is False
     assert body["guestsCanInviteOthers"] is False
