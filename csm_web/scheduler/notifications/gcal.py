@@ -104,13 +104,13 @@ class GoogleCalendarClient:
         )
 
 
-def first_occurrence(section_start, day_of_week):
+def _first_occurrence(section_start, day_of_week):
     """The first date on or after section_start falling on day_of_week."""
     days_ahead = (day_to_number(day_of_week) - section_start.weekday()) % 7
     return section_start + datetime.timedelta(days=days_ahead)
 
 
-def build_attendees(section):
+def _build_attendees(section):
     """The mentor and actively enrolled students, deduped and sorted."""
     emails = {section.mentor.user.email.lower()}
     for student in section.students.filter(active=True).exclude(user__email=""):
@@ -118,7 +118,7 @@ def build_attendees(section):
     return [{"email": email} for email in sorted(emails)]
 
 
-def build_event_body(section):
+def _build_event_body(section):
     """Map a Section onto a Calendar event body.
 
     Uses the section's first spacetime, so a section meeting twice a week only
@@ -129,7 +129,7 @@ def build_event_body(section):
     spacetime = section.spacetimes.first()
 
     # A spacetime has a weekday but no date, so pick the first matching date.
-    start_date = first_occurrence(course.section_start, spacetime.day_of_week)
+    start_date = _first_occurrence(course.section_start, spacetime.day_of_week)
     start = datetime.datetime.combine(start_date, spacetime.start_time)
     end = datetime.datetime.combine(start_date, spacetime.end_time)
 
@@ -140,7 +140,7 @@ def build_event_body(section):
         "start": {"dateTime": start.isoformat(), "timeZone": CALENDAR_TIME_ZONE},
         "end": {"dateTime": end.isoformat(), "timeZone": CALENDAR_TIME_ZONE},
         "recurrence": [f"RRULE:FREQ=WEEKLY;UNTIL={course.valid_until:%Y%m%d}T235959Z"],
-        "attendees": build_attendees(section),
+        "attendees": _build_attendees(section),
         # All three default in Google's favor; seeOtherGuests would show every
         # student the whole roster's email addresses.
         "guestsCanModify": False,
@@ -153,7 +153,7 @@ def create_section_event(section):
     """Create the section's calendar event and store its id."""
     course = section.mentor.course
     event = GoogleCalendarClient().create_event(
-        course.calendar_id, build_event_body(section), sendUpdates="all"
+        course.calendar_id, _build_event_body(section), sendUpdates="all"
     )
     section.calendar_event_id = event["id"]
     section.save(update_fields=["calendar_event_id"])
@@ -166,7 +166,7 @@ def update_section_event(section):
     return GoogleCalendarClient().patch_event(
         course.calendar_id,
         section.calendar_event_id,
-        build_event_body(section),
+        _build_event_body(section),
         sendUpdates="all",
     )
 
@@ -181,6 +181,6 @@ def sync_section_attendees(section):
     return GoogleCalendarClient().patch_event(
         course.calendar_id,
         section.calendar_event_id,
-        {"attendees": build_attendees(section)},
+        {"attendees": _build_attendees(section)},
         sendUpdates="all",
     )
