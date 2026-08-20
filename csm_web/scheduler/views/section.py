@@ -121,9 +121,9 @@ def add_student(section, user):  # make this endpoint for only adding as a stude
         currAttendees = GoogleCalendarClient.get_event(calendar_id=student.section.course.calednar_id,
                                        event_id=student.section.calednar_event_id)["attendees"]
         updatedAttendees = currAttendees.append({"email": student.user.email})
-        GoogleCalendarClient().update_event(calendar_id=student.section.course.calendar_id,
+        GoogleCalendarClient().patch_event(calendar_id=student.section.course.calendar_id,
                             event_id=student.section.calendar_event_id,
-                            body={currAttendees: updatedAttendees}
+                            body={"attendees": updatedAttendees}
         )
     else:
         student = Student.objects.create(
