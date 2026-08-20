@@ -85,7 +85,7 @@ def send_gcal_invite():
         # attendee emails
         "attendees": [
             {"email": "mentors@berkeley.edu"},
-            {"email": "benhung@berkeley.edu"}
+            {"email": "alex05sim@berkeley.edu"}
         ],
 
         "reminders": {

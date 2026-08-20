@@ -35,7 +35,7 @@ from .utils import (
     weekday_iso_to_string,
 )
 
-from ..notifications.gcal import client
+from ..notifications.gcal import GoogleCalendarClient
 
 
 def add_student(section, user):  # make this endpoint for only adding as a student
@@ -115,7 +115,10 @@ def add_student(section, user):  # make this endpoint for only adding as a stude
             log_str(old_section),
         )
         # Adding student as attendee to section event
-        client.update_event(calendar_id=student.section.course.calendar_id,
+        # FIXME: this call cannot work as written -- see the drop path below for
+        # the same four bugs. Needs a read-modify-write: get_event() to fetch the
+        # current event, append to its "attendees", then write the whole dict back.
+        GoogleCalendarClient().update_event(calendar_id=student.section.course.calendar_id,
                             event_id=student.section.calendar_event_id,
                             body=student.section.calendar_event_id["attendees"].append({
                                 "email": student.email
@@ -179,7 +182,15 @@ def swap_into_section(section, user):
         active_student.active = False
         active_student.save()
         # Remove from old_section
-        client.update_event(calendar_id=old_section.course.calendar_id,
+        # FIXME: four bugs here, all of which raise before Google is reached:
+        #   1. Section has no .course -- it is section.mentor.course (models.py:411)
+        #   2. calendar_event_id is a CharField (a string); subscripting it with
+        #      ["attendees"] raises TypeError
+        #   3. list.remove() returns None, so body=None even if 1-2 were fixed
+        #   4. Student has no .email -- it is active_student.user.email
+        # Also update_event is a full replace, so sending only attendees would
+        # wipe summary/start/end/recurrence. Read-modify-write, or use patch().
+        GoogleCalendarClient().update_event(calendar_id=old_section.course.calendar_id,
                             event_id=old_section.calendar_event_id,
                             body=old_section.calendar_event_id["attendees"].remove({
                                 "email": active_student.email
