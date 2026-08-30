@@ -66,6 +66,46 @@ export const useSectionStudents = (id: number): UseQueryResult<Student[], Server
 };
 
 /**
+ * Hook to get the WAITLISTED students for a section.
+ *
+ * Tries query-param first; if that fails, falls back to /sections/:id/waitlisted.
+ * Returns students sorted by name.
+ */
+export const useSectionWaitlistedStudents = (id: number): UseQueryResult<Student[], ServerError> => {
+  const queryResult = useQuery<Student[], Error>(
+    ["sections", id, "waitlisted-students"],
+    async () => {
+      if (isNaN(id)) {
+        throw new PermissionError("Invalid section id");
+      }
+
+      const resp1 = await fetchNormalized(`/waitlist/${id}/`);
+      if (resp1.ok) {
+        const students = await resp1.json();
+        return students.sort((a: Student, b: Student) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+      }
+
+      // if (resp1.status === 404) {
+      //   const resp2 = await fetchNormalized(`/sections/${id}/waitlisted`);
+      //   if (resp2.ok) {
+      //     const students = await resp2.json();
+      //     return students.sort((a: Student, b: Student) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+      //   }
+      //   handlePermissionsError(resp2.status);
+      //   throw new ServerError(`Failed to fetch waitlisted students for section ${id}`);
+      // }
+
+      handlePermissionsError(resp1.status);
+      throw new ServerError(`Failed to fetch waitlisted students for section ${id}`);
+    },
+    { retry: handleRetry }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+
+/**
  * Hook to get the attendances for a section.
  */
 export const useSectionAttendances = (id: number): UseQueryResult<RawAttendance[], ServerError> => {
@@ -383,6 +423,91 @@ export const useEnrollUserMutation = (sectionId: number): UseMutationResult<void
   return mutationResult;
 };
 
+/**
+ * Enroll the current user into a given section's waitlist.
+ *
+ * On success, returns nothing; on failure, returns the response body.
+ *
+ * Invalidates all queries associated with the section,
+ * along with the current user profile query.
+ */
+export const useEnrollStudentToWaitlistMutation = (
+  sectionId: number
+): UseMutationResult<void, EnrollUserMutationResponse, void> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, EnrollUserMutationResponse, void>(
+    async () => {
+      const response = await fetchWithMethod(`waitlist/${sectionId}/add`, HTTP_METHODS.PUT);
+      if (response.ok) {
+        return;
+      } else {
+        throw await response.json();
+      }
+    },
+    {
+      onSuccess: () => {
+        // invalidate all queries for the section
+        queryClient.invalidateQueries(["sections", sectionId]);
+        // invalidate profiles query for the user
+        queryClient.invalidateQueries(["profiles"]);
+      }
+    }
+  );
+
+  // handle error in component
+  return mutationResult;
+};
+
+/**
+ * Hook to get the current user's waitlist position for a section.
+ *
+ * Returns { position: number } where position is 1-indexed rank.
+ */
+export const useWaitlistPosition = (sectionId: number): UseQueryResult<{ position: number }, ServerError> => {
+  const queryResult = useQuery<{ position: number }, Error>(
+    ["waitlist", sectionId, "position"],
+    async () => {
+      const response = await fetchNormalized(`/waitlist/${sectionId}/position`);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to fetch waitlist position for section ${sectionId}`);
+      }
+    },
+    { retry: handleRetry }
+  );
+
+  handleError(queryResult);
+  return queryResult;
+};
+
+/**
+ * Hook to drop the current user from a waitlist.
+ *
+ * Uses the waitlisted student profile ID (associatedProfileId when role is WAITLIST).
+ */
+export const useDropWaitlistMutation = (waitlistedStudentId: number) => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, ServerError, void>(
+    async () => {
+      const response = await fetchWithMethod(`waitlist/${waitlistedStudentId}/drop`, HTTP_METHODS.PATCH);
+      if (!response.ok) {
+        throw new ServerError(`Failed to drop from waitlist`);
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["sections"]);
+        queryClient.invalidateQueries(["waitlist"]);
+        queryClient.invalidateQueries(["profiles"]);
+      }
+    }
+  );
+
+  return mutationResult;
+};
+
 interface EnrollStudentMutationRequest {
   emails: Array<{ [email: string]: string }>;
   actions: {
@@ -400,9 +525,24 @@ interface EnrollStudentMutationResponse {
     progress?: Array<{
       email: string;
       status: string;
-      detail?: any;
+      detail?: {
+        reason?: string;
+        section?: { id: number; mentor: { name: string } };
+      };
     }>;
   };
+}
+
+function normalizeEnrollError(response: Response, payload: Record<string, unknown>) {
+  if (!payload) {
+    return { errors: { critical: `Request failed (${response.status}).` } };
+  }
+
+  if (payload.detail && !payload.errors && !payload.progress) {
+    return { errors: { critical: payload.detail } };
+  }
+
+  return payload;
 }
 
 /**
@@ -412,6 +552,7 @@ interface EnrollStudentMutationResponse {
  * Failure response body contains the JSON response along with the response status.
  *
  * Invalidates all queries associated with the section.
+ * This endpoint is used by BOTH coordinators and mentors.
  */
 export const useEnrollStudentMutation = (
   sectionId: number
@@ -423,7 +564,53 @@ export const useEnrollStudentMutation = (
       if (response.ok) {
         return;
       } else {
-        throw { status: response.status, json: await response.json() };
+        let payload = null;
+        try {
+          payload = await response.json();
+        } catch (error) {
+          payload = null;
+        }
+        throw { status: response.status, json: normalizeEnrollError(response, payload) };
+      }
+    },
+    {
+      onSuccess: () => {
+        // invalidate all queries for the section
+        queryClient.invalidateQueries(["sections", sectionId]);
+      }
+    }
+  );
+
+  // handle error in component
+  return mutationResult;
+};
+
+/**
+ * Enroll a list of waitlisted students into a given section.
+ *
+ * On success, returns nothing; on failure, returns the response body.
+ * Failure response body contains the JSON response along with the response status.
+ *
+ * Invalidates all queries associated with the section.
+ * This endpoint is used by coordinators only.
+ */
+export const useCoordEnrollStudentToWaitlistMutation = (
+  sectionId: number
+): UseMutationResult<void, EnrollStudentMutationResponse, EnrollStudentMutationRequest> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, EnrollStudentMutationResponse, EnrollStudentMutationRequest>(
+    async (body: EnrollStudentMutationRequest) => {
+      const response = await fetchWithMethod(`waitlist/${sectionId}/coordadd`, HTTP_METHODS.PUT, body);
+      if (response.ok) {
+        return;
+      } else {
+        let payload = null;
+        try {
+          payload = await response.json();
+        } catch (error) {
+          payload = null;
+        }
+        throw { status: response.status, json: normalizeEnrollError(response, payload) };
       }
     },
     {
@@ -470,6 +657,7 @@ export const useSectionCreateMutation = (): UseMutationResult<Section, ServerErr
 export interface SectionUpdateMutationBody {
   capacity: number;
   description: string;
+  waitlistCapacity: number;
 }
 
 /**

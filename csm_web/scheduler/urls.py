@@ -23,5 +23,20 @@ urlpatterns += [
     path("matcher/<int:pk>/mentors/", views.matcher.mentors),
     path("matcher/<int:pk>/configure/", views.matcher.configure),
     path("matcher/<int:pk>/create/", views.matcher.create),
+    path("waitlist/<int:pk>/add/", views.waitlistedStudent.add),
+    path("waitlist/<int:pk>/drop/", views.waitlistedStudent.drop),
+    path("waitlist/<int:pk>/", views.waitlistedStudent.view),
+    path("waitlist/<int:pk>/coordadd/", views.waitlistedStudent.add_by_coord),
+    path(
+        "waitlist/<int:pk>/count_waitlist/",
+        views.waitlistedStudent.count_waitlist,
+    ),
+    path(
+        "waitlist/<int:pk>/position/",
+        views.waitlistedStudent.position,
+    ),
+    path("coord/<int:pk>/students/", views.coord.view_students),
+    path("coord/<int:pk>/mentors/", views.coord.view_mentors),
+    path("coord/<int:pk>/section/", views.coord.delete_section),
     path("export/", views.export_data),
 ]

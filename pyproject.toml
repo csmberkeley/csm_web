@@ -38,6 +38,11 @@ ipython = "^8.26.0"
 sentry-sdk = "^2.9.0"
 social-auth-app-django = "^5.4.2"
 
+# prod stack (moved here so Heroku installs them automatically)
+django-on-heroku = "^1.1.2"
+psycopg2-binary = "^2.9.9"
+gunicorn = "^22.0.0"
+
 [tool.poetry.group.dev.dependencies]
 # formatting/linting
 black = "^24.4.2"
@@ -45,17 +50,6 @@ isort = "^5.13.2"
 pre-commit = "^3.7.1"
 pylint = "^3.2.5"
 pylint-django = "^2.5.5"
-
-[tool.poetry.group.prod]
-# mark prod as optional; these are not needed during development
-optional = true
-
-[tool.poetry.group.prod.dependencies]
-# django
-django-heroku = "^0.3.1"
-psycopg2-binary = "^2.9.9"
-# heroku
-gunicorn = "^22.0.0"
 
 ### tools ###
 

@@ -3,7 +3,15 @@ import datetime
 from django.core.management import call_command
 from django.utils import timezone
 from scheduler.factories import StudentFactory
-from scheduler.models import Coordinator, Course, Mentor, Section, Spacetime, User
+from scheduler.models import (
+    Coordinator,
+    Course,
+    Mentor,
+    Section,
+    Spacetime,
+    User,
+    WaitlistedStudent,
+)
 
 NOW = timezone.now().astimezone(timezone.get_default_timezone())
 
@@ -245,3 +253,36 @@ def student_setup_closed_priority():
     demo_user = User.objects.get(username="demo_user")
     demo_user.priority_enrollment = now_plus(3)
     demo_user.save()
+
+
+def student_setup_open_with_fully_full():
+    """
+    Open course; one section is fully full (enrolled AND waitlist at capacity).
+    Mentor_2's Monday section: capacity=3, 3 enrolled, waitlist_capacity=3, 3 waitlisted.
+    Mentor_6's Thursday section: capacity=3, 3 enrolled, waitlist_capacity=3, 3 waitlisted.
+    """
+    _setup_user()
+    cs61a = _setup_course_open()
+    _setup(cs61a)
+
+    # Fill waitlist for mentor_2 Monday section (capacity=3, already 3 enrolled)
+    section_m2 = Section.objects.get(mentor__user__username="test_mentor_2")
+    for i in range(1, 4):
+        wl_user = User.objects.create(
+            username=f"waitlist_m2_{i}",
+            first_name=f"WL_M2_{i}",
+            last_name="Student",
+            email=f"waitlist_m2_{i}@berkeley.edu",
+        )
+        WaitlistedStudent.objects.create(user=wl_user, course=cs61a, section=section_m2)
+
+    # Fill waitlist for mentor_6 Thursday section (capacity=3, already 3 enrolled)
+    section_m6 = Section.objects.get(mentor__user__username="test_mentor_6")
+    for i in range(1, 4):
+        wl_user = User.objects.create(
+            username=f"waitlist_m6_{i}",
+            first_name=f"WL_M6_{i}",
+            last_name="Student",
+            email=f"waitlist_m6_{i}@berkeley.edu",
+        )
+        WaitlistedStudent.objects.create(user=wl_user, course=cs61a, section=section_m6)

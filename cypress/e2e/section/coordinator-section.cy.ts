@@ -132,7 +132,7 @@ describe("modifying students", () => {
       cy.wait("@section-students");
 
       // expected list of students (in order)
-      cy.get("#students-table span.student-info")
+      cy.get(".section-detail-info-card.enrolled-students #students-table span.student-info")
         .should("have.length", 4)
         .each(($text, idx) => {
           expect($text.text()).to.match(STUDENT_LIST[idx]);
@@ -148,7 +148,7 @@ describe("modifying students", () => {
       cy.get(".coordinator-add-student-modal").should("not.exist");
 
       // should have the same list of students
-      cy.get("#students-table span.student-info")
+      cy.get(".section-detail-info-card.enrolled-students #students-table span.student-info")
         .should("have.length", 4)
         .each(($text, idx) => {
           expect($text.text()).to.match(STUDENT_LIST[idx]);
@@ -199,7 +199,7 @@ describe("modifying students", () => {
       cy.get(".coordinator-add-student-modal").should("not.exist");
 
       // students should stay the same
-      cy.get("#students-table span.student-info")
+      cy.get(".section-detail-info-card.enrolled-students #students-table span.student-info")
         .should("have.length", 4)
         .each(($text, idx) => {
           expect($text.text()).to.match(STUDENT_LIST[idx]);
@@ -247,7 +247,7 @@ describe("modifying students", () => {
       cy.wait("@section-students");
 
       // one more student should appear
-      cy.get("#students-table span.student-info")
+      cy.get(".section-detail-info-card.enrolled-students #students-table span.student-info")
         .should("have.length", 5)
         .each(($text, idx) => {
           if (idx == 4) {
@@ -297,7 +297,7 @@ describe("modifying students", () => {
 
       // one more student should appear
       const expected_list = [...STUDENT_LIST.slice(0, 2), /banned student/i, ...STUDENT_LIST.slice(2)];
-      cy.get("#students-table span.student-info")
+      cy.get(".section-detail-info-card.enrolled-students #students-table span.student-info")
         .should("have.length", 5)
         .each(($text, idx) => {
           expect($text.text()).to.match(expected_list[idx]);
@@ -333,7 +333,7 @@ describe("modifying students", () => {
       cy.wait("@section-students");
 
       const expected_list = [...STUDENT_LIST, /E Student/i, /Test User 1/i];
-      cy.get("#students-table span.student-info")
+      cy.get(".section-detail-info-card.enrolled-students #students-table span.student-info")
         .should("have.length", 6)
         .each(($text, idx) => {
           expect($text.text()).to.match(expected_list[idx]);
@@ -457,7 +457,7 @@ describe("modifying students", () => {
         /Test User 1/i,
         /User Two/i
       ];
-      cy.get("#students-table span.student-info")
+      cy.get(".section-detail-info-card.enrolled-students #students-table span.student-info")
         .should("have.length", 7)
         .each(($text, idx) => {
           expect($text.text()).to.match(expected_list[idx]);

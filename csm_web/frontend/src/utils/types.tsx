@@ -3,7 +3,8 @@ import { DateTime } from "luxon";
 export enum Role {
   COORDINATOR = "COORDINATOR",
   MENTOR = "MENTOR",
-  STUDENT = "STUDENT"
+  STUDENT = "STUDENT",
+  WAITLIST = "WAITLIST"
 }
 
 export interface Override {
@@ -57,6 +58,8 @@ export interface Section {
   userRole: Role;
   courseTitle: string;
   courseRestricted: boolean;
+  waitlistCapacity: number;
+  numStudentsWaitlisted: number;
 }
 
 export interface Mentor {

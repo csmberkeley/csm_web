@@ -22,7 +22,7 @@ ENV PATH $VIRTUAL_ENV/bin:$PATH
 
 # install python dependencies
 COPY poetry.lock pyproject.toml ./
-RUN poetry install --no-root --with=prod
+RUN poetry install --no-root
 
 # start database
 COPY ./docker-django-entrypoint.sh ./
