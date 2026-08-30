@@ -9,6 +9,7 @@ import { emptyRoles, Roles } from "../utils/user";
 import CourseMenu from "./CourseMenu";
 import Home from "./Home";
 import Policies from "./Policies";
+import CoordTable from "./coord_interface/CoordTable";
 import { DataExport } from "./data_export/DataExport";
 import { EnrollmentMatcher } from "./enrollment_automation/EnrollmentMatcher";
 import { Resources } from "./resource_aggregation/Resources";
@@ -38,6 +39,8 @@ const App = () => {
           <Route index element={<Home />} />
           <Route path="sections/:id/*" element={<Section />} />
           <Route path="courses/*" element={<CourseMenu />} />
+          <Route path="coord/:id/students" element={<CoordTable />} />
+          <Route path="coord/:id/mentors" element={<CoordTable />} />
           <Route path="resources/*" element={<Resources />} />
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
           <Route path="policies/*" element={<Policies />} />

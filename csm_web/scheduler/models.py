@@ -8,12 +8,14 @@ from django.core.exceptions import ObjectDoesNotExist
 from django.db import models
 from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 from django.dispatch import receiver
-from django.utils import functional, timezone
+from django.utils import timezone
 from rest_framework.serializers import ValidationError
 
 logger = logging.getLogger(__name__)
 
 logger.info = logger.warning
+
+DEFAULT_WAITLIST_CAP = 3
 
 
 class DayOfWeekField(models.Field):
@@ -72,6 +74,30 @@ class User(AbstractUser):
         else:
             is_valid_enrollment_time = course.is_open()
         return is_valid_enrollment_time and not is_associated
+
+    def can_waitlist_in_course(self, course, bypass_enrollment_time=False):
+        """Determine whether this user is allowed to waitlist in the given course."""
+        # check restricted first
+        if course.is_restricted and not self.is_whitelisted_for(course):
+            return False
+
+        if bypass_enrollment_time:
+            return True
+
+        if self.priority_enrollment:
+            now = timezone.now().astimezone(timezone.get_default_timezone())
+            return self.priority_enrollment < now < course.enrollment_end
+
+        return course.is_open()
+
+    def can_enroll_in_waitlist(self, course):
+        """Determine whether this user is allowed to waitlist in the given course."""
+        return (
+            self.waitlistedstudent_set.filter(
+                active=True, section__mentor__course=course
+            ).count()
+            < course.max_waitlist_enroll
+        )
 
     def is_whitelisted_for(self, course: "Course"):
         """Determine whether this user is whitelisted for the given course."""
@@ -170,29 +196,32 @@ class Course(ValidatingModel):
     enrollment_start = models.DateTimeField()
     enrollment_end = models.DateTimeField()
     permitted_absences = models.PositiveSmallIntegerField()
-    # time limit for wotd submission;
+    # time limit fdocor wotd submission;
     # section occurrence date + day limit, rounded to EOD
     word_of_the_day_limit = models.DurationField(null=True, blank=True)
-
     is_restricted = models.BooleanField(default=False)
     whitelist = models.ManyToManyField("User", blank=True, related_name="whitelist")
+    max_waitlist_enroll = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
 
     def __str__(self):
         return self.name
 
     def clean(self):
         super().clean()
-        if self.section_start <= self.enrollment_start.date():
+        if (
+            self.section_start
+            <= self.enrollment_start.date()  # pylint: disable=no-member
+        ):
             raise ValidationError("section_start must be after enrollment_start")
         if self.enrollment_end <= self.enrollment_start:
             raise ValidationError("enrollment_end must be after enrollment_start")
-        if self.valid_until < self.enrollment_end.date():
+        if self.valid_until < self.enrollment_end.date():  # pylint: disable=no-member
             raise ValidationError("valid_until must be after enrollment_end")
 
         # check word of the day limit is in days
         if (
             isinstance(self.word_of_the_day_limit, datetime.timedelta)
-            and self.word_of_the_day_limit.seconds > 0
+            and self.word_of_the_day_limit.seconds > 0  # pylint: disable=no-member
         ):
             raise ValidationError("word of the day limit must be in days")
 
@@ -200,6 +229,14 @@ class Course(ValidatingModel):
         """Determine whether the course is open for enrollment."""
         now = timezone.now().astimezone(timezone.get_default_timezone())
         return self.enrollment_start < now < self.enrollment_end
+
+    def is_coordinator(self, user):
+        """
+        Returns boolean
+        - True if is coord
+        - False if is not coord
+        """
+        return self.coordinator_set.filter(user=user).exists()
 
 
 class Profile(ValidatingModel):
@@ -218,6 +255,44 @@ class Profile(ValidatingModel):
 
     class Meta:
         abstract = True
+
+
+class WaitlistedStudent(Profile):
+    """
+    Represents a given "instance" of a waitlisted student. Every section in which a student enrolls
+    on the waitlist should have a new WaitlistedStudent profile.
+    """
+
+    section = models.ForeignKey(
+        "Section", on_delete=models.CASCADE, related_name="waitlist_set"
+    )
+    active = models.BooleanField(
+        default=True, help_text="An inactive student is a dropped student."
+    )
+    timestamp = models.DateTimeField(auto_now_add=True)
+    position = models.PositiveIntegerField(
+        null=True,
+        blank=True,
+        help_text=(
+            "Manual position on the waitlist. Lower numbers have higher priority."
+        ),
+    )
+
+    class Meta:
+        ordering = ["position", "timestamp"]
+
+    def save(self, *args, **kwargs):
+        if self.active and self.position is None:
+            max_pos = (
+                WaitlistedStudent.objects.filter(section=self.section, active=True)
+                .exclude(pk=self.pk)
+                .order_by("-position")
+                .values_list("position", flat=True)
+                .first()
+            )
+            self.position = (max_pos or 0) + 1
+
+        super().save(*args, **kwargs)
 
 
 class Student(Profile):
@@ -309,10 +384,12 @@ class Mentor(Profile):
     have a new Mentor profile.
     """
 
+    family = models.CharField(max_length=100, blank=True)
+
 
 class Coordinator(Profile):
     """
-    This profile is used to allow coordinators to acess the admin page.
+    This profile is used to allow coordinators to access the admin page.
     """
 
     def save(self, *args, **kwargs):
@@ -330,6 +407,7 @@ class Coordinator(Profile):
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
     capacity = models.PositiveSmallIntegerField()
+    waitlist_capacity = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
     mentor = OneToOneOrNoneField(
         Mentor, on_delete=models.CASCADE, blank=True, null=True
     )
@@ -342,14 +420,39 @@ class Section(ValidatingModel):
         ),
     )
 
+    @property
+    def day_time(self):
+        """Get the day and time string for the first spacetime of this section."""
+        day_time = self.spacetimes.first()  # pylint: disable=no-member
+        if day_time:
+            return (
+                f"{day_time.day_of_week[:3]} {day_time.start_time.strftime('%I:%M%p')}"
+            )
+        return None
+
     # @functional.cached_property
     # def course(self):
     #     return self.mentor.course
 
-    @functional.cached_property
+    @property
     def current_student_count(self):
         """Query the number of students currently enrolled in this section."""
         return self.students.filter(active=True).count()
+
+    @property
+    def current_waitlist_count(self):
+        """Query the number of waitlisted students currently enrolled in this section."""
+        return WaitlistedStudent.objects.filter(active=True, section=self).count()
+
+    @property
+    def is_waitlist_full(self):
+        """Returns whether waitlist is open"""
+        return self.current_waitlist_count >= self.waitlist_capacity
+
+    @property
+    def is_section_full(self):
+        """Returns whether section capacity is open"""
+        return self.current_student_count >= self.capacity
 
     def delete(self, *args, **kwargs):
         if self.current_student_count and not kwargs.get("force"):
@@ -499,9 +602,9 @@ class Spacetime(ValidatingModel):
                 year=1,
                 day=1,
                 month=1,
-                hour=self.start_time.hour,
-                minute=self.start_time.minute,
-                second=self.start_time.second,
+                hour=self.start_time.hour,  # pylint: disable=no-member
+                minute=self.start_time.minute,  # pylint: disable=no-member
+                second=self.start_time.second,  # pylint: disable=no-member
             )
             + self.duration
         ).time()
@@ -511,8 +614,12 @@ class Spacetime(ValidatingModel):
         return day_to_number(self.day_of_week)
 
     def __str__(self):
-        formatted_time = self.start_time.strftime("%I:%M %p")
-        num_minutes = int(self.duration.total_seconds() // 60)
+        formatted_time = self.start_time.strftime(  # pylint: disable=no-member
+            "%I:%M %p"
+        )
+        num_minutes = int(
+            self.duration.total_seconds() // 60  # pylint: disable=no-member
+        )
         return (
             f"{self.location} {self.day_of_week} {formatted_time} for {num_minutes} min"
         )
@@ -536,7 +643,9 @@ class Override(ValidatingModel):
         super().clean()
         if self.spacetime == self.overriden_spacetime:
             raise ValidationError("A spacetime cannot override itself")
+        # pylint: disable=no-member
         if self.spacetime.day_of_week != self.date.strftime("%A"):
+            # pylint: enable=no-member
             raise ValidationError(
                 "Day of week of spacetime and day of week of date do not match"
             )

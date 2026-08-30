@@ -131,9 +131,11 @@ const CourseCard = ({ profiles }: CourseCardProps): React.ReactElement => {
 
   if (role === Role.COORDINATOR) {
     return (
-      <Link to={`/courses/${courseId}`} className="course-card-link">
-        <Card />
-      </Link>
+      <>
+        <Link to={`/courses/${courseId}`} className="course-card-link">
+          <Card />
+        </Link>
+      </>
     );
   }
 
