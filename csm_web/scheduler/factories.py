@@ -56,15 +56,13 @@ COURSE_INFO = [
     ("CSM61C", "Machine Structures", False),
     ("CSM70", "Discrete Mathematics and Probability Theory", False),
     ("CSM88", "Computational Structures in Data Science", False),
-    ("CSM16A", "Designing Information Devices and Systems I", False),
-    ("CSM16B", "Designing Information Devices and Systems II", False),
+    ("CSM66", "Designing Information Devices and Systems I", False),
+    ("CSM64", "Designing Information Devices and Systems II", False),
     ("CS61A", "Structure and Interpretation of Computer Programs", True),
     ("CS61B", "Data Structures", True),
     ("CS61C", "Machine Structures", True),
     ("CS70", "Discrete Mathematics and Probability Theory", True),
     ("CS88", "Computational Structures in Data Science", True),
-    ("EECS16A", "Designing Information Devices and Systems I", True),
-    ("EECS16B", "Designing Information Devices and Systems II", True),
 ]
 
 LARGE_COURSE_INFO = [
