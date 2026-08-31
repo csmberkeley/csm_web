@@ -63,8 +63,6 @@ COURSE_INFO = [
     ("CS61C", "Machine Structures", True),
     ("CS70", "Discrete Mathematics and Probability Theory", True),
     ("CS88", "Computational Structures in Data Science", True),
-    ("EECS16A", "Designing Information Devices and Systems I", True),
-    ("EECS16B", "Designing Information Devices and Systems II", True),
 ]
 
 LARGE_COURSE_INFO = [
