@@ -1,12 +1,13 @@
 {% extends "./base.html" %}
 {% block extra_head %}
 	<!-- React and ReactDOM -->
+	{% load static %}
 	{% if DJANGO_ENV == 'prod' %}
-	<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-	<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+    <script src="{% static 'frontend/react.production.min.js' %}"></script>
+    <script src="{% static 'frontend/react-dom.production.min.js' %}"></script>
 	{% else %}
-	<script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
-	<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="{% static 'frontend/react.development.js' %}"></script>
+    <script src="{% static 'frontend/react-dom.development.js' %}"></script>
 	{% endif %}
 
     {% load static %}
