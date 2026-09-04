@@ -1,7 +1,7 @@
 {
   "name": "csm_web",
   "version": "1.0.0",
-  "description": "",
+  "description": "This repository contains webapps that help support the infrastructure of CSM. Currently, it only holds Scheduler (our section signup and attendance system), but more are on the way.",
   "main": "index.tsx",
   "scripts": {
     "dev": "webpack --mode development",

@@ -142,9 +142,10 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
     }
   };
 
-  /**
-   * Handle form submission.
-   */
+  const hasEmptyLocation = () => {
+    return spacetimes.some(spacetime => !spacetime.location?.trim());
+  };
+
   const handleSubmit = (event: React.MouseEvent<HTMLButtonElement>): void => {
     event.preventDefault();
 
@@ -289,7 +290,7 @@ export const CreateSectionModal = ({ courseId, closeModal, reloadSections }: Cre
         <button className="secondary-btn" id="add-occurence-btn" onClick={appendSpacetime}>
           Add another occurence
         </button>
-        <button className="primary-btn" onClick={handleSubmit}>
+        <button className="primary-btn" onClick={handleSubmit} disabled={hasEmptyLocation()}>
           Submit
         </button>
       </div>
