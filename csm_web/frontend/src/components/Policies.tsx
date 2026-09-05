@@ -12,7 +12,7 @@ const Policies = () => {
   const comms = SECTIONS.communications;
   const attendance = SECTIONS.attendance;
   const aff = SECTIONS.affinitySections;
-  const forUnit = SECTIONS.csmForUnit;
+  // const forUnit = SECTIONS.csmForUnit;
   const faq = SECTIONS.faq;
   return (
     <div>
@@ -57,10 +57,8 @@ const Policies = () => {
               {guides.body.i3_2}
             </li>
             <li>
-              {guides.body.i4_1}
               <b> {guides.body.i4_b} </b>
               {guides.body.i4_2}
-              <b> {guides.body.i4_b2} </b>
             </li>
             <li>{guides.body.i5}</li>
           </ol>
@@ -69,7 +67,7 @@ const Policies = () => {
         <div>
           <h1> {attendance.title}</h1>
           <p> {attendance.body.p1_1}</p>
-          <p> {attendance.body.p2_1}</p>
+          {/* <p> {attendance.body.p2_1}</p> */}
         </div>
 
         <div className="divider"></div>
@@ -112,7 +110,7 @@ const Policies = () => {
 
         <div className="divider"></div>
 
-        <div>
+        {/* <div>
           <h1> {forUnit.title} </h1>
           <p>
             {forUnit.body.p1_1}
@@ -162,7 +160,7 @@ const Policies = () => {
           </p>
         </div>
 
-        <div className="divider"></div>
+        <div className="divider"></div> */}
 
         <div>
           <h1> {faq.title} </h1>
@@ -185,7 +183,7 @@ const Policies = () => {
             <b> {faq.body.p5_b} </b>{" "}
           </p>
           <p> {faq.body.p6} </p>
-          <p>
+          {/* <p>
             {" "}
             <b> {faq.body.p7_b} </b>{" "}
           </p>
@@ -203,7 +201,7 @@ const Policies = () => {
             <li> {faq.body.li3} </li>
             <li> {faq.body.li4} </li>
           </ul>
-          <p> {faq.body.p10} </p>
+          <p> {faq.body.p10} </p> */}
         </div>
       </div>
     </div>
