@@ -52,7 +52,7 @@ export const SECTIONS = {
       },
       p1:
         "is a student organization with the goal of creating a community feeling among the lower-division " +
-        "CS courses (CS 61A, CS 61B, CS 61C, CS 70, CS 88 (now DATA C88C), EECS 16A, and EECS 16B). " +
+        "CS courses (CS 61A, CS 61B, CS 61C, CS 70, CS 88 (now DATA C88C), ELENG 66, and ELENG 64). " +
         "We offer small (4 to 7 students), 1 or 1.5 hour long sections each led by a mentor that you regularly " +
         "attend to review the past week’s material. Most sections will be in-person, with some being online. " +
         "You should sign up for a section if you’d like to work with others and receive extra practice and " +
@@ -254,8 +254,8 @@ export const SECTIONS = {
       p1_b: "What courses does CSM offer sections for?",
       p2:
         "We offer small tutoring sections (4 to 7 students) for the lower-division CS courses: " +
-        "CS 61A, CS 61B, CS 61C, CS 70, CS 88 (now DATA C88C), EECS 16A, and EECS 16B. " +
-        "We do not offer 1-1 tutoring.",
+        "CS 61A, CS 61B, CS 61C, CS 70, CS 88 (now DATA C88C), ELENG 66, and ELENG 64. " +
+        "We also offer 1-on-1 sections.",
       p3_b: "What requirements are there to join a section?",
       p4_1:
         "You must currently be enrolled in the course you wish to take a section for. " +
@@ -264,9 +264,9 @@ export const SECTIONS = {
       p4_2: " on CalCentral to avoid receiving an NP.",
       p5_b: "Sections are full. Can I be put on a waitlist?",
       p6:
-        "Sections are first come first serve, and we do not have a " +
-        "waitlist. We recommend keeping an eye on Scheduler for any " +
-        "spots that may open up if other students drop.",
+        "Yes. If a section is full, you can join the waitlist on Scheduler. " +
+        "We also recommend keeping an eye on Scheduler for any spots that " +
+        "may open up if other students drop.",
       p7_b: "I'm not sure if I should take the unit—what should I be considering?",
       p8: "Good reasons to enroll in the unit:",
       li1: "You need extra units to meet your college's requirements or to " + "receive financial aid",
