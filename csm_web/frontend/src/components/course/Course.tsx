@@ -208,7 +208,7 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
 
             <a href="https://forms.gle/Ti2LjrihPnUBqYaA9">
               <h3 style={{ textAlign: "center" }}>
-                Feel free to fill out this form, if you potenially want indicate your preferred section times than the
+                Feel free to fill out this form, if you want to indicate your preferred section times other than the
                 ones listed.
               </h3>
             </a>
