@@ -194,7 +194,7 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
             )}
           </div>
         )}
-        {(course.name === "CSM66" || course.name === "CSM6") && (
+        {(course.name === "CSM66" || course.name === "CSM64") && (
           <div>
             <h2 style={{ textAlign: "center" }}>
               If listed times do not work, please enroll in the &quot;Interested!&quot; (located in Su) section to
