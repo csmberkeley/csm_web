@@ -194,6 +194,26 @@ const Course = ({ courses, priorityEnrollment, enrollmentTimes }: CourseProps): 
             )}
           </div>
         )}
+        {(course.name === "CSM66" || course.name === "CSM6") && (
+          <div>
+            <h2 style={{ textAlign: "center" }}>
+              If listed times do not work, please enroll in the &quot;Interested!&quot; (located in Su) section to
+              express your interest for other section times.
+            </h2>
+
+            <h3 style={{ textAlign: "center" }}>
+              (please note that the time and date for &quot;Interested!&quot; section do NOT reflect when the actual
+              section will be)
+            </h3>
+
+            <a href="https://forms.gle/Ti2LjrihPnUBqYaA9">
+              <h3 style={{ textAlign: "center" }}>
+                Feel free to fill out this form, if you potenially want indicate your preferred section times than the
+                ones listed.
+              </h3>
+            </a>
+          </div>
+        )}
         {!course.enrollmentOpen && (
           <div id="course-enrollment-open-status">
             {priorityEnrollment
