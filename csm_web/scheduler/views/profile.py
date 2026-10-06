@@ -17,9 +17,13 @@ class ProfileViewSet(*viewset_with("list")):
         return Response(
             ProfileSerializer(
                 [
-                    *request.user.student_set.filter(active=True, banned=False),
-                    *request.user.waitlistedstudent_set.filter(active=True),
-                    *request.user.mentor_set.all(),  # .exclude(section=None),
+                    *request.user.student_set.filter(
+                        active=True, banned=False, section__active=True
+                    ),
+                    *request.user.waitlistedstudent_set.filter(
+                        active=True, section__active=True
+                    ),
+                    *request.user.mentor_set.filter(section__active=True),
                     *request.user.coordinator_set.all(),
                 ],
                 many=True,

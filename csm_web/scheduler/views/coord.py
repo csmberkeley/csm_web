@@ -26,9 +26,9 @@ def view_students(request, pk=None):
             "You do not have permission to view the coordinator view."
         )
 
-    students = Student.objects.filter(active=True, course=pk).order_by(
-        "user__first_name"
-    )
+    students = Student.objects.filter(
+        active=True, section__active=True, course=pk
+    ).order_by("user__first_name")
 
     return Response(CoordStudentSerializer(students, many=True).data)
 
@@ -52,7 +52,9 @@ def view_mentors(request, pk=None):
             "You do not have permission to view the coordinator view."
         )
 
-    mentors = Mentor.objects.filter(course=pk).order_by("user__first_name")
+    mentors = Mentor.objects.filter(course=pk, section__active=True).order_by(
+        "user__first_name"
+    )
     return Response(CoordMentorSerializer(mentors, many=True).data)
 
 
@@ -62,9 +64,9 @@ def delete_section(request, pk):
     Endpoint: /coord/<section id: int>/section
     pk = section id
 
-    Delete a section and all associated spacetimes and overrides.
+    Archive a section while preserving its enrollment and attendance history.
     """
-    section = get_object_or_error(Section.objects, pk=pk)
+    section = get_object_or_error(Section.objects, pk=pk, active=True)
     is_coord = bool(
         section.mentor.course.coordinator_set.filter(user=request.user).count()
     )
@@ -73,6 +75,6 @@ def delete_section(request, pk):
             "You do not have permission to view the coordinator view."
         )
 
-    # Delete the section itself, will cascade and delete everything else
-    section.delete()
+    section.active = False
+    section.save(update_fields=["active"])
     return Response(status=204)

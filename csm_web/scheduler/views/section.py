@@ -204,7 +204,7 @@ def add_from_waitlist(pk):
     cascade_section_id = None
     response = None
     with transaction.atomic():
-        section = Section.objects.select_for_update().get(pk=pk)
+        section = Section.objects.select_for_update().get(pk=pk, active=True)
         waitlisted_students = list(
             WaitlistedStudent.objects.select_for_update()
             .filter(active=True, section=section)
@@ -267,7 +267,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             "section__mentor__course__id", flat=True
         )
         return (
-            Section.objects.exclude(mentor__course__pk__in=banned_from)
+            Section.objects.filter(active=True)
+            .exclude(mentor__course__pk__in=banned_from)
             .prefetch_related(
                 Prefetch(
                     "spacetimes",
@@ -509,11 +510,11 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             # We reload the section object for atomicity. Even though we do not update
             # the section directly, any student trying to enroll must first acquire a lock on the
             # desired section. This allows us to assume that current_student_count is correct.
-            section = get_object_or_error(Section.objects, pk=pk)
+            section = get_object_or_error(Section.objects, pk=pk, active=True)
             section = (
                 Section.objects.select_for_update()
                 .prefetch_related("mentor__course")
-                .get(pk=section.pk)
+                .get(pk=section.pk, active=True)
             )
             is_coordinator = bool(
                 section.mentor.course.coordinator_set.filter(user=request.user).count()
@@ -870,7 +871,7 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
                 { id: int, word: string }
                 where "id" is the section occurrence id
         """
-        section = get_object_or_error(Section.objects, pk=pk)
+        section = get_object_or_error(Section.objects, pk=pk, active=True)
         course = section.mentor.course
 
         is_student = Student.objects.filter(

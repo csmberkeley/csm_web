@@ -18,8 +18,9 @@ class SpacetimeViewSet(viewsets.GenericViewSet):
 
     def get_queryset(self):
         return Spacetime.objects.filter(
+            Q(section__active=True),
             Q(section__mentor__user=self.request.user)
-            | Q(section__mentor__course__coordinator__user=self.request.user)
+            | Q(section__mentor__course__coordinator__user=self.request.user),
         ).distinct()
 
     def destroy(self, request, pk=None):

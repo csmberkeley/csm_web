@@ -21,7 +21,7 @@ def view(request, pk=None):
 
     GET: View all students on the waitlist for a section
     """
-    section = get_object_or_error(Section.objects, pk=pk)
+    section = get_object_or_error(Section.objects, pk=pk, active=True)
     if section.mentor is None:
         raise NotFound("This section has no mentor assigned.")
     is_mentor = request.user == section.mentor.user
@@ -51,8 +51,8 @@ def add(request, pk=None):
     """
 
     with transaction.atomic():
-        section = get_object_or_error(Section.objects, pk=pk)
-        section = Section.objects.select_for_update().get(pk=section.pk)
+        section = get_object_or_error(Section.objects, pk=pk, active=True)
+        section = Section.objects.select_for_update().get(pk=section.pk, active=True)
         student = request.user
 
         response = _add_to_waitlist_or_section(
@@ -84,7 +84,7 @@ def add_by_coord(request, pk=None):
         emails: list of {"email": str}
     """
 
-    section = get_object_or_error(Section.objects, pk=pk)
+    section = get_object_or_error(Section.objects, pk=pk, active=True)
 
     is_coord = bool(
         section.mentor.course.coordinator_set.filter(user=request.user).count()
@@ -119,7 +119,9 @@ def add_by_coord(request, pk=None):
     any_errors = False
     for email in emails:
         with transaction.atomic():
-            section = Section.objects.select_for_update().get(pk=section.pk)
+            section = Section.objects.select_for_update().get(
+                pk=section.pk, active=True
+            )
             user, _ = User.objects.get_or_create(
                 username=email.split("@")[0], email=email
             )
@@ -263,7 +265,7 @@ def count_waitlist(request, pk=None):
     Endpoint: /api/waitlist/<pk>/count_waitlist
     pk= section id
     """
-    section = get_object_or_error(Section.objects, pk=pk)
+    section = get_object_or_error(Section.objects, pk=pk, active=True)
     return Response(section.current_waitlist_count)
 
 
@@ -278,7 +280,7 @@ def position(request, pk=None):
     Returns {"position": <int>} where position is 1-indexed rank among
     active waitlisted students.
     """
-    section = get_object_or_error(Section.objects, pk=pk)
+    section = get_object_or_error(Section.objects, pk=pk, active=True)
     waitlisted_student = WaitlistedStudent.objects.filter(
         active=True, section=section, user=request.user
     ).first()

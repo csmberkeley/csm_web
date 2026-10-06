@@ -1,0 +1,19 @@
+.section-delete {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 1rem;
+}
+
+.section-delete-modal {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.section-delete-confirmation {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}

@@ -566,7 +566,7 @@ class SectionAdmin(BasePermissionModelAdmin):
     autocomplete_fields = ("mentor",)
 
     actions = ("swap_mentors",)
-    list_filter = ("mentor__course", "spacetimes__day_of_week")
+    list_filter = ("active", "mentor__course", "spacetimes__day_of_week")
     list_display = (
         "id",
         "get_mentor",
@@ -574,6 +574,7 @@ class SectionAdmin(BasePermissionModelAdmin):
         "get_spacetimes",
         "description",
         "get_capacity",
+        "active",
     )
     search_fields = (
         "id",

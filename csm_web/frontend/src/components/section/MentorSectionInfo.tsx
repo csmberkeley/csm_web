@@ -8,6 +8,7 @@ import {
 } from "../../utils/queries/sections";
 import { Mentor, Spacetime, Student } from "../../utils/types";
 import LoadingSpinner from "../LoadingSpinner";
+import CoordSectionDelete from "../coord_interface/CoordSectionDelete";
 import { CoordinatorAddStudentModal } from "./CoordinatorAddStudentModal";
 import MetaEditModal from "./MetaEditModal";
 import { InfoCard, SectionSpacetime } from "./Section";
@@ -16,7 +17,7 @@ import SpacetimeEditModal from "./SpacetimeEditModal";
 import StudentDropper from "./StudentDropper";
 
 import PencilIcon from "../../../static/frontend/img/pencil.svg";
-import XIcon from "../../../static/frontend/img/x.svg";
+import TrashIcon from "../../../static/frontend/img/trash-alt.svg";
 
 import "../../css/coordinator-add-student.scss";
 
@@ -162,6 +163,7 @@ export default function MentorSectionInfo({
       <h3 className="section-detail-page-title">{`${
         isCoordinator ? `${mentor.name || mentor.email}'s` : "My"
       } Section`}</h3>
+      {isCoordinator && <CoordSectionDelete sectionId={sectionId} />}
       <div className="section-info-cards-container">
         <SectionInfo
           title="Enrolled Students"
@@ -203,7 +205,7 @@ export default function MentorSectionInfo({
                         setDeleteType(false);
                       }}
                     >
-                      <XIcon className="icon" /> Delete
+                      <TrashIcon className="icon" aria-hidden="true" /> Delete
                     </button>
                   ) : (
                     <div>{/* empty div for positioning */}</div>
@@ -230,7 +232,7 @@ export default function MentorSectionInfo({
                       setDeleteType(true);
                     }}
                   >
-                    <XIcon className="icon" /> Delete
+                    <TrashIcon className="icon" aria-hidden="true" /> Delete
                   </button>
                   <button
                     className="secondary-link-btn info-card-edit-btn"

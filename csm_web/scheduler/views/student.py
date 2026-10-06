@@ -16,12 +16,18 @@ class StudentViewSet(viewsets.GenericViewSet):
     serializer_class = StudentSerializer
 
     def get_queryset(self):
-        own_profiles = Student.objects.filter(user=self.request.user, active=True)
+        own_profiles = Student.objects.filter(
+            user=self.request.user, active=True, section__active=True
+        )
         pupil_profiles = Student.objects.filter(
-            section__mentor__user=self.request.user, active=True
+            section__mentor__user=self.request.user,
+            active=True,
+            section__active=True,
         )
         coordinator_student_profiles = Student.objects.filter(
-            section__mentor__course__coordinator__user=self.request.user, active=True
+            section__mentor__course__coordinator__user=self.request.user,
+            active=True,
+            section__active=True,
         )
         return (own_profiles | pupil_profiles | coordinator_student_profiles).distinct()
 

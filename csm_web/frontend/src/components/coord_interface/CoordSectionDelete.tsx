@@ -1,55 +1,50 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
-import { useCoordDeleteSectionMutation } from "../../utils/queries/coord";
-// import Modal from "../Modal";
-import XIcon from "../../../static/frontend/img/x.svg";
+import { useDeleteSectionMutation } from "../../utils/queries/sections";
+import Modal from "../Modal";
+import TrashIcon from "../../../static/frontend/img/trash-alt.svg";
 
-// import "../../css/student_dropper.scss";
+import "../../css/section_delete.scss";
 
 interface CoordSectionDeleteProps {
   sectionId: number;
 }
 
 export default function CoordSectionDelete({ sectionId }: CoordSectionDeleteProps) {
-  const [showDropPrompt, setShowDropPrompt] = useState(false);
-  const [drop, setDrop] = useState(false);
-  const [ban, setBan] = useState(false);
-  const [blacklist, setBlacklist] = useState(false);
+  const [showDeletePrompt, setShowDeletePrompt] = useState(false);
+  const [confirmed, setConfirmed] = useState(false);
+  const deleteSectionMutation = useDeleteSectionMutation(sectionId);
+  const navigate = useNavigate();
 
-  /**
-   * Mutation to drop a student from the section. (Inspiration taken from dropping students within sections)
-   */
-  const coordSectionDeleteMutation = useCoordDeleteSectionMutation(sectionId);
-
-  function handleClickDrop() {
-    coordSectionDeleteMutation.mutate({ banned: ban, blacklisted: blacklist });
-    setShowDropPrompt(false);
+  function handleDelete() {
+    deleteSectionMutation.mutate(undefined, {
+      onSuccess: () => navigate(-1)
+    });
   }
 
-  const dropDiv = (
-    <div>
-      <h2 className="student-dropper-head-item">DROP Student</h2>
-      <div className="student-dropper-checkbox-container">
-        <input type="checkbox" id="drop" name="drop" onChange={e => setDrop(e.target.checked)} />
-        <label className="student-dropper-checkbox-label" htmlFor="drop">
-          I would like to DELETE the section: {sectionId}.
-        </label>
-        <br></br>
-      </div>
-    </div>
-  );
-
   return (
-    //   <span className={`student-dropper ${showDropPrompt ? "ban-prompt-visible" : ""}`}>
-    //     <XIcon
-    //       className="icon inline-plus-sign"
-    //       title="Drop student from section"
-    //       onClick={() => setShowDropPrompt(true)}
-    //     />
-    //     <div>dropDiv</div>
-    <button className="danger-btn" onClick={handleClickDrop} disabled={!drop}>
-      Submit
-    </button>
-    //   </span>
+    <div className="section-delete">
+      <button className="danger-btn" onClick={() => setShowDeletePrompt(true)}>
+        <TrashIcon className="icon" aria-hidden="true" /> Delete section
+      </button>
+      {showDeletePrompt && (
+        <Modal className="section-delete-modal" closeModal={() => setShowDeletePrompt(false)}>
+          <h2>Delete section</h2>
+          <p>This section will be hidden, but its enrollment and attendance history will be preserved.</p>
+          <label className="section-delete-confirmation">
+            <input type="checkbox" checked={confirmed} onChange={event => setConfirmed(event.target.checked)} />I
+            understand and want to delete this section.
+          </label>
+          <button
+            className="danger-btn"
+            onClick={handleDelete}
+            disabled={!confirmed || deleteSectionMutation.isLoading}
+          >
+            {deleteSectionMutation.isLoading ? "Deleting…" : "Delete"}
+          </button>
+        </Modal>
+      )}
+    </div>
   );
 }

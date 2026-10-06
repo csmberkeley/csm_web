@@ -356,6 +356,37 @@ export const useDropStudentMutation = (
 };
 
 /**
+ * Soft-delete (archive) a section as a coordinator.
+ */
+export const useDeleteSectionMutation = (sectionId: number): UseMutationResult<void, ServerError, void, unknown> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<void, ServerError, void, unknown>(
+    async () => {
+      if (isNaN(sectionId)) {
+        throw new PermissionError("Invalid section id");
+      }
+
+      const response = await fetchWithMethod(`coord/${sectionId}/section`, HTTP_METHODS.DELETE);
+      if (!response.ok) {
+        handlePermissionsError(response.status);
+        throw new ServerError(`Failed to delete section ${sectionId}`);
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["sections", sectionId]);
+        queryClient.invalidateQueries(["courses"]);
+        queryClient.invalidateQueries(["profiles"]);
+      },
+      retry: handleRetry
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
+};
+
+/**
  * Hook to drop the current user from their section.
  *
  * Invalidates the current user profile query.

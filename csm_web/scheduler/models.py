@@ -406,6 +406,7 @@ class Coordinator(Profile):
 
 class Section(ValidatingModel):
     # course = models.ForeignKey(Course, on_delete=models.CASCADE)
+    active = models.BooleanField(default=True, db_index=True)
     capacity = models.PositiveSmallIntegerField()
     waitlist_capacity = models.PositiveSmallIntegerField(default=DEFAULT_WAITLIST_CAP)
     mentor = OneToOneOrNoneField(
