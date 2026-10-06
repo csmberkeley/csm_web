@@ -85,6 +85,13 @@ export interface Student {
   email: string;
 }
 
+export interface WaitlistedStudent {
+  id: number;
+  name: string;
+  email: string;
+  position: number;
+}
+
 export enum AttendancePresence {
   EX = "EX",
   PR = "PR",

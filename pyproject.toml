@@ -42,6 +42,8 @@ social-auth-app-django = "^5.4.2"
 django-on-heroku = "^1.1.2"
 psycopg2-binary = "^2.9.9"
 gunicorn = "^22.0.0"
+djangorestframework-stubs = "^3.18.1"
+ipykernel = "^7.3.0"
 
 [tool.poetry.group.dev.dependencies]
 # formatting/linting
