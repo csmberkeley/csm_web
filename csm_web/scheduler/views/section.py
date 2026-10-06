@@ -391,6 +391,8 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
             user=self.request.user
         ).count():
             raise PermissionDenied("Only coordinators can change section metadata")
+        old_capacity = section.capacity
+        new_capacity = request.data.get("capacity")
         serializer = self.serializer_class(
             section,
             data={
@@ -402,6 +404,10 @@ class SectionViewSet(*viewset_with("retrieve", "partial_update", "create")):
         )
         if serializer.is_valid():
             section = serializer.save()
+
+            if new_capacity > old_capacity:
+                add_from_waitlist(pk=section.pk)
+
             logger.info(
                 "<Section:Meta:Success> Updated metadata on section %s",
                 log_str(section),
