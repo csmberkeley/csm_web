@@ -4,7 +4,7 @@
 
 import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
-import { Attendance, RawAttendance, Section, Spacetime, Student } from "../types";
+import { Attendance, RawAttendance, Section, Spacetime, Student, WaitlistedStudent } from "../types";
 import { handleError, handlePermissionsError, handleRetry, PermissionError, ServerError } from "./helpers";
 
 /* ===== Queries ===== */
@@ -71,8 +71,8 @@ export const useSectionStudents = (id: number): UseQueryResult<Student[], Server
  * Tries query-param first; if that fails, falls back to /sections/:id/waitlisted.
  * Returns students sorted by name.
  */
-export const useSectionWaitlistedStudents = (id: number): UseQueryResult<Student[], ServerError> => {
-  const queryResult = useQuery<Student[], Error>(
+export const useSectionWaitlistedStudents = (id: number): UseQueryResult<WaitlistedStudent[], ServerError> => {
+  const queryResult = useQuery<WaitlistedStudent[], Error>(
     ["sections", id, "waitlisted-students"],
     async () => {
       if (isNaN(id)) {
@@ -82,7 +82,7 @@ export const useSectionWaitlistedStudents = (id: number): UseQueryResult<Student
       const resp1 = await fetchNormalized(`/waitlist/${id}/`);
       if (resp1.ok) {
         const students = await resp1.json();
-        return students.sort((a: Student, b: Student) => a.name.toLowerCase().localeCompare(b.name.toLowerCase()));
+        return students.sort((a: WaitlistedStudent, b: WaitlistedStudent) => a.position > b.position);
       }
 
       // if (resp1.status === 404) {
