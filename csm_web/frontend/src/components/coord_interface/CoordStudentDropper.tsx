@@ -19,7 +19,7 @@ export default function CoordStudentDropper({ id, sectionId, name, courseRestric
   // need to find a way to change the selectedData into the format which we want for this
   // either make it so we take in a list and then decode it wtihin this component or do something
   const [showDropPrompt, setShowDropPrompt] = useState(false);
-  const [drop, setDrop] = useState(false);
+  const [drop, setDrop] = useState(false);  
   const [ban, setBan] = useState(false);
   const [blacklist, setBlacklist] = useState(false);
 

@@ -8,6 +8,7 @@ import { Role } from "../utils/types";
 import { emptyRoles, Roles } from "../utils/user";
 import CourseMenu from "./CourseMenu";
 import Home from "./Home";
+import MyProfile from "./MyProfile";
 import Policies from "./Policies";
 import CoordTable from "./coord_interface/CoordTable";
 import { DataExport } from "./data_export/DataExport";
@@ -44,6 +45,7 @@ const App = () => {
           <Route path="resources/*" element={<Resources />} />
           <Route path="matcher/*" element={<EnrollmentMatcher />} />
           <Route path="policies/*" element={<Policies />} />
+          <Route path="myprofile/*" element={<MyProfile />} />
           <Route path="export/*" element={<DataExport />} />
           <Route path="*" element={<NotFound />} />
         </Route>
@@ -91,7 +93,8 @@ function Header(): React.ReactElement {
     if (
       location.pathname.startsWith("/resources") ||
       location.pathname.startsWith("/matcher") ||
-      location.pathname.startsWith("/policies")
+      location.pathname.startsWith("/policies") || 
+      location.pathname.startsWith("/myprofile")
     ) {
       isActive = false;
     }
@@ -143,6 +146,9 @@ function Header(): React.ReactElement {
       <div className="site-title-group">
         <NavLink to="/policies" className={navlinkClassSubtitle}>
           <h3 className="site-subtitle">Policies</h3>
+        </NavLink>
+        <NavLink to="/myprofile" className={navlinkClassSubtitle}>
+          <h3 className="site-subtitle">{"My Profile"}</h3>
         </NavLink>
         <a id="logout-btn" href="#" onClick={logout} title="Log out">
           <LogOutIcon className="icon" />
