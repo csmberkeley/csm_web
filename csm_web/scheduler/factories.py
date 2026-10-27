@@ -603,12 +603,17 @@ def generate_test_data(preconfirm=False):
                 )
                 user_objects.extend(waitlisted_users)
                 waitlisted_students = []
+                wl_position = 1
                 for waitlisted_user in waitlisted_users:
                     waitlisted_students.append(
                         WaitlistedStudentFactory.build(
-                            section=section, course=course, user=waitlisted_user
+                            section=section,
+                            course=course,
+                            user=waitlisted_user,
+                            position=wl_position,
                         )
                     )
+                    wl_position = wl_position + 1
                 waitlisted_student_objects.extend(waitlisted_students)
 
     # courses with many sections/students

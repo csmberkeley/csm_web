@@ -57,7 +57,7 @@ social-auth-core==4.5.6 ; python_full_version >= "3.12.4" and python_full_versio
 sqlparse==0.5.3 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
 stack-data==0.6.3 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
 traitlets==5.14.3 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
-typing-extensions==4.12.2 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
+typing-extensions==4.16.0 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
 tzdata==2025.1 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
 urllib3==2.3.0 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
 wcwidth==0.2.13 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
