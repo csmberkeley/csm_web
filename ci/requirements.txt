@@ -34,11 +34,11 @@ networkx==3.4.2 ; python_full_version >= "3.12.4" and python_full_version < "3.1
 oauthlib==3.2.2 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
 packaging==24.2 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
 parso==0.8.4 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
-pexpect==4.9.0 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0" and sys_platform != "win32" and sys_platform != "emscripten"
+pexpect==4.9.0 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0" and (sys_platform != "win32" and sys_platform != "emscripten")
 pluggy==1.5.0 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
 prompt-toolkit==3.0.50 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
 psycopg2-binary==2.9.10 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
-ptyprocess==0.7.0 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0" and sys_platform != "win32" and sys_platform != "emscripten"
+ptyprocess==0.7.0 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0" and (sys_platform != "win32" and sys_platform != "emscripten")
 pure-eval==0.2.3 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
 pycparser==2.22 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0" and platform_python_implementation != "PyPy"
 pygments==2.19.1 ; python_full_version >= "3.12.4" and python_full_version < "3.13.0"
