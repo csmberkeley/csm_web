@@ -470,6 +470,13 @@ class ResourceVersion(ValidatingModel):
     feedback = models.CharField(max_length=200, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    def clean(self):
+            super().clean()
+            if self.course.is_restricted:
+                raise NotImplementedError(
+                    "Resources currently cannot be associated with a restricted course."
+                )
+
 
 class Link(ValidatingModel):
     resource = models.ForeignKey(Resource, on_delete=models.CASCADE)
