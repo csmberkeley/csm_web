@@ -411,21 +411,45 @@ class ResourceCategory(ValidatingModel):
         blank=True, max_length=260, 
         help_text="A description for this resource category.")
     course = models.ForeignKey("Course", on_delete=models.CASCADE)
-    created_by = models.ForeignKey("Coordinator")
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL)
     created_at = models.DateTimeField()
 
     class Meta:
         ordering = ["created_at"]
+        constraints = [
+            models.UniqueConstraint(
+                fields = ["course", "name"],
+                name = "unique_resource_category_name_per_course"
+            )
+        ]
+
+    def clean(self):
+        super().clean()
+        if self.course.is_restricted:
+            raise NotImplementedError(
+                "Resources currently cannot be associated with a restricted course."
+            )
 
 
 class LibraryResource(ValidatingModel):
     course = models.ForeignKey("Course", on_delete=models.CASCADE)
-    uploader = models.ForeignKey("Coordinator", on_delete=models.SET_NULL)
-    category = models.ForeignKey("Category", on_delete=models.SET_NULL)
+    uploader = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL)
+    category = models.ForeignKey("ResourceCategory", on_delete=models.SET_NULL)
     published_version_ref = models.ForeignKey("ResourceVersion", on_delete=models.SET_NULL, null=True)
-    archived_status = models.BooleanField()
-    created_at = models.DateTimeField()
+    archived_status = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now_add=True)
     tags = ArrayField(models.CharField(max_length=20), default=list, blank=True)
+
+    class Meta:
+        ordering = ["updated_at", "created_at"]
+
+    def clean(self):
+        super().clean()
+        if self.course.is_restricted:
+            raise NotImplementedError(
+                "Resources currently cannot be associated with a restricted course."
+            )
 
 class ResourceVersion(ValidatingModel):
     class ResourceType(models.TextChoices):
@@ -436,15 +460,15 @@ class ResourceVersion(ValidatingModel):
         APPROVED = "approved"
         REJECTED = "rejected"
     resource = models.ForeignKey(LibraryResource, on_delete=models.CASCADE)
-    version_number = models.PositiveSmallIntegerField()
+    version_number = models.PositiveSmallIntegerField(default=1)
     title = models.CharField(blank=True, max_length=100)
     description = models.CharField(blank=True, max_length=260)
     file_ref = models.CharField(blank=True, max_length=300)
     resource_type = models.CharField(max_length=20, choices=ResourceType.choices)
     status = models.CharField(max_length=20, choices=Status.choices)
-    reviewer = models.ForeignKey(Coordinator, on_delete=models.SET_NULL)
-    feedback = models.CharField(max_length=200)
-    timestamp = models.DateTimeField()
+    reviewer = models.ForeignKey("Coordinator", on_delete=models.SET_NULL)
+    feedback = models.CharField(max_length=200, blank=True)
+    timestamp = models.DateTimeField(auto_now_add=True)
 
 
 class Link(ValidatingModel):
