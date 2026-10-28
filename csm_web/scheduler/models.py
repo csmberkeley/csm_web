@@ -411,7 +411,7 @@ class ResourceCategory(ValidatingModel):
         blank=True, max_length=260, 
         help_text="A description for this resource category.")
     course = models.ForeignKey("Course", on_delete=models.CASCADE)
-    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
     created_at = models.DateTimeField()
 
     class Meta:
@@ -433,12 +433,12 @@ class ResourceCategory(ValidatingModel):
 
 class LibraryResource(ValidatingModel):
     course = models.ForeignKey("Course", on_delete=models.CASCADE)
-    uploader = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL)
-    category = models.ForeignKey("ResourceCategory", on_delete=models.SET_NULL)
+    uploader = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True)
+    category = models.ForeignKey("ResourceCategory", on_delete=models.SET_NULL, null=True)
     published_version_ref = models.ForeignKey("ResourceVersion", on_delete=models.SET_NULL, null=True)
     archived_status = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
     tags = ArrayField(models.CharField(max_length=20), default=list, blank=True)
 
     class Meta:
@@ -449,6 +449,10 @@ class LibraryResource(ValidatingModel):
         if self.course.is_restricted:
             raise NotImplementedError(
                 "Resources currently cannot be associated with a restricted course."
+            )
+        if self.category and ResourceCategory.objects.filter(pk=self.category_id, course=self.course_id).empty():
+            raise ValidationError(
+                "The category and the resource must belong to the same course."
             )
 
 class ResourceVersion(ValidatingModel):
@@ -466,16 +470,25 @@ class ResourceVersion(ValidatingModel):
     file_ref = models.CharField(blank=True, max_length=300)
     resource_type = models.CharField(max_length=20, choices=ResourceType.choices)
     status = models.CharField(max_length=20, choices=Status.choices)
-    reviewer = models.ForeignKey("Coordinator", on_delete=models.SET_NULL)
+    reviewer = models.ForeignKey("Coordinator", on_delete=models.SET_NULL, null=True)
     feedback = models.CharField(max_length=200, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
+    class Meta:
+        ordering = ["timestamp"]
+        constraints = [
+            models.UniqueConstraint(
+                fields = ["resource, version_number"],
+                name = "unique_version_number_per_resource"
+            )
+        ]
+
     def clean(self):
-            super().clean()
-            if self.course.is_restricted:
-                raise NotImplementedError(
-                    "Resources currently cannot be associated with a restricted course."
-                )
+        super().clean()
+        if self.course.is_restricted:
+            raise NotImplementedError(
+                "Resources currently cannot be associated with a restricted course."
+            )
 
 
 class Link(ValidatingModel):
