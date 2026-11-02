@@ -8,6 +8,7 @@ from .models import (
     Coordinator,
     Course,
     DayOfWeekField,
+    LibraryResource,
     Link,
     Matcher,
     MatcherPreference,
@@ -15,6 +16,8 @@ from .models import (
     Mentor,
     Override,
     Resource,
+    ResourceCategory,
+    ResourceVersion,
     Section,
     SectionOccurrence,
     Spacetime,
@@ -458,6 +461,58 @@ class SectionOccurrenceSerializer(serializers.ModelSerializer):
     class Meta:
         model = SectionOccurrence
         fields = ("id", "date", "section", "attendances")
+
+MAX_TAGS = 50
+class ResourceCategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ResourceCategory
+        fields = ["id", "name", "description", "course", "created_by", "created_at"]
+        read_only_fields = ["created_by", "created_at"]
+
+class ResourceVersionSerializer(serializers.ModelSerializer):
+    
+    class Meta:
+        model = ResourceVersion
+        fields = [
+            "id",
+            "resource",
+            "version_number",
+            "title",
+            "description",
+            "file_ref",
+            "resource_type",
+            "status",
+            "reviewer",
+            "feedback",
+            "timestamp",
+        ]
+        read_only_fields = [
+            "version_number",
+            "status",
+            "reviewer",
+            "feedback",
+            "timestamp",
+        ]
+
+
+class LibraryResourceSerializer(serializers.ModelSerializer):
+    published_versoin = ResourceVersionSerializer(source="published_version_ref", read_only=True)
+
+    def validate_tags(self, tags):
+        cleaned = []
+        for tag in tags:
+            tag = tag.strip().lower()
+            if tag and tag not in cleaned:
+                cleaned.append(tag)
+        if len(cleaned) > MAX_TAGS:
+            raise serializers.ValidationError(f'At most {MAX_TAGS} tags are allowed.')
+        return cleaned
+
+    class Meta:
+        model = LibraryResource
+        fields = ["id", "course", "uploader", "category", "published_version_ref", "archived_status", "created_at", "updated_at", "tags"]
+        read_only_fields = ["uploader", "created_at", "updated_at", "published_version_ref"]
 
 
 class OverrideSerializer(serializers.ModelSerializer):

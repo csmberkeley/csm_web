@@ -5,12 +5,11 @@ import re
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import ArrayField
-from django.core.exceptions import ObjectDoesNotExist
+from django.core.exceptions import ObjectDoesNotExist, ValidationError
 from django.db import models
 from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 from django.dispatch import receiver
 from django.utils import functional, timezone
-from rest_framework.serializers import ValidationError
 
 logger = logging.getLogger(__name__)
 
@@ -400,9 +399,15 @@ class Resource(ValidatingModel):
 
     def clean(self):
         super().clean()
-        if self.course.is_restricted:
-            raise NotImplementedError(
-                "Resources currently cannot be associated with a restricted course."
+        if self.course_id and Course.objects.filter(
+            pk=self.course_id, is_restricted=True
+        ).exists():
+            raise ValidationError(
+                {
+                    "course": (
+                        "Resources currently cannot be associated with a restricted course."
+                    )
+                }
             )
 
 class ResourceCategory(ValidatingModel):
@@ -425,9 +430,15 @@ class ResourceCategory(ValidatingModel):
 
     def clean(self):
         super().clean()
-        if self.course.is_restricted:
-            raise NotImplementedError(
-                "Resources currently cannot be associated with a restricted course."
+        if self.course_id and Course.objects.filter(
+            pk=self.course_id, is_restricted=True
+        ).exists():
+            raise ValidationError(
+                {
+                    "course": (
+                        "Resources currently cannot be associated with a restricted course."
+                    )
+                }
             )
 
 
@@ -446,14 +457,33 @@ class LibraryResource(ValidatingModel):
 
     def clean(self):
         super().clean()
-        if self.course.is_restricted:
-            raise NotImplementedError(
-                "Resources currently cannot be associated with a restricted course."
-            )
-        if self.category and ResourceCategory.objects.filter(pk=self.category_id, course=self.course_id).empty():
+        if self.course_id and Course.objects.filter(
+            pk=self.course_id, is_restricted=True
+        ).exists():
             raise ValidationError(
-                "The category and the resource must belong to the same course."
+                {
+                    "course": (
+                        "Resources currently cannot be associated with a restricted course."
+                    )
+                }
             )
+        if self.category_id is not None and self.course_id is not None:
+            category_course_id = ResourceCategory.objects.filter(
+                pk=self.category_id
+            ).values_list("course_id", flat=True).first()
+            course_exists = Course.objects.filter(pk=self.course_id).exists()
+            if (
+                category_course_id is not None
+                and course_exists
+                and category_course_id != self.course_id
+            ):
+                raise ValidationError(
+                    {
+                        "category": (
+                            "The category and the resource must belong to the same course."
+                        )
+                    }
+                )
 
 class ResourceVersion(ValidatingModel):
     class ResourceType(models.TextChoices):
@@ -469,7 +499,7 @@ class ResourceVersion(ValidatingModel):
     description = models.CharField(blank=True, max_length=260)
     file_ref = models.CharField(blank=True, max_length=300)
     resource_type = models.CharField(max_length=20, choices=ResourceType.choices)
-    status = models.CharField(max_length=20, choices=Status.choices)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
     reviewer = models.ForeignKey("Coordinator", on_delete=models.SET_NULL, null=True)
     feedback = models.CharField(max_length=200, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
@@ -478,16 +508,22 @@ class ResourceVersion(ValidatingModel):
         ordering = ["timestamp"]
         constraints = [
             models.UniqueConstraint(
-                fields = ["resource, version_number"],
+                fields=["resource", "version_number"],
                 name = "unique_version_number_per_resource"
             )
         ]
 
     def clean(self):
         super().clean()
-        if self.course.is_restricted:
-            raise NotImplementedError(
-                "Resources currently cannot be associated with a restricted course."
+        if self.resource_id and LibraryResource.objects.filter(
+            pk=self.resource_id, course__is_restricted=True
+        ).exists():
+            raise ValidationError(
+                {
+                    "resource": (
+                        "Resources currently cannot be associated with a restricted course."
+                    )
+                }
             )
 
 
