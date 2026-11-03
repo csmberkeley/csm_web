@@ -191,3 +191,169 @@ def library_resources(request):
         )
 
     return Response([serialize_library_resource(resource) for resource in resources])
+
+
+VERSION_FIELDS = ("title", "description", "file_ref", "resource_type")
+RESOURCE_FIELDS = ("category", "tags")
+
+
+def _get_course_roles(user, course):
+    """Return (is_mentor, is_coordinator) for the user in the given course."""
+    is_mentor = Mentor.objects.filter(user=user, course=course).exists()
+    is_coordinator = Coordinator.objects.filter(user=user, course=course).exists()
+    return is_mentor, is_coordinator
+
+
+@api_view(["PUT", "PATCH"])
+def config_resource(request, pk):
+    """
+    Endpoint: /api/library/resources/<pk>/
+    Edit a library resource.
+
+    - Mentors may edit only resources they uploaded; coordinators may edit any
+      resource in their course.
+    - Changes to title/description/file_ref/resource_type never modify an
+      approved version. If the latest version is pending, it is updated in
+      place; otherwise (approved or rejected) a new pending version is created.
+      The currently published version stays live until the new one is
+      approved, so pending content is never exposed.
+    - category/tags are resource-level metadata and apply immediately.
+    - Only coordinators may change archived_status (archive/unarchive).
+    """
+    if not request.user.is_authenticated:
+        raise NotAuthenticated("You must be logged in to edit a resource")
+
+    unknown_fields = set(request.data) - set(
+        VERSION_FIELDS + RESOURCE_FIELDS + ("archived_status",)
+    )
+    if unknown_fields:
+        raise ValidationError(
+            {field: ["This field cannot be edited."] for field in unknown_fields}
+        )
+
+    with transaction.atomic():
+        try:
+            resource = (
+                LibraryResource.objects.select_for_update()
+                .select_related("course")
+                .get(pk=pk)
+            )
+        except LibraryResource.DoesNotExist:
+            return Response(
+                {"error": "Resource not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        is_mentor, is_coordinator = _get_course_roles(request.user, resource.course)
+        is_owner = resource.uploader_id == request.user.id
+        if not (is_coordinator or (is_mentor and is_owner)):
+            raise PermissionDenied(
+                "You can only edit your own submissions, unless you are a coordinator."
+            )
+
+        if "archived_status" in request.data and not is_coordinator:
+            raise PermissionDenied("Only coordinators can archive resources.")
+        if resource.archived_status and not is_coordinator:
+            raise PermissionDenied("Archived resources cannot be edited.")
+
+        # resource-level metadata
+        resource_data = {
+            field: request.data[field]
+            for field in RESOURCE_FIELDS + ("archived_status",)
+            if field in request.data
+        }
+        if resource_data:
+            resource_serializer = LibraryResourceSerializer(
+                resource,
+                data=resource_data,
+                partial=True,
+                context={"request": request},
+            )
+            resource_serializer.is_valid(raise_exception=True)
+            category = resource_serializer.validated_data.get(
+                "category", resource.category
+            )
+            if category is not None and category.course_id != resource.course_id:
+                raise ValidationError(
+                    {"category": ["The category must belong to the selected course."]}
+                )
+            resource = resource_serializer.save()
+
+        # version content
+        version = None
+        version_changes = {
+            field: request.data[field]
+            for field in VERSION_FIELDS
+            if field in request.data
+        }
+        if version_changes:
+            latest = (
+                ResourceVersion.objects.filter(resource=resource)
+                .order_by("-version_number")
+                .first()
+            )
+            if latest is not None and latest.status == ResourceVersion.Status.PENDING:
+                # still awaiting review; revise the pending submission in place
+                version_serializer = ResourceVersionSerializer(
+                    latest, data=version_changes, partial=True
+                )
+                version_serializer.is_valid(raise_exception=True)
+                version = version_serializer.save()
+            else:
+                # approved or rejected: submit a new version for (re)approval
+                version_data = {
+                    field: getattr(latest, field) if latest is not None else ""
+                    for field in VERSION_FIELDS
+                }
+                version_data.update(version_changes)
+                version_data["resource"] = resource.pk
+                version_serializer = ResourceVersionSerializer(data=version_data)
+                version_serializer.is_valid(raise_exception=True)
+                version = version_serializer.save(
+                    version_number=(latest.version_number + 1) if latest else 1,
+                    status=ResourceVersion.Status.PENDING,
+                    reviewer=None,
+                    feedback="",
+                )
+
+    response_data = {
+        "resource": LibraryResourceSerializer(
+            resource, context={"request": request}
+        ).data,
+        "version": (
+            ResourceVersionSerializer(version, context={"request": request}).data
+            if version is not None
+            else None
+        ),
+    }
+    return Response(response_data, status=status.HTTP_200_OK)
+
+
+@api_view(["DELETE"])
+def delete_resource(request, pk):
+    """
+    Endpoint: /api/library/resources/<pk>/
+    Coordinators only. Archives the resource by default (hidden from the public
+    library, but kept with its version history). Pass ?hard=true to delete the
+    resource and all of its versions permanently.
+    """
+    if not request.user.is_authenticated:
+        raise NotAuthenticated("You must be logged in to remove a resource")
+
+    try:
+        resource = LibraryResource.objects.select_related("course").get(pk=pk)
+    except LibraryResource.DoesNotExist:
+        return Response(
+            {"error": "Resource not found"}, status=status.HTTP_404_NOT_FOUND
+        )
+
+    _, is_coordinator = _get_course_roles(request.user, resource.course)
+    if not is_coordinator:
+        raise PermissionDenied("Only coordinators can remove resources.")
+
+    if request.query_params.get("hard", "").lower() in ("true", "1"):
+        resource.delete()
+    else:
+        resource.archived_status = True
+        resource.save(update_fields=["archived_status", "updated_at"])
+
+    return Response(status=status.HTTP_204_NO_CONTENT)
