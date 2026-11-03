@@ -23,12 +23,15 @@ class UserViewSet(*viewset_with("list")):
         return Response(self.queryset.order_by("email").values_list("email", flat=True))
 
 
-@api_view(["GET"])
+@api_view(["GET", "PATCH"])
 def userinfo(request):
     """
-    Get user info for request user
-
-    TODO: perhaps replace this with a viewset when we establish profiles
+    Get or update user info for request user
     """
-    serializer = UserSerializer(request.user)
+    if request.method == "PATCH":
+        serializer = UserSerializer(request.user, data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        serializer.save()
+    else:
+        serializer = UserSerializer(request.user)
     return Response(serializer.data, status=status.HTTP_200_OK)
