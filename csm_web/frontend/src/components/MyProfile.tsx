@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useUserInfo } from "../utils/queries/base";
+import { useUserInfo, useUserInfoUpdateMutation } from "../utils/queries/base";
 
 import "../css/my-profile.scss";
 
@@ -12,18 +12,23 @@ const PRONOUN_OPTIONS = ["She/her", "He/him", "They/them", "Prefer not to say"];
 
 const MyProfile = (): React.ReactElement => {
   const { data: userInfo, isSuccess: userInfoLoaded } = useUserInfo();
+  const updateUserInfo = useUserInfoUpdateMutation();
 
   const [name, setName] = useState("");
-  const [pronouns, setPronouns] = useState(PRONOUN_OPTIONS[0]);
+  const [pronouns, setPronouns] = useState("");
   const [bio, setBio] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [photoError, setPhotoError] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // prefill the name once the user info has loaded
+  const savedName = userInfoLoaded ? `${userInfo.firstName} ${userInfo.lastName}`.trim() : "";
+
+  // fill the form with the logged-in user's saved profile
   useEffect(() => {
     if (userInfoLoaded) {
-      setName(`${userInfo.firstName} ${userInfo.lastName}`.trim());
+      setName(savedName);
+      setPronouns(userInfo.pronouns);
+      setBio(userInfo.bio);
     }
   }, [userInfoLoaded, userInfo]);
 
@@ -33,6 +38,9 @@ const MyProfile = (): React.ReactElement => {
       if (photoUrl) URL.revokeObjectURL(photoUrl);
     };
   }, [photoUrl]);
+
+  const hasChanges =
+    userInfoLoaded && (name.trim() !== savedName || pronouns !== userInfo.pronouns || bio !== userInfo.bio);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -54,7 +62,14 @@ const MyProfile = (): React.ReactElement => {
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
-    // TODO: send name, pronouns, bio, and photo to the backend once profile fields exist
+    // the backend stores first and last name separately, so split after the first word
+    const [firstName, ...rest] = name.trim().split(/\s+/);
+    updateUserInfo.mutate({
+      firstName,
+      lastName: rest.join(" "),
+      pronouns,
+      bio
+    });
   };
 
   const initials = name
@@ -68,8 +83,8 @@ const MyProfile = (): React.ReactElement => {
     <form className="my-profile" onSubmit={handleSave}>
       <div className="my-profile-header">
         <h2 className="my-profile-title">Edit Profile</h2>
-        <button type="submit" className="primary-btn">
-          Save changes
+        <button type="submit" className="primary-btn" disabled={!hasChanges || updateUserInfo.isLoading}>
+          {updateUserInfo.isLoading ? "Saving..." : "Save changes"}
         </button>
       </div>
 
@@ -111,6 +126,7 @@ const MyProfile = (): React.ReactElement => {
       <label className="my-profile-field">
         <span className="my-profile-label">Pronouns</span>
         <select className="my-profile-input" value={pronouns} onChange={e => setPronouns(e.target.value)}>
+          <option value="">Select pronouns</option>
           {PRONOUN_OPTIONS.map(option => (
             <option key={option} value={option}>
               {option}

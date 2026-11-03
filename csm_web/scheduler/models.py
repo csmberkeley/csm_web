@@ -52,6 +52,8 @@ def week_bounds(date):
 
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
+    pronouns = models.CharField(max_length=50, blank=True, default="")
+    bio = models.CharField(max_length=160, blank=True, default="")
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         """Determine whether this user is allowed to enroll in the given course."""

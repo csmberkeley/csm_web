@@ -8,8 +8,8 @@
  * the error boundary in App.tsx will catch any errors and display a friendly error page.
  */
 
-import { useQuery, UseQueryResult } from "@tanstack/react-query";
-import { fetchNormalized } from "../api";
+import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
+import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
 import { Profile, RawUserInfo } from "../types";
 import { handleError, handlePermissionsError, handleRetry, ServerError } from "./helpers";
 
@@ -77,4 +77,44 @@ export const useUserEmails = (): UseQueryResult<string[], Error> => {
 
   handleError(queryResult);
   return queryResult;
+};
+
+export interface UserInfoUpdateMutationRequest {
+  firstName?: string;
+  lastName?: string;
+  pronouns?: string;
+  bio?: string;
+}
+
+/**
+ * Hook to update the user's own info.
+ *
+ * Invalidates the user info query on success.
+ */
+export const useUserInfoUpdateMutation = (): UseMutationResult<
+  RawUserInfo,
+  ServerError,
+  UserInfoUpdateMutationRequest
+> => {
+  const queryClient = useQueryClient();
+  const mutationResult = useMutation<RawUserInfo, Error, UserInfoUpdateMutationRequest>(
+    async (body: UserInfoUpdateMutationRequest) => {
+      const response = await fetchWithMethod("/userinfo", HTTP_METHODS.PATCH, body);
+      if (response.ok) {
+        return await response.json();
+      } else {
+        handlePermissionsError(response.status);
+        throw new ServerError("Failed to update user info");
+      }
+    },
+    {
+      onSuccess: () => {
+        queryClient.invalidateQueries(["userinfo"]);
+      },
+      retry: handleRetry
+    }
+  );
+
+  handleError(mutationResult);
+  return mutationResult;
 };
