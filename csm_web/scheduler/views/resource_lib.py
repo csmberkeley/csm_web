@@ -1,8 +1,15 @@
+from django.db import transaction
 from rest_framework import status
 from rest_framework.decorators import api_view
+from rest_framework.exceptions import (
+    NotAuthenticated,
+    PermissionDenied,
+    ValidationError,
+)
 from rest_framework.response import Response
 
-from ..models import LibraryResource, ResourceVersion
+from ..models import Coordinator, LibraryResource, Mentor, ResourceVersion
+from ..serializers import LibraryResourceSerializer, ResourceVersionSerializer
 
 
 def serialize_library_resource(resource):
@@ -41,7 +48,95 @@ def serialize_library_resource(resource):
     }
 
 
-@api_view(["GET"])
+def create_library_resource(request):
+    """Create a pending library resource submission"""
+    if not request.user.is_authenticated:
+        raise NotAuthenticated("You must be logged in to submit a resource")
+
+    required_fields = (
+        "course",
+        "resource_type",
+    )
+
+    missing_fields = [field for field in required_fields if field not in request.data]
+    if missing_fields:
+        raise ValidationError(
+            {field: ["This field is required."] for field in missing_fields}
+        )
+
+    resource_data = {
+        "course": request.data["course"],
+        "category": request.data["category"],
+        "tags": request.data.get("tags", []),
+    }
+
+    resource_serializer = LibraryResourceSerializer(
+        data=resource_data,
+        context={"request": request},
+    )
+
+    resource_serializer.is_valid(raise_exception=True)
+
+    course = resource_serializer.validated_data["course"]
+    category = resource_serializer.validated_data["category"]
+    if category.course_id != course.id:
+        raise ValidationError(
+            {"category": ["The category must belong to the selected course."]}
+        )
+    is_mentor = Mentor.objects.filter(
+        user=request.user,
+        course=course,
+    ).exists()
+
+    is_coordinator = Coordinator.objects.filter(
+        user=request.user,
+        course=course,
+    ).exists()
+
+    if not (is_mentor or is_coordinator):
+        raise PermissionDenied("You must be a mentor or coordinator for this course.")
+
+    version_data = {
+        "title": request.data["title"],
+        "description": request.data["description"],
+        "file_ref": request.data["file_ref"],
+        "resource_type": request.data["resource_type"],
+    }
+
+    with transaction.atomic():
+        resource = resource_serializer.save(
+            uploader=request.user,
+            archived_status=False,
+        )
+        version_data["resource"] = resource.pk
+        version_serializer = ResourceVersionSerializer(data=version_data)
+        version_serializer.is_valid(raise_exception=True)
+        version = version_serializer.save(
+            version_number=1,
+            status=ResourceVersion.Status.PENDING,
+            reviewer=None,
+        )
+    resource_output = LibraryResourceSerializer(
+        resource,
+        context={"request": request},
+    ).data
+
+    version_output = ResourceVersionSerializer(
+        version,
+        context={"request": request},
+    ).data
+
+    response_data = {
+        "resource": resource_output,
+        "version": version_output,
+    }
+    return Response(
+        response_data,
+        status=status.HTTP_201_CREATED,
+    )
+
+
+@api_view(["GET", "POST"])
 def library_resources(request):
     """
     Endpoint: /api/resources
@@ -53,6 +148,9 @@ def library_resources(request):
     type - resource type to filter by (e.g. "pdf", "file")
     search - case-insensitive substring match on the resource title
     """
+    if request.method == "POST":
+        return create_library_resource(request)
+
     resources = LibraryResource.objects.filter(
         archived_status=False,
         published_version_ref__isnull=False,
