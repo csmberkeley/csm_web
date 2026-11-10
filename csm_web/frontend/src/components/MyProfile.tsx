@@ -12,7 +12,15 @@ const NAME_MAX = 50;
 const BIO_MAX = 160;
 const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 const PHOTO_TYPES = ["image/jpeg", "image/png"];
+const PHOTO_EXTENSIONS = [".jpg", ".jpeg", ".jfif", ".png"];
 const PRONOUN_OPTIONS = ["She/her", "He/him", "They/them", "Prefer not to say"];
+
+// browsers get a file's type from the OS, which on Windows can be blank or unusual;
+// this is only a quick check, since the server verifies the actual image
+const isAllowedPhoto = (file: File): boolean => {
+  const fileName = file.name.toLowerCase();
+  return PHOTO_TYPES.includes(file.type) || PHOTO_EXTENSIONS.some(extension => fileName.endsWith(extension));
+};
 
 const MyProfile = (): React.ReactElement => {
   const { data: userInfo, isSuccess: userInfoLoaded } = useUserInfo();
@@ -69,7 +77,7 @@ const MyProfile = (): React.ReactElement => {
     e.target.value = "";
     if (!file) return;
 
-    if (!PHOTO_TYPES.includes(file.type)) {
+    if (!isAllowedPhoto(file)) {
       setPhotoError("Photo must be a JPG or PNG.");
       return;
     }
@@ -165,7 +173,13 @@ const MyProfile = (): React.ReactElement => {
             </button>
           </div>
           {photoError && <span className="my-profile-error">{photoError}</span>}
-          <input ref={fileInputRef} type="file" accept={PHOTO_TYPES.join(",")} hidden onChange={handlePhotoChange} />
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={[...PHOTO_TYPES, ...PHOTO_EXTENSIONS].join(",")}
+            hidden
+            onChange={handlePhotoChange}
+          />
         </div>
       </div>
 
