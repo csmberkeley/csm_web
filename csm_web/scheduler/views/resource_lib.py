@@ -1,8 +1,10 @@
 from django.db import transaction
+from django.utils import timezone
 from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.exceptions import (
     NotAuthenticated,
+    NotFound,
     PermissionDenied,
     ValidationError,
 )
@@ -357,3 +359,88 @@ def delete_resource(request, pk):
         resource.save(update_fields=["archived_status", "updated_at"])
 
     return Response(status=status.HTTP_204_NO_CONTENT)
+
+
+@api_view(["GET"])
+def pending(request):
+    """
+    Endpoint: /api/library/resources/pending/
+    Returns the pending versions for every course the user coordinates,
+    oldest first. Users who coordinate no courses get an empty list.
+    """
+    if not request.user.is_authenticated:
+        raise NotAuthenticated("You must be logged in to view the review queue")
+
+    course_ids = Coordinator.objects.filter(user=request.user).values_list(
+        "course_id", flat=True
+    )
+    versions = ResourceVersion.objects.filter(
+        status=ResourceVersion.Status.PENDING,
+        resource__course_id__in=course_ids,
+        resource__archived_status=False,
+    ).select_related("resource")
+
+    return Response(ResourceVersionSerializer(versions, many=True).data)
+
+
+def _review_version(request, pk, new_status):
+    """
+    Shared by approve and reject.
+    404 if the version doesn't exist, 403 unless the user coordinates its
+    course, 400 if it isn't pending. Approving also publishes the version;
+    rejecting leaves the published version alone.
+    """
+    if not request.user.is_authenticated:
+        raise NotAuthenticated("You must be logged in to review resources")
+
+    with transaction.atomic():
+        try:
+            version = ResourceVersion.objects.get(pk=pk)
+        except ResourceVersion.DoesNotExist as error:
+            raise NotFound("Version not found") from error
+
+        resource = LibraryResource.objects.select_for_update().get(
+            pk=version.resource_id
+        )
+        version.refresh_from_db()
+
+        reviewer = Coordinator.objects.filter(
+            user=request.user, course_id=resource.course_id
+        ).first()
+        if reviewer is None:
+            raise PermissionDenied(
+                "You must be a coordinator of this course to review resources."
+            )
+        if version.status != ResourceVersion.Status.PENDING:
+            raise ValidationError("Only pending versions can be reviewed.")
+
+        version.status = new_status
+        version.reviewer = reviewer
+        version.reviewed_at = timezone.now()
+        version.feedback = request.data.get("feedback", "")
+        version.save()
+
+        if new_status == ResourceVersion.Status.APPROVED:
+            resource.published_version_ref = version
+            resource.save()
+
+    return Response(ResourceVersionSerializer(version).data)
+
+
+@api_view(["POST"])
+def approve(request, pk):
+    """
+    Endpoint: /api/library/versions/<pk>/approve/
+    Approves a pending version and makes it the published version.
+    """
+    return _review_version(request, pk, ResourceVersion.Status.APPROVED)
+
+
+@api_view(["POST"])
+def reject(request, pk):
+    """
+    Endpoint: /api/library/versions/<pk>/reject/
+    Body (optional): {"feedback": "..."}
+    Rejects a pending version. The currently published version stays public.
+    """
+    return _review_version(request, pk, ResourceVersion.Status.REJECTED)

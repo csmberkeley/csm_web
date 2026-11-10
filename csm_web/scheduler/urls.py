@@ -44,4 +44,7 @@ urlpatterns += [
         views.resource_lib.library_resources,
         name="library-resources",
     ),
+    path("library/resources/pending/", views.resource_lib.pending, name="library-pending"),
+    path("library/versions/<int:pk>/approve/", views.resource_lib.approve, name="library-approve"),
+    path("library/versions/<int:pk>/reject/", views.resource_lib.reject, name="library-reject"),
 ]
