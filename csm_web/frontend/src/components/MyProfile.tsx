@@ -38,6 +38,8 @@ const MyProfile = (): React.ReactElement => {
   const [photoRemoved, setPhotoRemoved] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // the save button reads "Changes saved" after a save, until the user edits again
+  const [justSaved, setJustSaved] = useState(false);
 
   const savedName = userInfoLoaded ? `${userInfo.firstName} ${userInfo.lastName}`.trim() : "";
   const savedPhotoUrl = userInfoLoaded ? userInfo.profilePhoto : null;
@@ -70,6 +72,11 @@ const MyProfile = (): React.ReactElement => {
   const textChanged = userInfoLoaded && (nameChanged || pronouns !== userInfo.pronouns || bio.trim() !== userInfo.bio);
   const photoChanged = pendingPhoto !== null || photoRemoved;
   const hasChanges = userInfoLoaded && normalizedName !== "" && (textChanged || photoChanged);
+
+  // any new edit turns the button back into "Save changes"
+  useEffect(() => {
+    if (hasChanges) setJustSaved(false);
+  }, [hasChanges]);
 
   const handlePhotoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -115,13 +122,17 @@ const MyProfile = (): React.ReactElement => {
     setPendingPhoto(null);
     setPhotoRemoved(false);
 
-    if (!textChanged) return;
+    if (!textChanged) {
+      setJustSaved(true);
+      return;
+    }
     // the backend stores first and last name separately, so split after the first word;
     // only when the name was edited, since the split would rewrite a multi-word first name
     const [firstName, ...rest] = normalizedName.split(" ");
     const nameFields = nameChanged ? { firstName, lastName: rest.join(" ") } : {};
     try {
       await updateUserInfo.mutateAsync({ ...nameFields, pronouns, bio });
+      setJustSaved(true);
     } catch (error) {
       setSaveError((error as Error).message);
     }
@@ -139,7 +150,7 @@ const MyProfile = (): React.ReactElement => {
       <div className="my-profile-header">
         <h2 className="my-profile-title">Edit Profile</h2>
         <button type="submit" className="primary-btn" disabled={!hasChanges || isSaving}>
-          {isSaving ? "Saving..." : "Save changes"}
+          {isSaving ? "Saving..." : justSaved ? "Changes saved" : "Save changes"}
         </button>
       </div>
 
