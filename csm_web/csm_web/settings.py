@@ -181,6 +181,12 @@ STORAGES = {
     },
 }
 
+if DJANGO_ENV == DEVELOPMENT:
+    # store uploaded files on disk instead of S3
+    MEDIA_URL = "/media/"
+    MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+    STORAGES["default"] = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
@@ -228,6 +234,10 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.social_auth.load_extra_data",
     "social_core.pipeline.user.user_details",
 )
+
+# user_details would otherwise replace names edited on the profile page at every login;
+# blank names (e.g. ghost profiles) are still filled in from Google
+SOCIAL_AUTH_IMMUTABLE_USER_FIELDS = ["first_name", "last_name"]
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
 SOCIAL_AUTH_GOOGLE_OAUTH2_IGNORE_DEFAULT_SCOPE = True
@@ -311,7 +321,13 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     )
     CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")
     CSP_CONNECT_SRC = ("'self'",)
-    CSP_IMG_SRC = ("'self'", "data:")
+    # profile photos are previewed from blob: URLs and served directly from the S3 bucket
+    CSP_IMG_SRC = (
+        "'self'",
+        "data:",
+        "blob:",
+        f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com",
+    )
     CSP_FONT_SRC = ("https://fonts.gstatic.com",)
     CSP_FRAME_ANCESTORS = ("'none'",)
     CSP_BLOCK_ALL_MIXED_CONTENT = True

@@ -1,6 +1,7 @@
 import datetime
 import logging
 import re
+import uuid
 
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
@@ -50,10 +51,17 @@ def week_bounds(date):
     return week_start, week_end
 
 
+def profile_photo_path(_instance, filename):
+    """Compute the storage path for a user's profile photo."""
+    extension = filename.rsplit(".", 1)[-1].lower()
+    return f"profile_photos/{uuid.uuid4().hex}.{extension}"
+
+
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
     pronouns = models.CharField(max_length=50, blank=True, default="")
     bio = models.CharField(max_length=160, blank=True, default="")
+    profile_photo = models.ImageField(upload_to=profile_photo_path, blank=True)
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         """Determine whether this user is allowed to enroll in the given course."""
@@ -107,6 +115,20 @@ class User(AbstractUser):
 
     class Meta:
         indexes = (models.Index(fields=("email",)),)
+
+
+@receiver(models.signals.post_delete, sender=User)
+def auto_delete_profile_photo_on_delete(instance, **kwargs):
+    """
+    Deletes the profile photo from storage when the corresponding `User` is deleted.
+    """
+    if instance.profile_photo:
+        name = instance.profile_photo.name
+        try:
+            instance.profile_photo.delete(save=False)
+        except Exception:  # pylint: disable=broad-except
+            # this runs inside the delete transaction, so raising would keep the user
+            logger.exception("Failed to delete profile photo %s", name)
 
 
 class ValidatingModel(models.Model):

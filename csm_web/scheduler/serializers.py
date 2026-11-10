@@ -190,16 +190,24 @@ class UserSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = (
-            "id",
-            "email",
-            "first_name",
-            "last_name",
-            "priority_enrollment",
-            "pronouns",
-            "bio",
-        )
-        read_only_fields = ("id", "email", "priority_enrollment")
+        fields = ("id", "email", "first_name", "last_name", "priority_enrollment")
+
+
+class UserProfileSerializer(UserSerializer):
+    """
+    Serializer for a user's own profile, including their pronouns, bio, and photo
+    """
+
+    class Meta(UserSerializer.Meta):
+        fields = UserSerializer.Meta.fields + ("pronouns", "bio", "profile_photo")
+        read_only_fields = ("id", "email", "priority_enrollment", "profile_photo")
+
+    def update(self, instance, validated_data):
+        """Save only the submitted fields, so a concurrent photo upload isn't overwritten."""
+        for field, value in validated_data.items():
+            setattr(instance, field, value)
+        instance.save(update_fields=list(validated_data))
+        return instance
 
 
 class ProfileSerializer(serializers.Serializer):  # pylint: disable=abstract-method

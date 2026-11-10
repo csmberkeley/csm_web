@@ -8,7 +8,14 @@
  * the error boundary in App.tsx will catch any errors and display a friendly error page.
  */
 
-import { useMutation, UseMutationResult, useQuery, useQueryClient, UseQueryResult } from "@tanstack/react-query";
+import {
+  QueryClient,
+  useMutation,
+  UseMutationResult,
+  useQuery,
+  useQueryClient,
+  UseQueryResult
+} from "@tanstack/react-query";
 import { fetchNormalized, fetchWithMethod, HTTP_METHODS } from "../api";
 import { Profile, RawUserInfo } from "../types";
 import { handleError, handlePermissionsError, handleRetry, ServerError } from "./helpers";
@@ -90,6 +97,7 @@ export interface UserInfoUpdateMutationRequest {
  * Hook to update the user's own info.
  *
  * Invalidates the user info query on success.
+ * Errors are left for the page to display, so unsaved edits aren't lost to the error boundary.
  */
 export const useUserInfoUpdateMutation = (): UseMutationResult<
   RawUserInfo,
@@ -97,7 +105,7 @@ export const useUserInfoUpdateMutation = (): UseMutationResult<
   UserInfoUpdateMutationRequest
 > => {
   const queryClient = useQueryClient();
-  const mutationResult = useMutation<RawUserInfo, Error, UserInfoUpdateMutationRequest>(
+  return useMutation<RawUserInfo, ServerError, UserInfoUpdateMutationRequest>(
     async (body: UserInfoUpdateMutationRequest) => {
       const response = await fetchWithMethod("/userinfo", HTTP_METHODS.PATCH, body);
       if (response.ok) {
@@ -108,13 +116,67 @@ export const useUserInfoUpdateMutation = (): UseMutationResult<
       }
     },
     {
-      onSuccess: () => {
-        queryClient.invalidateQueries(["userinfo"]);
-      },
+      // returned so the mutation stays loading until the page has the saved values
+      onSuccess: () => queryClient.invalidateQueries(["userinfo"]),
       retry: handleRetry
     }
   );
+};
 
-  handleError(mutationResult);
-  return mutationResult;
+/**
+ * Store a photo endpoint's response as the current user info.
+ */
+const storeUserInfoResponse = async (queryClient: QueryClient, data: RawUserInfo): Promise<void> => {
+  // an in-flight refetch may have read the old photo, and would overwrite this response
+  await queryClient.cancelQueries(["userinfo"]);
+  queryClient.setQueryData(["userinfo"], data);
+};
+
+/**
+ * Hook to upload the user's own profile photo.
+ *
+ * Errors are left for the page to display next to the photo.
+ */
+export const useUserPhotoUploadMutation = (): UseMutationResult<RawUserInfo, ServerError, File> => {
+  const queryClient = useQueryClient();
+  return useMutation<RawUserInfo, ServerError, File>(
+    async (photo: File) => {
+      const body = new FormData();
+      body.append("photo", photo);
+      const response = await fetchWithMethod("/userinfo/photo", HTTP_METHODS.POST, body, true);
+      if (response.ok) {
+        return await response.json();
+      }
+      if (response.status === 400) {
+        // validation failures carry a message for the user; check before the generic 4xx handling
+        const error = await response.json().catch(() => null);
+        throw new ServerError(error?.detail ?? "Failed to upload photo");
+      }
+      handlePermissionsError(response.status);
+      throw new ServerError("Failed to upload photo");
+    },
+    {
+      onSuccess: data => storeUserInfoResponse(queryClient, data)
+    }
+  );
+};
+
+/**
+ * Hook to remove the user's own profile photo.
+ */
+export const useUserPhotoRemoveMutation = (): UseMutationResult<RawUserInfo, ServerError, void> => {
+  const queryClient = useQueryClient();
+  return useMutation<RawUserInfo, ServerError, void>(
+    async () => {
+      const response = await fetchWithMethod("/userinfo/photo", HTTP_METHODS.DELETE);
+      if (response.ok) {
+        return await response.json();
+      }
+      handlePermissionsError(response.status);
+      throw new ServerError("Failed to remove photo");
+    },
+    {
+      onSuccess: data => storeUserInfoResponse(queryClient, data)
+    }
+  );
 };

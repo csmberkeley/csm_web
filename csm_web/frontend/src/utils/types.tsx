@@ -39,6 +39,7 @@ export interface UserInfo {
   priorityEnrollment?: DateTime;
   pronouns: string;
   bio: string;
+  profilePhoto: string | null;
 }
 
 /**

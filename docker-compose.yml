@@ -56,6 +56,12 @@ services:
       - type: bind
         source: ./csm_web/scheduler/migrations/
         target: /opt/csm_web/csm_web/scheduler/migrations/
+      # output from file uploads
+      - type: bind
+        source: ./csm_web/media/
+        target: /opt/csm_web/csm_web/media/
+        bind:
+          create_host_path: true
     depends_on:
       postgres:
         condition: service_healthy
