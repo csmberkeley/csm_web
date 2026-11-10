@@ -232,12 +232,9 @@ SOCIAL_AUTH_PIPELINE = (
     "social_core.pipeline.user.create_user",
     "social_core.pipeline.social_auth.associate_user",
     "social_core.pipeline.social_auth.load_extra_data",
+    "scheduler.utils.social_auth.keep_edited_names",
     "social_core.pipeline.user.user_details",
 )
-
-# user_details would otherwise replace names edited on the profile page at every login;
-# blank names (e.g. ghost profiles) are still filled in from Google
-SOCIAL_AUTH_IMMUTABLE_USER_FIELDS = ["first_name", "last_name"]
 
 SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = os.environ.get("SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET")
 SOCIAL_AUTH_GOOGLE_OAUTH2_IGNORE_DEFAULT_SCOPE = True

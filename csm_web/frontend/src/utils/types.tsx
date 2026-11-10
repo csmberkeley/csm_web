@@ -37,9 +37,6 @@ export interface UserInfo {
   lastName: string;
   email: string;
   priorityEnrollment?: DateTime;
-  pronouns: string;
-  bio: string;
-  profilePhoto: string | null;
 }
 
 /**
@@ -47,6 +44,15 @@ export interface UserInfo {
  */
 export type RawUserInfo = Omit<UserInfo, "priorityEnrollment"> & {
   priorityEnrollment?: string;
+};
+
+/**
+ * Raw type of the logged-in user's own info; other endpoints returning users omit these fields.
+ */
+export type RawUserProfileInfo = RawUserInfo & {
+  pronouns: string;
+  bio: string;
+  profilePhoto: string | null;
 };
 
 export interface Section {

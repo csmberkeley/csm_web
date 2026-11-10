@@ -71,7 +71,7 @@ const MyProfile = (): React.ReactElement => {
   const nameChanged = normalizedName !== savedName.replace(/\s+/g, " ");
   const textChanged = userInfoLoaded && (nameChanged || pronouns !== userInfo.pronouns || bio.trim() !== userInfo.bio);
   const photoChanged = pendingPhoto !== null || photoRemoved;
-  const hasChanges = userInfoLoaded && normalizedName !== "" && (textChanged || photoChanged);
+  const hasChanges = userInfoLoaded && (normalizedName !== "" || !nameChanged) && (textChanged || photoChanged);
 
   // any new edit turns the button back into "Save changes"
   useEffect(() => {
@@ -142,7 +142,7 @@ const MyProfile = (): React.ReactElement => {
     .split(/\s+/)
     .filter(Boolean)
     .slice(0, 2)
-    .map(word => word[0].toUpperCase())
+    .map(word => Array.from(word)[0].toUpperCase())
     .join("");
 
   return (

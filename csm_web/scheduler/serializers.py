@@ -201,6 +201,10 @@ class UserProfileSerializer(UserSerializer):
     class Meta(UserSerializer.Meta):
         fields = UserSerializer.Meta.fields + ("pronouns", "bio", "profile_photo")
         read_only_fields = ("id", "email", "priority_enrollment", "profile_photo")
+        extra_kwargs = {
+            "first_name": {"allow_blank": False, "max_length": 50},
+            "last_name": {"max_length": 50},
+        }
 
     def update(self, instance, validated_data):
         """Save only the submitted fields, so a concurrent photo upload isn't overwritten."""

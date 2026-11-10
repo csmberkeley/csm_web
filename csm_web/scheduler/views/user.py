@@ -10,8 +10,8 @@ from rest_framework.response import Response
 from rest_framework import status
 from rest_framework.decorators import api_view, parser_classes
 
-from .utils import logger, viewset_with
-from ..models import Coordinator, User
+from .utils import viewset_with
+from ..models import Coordinator, User, delete_stored_photo
 from scheduler.serializers import UserProfileSerializer
 
 
@@ -105,16 +105,6 @@ def process_profile_photo(photo):
         raise ValidationError({"detail": "File is not a valid image."}) from error
 
     return ContentFile(buffer.getvalue()), PROFILE_PHOTO_EXTENSIONS[image_format]
-
-
-def delete_stored_photo(user, name):
-    """
-    Delete a photo file; the request's outcome is already decided, so failures are only logged.
-    """
-    try:
-        user.profile_photo.storage.delete(name)
-    except Exception:  # pylint: disable=broad-except
-        logger.exception("Failed to delete profile photo %s", name)
 
 
 @api_view(["POST", "DELETE"])

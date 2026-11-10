@@ -6,7 +6,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ObjectDoesNotExist
-from django.db import models
+from django.db import models, transaction
 from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 from django.dispatch import receiver
 from django.utils import timezone
@@ -117,6 +117,16 @@ class User(AbstractUser):
         indexes = (models.Index(fields=("email",)),)
 
 
+def delete_stored_photo(user, name):
+    """
+    Delete a photo file; the caller's outcome is already decided, so failures are only logged.
+    """
+    try:
+        user.profile_photo.storage.delete(name)
+    except Exception:  # pylint: disable=broad-except
+        logger.exception("Failed to delete profile photo %s", name)
+
+
 @receiver(models.signals.post_delete, sender=User)
 def auto_delete_profile_photo_on_delete(instance, **kwargs):
     """
@@ -124,11 +134,8 @@ def auto_delete_profile_photo_on_delete(instance, **kwargs):
     """
     if instance.profile_photo:
         name = instance.profile_photo.name
-        try:
-            instance.profile_photo.delete(save=False)
-        except Exception:  # pylint: disable=broad-except
-            # this runs inside the delete transaction, so raising would keep the user
-            logger.exception("Failed to delete profile photo %s", name)
+        # this runs inside the delete transaction, which could still roll back and keep the user
+        transaction.on_commit(lambda: delete_stored_photo(instance, name))
 
 
 class ValidatingModel(models.Model):

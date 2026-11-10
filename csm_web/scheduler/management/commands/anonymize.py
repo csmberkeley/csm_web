@@ -24,4 +24,8 @@ class Command(BaseCommand):
                 user.email = f"{user_pk}@berkeley.edu"
                 user.first_name = f"{user_pk}_first_name"
                 user.last_name = f"{user_pk}_last_name"
+                user.pronouns = ""
+                user.bio = ""
+                # only clears the reference; the stored file may belong to another environment
+                user.profile_photo = ""
                 user.save()

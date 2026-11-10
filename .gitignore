@@ -231,3 +231,6 @@ main.css
 
 # local file uploads
 csm_web/media/
+
+# local telemetry logs
+.server_logs/

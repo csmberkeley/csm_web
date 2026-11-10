@@ -93,7 +93,7 @@ function Header(): React.ReactElement {
     if (
       location.pathname.startsWith("/resources") ||
       location.pathname.startsWith("/matcher") ||
-      location.pathname.startsWith("/policies") || 
+      location.pathname.startsWith("/policies") ||
       location.pathname.startsWith("/myprofile")
     ) {
       isActive = false;
@@ -148,7 +148,7 @@ function Header(): React.ReactElement {
           <h3 className="site-subtitle">Policies</h3>
         </NavLink>
         <NavLink to="/myprofile" className={navlinkClassSubtitle}>
-          <h3 className="site-subtitle">{"My Profile"}</h3>
+          <h3 className="site-subtitle">My Profile</h3>
         </NavLink>
         <a id="logout-btn" href="#" onClick={logout} title="Log out">
           <LogOutIcon className="icon" />
