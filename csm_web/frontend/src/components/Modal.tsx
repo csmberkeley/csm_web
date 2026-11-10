@@ -8,17 +8,25 @@ interface ModalProps {
   children: React.ReactNode;
   closeModal: React.MouseEventHandler<Element>;
   className?: string;
+  modalClassName?: string;
+  overlayClassName?: string;
 }
 
 interface ModalCloserProps {
   children: React.ReactNode;
 }
 
-export default function Modal({ children, closeModal, className = "" }: ModalProps): React.ReactElement {
+export default function Modal({
+  children,
+  closeModal,
+  className = "",
+  modalClassName = "",
+  overlayClassName = ""
+}: ModalProps): React.ReactElement {
   return (
     <ModalContext.Provider value={closeModal}>
-      <div className="modal-overlay" onClick={closeModal} />
-      <div className={`modal `}>
+      <div className={`modal-overlay${overlayClassName ? ` ${overlayClassName}` : ""}`} onClick={closeModal} />
+      <div className={`modal ${modalClassName}`}>
         <div className="modal-close-container">
           <button className="modal-close-x" aria-label="close" onClick={closeModal}>
             <XIcon className="icon" />

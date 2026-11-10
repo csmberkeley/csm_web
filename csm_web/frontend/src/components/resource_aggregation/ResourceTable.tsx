@@ -12,7 +12,7 @@ import { Role } from "../../utils/types";
 import { Roles } from "../../utils/user";
 import LoadingSpinner from "../LoadingSpinner";
 import { ResourceRow } from "./ResourceRow";
-import { emptyResource, Link, Resource, Worksheet } from "./ResourceTypes";
+import { emptyResource, Link, PublishOptions, Resource, Worksheet } from "./ResourceTypes";
 
 import PlusIcon from "../../../static/frontend/img/plus.svg";
 
@@ -66,6 +66,7 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
    * @param linkMap - form data object containing link info
    * @param newWorksheets - list of new worksheets to add
    * @param newLinks - list of new links to add
+   * @param publishOptions - selected publication time
    * @returns
    */
   function getResourceFormData(
@@ -73,7 +74,8 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
     fileFormDataMap: Map<number, Worksheet>,
     linkMap: Map<number, Link>,
     newWorksheets: Array<Worksheet>,
-    newLinks: Array<Link>
+    newLinks: Array<Link>,
+    publishOptions: PublishOptions
   ) {
     const resourceFormData = new FormData();
     for (const [key, value] of Object.entries(newResource)) {
@@ -81,6 +83,7 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
         resourceFormData.set(key, value);
       }
     }
+    resourceFormData.set("publishAt", publishOptions.publishAt ?? "");
     let idx = 0; // cumulative index in worksheet array
     for (const worksheet of fileFormDataMap.values()) {
       for (const [key, value] of Object.entries(worksheet)) {
@@ -171,16 +174,25 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
    * @param linkMap form data object containing link info
    * @param newWorksheets list of worksheets to add to resource
    * @param newLinks list of links to add to resource
+   * @param publishOptions selected publication time
    */
-  function handleAddResource(
+  async function handleAddResource(
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
     linkMap: Map<number, Link>,
     newWorksheets: Array<Worksheet>,
-    newLinks: Array<Link>
-  ) {
-    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, linkMap, newWorksheets, newLinks);
-    createResourceMutation.mutate(resourceFormData);
+    newLinks: Array<Link>,
+    publishOptions: PublishOptions
+  ): Promise<void> {
+    const resourceFormData = getResourceFormData(
+      newResource,
+      fileFormDataMap,
+      linkMap,
+      newWorksheets,
+      newLinks,
+      publishOptions
+    );
+    await createResourceMutation.mutateAsync(resourceFormData);
     setAddingResource(false);
   }
 
@@ -194,16 +206,26 @@ export const ResourceTable = ({ courseID, roles }: ResourceTableProps): React.Re
    * @param fileFormDataMap FormData object for any files to add
    * @param linkMap form data object containing link info
    * @param newWorksheets list of worksheets to add to resource
+   * @param newLinks list of links to add to resource
+   * @param publishOptions selected publication time
    */
-  function handleUpdateResource(
+  async function handleUpdateResource(
     newResource: Resource,
     fileFormDataMap: Map<number, Worksheet>,
     linkMap: Map<number, Link>,
     newWorksheets: Array<Worksheet>,
-    newLinks: Array<Link>
-  ) {
-    const resourceFormData = getResourceFormData(newResource, fileFormDataMap, linkMap, newWorksheets, newLinks);
-    updateResourceMutation.mutate(resourceFormData);
+    newLinks: Array<Link>,
+    publishOptions: PublishOptions
+  ): Promise<void> {
+    const resourceFormData = getResourceFormData(
+      newResource,
+      fileFormDataMap,
+      linkMap,
+      newWorksheets,
+      newLinks,
+      publishOptions
+    );
+    await updateResourceMutation.mutateAsync(resourceFormData);
   }
 
   /**

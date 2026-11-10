@@ -16,6 +16,10 @@ export interface Worksheet {
   deleted?: string[];
 }
 
+export interface PublishOptions {
+  publishAt: string | null;
+}
+
 export interface Link {
   id: number;
   resource: number;
