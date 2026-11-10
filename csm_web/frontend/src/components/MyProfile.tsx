@@ -5,6 +5,12 @@ import {
   useUserPhotoRemoveMutation,
   useUserPhotoUploadMutation
 } from "../utils/queries/base";
+import useUnsavedChangesWarning from "../utils/useUnsavedChangesWarning";
+import Modal from "./Modal";
+import PhotoCropper from "./PhotoCropper";
+
+import CameraIcon from "../../static/frontend/img/camera.svg";
+import CheckIcon from "../../static/frontend/img/check.svg";
 
 import "../css/my-profile.scss";
 
@@ -37,6 +43,8 @@ const MyProfile = (): React.ReactElement => {
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
   const [photoRemoved, setPhotoRemoved] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  // a chosen photo waiting to be cropped
+  const [cropFile, setCropFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
   // the save button reads "Changes saved" after a save, until the user edits again
   const [justSaved, setJustSaved] = useState(false);
@@ -71,7 +79,9 @@ const MyProfile = (): React.ReactElement => {
   const nameChanged = normalizedName !== savedName.replace(/\s+/g, " ");
   const textChanged = userInfoLoaded && (nameChanged || pronouns !== userInfo.pronouns || bio.trim() !== userInfo.bio);
   const photoChanged = pendingPhoto !== null || photoRemoved;
-  const hasChanges = userInfoLoaded && (normalizedName !== "" || !nameChanged) && (textChanged || photoChanged);
+  const hasUnsavedEdits = userInfoLoaded && (textChanged || photoChanged);
+  const hasChanges = hasUnsavedEdits && (normalizedName !== "" || !nameChanged);
+  const leaveWarning = useUnsavedChangesWarning(hasUnsavedEdits || isSaving);
 
   // any new edit turns the button back into "Save changes"
   useEffect(() => {
@@ -93,8 +103,18 @@ const MyProfile = (): React.ReactElement => {
       return;
     }
     setPhotoError("");
-    setPendingPhoto(file);
+    setCropFile(file);
+  };
+
+  const handleCropConfirm = (cropped: File) => {
+    setCropFile(null);
+    setPendingPhoto(cropped);
     setPhotoRemoved(false);
+  };
+
+  const handleCropError = (message: string) => {
+    setCropFile(null);
+    setPhotoError(message);
   };
 
   const handlePhotoRemove = () => {
@@ -138,6 +158,15 @@ const MyProfile = (): React.ReactElement => {
     }
   };
 
+  const openPhotoPicker = () => fileInputRef.current?.click();
+  const showSaved = justSaved && !isSaving;
+
+  const unsavedPhotoHint = pendingPhoto
+    ? "New photo, not saved yet"
+    : photoRemoved
+    ? "Photo will be removed when you save"
+    : "";
+
   const initials = name
     .split(/\s+/)
     .filter(Boolean)
@@ -146,100 +175,150 @@ const MyProfile = (): React.ReactElement => {
     .join("");
 
   return (
-    <form className="my-profile" onSubmit={handleSave}>
-      <div className="my-profile-header">
-        <h2 className="my-profile-title">Edit Profile</h2>
-        <button type="submit" className="primary-btn" disabled={!hasChanges || isSaving}>
-          {isSaving ? "Saving..." : justSaved ? "Changes saved" : "Save changes"}
-        </button>
-      </div>
-
-      {saveError && <span className="my-profile-error">{saveError}</span>}
-
-      <div className="my-profile-photo-row">
-        {photoUrl ? (
-          <img className="my-profile-avatar" src={photoUrl} alt="Profile photo" />
-        ) : (
-          <div className="my-profile-avatar my-profile-avatar-empty">{initials}</div>
-        )}
-        <div className="my-profile-photo-info">
-          <span className="my-profile-label">Profile photo</span>
-          <span className="my-profile-hint">JPG or PNG · Max 5 MB</span>
-          <div className="my-profile-photo-actions">
-            <button
-              type="button"
-              className="primary-btn"
-              disabled={isSaving}
-              onClick={() => fileInputRef.current?.click()}
-            >
-              Upload photo
-            </button>
-            <button
-              type="button"
-              className="my-profile-outline-btn"
-              disabled={!photoUrl || isSaving}
-              onClick={handlePhotoRemove}
-            >
-              Remove
-            </button>
-          </div>
-          {photoError && <span className="my-profile-error">{photoError}</span>}
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept={[...PHOTO_TYPES, ...PHOTO_EXTENSIONS].join(",")}
-            hidden
-            onChange={handlePhotoChange}
-          />
+    <>
+      <form className="my-profile" onSubmit={handleSave}>
+        <div className="my-profile-header">
+          <h2 className="my-profile-title">Edit Profile</h2>
+          <button
+            type="submit"
+            className={`primary-btn${showSaved ? " my-profile-saved" : ""}`}
+            disabled={!hasChanges || isSaving}
+          >
+            {showSaved && <CheckIcon className="icon" />}
+            {isSaving ? "Saving..." : showSaved ? "Changes saved" : "Save changes"}
+          </button>
         </div>
-      </div>
 
-      <label className="my-profile-field">
-        <span className="my-profile-label">Name</span>
-        <input
-          className="my-profile-input"
-          value={name}
-          maxLength={NAME_MAX}
-          readOnly={isSaving}
-          onChange={e => setName(e.target.value)}
+        {userInfoLoaded && (
+          <p className="my-profile-account">
+            Signed in as <strong>{userInfo.email}</strong>
+          </p>
+        )}
+
+        {saveError && <span className="my-profile-error">{saveError}</span>}
+
+        <div className="my-profile-photo-row">
+          <button
+            type="button"
+            className="my-profile-avatar-btn"
+            aria-label="Change profile photo"
+            disabled={isSaving}
+            onClick={openPhotoPicker}
+          >
+            {photoUrl ? (
+              <img className="my-profile-avatar" src={photoUrl} alt="" />
+            ) : (
+              <span className="my-profile-avatar my-profile-avatar-empty">{initials}</span>
+            )}
+            <span className="my-profile-avatar-overlay">
+              <CameraIcon className="icon outline" />
+            </span>
+          </button>
+          <div className="my-profile-photo-info">
+            <span className="my-profile-label">Profile photo</span>
+            <span className="my-profile-hint">JPG or PNG · Max 5 MB</span>
+            <div className="my-profile-photo-actions">
+              <button type="button" className="primary-btn" disabled={isSaving} onClick={openPhotoPicker}>
+                Upload photo
+              </button>
+              <button
+                type="button"
+                className="my-profile-outline-btn"
+                disabled={!photoUrl || isSaving}
+                onClick={handlePhotoRemove}
+              >
+                Remove
+              </button>
+            </div>
+            {unsavedPhotoHint && (
+              <span className="my-profile-unsaved" role="status">
+                {unsavedPhotoHint}
+              </span>
+            )}
+            {photoError && <span className="my-profile-error">{photoError}</span>}
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept={[...PHOTO_TYPES, ...PHOTO_EXTENSIONS].join(",")}
+              hidden
+              onChange={handlePhotoChange}
+            />
+          </div>
+        </div>
+
+        <label className="my-profile-field">
+          <span className="my-profile-label">Name</span>
+          <input
+            className="my-profile-input"
+            value={name}
+            maxLength={NAME_MAX}
+            readOnly={isSaving}
+            onChange={e => setName(e.target.value)}
+          />
+          <span className="my-profile-count">
+            {name.length}/{NAME_MAX}
+          </span>
+        </label>
+
+        <label className="my-profile-field">
+          <span className="my-profile-label">Pronouns</span>
+          <select
+            className="my-profile-input"
+            value={pronouns}
+            disabled={isSaving}
+            onChange={e => setPronouns(e.target.value)}
+          >
+            <option value="">Select pronouns</option>
+            {PRONOUN_OPTIONS.map(option => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className="my-profile-field">
+          <span className="my-profile-label">Bio</span>
+          <textarea
+            className="my-profile-input"
+            placeholder="Tell us a little about yourself..."
+            value={bio}
+            maxLength={BIO_MAX}
+            readOnly={isSaving}
+            onChange={e => setBio(e.target.value)}
+          />
+          <span className="my-profile-count">
+            {bio.length}/{BIO_MAX}
+          </span>
+        </label>
+      </form>
+
+      {cropFile && (
+        <PhotoCropper
+          file={cropFile}
+          onCancel={() => setCropFile(null)}
+          onConfirm={handleCropConfirm}
+          onError={handleCropError}
         />
-        <span className="my-profile-count">
-          {name.length}/{NAME_MAX}
-        </span>
-      </label>
+      )}
 
-      <label className="my-profile-field">
-        <span className="my-profile-label">Pronouns</span>
-        <select
-          className="my-profile-input"
-          value={pronouns}
-          disabled={isSaving}
-          onChange={e => setPronouns(e.target.value)}
-        >
-          <option value="">Select pronouns</option>
-          {PRONOUN_OPTIONS.map(option => (
-            <option key={option} value={option}>
-              {option}
-            </option>
-          ))}
-        </select>
-      </label>
-
-      <label className="my-profile-field">
-        <span className="my-profile-label">Bio</span>
-        <textarea
-          className="my-profile-input"
-          placeholder="Tell us a little about yourself..."
-          value={bio}
-          maxLength={BIO_MAX}
-          readOnly={isSaving}
-          onChange={e => setBio(e.target.value)}
-        />
-        <span className="my-profile-count">
-          {bio.length}/{BIO_MAX}
-        </span>
-      </label>
-    </form>
+      {leaveWarning.showWarning && (
+        <Modal closeModal={leaveWarning.stay}>
+          <div className="my-profile-leave">
+            <h3 className="my-profile-dialog-title">Leave without saving?</h3>
+            <p className="my-profile-leave-text">Your changes on this page haven&apos;t been saved.</p>
+            <div className="my-profile-dialog-actions">
+              <button type="button" className="my-profile-outline-btn" onClick={leaveWarning.stay}>
+                Keep editing
+              </button>
+              <button type="button" className="danger-btn" onClick={leaveWarning.leave}>
+                Leave without saving
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+    </>
   );
 };
 
