@@ -16,7 +16,9 @@ import "../css/my-profile.scss";
 
 const NAME_MAX = 50;
 const BIO_MAX = 160;
-const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
+// limits the chosen photo; only its small crop is uploaded, which the server limits separately
+const PHOTO_MAX_MB = 25;
+const PHOTO_MAX_BYTES = PHOTO_MAX_MB * 1024 * 1024;
 const PHOTO_TYPES = ["image/jpeg", "image/png"];
 const PHOTO_EXTENSIONS = [".jpg", ".jpeg", ".jfif", ".png"];
 const PRONOUN_OPTIONS = ["She/her", "He/him", "They/them", "Prefer not to say"];
@@ -99,7 +101,7 @@ const MyProfile = (): React.ReactElement => {
       return;
     }
     if (file.size > PHOTO_MAX_BYTES) {
-      setPhotoError("Photo must be 5 MB or smaller.");
+      setPhotoError(`Photo must be ${PHOTO_MAX_MB} MB or smaller.`);
       return;
     }
     setPhotoError("");
@@ -216,7 +218,7 @@ const MyProfile = (): React.ReactElement => {
           </button>
           <div className="my-profile-photo-info">
             <span className="my-profile-label">Profile photo</span>
-            <span className="my-profile-hint">JPG or PNG · Max 5 MB</span>
+            <span className="my-profile-hint">JPG or PNG · Max {PHOTO_MAX_MB} MB</span>
             <div className="my-profile-photo-actions">
               <button type="button" className="primary-btn" disabled={isSaving} onClick={openPhotoPicker}>
                 Upload photo

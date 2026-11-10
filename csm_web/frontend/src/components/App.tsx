@@ -2,7 +2,7 @@ import React, { Component, useEffect, useState } from "react";
 import { Link, NavLink, NavLinkProps, Outlet, Route, Routes, useLocation } from "react-router-dom";
 
 import { logout } from "../utils/api";
-import { useProfiles } from "../utils/queries/base";
+import { useProfiles, useUserInfo } from "../utils/queries/base";
 import { useMatcherActiveCourses } from "../utils/queries/matcher";
 import { Role } from "../utils/types";
 import { emptyRoles, Roles } from "../utils/user";
@@ -71,6 +71,7 @@ const AppLayout = () => {
 
 function Header(): React.ReactElement {
   const location = useLocation();
+  const { data: userInfo } = useUserInfo();
 
   /**
    * Helper function to determine class name for a NavLink component
@@ -148,7 +149,10 @@ function Header(): React.ReactElement {
           <h3 className="site-subtitle">Policies</h3>
         </NavLink>
         <NavLink to="/myprofile" className={navlinkClassSubtitle}>
-          <h3 className="site-subtitle">My Profile</h3>
+          <div className="site-profile-link">
+            {userInfo?.profilePhoto && <img className="site-profile-photo" src={userInfo.profilePhoto} alt="" />}
+            <h3 className="site-subtitle">My Profile</h3>
+          </div>
         </NavLink>
         <a id="logout-btn" href="#" onClick={logout} title="Log out">
           <LogOutIcon className="icon" />

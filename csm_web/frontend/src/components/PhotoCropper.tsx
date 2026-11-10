@@ -2,6 +2,8 @@ import React, { useEffect, useRef, useState } from "react";
 import Modal from "./Modal";
 
 const MAX_VIEWPORT_SIZE = 280;
+// stays usable on very short screens, like a phone held sideways
+const MIN_VIEWPORT_SIZE = 120;
 const VIEWPORT_SCREEN_MARGIN = 96;
 // room for the title, zoom slider and buttons, since the dialog can't scroll
 const VIEWPORT_SCREEN_HEIGHT_MARGIN = 280;
@@ -28,6 +30,16 @@ interface PhotoCropperProps {
   onError: (message: string) => void;
 }
 
+const getViewportSize = (): number =>
+  Math.max(
+    MIN_VIEWPORT_SIZE,
+    Math.min(
+      MAX_VIEWPORT_SIZE,
+      window.innerWidth - VIEWPORT_SCREEN_MARGIN,
+      window.innerHeight - VIEWPORT_SCREEN_HEIGHT_MARGIN
+    )
+  );
+
 /**
  * Keep the image covering the whole viewport at the given scale.
  * Offsets are the distance of the image's center from the viewport's center.
@@ -45,13 +57,7 @@ const clampOffset = (offset: Point, image: Size, scale: number, viewportSize: nu
  * Dialog to choose which square part of a photo to use.
  */
 const PhotoCropper = ({ file, onCancel, onConfirm, onError }: PhotoCropperProps): React.ReactElement => {
-  const [viewportSize] = useState(() =>
-    Math.min(
-      MAX_VIEWPORT_SIZE,
-      window.innerWidth - VIEWPORT_SCREEN_MARGIN,
-      window.innerHeight - VIEWPORT_SCREEN_HEIGHT_MARGIN
-    )
-  );
+  const [viewportSize, setViewportSize] = useState(getViewportSize);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [imageSize, setImageSize] = useState<Size | null>(null);
   const [zoom, setZoom] = useState(1);
@@ -86,6 +92,20 @@ const PhotoCropper = ({ file, onCancel, onConfirm, onError }: PhotoCropperProps)
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [onCancel]);
+
+  // keep the dialog on screen when the window resizes or a phone rotates
+  useEffect(() => {
+    const handleResize = () => {
+      const newSize = getViewportSize();
+      if (newSize === viewportSize) return;
+      // offsets are in screen pixels, so they grow with the viewport to keep the same crop
+      const ratio = newSize / viewportSize;
+      setOffset(current => ({ x: current.x * ratio, y: current.y * ratio }));
+      setViewportSize(newSize);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [viewportSize]);
 
   useEffect(() => {
     if (!isDragging || !imageSize) return;
@@ -122,8 +142,9 @@ const PhotoCropper = ({ file, onCancel, onConfirm, onError }: PhotoCropperProps)
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    // a right click opens a menu that can swallow the release, and a second finger isn't a new drag
-    if (e.button !== 0 || isDragging) return;
+    // a right click opens a menu that can swallow the release, and a second finger isn't a new drag;
+    // before the image loads nothing is listening for the release either
+    if (e.button !== 0 || isDragging || !imageSize) return;
     e.preventDefault();
     viewportRef.current?.focus();
     dragStartRef.current = { pointerId: e.pointerId, pointer: { x: e.clientX, y: e.clientY }, offset };
@@ -131,7 +152,8 @@ const PhotoCropper = ({ file, onCancel, onConfirm, onError }: PhotoCropperProps)
   };
 
   const changeZoom = (requestedZoom: number) => {
-    if (!imageSize) return;
+    // a drag measures from where it started, so a change partway through would make the image jump
+    if (!imageSize || isDragging) return;
     const newZoom = Math.min(MAX_ZOOM, Math.max(1, requestedZoom));
     // keep the same part of the photo in the center while zooming
     const ratio = newZoom / zoom;
@@ -140,7 +162,7 @@ const PhotoCropper = ({ file, onCancel, onConfirm, onError }: PhotoCropperProps)
   };
 
   const moveBy = (dx: number, dy: number) => {
-    if (!imageSize) return;
+    if (!imageSize || isDragging) return;
     setOffset(clampOffset({ x: offset.x + dx, y: offset.y + dy }, imageSize, scale, viewportSize));
   };
 
