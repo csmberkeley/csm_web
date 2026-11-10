@@ -34,45 +34,6 @@ $profile-hint: #8a8a8a;
   }
 }
 
-/// "Changes saved" popup
-
-// darker than $csm-green so white text stays readable
-$profile-saved-green: #2e7d4f;
-
-.my-profile-saved-popup {
-  position: fixed;
-
-  // upper middle of the screen, wherever the page is scrolled
-  top: 25vh;
-  left: 50%;
-  z-index: 1000;
-
-  padding: 14px 32px;
-
-  font-size: 1.1rem;
-  font-weight: 600;
-  color: white;
-
-  background-color: $profile-saved-green;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgb(0 0 0 / 30%);
-
-  transform: translateX(-50%);
-  animation: my-profile-saved-in 0.2s ease-out;
-}
-
-@keyframes my-profile-saved-in {
-  from {
-    opacity: 0;
-    transform: translate(-50%, -12px);
-  }
-
-  to {
-    opacity: 1;
-    transform: translateX(-50%);
-  }
-}
-
 .my-profile-title {
   margin: 0;
   font-size: 2rem;
