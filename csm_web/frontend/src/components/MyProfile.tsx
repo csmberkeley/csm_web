@@ -13,6 +13,7 @@ const BIO_MAX = 160;
 const PHOTO_MAX_BYTES = 5 * 1024 * 1024;
 const PHOTO_TYPES = ["image/jpeg", "image/png"];
 const PRONOUN_OPTIONS = ["She/her", "He/him", "They/them", "Prefer not to say"];
+const SAVED_POPUP_MS = 3000;
 
 const MyProfile = (): React.ReactElement => {
   const { data: userInfo, isSuccess: userInfoLoaded } = useUserInfo();
@@ -30,6 +31,18 @@ const MyProfile = (): React.ReactElement => {
   const [photoRemoved, setPhotoRemoved] = useState(false);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // "Changes saved" popup, hidden again after a few seconds
+  const [showSaved, setShowSaved] = useState(false);
+  const savedTimerRef = useRef<number | undefined>(undefined);
+
+  const flashSaved = () => {
+    window.clearTimeout(savedTimerRef.current);
+    setShowSaved(true);
+    savedTimerRef.current = window.setTimeout(() => setShowSaved(false), SAVED_POPUP_MS);
+  };
+
+  // stop the hide timer if the page closes while the popup is showing
+  useEffect(() => () => window.clearTimeout(savedTimerRef.current), []);
 
   const savedName = userInfoLoaded ? `${userInfo.firstName} ${userInfo.lastName}`.trim() : "";
   const savedPhotoUrl = userInfoLoaded ? userInfo.profilePhoto : null;
@@ -92,6 +105,7 @@ const MyProfile = (): React.ReactElement => {
     e.preventDefault();
     setPhotoError("");
     setSaveError("");
+    setShowSaved(false);
 
     // save the photo first, so a rejected file stops the save before anything has changed
     try {
@@ -107,13 +121,17 @@ const MyProfile = (): React.ReactElement => {
     setPendingPhoto(null);
     setPhotoRemoved(false);
 
-    if (!textChanged) return;
+    if (!textChanged) {
+      flashSaved();
+      return;
+    }
     // the backend stores first and last name separately, so split after the first word;
     // only when the name was edited, since the split would rewrite a multi-word first name
     const [firstName, ...rest] = normalizedName.split(" ");
     const nameFields = nameChanged ? { firstName, lastName: rest.join(" ") } : {};
     try {
       await updateUserInfo.mutateAsync({ ...nameFields, pronouns, bio });
+      flashSaved();
     } catch (error) {
       setSaveError((error as Error).message);
     }
@@ -128,6 +146,12 @@ const MyProfile = (): React.ReactElement => {
 
   return (
     <form className="my-profile" onSubmit={handleSave}>
+      {showSaved && (
+        <div className="my-profile-saved-popup" role="status">
+          Changes saved
+        </div>
+      )}
+
       <div className="my-profile-header">
         <h2 className="my-profile-title">Edit Profile</h2>
         <button type="submit" className="primary-btn" disabled={!hasChanges || isSaving}>
