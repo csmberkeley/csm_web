@@ -25,6 +25,8 @@ const MyProfile = (): React.ReactElement => {
   const [bio, setBio] = useState("");
   const [photoError, setPhotoError] = useState("");
   const [saveError, setSaveError] = useState("");
+  const [showSaved, setShowSaved] = useState(false);
+
   // photo changes wait for "Save changes"; until then they are only previewed
   const [pendingPhoto, setPendingPhoto] = useState<File | null>(null);
   const [photoRemoved, setPhotoRemoved] = useState(false);
@@ -56,6 +58,13 @@ const MyProfile = (): React.ReactElement => {
     return () => URL.revokeObjectURL(url);
   }, [pendingPhoto]);
 
+  // hide the "Changes saved" banner a few seconds after it appears
+  useEffect(() => {
+    if (!showSaved) return;
+    const timer = setTimeout(() => setShowSaved(false), 3000);
+    return () => clearTimeout(timer);
+  }, [showSaved]);
+
   // compare what the server would store, since it collapses name spacing and trims the bio
   const normalizedName = name.trim().replace(/\s+/g, " ");
   const nameChanged = normalizedName !== savedName.replace(/\s+/g, " ");
@@ -68,6 +77,7 @@ const MyProfile = (): React.ReactElement => {
     // reset so picking the same file again still triggers onChange
     e.target.value = "";
     if (!file) return;
+    setShowSaved(false);
 
     if (!PHOTO_TYPES.includes(file.type)) {
       setPhotoError("Photo must be a JPG or PNG.");
@@ -83,6 +93,7 @@ const MyProfile = (): React.ReactElement => {
   };
 
   const handlePhotoRemove = () => {
+    setShowSaved(false);
     setPhotoError("");
     setPendingPhoto(null);
     setPhotoRemoved(savedPhotoUrl !== null);
@@ -92,6 +103,7 @@ const MyProfile = (): React.ReactElement => {
     e.preventDefault();
     setPhotoError("");
     setSaveError("");
+    setShowSaved(false); // reset: nothing has saved yet
 
     // save the photo first, so a rejected file stops the save before anything has changed
     try {
@@ -102,20 +114,24 @@ const MyProfile = (): React.ReactElement => {
       }
     } catch (error) {
       setPhotoError((error as Error).message);
-      return;
+      return; // photo failed → no banner
     }
     setPendingPhoto(null);
     setPhotoRemoved(false);
 
-    if (!textChanged) return;
+    if (!textChanged) {
+      setShowSaved(true); // success #1: only the photo changed
+      return;
+    }
     // the backend stores first and last name separately, so split after the first word;
     // only when the name was edited, since the split would rewrite a multi-word first name
     const [firstName, ...rest] = normalizedName.split(" ");
     const nameFields = nameChanged ? { firstName, lastName: rest.join(" ") } : {};
     try {
       await updateUserInfo.mutateAsync({ ...nameFields, pronouns, bio });
+      setShowSaved(true); // success #2: text saved
     } catch (error) {
-      setSaveError((error as Error).message);
+      setSaveError((error as Error).message); // text failed → no banner
     }
   };
 
@@ -136,6 +152,7 @@ const MyProfile = (): React.ReactElement => {
       </div>
 
       {saveError && <span className="my-profile-error">{saveError}</span>}
+      {showSaved && <span className="my-profile-success">Changes saved</span>}
 
       <div className="my-profile-photo-row">
         {photoUrl ? (
@@ -176,7 +193,10 @@ const MyProfile = (): React.ReactElement => {
           value={name}
           maxLength={NAME_MAX}
           readOnly={isSaving}
-          onChange={e => setName(e.target.value)}
+          onChange={e => {
+            setName(e.target.value);
+            setShowSaved(false);
+          }}
         />
         <span className="my-profile-count">
           {name.length}/{NAME_MAX}
@@ -189,7 +209,10 @@ const MyProfile = (): React.ReactElement => {
           className="my-profile-input"
           value={pronouns}
           disabled={isSaving}
-          onChange={e => setPronouns(e.target.value)}
+          onChange={e => {
+            setPronouns(e.target.value);
+            setShowSaved(false);
+          }}
         >
           <option value="">Select pronouns</option>
           {PRONOUN_OPTIONS.map(option => (
@@ -208,7 +231,10 @@ const MyProfile = (): React.ReactElement => {
           value={bio}
           maxLength={BIO_MAX}
           readOnly={isSaving}
-          onChange={e => setBio(e.target.value)}
+          onChange={e => {
+            setBio(e.target.value);
+            setShowSaved(false);
+          }}
         />
         <span className="my-profile-count">
           {bio.length}/{BIO_MAX}
