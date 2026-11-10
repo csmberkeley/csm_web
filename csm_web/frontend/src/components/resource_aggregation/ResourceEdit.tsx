@@ -4,6 +4,7 @@ import React, { ChangeEvent, MouseEvent, useState, useEffect } from "react";
 import Modal from "../Modal";
 import { Tooltip } from "../Tooltip";
 import ResourceLinkEdit from "./ResourceLinkEdit";
+import { ResourcePublishModal } from "./ResourcePublishModal";
 import {
   copyWorksheet,
   copyLink,
@@ -16,7 +17,8 @@ import {
   emptyFormErrors,
   emptyTouched,
   allTouched,
-  Resource
+  Resource,
+  PublishOptions
 } from "./ResourceTypes";
 import ResourceWorksheetEdit from "./ResourceWorksheetEdit";
 
@@ -32,8 +34,9 @@ interface ResourceEditProps {
     fileFormDataMap: Map<number, Worksheet>,
     linkMap: Map<number, Link>,
     newWorksheets: Worksheet[],
-    newLinks: Link[]
-  ) => void;
+    newLinks: Link[],
+    publishOptions: PublishOptions
+  ) => Promise<void>;
   onCancel: () => void;
 }
 
@@ -51,6 +54,9 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   const [formErrors, setFormErrors] = useState<FormErrors>(emptyFormErrors());
   const [touched, setTouched] = useState<Touched>(emptyTouched());
   const [isEditingLinks, setIsEditingLinks] = useState<boolean>(false);
+  const [showPublishModal, setShowPublishModal] = useState<boolean>(false);
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [submissionError, setSubmissionError] = useState<string>("");
 
   const resourceWorksheetMap = new Map();
   const resourceLinkMap = new Map();
@@ -271,17 +277,33 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   }, [touched]);
 
   /**
-   * Wrapper for the onSubmit function, validating all fields before submission.
-   *
-   * @param e onSubmit event
+   * Validates all fields and opens the publication options modal.
    */
-  function handleSubmit(e: MouseEvent<HTMLButtonElement>) {
+  function handleSubmit() {
     // set all fields as touched for future validates
     setTouched(allTouched());
 
     // validate all fields
     if (validate(true)) {
-      onSubmit(e, existingWorksheetMap, existingLinkMap, newWorksheets, newLinks);
+      setSubmissionError("");
+      setShowPublishModal(true);
+    }
+  }
+
+  /**
+   * Submits the resource with the selected publication options.
+   */
+  async function handleResourcePost(options: PublishOptions, e: MouseEvent<HTMLButtonElement>): Promise<void> {
+    setIsSubmitting(true);
+    setSubmissionError("");
+
+    try {
+      await onSubmit(e, existingWorksheetMap, existingLinkMap, newWorksheets, newLinks, options);
+      setShowPublishModal(false);
+    } catch (error) {
+      setSubmissionError(error instanceof Error ? error.message : "Unable to save this resource. Please try again.");
+    } finally {
+      setIsSubmitting(false);
     }
   }
 
@@ -661,138 +683,155 @@ export const ResourceEdit = ({ resource, onChange, onSubmit, onCancel }: Resourc
   );
 
   return (
-    <Modal closeModal={onCancel} className="resource-edit-modal">
-      <div className="resource-edit-container">
-        <div id="resource-edit-inner">
-          <div className="resource-info-edit">
-            <label className="form-label resource-edit-head-item">
-              Week Number
-              <input
-                className="form-input"
-                type="text"
-                defaultValue={resource.weekNum}
-                placeholder="Week Number"
-                onChange={e => onChange(e, "weekNum")}
-                onBlur={() => handleBlur("weekNum")}
-              />
-            </label>
-            <div className="resource-validation-error">
-              {formErrors.weekNum && <ExclamationCircle className="icon" />}
-              {formErrors.weekNum}
-            </div>
-          </div>
-          <div className="resource-info-edit">
-            <label className="form-label resource-edit-head-item">
-              Date
-              <input
-                className="form-date"
-                type="date"
-                defaultValue={resource.date}
-                onChange={e => onChange(e, "date")}
-                onBlur={() => handleBlur("date")}
-              />
-            </label>
-            <div className="resource-validation-error">
-              {formErrors.date && <ExclamationCircle className="icon" />}
-              {formErrors.date}
-            </div>
-          </div>
-          <div className="resource-info-edit">
-            <label className="form-label resource-edit-head-item">
-              Topics
-              <div className="topics-tooltip-wrapper">
-                <Tooltip
-                  placement="bottom"
-                  source={
-                    <input
-                      className="form-input"
-                      type="text"
-                      defaultValue={resource.topics}
-                      placeholder="Topics"
-                      onChange={e => onChange(e, "topics")}
-                      onBlur={() => handleBlur("topics")}
-                    />
-                  }
-                >
-                  Topics should be delimited by semicolons
-                </Tooltip>
+    <>
+      <Modal closeModal={onCancel} className="resource-edit-modal">
+        <div className="resource-edit-container">
+          <div id="resource-edit-inner">
+            <div className="resource-info-edit">
+              <label className="form-label resource-edit-head-item">
+                Week Number
+                <input
+                  className="form-input"
+                  type="text"
+                  defaultValue={resource.weekNum}
+                  placeholder="Week Number"
+                  onChange={e => onChange(e, "weekNum")}
+                  onBlur={() => handleBlur("weekNum")}
+                />
+              </label>
+              <div className="resource-validation-error">
+                {formErrors.weekNum && <ExclamationCircle className="icon" />}
+                {formErrors.weekNum}
               </div>
-            </label>
-            <div className="resource-validation-error">
-              {formErrors.topics && <ExclamationCircle className="icon" />}
-              {formErrors.topics}
             </div>
-          </div>
-        </div>
-        <div className="tab-list">
-          <button
-            onClick={() => {
-              setIsEditingLinks(false);
-            }}
-            className={`tab ${!isEditingLinks ? "active" : ""}`}
-          >
-            Edit Worksheets
-          </button>
-          <button
-            onClick={() => {
-              setIsEditingLinks(true);
-            }}
-            className={`tab ${isEditingLinks ? "active" : ""}`}
-          >
-            Edit Links
-          </button>
-        </div>
-        <div className="resource-edit-content-wrapper">
-          <div className="resource-edit-content">
-            {!isEditingLinks && (
-              <div className="resource-worksheet-container">
-                {hasWorksheets && (
-                  <div className="resource-worksheet-head">
-                    <div className="resource-worksheet-head-item">Name</div>
-                    <div className="resource-worksheet-head-item">Worksheet File</div>
-                    <div className="resource-worksheet-head-item">Solution File</div>
-                  </div>
-                )}
-                {existingWorksheetDisplay}
-                {newWorksheetDisplay}
-                <div className="resource-worksheet-actions-container">
-                  <button onClick={handleAddWorksheet} className="secondary-btn">
-                    <PlusIcon className="icon" />
-                    Add Worksheet
-                  </button>
+            <div className="resource-info-edit">
+              <label className="form-label resource-edit-head-item">
+                Date
+                <input
+                  className="form-date"
+                  type="date"
+                  defaultValue={resource.date}
+                  onChange={e => onChange(e, "date")}
+                  onBlur={() => handleBlur("date")}
+                />
+              </label>
+              <div className="resource-validation-error">
+                {formErrors.date && <ExclamationCircle className="icon" />}
+                {formErrors.date}
+              </div>
+            </div>
+            <div className="resource-info-edit">
+              <label className="form-label resource-edit-head-item">
+                Topics
+                <div className="topics-tooltip-wrapper">
+                  <Tooltip
+                    placement="bottom"
+                    source={
+                      <input
+                        className="form-input"
+                        type="text"
+                        defaultValue={resource.topics}
+                        placeholder="Topics"
+                        onChange={e => onChange(e, "topics")}
+                        onBlur={() => handleBlur("topics")}
+                      />
+                    }
+                  >
+                    Topics should be delimited by semicolons
+                  </Tooltip>
                 </div>
+              </label>
+              <div className="resource-validation-error">
+                {formErrors.topics && <ExclamationCircle className="icon" />}
+                {formErrors.topics}
               </div>
-            )}
-            {isEditingLinks && (
-              <div className="resource-worksheet-container">
-                {hasLinks && (
-                  <div className="resource-link-head">
-                    <div className="resource-worksheet-head-item">Name</div>
-                    <div className="resource-worksheet-head-item">URL</div>
+            </div>
+          </div>
+          <div className="tab-list">
+            <button
+              onClick={() => {
+                setIsEditingLinks(false);
+              }}
+              className={`tab ${!isEditingLinks ? "active" : ""}`}
+            >
+              Edit Worksheets
+            </button>
+            <button
+              onClick={() => {
+                setIsEditingLinks(true);
+              }}
+              className={`tab ${isEditingLinks ? "active" : ""}`}
+            >
+              Edit Links
+            </button>
+          </div>
+          <div className="resource-edit-content-wrapper">
+            <div className="resource-edit-content">
+              {!isEditingLinks && (
+                <div className="resource-worksheet-container">
+                  {hasWorksheets && (
+                    <div className="resource-worksheet-head">
+                      <div className="resource-worksheet-head-item">Name</div>
+                      <div className="resource-worksheet-head-item">Worksheet File</div>
+                      <div className="resource-worksheet-head-item">Solution File</div>
+                    </div>
+                  )}
+                  {existingWorksheetDisplay}
+                  {newWorksheetDisplay}
+                  <div className="resource-worksheet-actions-container">
+                    <button onClick={handleAddWorksheet} className="secondary-btn">
+                      <PlusIcon className="icon" />
+                      Add Worksheet
+                    </button>
                   </div>
-                )}
-                {existingLinkDisplay}
-                {newLinkDisplay}
-                <div className="resource-worksheet-actions-container">
-                  <button onClick={handleAddLink} className="secondary-btn">
-                    <PlusIcon className="icon" />
-                    Add Link
-                  </button>
                 </div>
-              </div>
-            )}
+              )}
+              {isEditingLinks && (
+                <div className="resource-worksheet-container">
+                  {hasLinks && (
+                    <div className="resource-link-head">
+                      <div className="resource-worksheet-head-item">Name</div>
+                      <div className="resource-worksheet-head-item">URL</div>
+                    </div>
+                  )}
+                  {existingLinkDisplay}
+                  {newLinkDisplay}
+                  <div className="resource-worksheet-actions-container">
+                    <button onClick={handleAddLink} className="secondary-btn">
+                      <PlusIcon className="icon" />
+                      Add Link
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          <div className={`resource-edit-footer ${showPublishModal ? "resource-edit-footer-hidden" : ""}`}>
+            <button onClick={handleSubmit} className="primary-btn" disabled={!checkValid()}>
+              <CheckCircle className="icon" id="save-icon" /> Save
+            </button>
+            {!(!isEditingLinks && formErrors["existingLinks"].size == 0 && formErrors["newLinks"].size == 0) &&
+              !(
+                isEditingLinks &&
+                formErrors["existingWorksheets"].size == 0 &&
+                formErrors["newWorksheets"].size == 0
+              ) &&
+              tabErrorDisplay}
           </div>
         </div>
-        <div className="resource-edit-footer">
-          <button onClick={handleSubmit} className="primary-btn" disabled={!checkValid()}>
-            <CheckCircle className="icon" id="save-icon" /> Save
-          </button>
-          {!(!isEditingLinks && formErrors["existingLinks"].size == 0 && formErrors["newLinks"].size == 0) &&
-            !(isEditingLinks && formErrors["existingWorksheets"].size == 0 && formErrors["newWorksheets"].size == 0) &&
-            tabErrorDisplay}
-        </div>
-      </div>
-    </Modal>
+      </Modal>
+      {showPublishModal && (
+        <ResourcePublishModal
+          isSubmitting={isSubmitting}
+          onCancel={() => {
+            setSubmissionError("");
+            setShowPublishModal(false);
+          }}
+          onConfirm={handleResourcePost}
+          submissionError={submissionError}
+        />
+      )}
+    </>
   );
 };
 

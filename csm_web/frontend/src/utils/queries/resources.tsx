@@ -43,25 +43,25 @@ export const useCreateResourceMutation = (courseId: number): UseMutationResult<v
       const response = await fetchWithMethod(`/resources/${courseId}/resources`, HTTP_METHODS.POST, formdata, true);
       if (response.ok) {
         return await response.json();
-      } else {
-        if (response.status === 400) {
-          // invalid data; log the error and continue
-          console.error(await response.json());
-        } else {
-          handlePermissionsError(response.status);
-          throw new ServerError(`Failed to create resource for course ${courseId}`);
-        }
       }
+
+      if (response.status === 400) {
+        console.error(await response.json());
+        throw new ServerError("The resource contains invalid data. Check the fields and try again.");
+      }
+
+      handlePermissionsError(response.status);
+      throw new ServerError(`Failed to create resource for course ${courseId}`);
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["resources", courseId]);
       },
-      retry: handleRetry
+      // Multipart mutations are not retried because a repeated upload could create duplicate resources or files.
+      retry: false
     }
   );
 
-  handleError(mutationResult);
   return mutationResult;
 };
 
@@ -75,25 +75,25 @@ export const useUpdateResourceMutation = (courseId: number): UseMutationResult<v
       const response = await fetchWithMethod(`/resources/${courseId}/resources`, HTTP_METHODS.PUT, formdata, true);
       if (response.ok) {
         return await response.json();
-      } else {
-        if (response.status === 400) {
-          // invalid data; log the error and continue
-          console.error(await response.json());
-        } else {
-          handlePermissionsError(response.status);
-          throw new ServerError(`Failed to update resource for course ${courseId}`);
-        }
       }
+
+      if (response.status === 400) {
+        console.error(await response.json());
+        throw new ServerError("The resource contains invalid data. Check the fields and try again.");
+      }
+
+      handlePermissionsError(response.status);
+      throw new ServerError(`Failed to update resource for course ${courseId}`);
     },
     {
       onSuccess: () => {
         queryClient.invalidateQueries(["resources", courseId]);
       },
-      retry: handleRetry
+      // Multipart mutations are not retried because a repeated upload could create duplicate resources or files.
+      retry: false
     }
   );
 
-  handleError(mutationResult);
   return mutationResult;
 };
 

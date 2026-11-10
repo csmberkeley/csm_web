@@ -2,7 +2,7 @@ import React, { useState, useEffect, ChangeEvent, MouseEvent } from "react";
 
 import { ResourceEdit } from "./ResourceEdit";
 import ResourceRowRender from "./ResourceRowRender";
-import { Link, Resource, Worksheet } from "./ResourceTypes";
+import { Link, PublishOptions, Resource, Worksheet } from "./ResourceTypes";
 
 interface ResourceRowProps {
   initialResource: Resource;
@@ -11,8 +11,9 @@ interface ResourceRowProps {
     fileFormDataMap: Map<number, Worksheet>,
     linkMap: Map<number, Link>,
     newWorksheets: Array<Worksheet>,
-    newLinks: Array<Link>
-  ) => void;
+    newLinks: Array<Link>,
+    publishOptions: PublishOptions
+  ) => Promise<void>;
   canEdit: boolean;
   onDeleteResource: (resourceId: number) => void;
   addingResource: boolean;
@@ -31,13 +32,17 @@ export const ResourceRow = ({
   cancelOverride
 }: ResourceRowProps): React.ReactElement => {
   const [edit, setEdit] = useState<boolean>(false);
-  const [resource, setResource] = useState<Resource>({} as Resource);
+  const [resource, setResource] = useState<Resource>(initialResource);
 
   // update current resource if initialResource changes
   useEffect(() => {
-    setResource(initialResource);
-    setEdit(false);
-  }, [initialResource]);
+    // getNextResource creates a new object on parent rerenders. Preserve the in-progress
+    // add form while its mutation state changes so failed submissions can be corrected.
+    if (!addingResource) {
+      setResource(initialResource);
+      setEdit(false);
+    }
+  }, [addingResource, initialResource]);
 
   useEffect(() => {
     setEdit(addingResource);
@@ -62,15 +67,16 @@ export const ResourceRow = ({
    * @param linkMap - form data object containing link info
    * @param newWorksheets - new worksheets
    */
-  function handleSubmit(
+  async function handleSubmit(
     e: MouseEvent<HTMLButtonElement>,
     fileFormDataMap: Map<number, Worksheet>,
     linkMap: Map<number, Link>,
     newWorksheets: Array<Worksheet>,
-    newLinks: Array<Link>
-  ): void {
+    newLinks: Array<Link>,
+    publishOptions: PublishOptions
+  ): Promise<void> {
     e.preventDefault();
-    onUpdateResource(resource, fileFormDataMap, linkMap, newWorksheets, newLinks);
+    await onUpdateResource(resource, fileFormDataMap, linkMap, newWorksheets, newLinks, publishOptions);
     setEdit(false);
   }
 

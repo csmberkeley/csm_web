@@ -35,6 +35,18 @@ describe("Modal", () => {
     expect(component.asFragment()).toMatchSnapshot();
   });
 
+  it("should add custom classes to the overlay and modal shell", () => {
+    const handleCloseModal = jest.fn();
+    const component = render(
+      <Modal closeModal={handleCloseModal} modalClassName="test-modal-shell" overlayClassName="test-modal-overlay">
+        <div>Hello World</div>
+      </Modal>
+    );
+
+    expect(component.container.querySelector(".modal")?.classList.contains("test-modal-shell")).toBe(true);
+    expect(component.container.querySelector(".modal-overlay")?.classList.contains("test-modal-overlay")).toBe(true);
+  });
+
   describe("should close correctly", () => {
     test("when the close button is clicked", () => {
       const handleCloseModal = jest.fn();
