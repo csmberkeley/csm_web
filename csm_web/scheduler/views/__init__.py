@@ -4,6 +4,7 @@ from .course import CourseViewSet
 from .export import export_data
 from .profile import ProfileViewSet
 from .resource import ResourceViewSet
+from .resource_categories import ResourceCategoryViewSet
 from .section import SectionViewSet
 from .spacetime import SpacetimeViewSet
 from .student import StudentViewSet

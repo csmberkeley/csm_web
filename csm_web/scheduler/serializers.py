@@ -470,6 +470,34 @@ class ResourceCategorySerializer(serializers.ModelSerializer):
         fields = ["id", "name", "description", "course", "created_by", "created_at"]
         read_only_fields = ["created_by", "created_at"]
 
+    def validate_name(self, name):
+        name = name.strip()
+        if not name:
+            raise serializers.ValidationError("Category name cannot be blank.")
+        return name
+
+    def validate_course(self, course):
+        if self.instance is not None and course != self.instance.course:
+            raise serializers.ValidationError(
+                "A category cannot be moved to a different course."
+            )
+        return course
+
+    def validate(self, attrs):
+        course = attrs.get("course", getattr(self.instance, "course", None))
+        name = attrs.get("name", getattr(self.instance, "name", None))
+        if course is not None and name is not None:
+            duplicates = ResourceCategory.objects.filter(
+                course=course, name__iexact=name
+            )
+            if self.instance is not None:
+                duplicates = duplicates.exclude(pk=self.instance.pk)
+            if duplicates.exists():
+                raise serializers.ValidationError(
+                    {"name": "A category with this name already exists in the course."}
+                )
+        return attrs
+
 class ResourceVersionSerializer(serializers.ModelSerializer):
     
     class Meta:
@@ -513,7 +541,7 @@ class LibraryResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = LibraryResource
         fields = ["id", "course", "uploader", "category", "published_version_ref", "archived_status", "created_at", "updated_at", "tags"]
-        read_only_fields = ["uploader", "created_at", "updated_at", "ublished_version_ref"]
+        read_only_fields = ["uploader", "created_at", "updated_at", "published_version_ref"]
 
 
 class OverrideSerializer(serializers.ModelSerializer):
