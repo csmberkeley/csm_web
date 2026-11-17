@@ -511,7 +511,7 @@ class LibraryResourceSerializer(serializers.ModelSerializer):
     class Meta:
         model = LibraryResource
         fields = ["id", "course", "uploader", "category", "published_version_ref", "archived_status", "created_at", "updated_at", "tags"]
-        read_only_fields = ["uploader", "created_at", "updated_at", "published_version_ref"]
+        read_only_fields = ["uploader", "created_at", "updated_at", "ublished_version_ref"]
 
 
 class OverrideSerializer(serializers.ModelSerializer):
