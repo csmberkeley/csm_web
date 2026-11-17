@@ -39,4 +39,12 @@ urlpatterns += [
     path("coord/<int:pk>/mentors/", views.coord.view_mentors),
     path("coord/<int:pk>/section/", views.coord.delete_section),
     path("export/", views.export_data),
+    path(
+        "library/resources/",
+        views.resource_lib.library_resources,
+        name="library-resources",
+    ),
+    path("library/resources/pending/", views.resource_lib.pending, name="library-pending"),
+    path("library/versions/<int:pk>/approve/", views.resource_lib.approve, name="library-approve"),
+    path("library/versions/<int:pk>/reject/", views.resource_lib.reject, name="library-reject"),
 ]

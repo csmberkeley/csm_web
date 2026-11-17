@@ -485,6 +485,7 @@ class ResourceVersionSerializer(serializers.ModelSerializer):
             "status",
             "reviewer",
             "feedback",
+            "reviewed_at",
             "timestamp",
         ]
         read_only_fields = [
@@ -492,6 +493,7 @@ class ResourceVersionSerializer(serializers.ModelSerializer):
             "status",
             "reviewer",
             "feedback",
+            "reviewed_at",
             "timestamp",
         ]
 

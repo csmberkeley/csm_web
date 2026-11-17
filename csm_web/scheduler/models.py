@@ -615,6 +615,7 @@ class ResourceVersion(ValidatingModel):
         "Coordinator", on_delete=models.SET_NULL, null=True, blank=True
     )
     feedback = models.CharField(max_length=200, blank=True)
+    reviewed_at = models.DateTimeField(null=True, blank=True)
     timestamp = models.DateTimeField(auto_now_add=True)
 
     class Meta:
