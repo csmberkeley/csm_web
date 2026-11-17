@@ -495,9 +495,8 @@ class ResourceVersionSerializer(serializers.ModelSerializer):
             "timestamp",
         ]
 
-
 class LibraryResourceSerializer(serializers.ModelSerializer):
-    published_versoin = ResourceVersionSerializer(source="published_version_ref", read_only=True)
+    published_version = ResourceVersionSerializer(source="published_version_ref", read_only=True)
 
     def validate_tags(self, tags):
         cleaned = []
