@@ -268,6 +268,11 @@ select.my-profile-input {
   background-position: right 16px center;
 }
 
+.my-profile-count-limit {
+  font-weight: 600;
+  color: $csm-danger-darkened;
+}
+
 textarea.my-profile-input {
   min-height: 140px;
   resize: vertical;

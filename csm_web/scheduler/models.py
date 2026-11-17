@@ -6,6 +6,7 @@ import uuid
 from django.conf import settings
 from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ObjectDoesNotExist
+from django.core.files.storage import default_storage, storages
 from django.db import models, transaction
 from django.db.models.fields.related_descriptors import ReverseOneToOneDescriptor
 from django.dispatch import receiver
@@ -57,11 +58,20 @@ def profile_photo_path(_instance, filename):
     return f"profile_photos/{uuid.uuid4().hex}.{extension}"
 
 
+def profile_photo_storage():
+    """Use the profile photo storage when one is configured, otherwise the default storage."""
+    if "profile_photos" in settings.STORAGES:
+        return storages["profile_photos"]
+    return default_storage
+
+
 class User(AbstractUser):
     priority_enrollment = models.DateTimeField(null=True, blank=True)
     pronouns = models.CharField(max_length=50, blank=True, default="")
-    bio = models.CharField(max_length=160, blank=True, default="")
-    profile_photo = models.ImageField(upload_to=profile_photo_path, blank=True)
+    bio = models.CharField(max_length=500, blank=True, default="")
+    profile_photo = models.ImageField(
+        upload_to=profile_photo_path, storage=profile_photo_storage, blank=True
+    )
 
     def can_enroll_in_course(self, course, bypass_enrollment_time=False):
         """Determine whether this user is allowed to enroll in the given course."""

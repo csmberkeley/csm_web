@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import re
 
 import sentry_sdk
 from factory.django import DjangoModelFactory
@@ -187,6 +188,35 @@ if DJANGO_ENV == DEVELOPMENT:
     MEDIA_ROOT = os.path.join(BASE_DIR, "media")
     STORAGES["default"] = {"BACKEND": "django.core.files.storage.FileSystemStorage"}
 
+# Profile photos have their own S3 storage (an access point, served through CloudFront).
+# Without PROFILE_PHOTO_STORAGE_BUCKET they use the default storage, so in development
+# they stay on disk unless S3 is switched on in .env.
+PROFILE_PHOTO_STORAGE_BUCKET = (
+    os.environ.get("PROFILE_PHOTO_STORAGE_BUCKET", "").strip() or None
+)
+# just the domain, even if it was entered as a full link like https://example.cloudfront.net/
+PROFILE_PHOTO_CDN_DOMAIN = (
+    re.sub(
+        r"^https?://", "", os.environ.get("PROFILE_PHOTO_CDN_DOMAIN", "").strip()
+    ).rstrip("/")
+    or None
+)
+if PROFILE_PHOTO_STORAGE_BUCKET:
+    STORAGES["profile_photos"] = {
+        "BACKEND": "storages.backends.s3boto3.S3Boto3Storage",
+        "OPTIONS": {
+            "bucket_name": PROFILE_PHOTO_STORAGE_BUCKET,
+            "custom_domain": PROFILE_PHOTO_CDN_DOMAIN,
+            # the access point isn't public; use signed links until CloudFront serves it
+            "querystring_auth": not PROFILE_PHOTO_CDN_DOMAIN,
+            # cached for a day only, so a removed photo's old link stops working soon after
+            "object_parameters": {"CacheControl": "max-age=86400"},
+            # photo names are random and never reused, so there's no need to check for a
+            # taken name (which needs list access we don't have)
+            "file_overwrite": True,
+        },
+    }
+
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
@@ -318,13 +348,21 @@ if DJANGO_ENV in (PRODUCTION, STAGING):
     )
     CSP_STYLE_SRC = ("'self'", "https://fonts.googleapis.com")
     CSP_CONNECT_SRC = ("'self'",)
-    # profile photos are previewed from blob: URLs and served directly from the S3 bucket
-    CSP_IMG_SRC = (
-        "'self'",
-        "data:",
-        "blob:",
-        f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com",
-    )
+    # profile photos are previewed from blob: URLs, and served from wherever they're stored
+    if not PROFILE_PHOTO_STORAGE_BUCKET:
+        PROFILE_PHOTO_SRC = f"https://{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com"
+    elif PROFILE_PHOTO_CDN_DOMAIN:
+        PROFILE_PHOTO_SRC = f"https://{PROFILE_PHOTO_CDN_DOMAIN}"
+    elif PROFILE_PHOTO_STORAGE_BUCKET.startswith("arn:"):
+        # without CloudFront, signed links go straight to the access point; its region is
+        # the fourth part of the ARN (arn:aws:s3:REGION:ACCOUNT:accesspoint/NAME)
+        PROFILE_PHOTO_SRC = (
+            "https://*.s3-accesspoint."
+            f"{PROFILE_PHOTO_STORAGE_BUCKET.split(':')[3]}.amazonaws.com"
+        )
+    else:
+        PROFILE_PHOTO_SRC = f"https://{PROFILE_PHOTO_STORAGE_BUCKET}.s3.amazonaws.com"
+    CSP_IMG_SRC = ("'self'", "data:", "blob:", PROFILE_PHOTO_SRC)
     CSP_FONT_SRC = ("https://fonts.gstatic.com",)
     CSP_FRAME_ANCESTORS = ("'none'",)
     CSP_BLOCK_ALL_MIXED_CONTENT = True

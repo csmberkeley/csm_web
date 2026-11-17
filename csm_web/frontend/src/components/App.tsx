@@ -72,6 +72,8 @@ const AppLayout = () => {
 function Header(): React.ReactElement {
   const location = useLocation();
   const { data: userInfo } = useUserInfo();
+  // a photo that fails to load (e.g. its file is gone) is hidden rather than shown broken
+  const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null);
 
   /**
    * Helper function to determine class name for a NavLink component
@@ -145,14 +147,21 @@ function Header(): React.ReactElement {
         ) : null}
       </div>
       <div className="site-title-group">
-        <NavLink to="/policies" className={navlinkClassSubtitle}>
-          <h3 className="site-subtitle">Policies</h3>
-        </NavLink>
         <NavLink to="/myprofile" className={navlinkClassSubtitle}>
           <div className="site-profile-link">
-            {userInfo?.profilePhoto && <img className="site-profile-photo" src={userInfo.profilePhoto} alt="" />}
+            {userInfo?.profilePhoto && userInfo.profilePhoto !== brokenPhotoUrl && (
+              <img
+                className="site-profile-photo"
+                src={userInfo.profilePhoto}
+                alt=""
+                onError={() => setBrokenPhotoUrl(userInfo.profilePhoto)}
+              />
+            )}
             <h3 className="site-subtitle">My Profile</h3>
           </div>
+        </NavLink>
+        <NavLink to="/policies" className={navlinkClassSubtitle}>
+          <h3 className="site-subtitle">Policies</h3>
         </NavLink>
         <a id="logout-btn" href="#" onClick={logout} title="Log out">
           <LogOutIcon className="icon" />

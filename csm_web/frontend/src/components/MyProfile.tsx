@@ -15,7 +15,7 @@ import CheckIcon from "../../static/frontend/img/check.svg";
 import "../css/my-profile.scss";
 
 const NAME_MAX = 50;
-const BIO_MAX = 160;
+const BIO_MAX = 500;
 // limits the chosen photo; only its small crop is uploaded, which the server limits separately
 const PHOTO_MAX_MB = 25;
 const PHOTO_MAX_BYTES = PHOTO_MAX_MB * 1024 * 1024;
@@ -48,6 +48,8 @@ const MyProfile = (): React.ReactElement => {
   // a chosen photo waiting to be cropped
   const [cropFile, setCropFile] = useState<File | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  // a photo that fails to load (e.g. its file is gone) falls back to the initials
+  const [brokenPhotoUrl, setBrokenPhotoUrl] = useState<string | null>(null);
   // the save button reads "Changes saved" after a save, until the user edits again
   const [justSaved, setJustSaved] = useState(false);
 
@@ -207,8 +209,8 @@ const MyProfile = (): React.ReactElement => {
             disabled={isSaving}
             onClick={openPhotoPicker}
           >
-            {photoUrl ? (
-              <img className="my-profile-avatar" src={photoUrl} alt="" />
+            {photoUrl && photoUrl !== brokenPhotoUrl ? (
+              <img className="my-profile-avatar" src={photoUrl} alt="" onError={() => setBrokenPhotoUrl(photoUrl)} />
             ) : (
               <span className="my-profile-avatar my-profile-avatar-empty">{initials}</span>
             )}
@@ -289,9 +291,12 @@ const MyProfile = (): React.ReactElement => {
             readOnly={isSaving}
             onChange={e => setBio(e.target.value)}
           />
-          <span className="my-profile-count">
-            {bio.length}/{BIO_MAX}
-          </span>
+          {/* only shown once the limit is reached, to explain why typing stops */}
+          {bio.length >= BIO_MAX && (
+            <span className="my-profile-count my-profile-count-limit" role="status">
+              {bio.length}/{BIO_MAX}
+            </span>
+          )}
         </label>
       </form>
 
